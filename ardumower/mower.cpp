@@ -445,7 +445,7 @@ void Mower::setup(){
   perimeter.setPins(pinPerimeterLeft, pinPerimeterRight);      
     
   imu.init(pinBuzzer);
-  gps.init();
+  //gps.init();
 
   Robot::setup();  
 }
