@@ -45,13 +45,13 @@
 
 // ------ pins---------------------------------------
 #define pinMotorEnable  37         // EN motors enable
-#define pinMotorLeftPWM 5          // M1_IN1 left motor PWM pin
-#define pinMotorLeftDir 31         // M1_IN2 left motor Dir pin
+#define pinMotorLeftPWM 11 //5     // M1_IN1 left motor PWM pin
+#define pinMotorLeftDir 13 //31    // M1_IN2 left motor Dir pin
 #define pinMotorLeftSense A1       // M1_FB  left motor current sense
 #define pinMotorLeftFault 25       // M1_SF  left motor fault
                                                              
 #define pinMotorRightPWM  3        // M2_IN1 right motor PWM pin
-#define pinMotorRightDir 33        // M2_IN2 right motor Dir pin
+#define pinMotorRightDir 12 //33   // M2_IN2 right motor Dir pin
 #define pinMotorRightSense A0      // M2_FB  right motor current sense
 #define pinMotorRightFault 27      // M2_SF  right motor fault
                                     
