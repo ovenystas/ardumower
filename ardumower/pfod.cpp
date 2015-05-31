@@ -1098,7 +1098,7 @@ void RemoteControl::run(){
       Bluetooth.print(robot->imu.com.y);
       Bluetooth.print(",");
       Bluetooth.print(robot->imu.com.z);
-      Bluetooth.print(",");
+/*      Bluetooth.print(",");
       float lat, lon;
       unsigned long age;
       robot->gps.f_get_position(&lat, &lon, &age);
@@ -1115,7 +1115,7 @@ void RemoteControl::run(){
       Bluetooth.print(lat);
       Bluetooth.print(",");
       Bluetooth.print(lon);           
-      Bluetooth.println();      
+*/      Bluetooth.println();      
   } else if (pfodState == PFOD_PLOT_BAT){
     if (millis() >= nextPlotTime){
       nextPlotTime = millis() + 60000;
@@ -1251,7 +1251,7 @@ void RemoteControl::run(){
       }
     }
   } else if (pfodState == PFOD_PLOT_GPS){
-    if (millis() >= nextPlotTime){
+/*    if (millis() >= nextPlotTime){
       nextPlotTime = millis() + 200;
       float lat, lon;
       unsigned long age;
@@ -1279,7 +1279,7 @@ void RemoteControl::run(){
       Bluetooth.print(",");
       Bluetooth.println(robot->gpsY);
     }
-  } else if (pfodState == PFOD_PLOT_MOTOR){
+*/  } else if (pfodState == PFOD_PLOT_MOTOR){
     if (millis() >= nextPlotTime){
       nextPlotTime = millis() + 50;
       Bluetooth.print((float(millis())/1000.0f));

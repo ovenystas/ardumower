@@ -43,7 +43,7 @@
 #include "imu.h"
 #include "adcman.h"
 #include "perimeter.h"
-#include "gps.h"
+//#include "gps.h"
 #include "pfod.h"
 
 //#include "QueueList.h"
@@ -189,14 +189,14 @@ class Robot
     byte mowPatternCurr;
     char *mowPatternName();
     // -------- gps state -------------------------------
-    GPS gps;
+//    GPS gps;
     char gpsUse            ;       // use GPS?        
-    float gpsLat;
+/*    float gpsLat;
     float gpsLon;
     float gpsX ;   // X position (m)
     float gpsY ;   // Y position (m)
     unsigned long nextTimeGPS ;
-    // -------- odometry state --------------------------
+*/    // -------- odometry state --------------------------
     char odometryUse       ;       // use odometry?
     char twoWayOdometrySensorUse;  // use optional two-wire odometry sensor?
     int odometryTicksPerRevolution ;   // encoder ticks per one full resolution
@@ -447,7 +447,7 @@ class Robot
     virtual void setMotorMowPWM(int pwm, boolean useAccel);
     
     // GPS
-    virtual void processGPSData();
+    //virtual void processGPSData();
     
     // read hardware sensor (HAL)
     virtual int readSensor(char type){}    
@@ -520,7 +520,7 @@ protected:
     virtual void testOdometry();
     virtual void testMotors();
     virtual void setDefaults();    
-    virtual void receiveGPSTime();
+    //virtual void receiveGPSTime();
     virtual void calcOdometry();
     virtual void menu();
     virtual void configureBluetooth(boolean quick){};

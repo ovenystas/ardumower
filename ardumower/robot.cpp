@@ -91,7 +91,7 @@ Robot::Robot(){
    dropLeftCounter = dropRightCounter = 0;                                                                                              // Dropsensor - Absturzsensor
    dropLeft = dropRight = false;                                                                                                        // Dropsensor - Absturzsensor
   
-  gpsLat = gpsLon = gpsX = gpsY = 0;
+  //gpsLat = gpsLon = gpsX = gpsY = 0;
 
   imuDriveHeading = 0;
   imuRollHeading = 0;
@@ -148,7 +148,7 @@ Robot::Robot(){
   nextTimeLawnSensorCheck = 0;
   nextTimeTimer = millis() + 60000;
   nextTimeRTC = 0;
-  nextTimeGPS = 0;
+  //nextTimeGPS = 0;
   nextTimePfodLoop = 0;
   nextTimeRain = 0;
   lastMotorMowRpmTime = millis();
@@ -1135,7 +1135,7 @@ void Robot::printInfo(Stream &s){
       //Streamprint(s, "per %3d ", perimeterLeft);          
       if (perimeterUse) Streamprint(s, "per %3d ", perimeterCounter);                  
       if (lawnSensorUse) Streamprint(s, "lawn %3d ", lawnSensorCounter);
-      if (gpsUse) Streamprint(s, "gps %2d ", (int)gps.satellites());            
+      //if (gpsUse) Streamprint(s, "gps %2d ", (int)gps.satellites());            
     }
     Streamprint(s, "bat %2d.%01d ", (int)batVoltage, (int)((batVoltage *10) - ((int)batVoltage*10)) );       
     Streamprint(s, "chg %2d.%01d %2d.%01d ", 
@@ -1841,7 +1841,7 @@ if (millis() < nextTimeCheckBattery) return;
   }
 }
 
-
+/*
 void Robot::receiveGPSTime(){
   if (gpsUse) {
     unsigned long chars = 0;
@@ -1886,12 +1886,13 @@ void Robot::receiveGPSTime(){
     }      
   }
 }
+*/
 
 // check timer
 void Robot::checkTimer(){
   if (millis() < nextTimeTimer) return;
   nextTimeTimer = millis() + 60000;
-  receiveGPSTime();
+  //receiveGPSTime();
   boolean stopTimerTriggered = true;
   if (timerUse){    
     for (int i=0; i < MAX_TIMERS; i++){
@@ -2146,6 +2147,7 @@ void Robot::checkTilt(){
   }
 }
 
+/*
 void Robot::processGPSData()
 {
   if (millis() < nextTimeGPS) return;
@@ -2162,6 +2164,7 @@ void Robot::processGPSData()
   gpsX = (float)gps.distance_between(nlat,  gpsLon,  gpsLat, gpsLon);
   gpsY = (float)gps.distance_between(gpsLat, nlon,   gpsLat, gpsLon);
 }
+*/
 
 // calculate map position by odometry sensors
 void Robot::calcOdometry(){
@@ -2447,11 +2450,11 @@ void Robot::loop()  {
     
   ADCMan.run();
   if (imuUse) imu.update();
-  if (gpsUse) { 
+/*  if (gpsUse) { 
     gps.feed();
     processGPSData();    
   }
-    
+*/    
   bumperRight = false;
   bumperLeft = false;     
   
