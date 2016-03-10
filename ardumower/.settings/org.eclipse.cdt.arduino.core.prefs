@@ -1,0 +1,6 @@
+config/mega/boardName=Arduino/Genuino Mega or Mega 2560
+config/mega/menu_cpu=atmega2560
+config/mega/packageName=arduino
+config/mega/platformName=Arduino AVR Boards
+eclipse.preferences.version=1
+libraries=["EEPROM","Wire"]

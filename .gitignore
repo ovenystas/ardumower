@@ -1,8 +1,8 @@
-<<<<<<< HEAD
-pcb/megashield_svn_0.5/Dokumentation/Thumbs.db
-pcb/megashield_svn_1.2/Platinenbilder/Thumbs.db
-=======
+*/Thumbs.db
 *.sublime-workspace
 *.db
->>>>>>> origin/master
 *.bak
+/build/
+.cproject
+.project
+.settings/*

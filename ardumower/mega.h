@@ -2,9 +2,9 @@
   Ardumower (www.ardumower.de)
   Copyright (c) 2013-2014 by Alexander Grau
   Copyright (c) 2013-2014 by Sven Gennat
-  
+
   Private-use only! (you need to ask for a commercial-use)
- 
+
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
@@ -17,9 +17,8 @@
 
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
-  
-  Private-use only! (you need to ask for a commercial-use)
 
+  Private-use only! (you need to ask for a commercial-use)
 */
 
 #ifndef MEGA_H
@@ -32,13 +31,13 @@
 #include "bt.h"
 
 /*
-  Ardumower robot chassis
+ * Ardumower robot chassis
 */
 
 class Mower : public Robot
 {
   public:
-    Mower();  
+    Mower();
     virtual void setup(void);
     virtual void resetMotorFault();
     virtual int readSensor(char type);
@@ -46,8 +45,6 @@ class Mower : public Robot
     virtual void configureBluetooth(boolean quick);
 };
 
-
 extern Mower robot;
 
 #endif
-
