@@ -44,18 +44,11 @@
 #include <Wire.h>
 //#include <Servo.h>
 
-#ifdef __AVR__
-// Arduino Mega
 #include <EEPROM.h>
-#else
-// Arduino Due
-#include "due.h"
-#endif
 
 #include "config.h"
 
-// requires: Arduino Mega or Arduino Due
-// NOTE for Arduino Due:  use native USB port for programming and console!
+// requires: Arduino Mega
 
 void setup()
 {

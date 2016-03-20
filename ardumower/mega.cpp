@@ -38,7 +38,6 @@
 
 #include <Arduino.h>
 #include "mega.h"
-#include "due.h"
 
 // ------ pins---------------------------------------
 #define pinMotorEnable  37         // EN motors enable
@@ -79,32 +78,25 @@
 #define pinTilt 35                 // Tilt sensor (required for TC-G158 board)
 #define pinButton 51               // digital ON/OFF button
 #define pinBatteryVoltage A2       // battery voltage sensor
-#define pinBatterySwitch 4         // battery-OFF switch   
+#define pinBatterySwitch 4         // battery-OFF switch
 #define pinChargeVoltage A9        // charging voltage sensor
 #define pinChargeCurrent A8        // charge current sensor
 #define pinChargeRelay 50          // charge relay
 #define pinRemoteMow 12            // remote control mower motor
-#define pinRemoteSteer 11          // remote control steering 
+#define pinRemoteSteer 11          // remote control steering
 #define pinRemoteSpeed 10          // remote control speed
 #define pinRemoteSwitch 52         // remote control switch
 #define pinVoltageMeasurement A7   // test pin for your own voltage measurements
 
-#ifdef __AVR__
 #define pinOdometryLeft A12      // left odometry sensor
 #define pinOdometryLeft2 A13     // left odometry sensor (optional two-wire)
 #define pinOdometryRight A14     // right odometry sensor
 #define pinOdometryRight2 A15    // right odometry sensor (optional two-wire)
-#else
-#define pinOdometryLeft DAC0     // left odometry sensor
-#define pinOdometryLeft2 DAC1    // left odometry sensor (optional two-wire)
-#define pinOdometryRight CANRX   // right odometry sensor
-#define pinOdometryRight2 CANTX  // right odometry sensor (optional two-wire)
-#endif
 
 #define pinLawnFrontRecv 40        // lawn sensor front receive
-#define pinLawnFrontSend 41        // lawn sensor front sender 
+#define pinLawnFrontSend 41        // lawn sensor front sender
 #define pinLawnBackRecv 42         // lawn sensor back receive
-#define pinLawnBackSend 43         // lawn sensor back sender 
+#define pinLawnBackSend 43         // lawn sensor back sender
 #define pinUserSwitch1 46          // user-defined switch 1
 #define pinUserSwitch2 47          // user-defined switch 2
 #define pinUserSwitch3 48          // user-defined switch 3
@@ -248,7 +240,7 @@ Mower::Mower()
   userSwitch3 = 0;// user-defined switch 3 (default value)
   // ----- timer -----------------------------------------
   timerUse = 0;// use RTC and timer?
-  // ------ mower stats-------------------------------------------  
+  // ------ mower stats-------------------------------------------
   statsOverride = false;// if set to true mower stats are overwritten with the values below - be careful
   statsMowTimeMinutesTotal = 300;
   statsBatteryChargingCounterTotal = 11;
@@ -270,7 +262,7 @@ ISR(PCINT0_vect)
 
 // odometry signal change interrupt
 // mower motor speed sensor interrupt
-// NOTE: when choosing a higher perimeter sample rate (38 kHz) and using odometry interrupts, 
+// NOTE: when choosing a higher perimeter sample rate (38 kHz) and using odometry interrupts,
 // the Arduino Mega cannot handle all ADC interrupts anymore - the result will be a 'noisy'
 // perimeter filter output (mag value) which disappears when disabling odometry interrupts.
 // SOLUTION: allow odometry interrupt handler nesting (see odometry interrupt function)
@@ -292,14 +284,10 @@ ISR(PCINT2_vect, ISR_NOBLOCK)
 //void rpm_interrupt(){
 //}
 
-// WARNING: never use 'Serial' in the Ardumower code - use 'Console' instead
-// (required so we can use Arduino Due native port)
-
 void Mower::setup()
 {
   Wire.begin();
   Console.begin(BAUDRATE);
-  //while (!Console) ; // required if using Due native port
   Console.println("SETUP");
   rc.initSerial(PFOD_BAUDRATE);
 
@@ -397,22 +385,15 @@ void Mower::setup()
   // other
   pinMode(pinVoltageMeasurement, INPUT);
 
-  // PWM frequency setup  
+  // PWM frequency setup
   // For obstacle detection, motor torque should be detectable - torque can be computed by motor current.
   // To get consistent current values, PWM frequency should be 3.9 Khz
-  // http://wiki.ardumower.de/index.php?title=Motor_driver  
+  // http://wiki.ardumower.de/index.php?title=Motor_driver
   // http://sobisource.com/arduino-mega-pwm-pin-and-frequency-timer-control/
   // http://www.atmel.com/images/doc2549.pdf
-#ifdef __AVR__
   TCCR3B = (TCCR3B & 0xF8) | 0x02;  // set PWM frequency 3.9 Khz (pin2,3,5)
-#else
-  analogWrite(pinMotorMowPWM, 0); // sets PWMEnabled=true in Arduino library
-  pmc_enable_periph_clk(PWM_INTERFACE_ID);
-  PWMC_ConfigureClocks(3900 * PWM_MAX_DUTY_CYCLE, 0, VARIANT_MCK);// 3.9 Khz
-#endif
 
   // enable interrupts
-#ifdef __AVR__
   // R/C
   PCICR |= (1<<PCIE0);
   PCMSK0 |= (1<<PCINT4);
@@ -430,25 +411,10 @@ void Mower::setup()
   // mower motor speed sensor interrupt
   //attachInterrupt(5, rpm_interrupt, CHANGE);
   PCMSK2 |= (1<<PCINT19);
-#else
-  // Due interrupts
-  attachInterrupt(pinOdometryLeft, PCINT2_vect, CHANGE);
-  attachInterrupt(pinOdometryLeft2, PCINT2_vect, CHANGE);
-  attachInterrupt(pinOdometryRight, PCINT2_vect, CHANGE);
-  attachInterrupt(pinOdometryRight2, PCINT2_vect, CHANGE);
-
-  attachInterrupt(pinRemoteSpeed, PCINT0_vect, CHANGE);
-  attachInterrupt(pinRemoteSteer, PCINT0_vect, CHANGE);
-  attachInterrupt(pinRemoteMow, PCINT0_vect, CHANGE);
-  attachInterrupt(pinRemoteSwitch, PCINT0_vect, CHANGE);
-
-  //attachInterrupt(pinMotorMowRpm, rpm_interrupt, CHANGE);
-  attachInterrupt(pinMotorMowRpm, PCINT2_vect, CHANGE);
-#endif
 
   // ADC
   ADCMan.init();
-  ADCMan.setCapture(pinChargeCurrent, 1, true);//Aktivierung des LaddeStrom Pins beim ADC-Managers      
+  ADCMan.setCapture(pinChargeCurrent, 1, true);//Aktivierung des LaddeStrom Pins beim ADC-Managers
   ADCMan.setCapture(pinMotorMowSense, 1, true);
   ADCMan.setCapture(pinMotorLeftSense, 1, true);
   ADCMan.setCapture(pinMotorRightSense, 1, true);
@@ -545,15 +511,15 @@ int Mower::readSensor(char type)
     case SEN_DROP_LEFT: return(digitalRead(pinDropLeft)); break;// Dropsensor - Absturzsensor
 
 // sonar---------------------------------------------------------------------------------------------------
-    //case SEN_SONAR_CENTER: return(readURM37(pinSonarCenterTrigger, pinSonarCenterEcho)); break;  
+    //case SEN_SONAR_CENTER: return(readURM37(pinSonarCenterTrigger, pinSonarCenterEcho)); break;
     case SEN_SONAR_CENTER: return(readHCSR04(pinSonarCenterTrigger, pinSonarCenterEcho)); break;
     case SEN_SONAR_LEFT: return(readHCSR04(pinSonarLeftTrigger, pinSonarLeftEcho)); break;
     case SEN_SONAR_RIGHT: return(readHCSR04(pinSonarRightTrigger, pinSonarRightEcho)); break;
     // case SEN_LAWN_FRONT: return(measureLawnCapacity(pinLawnFrontSend, pinLawnFrontRecv)); break;
-    //case SEN_LAWN_BACK: return(measureLawnCapacity(pinLawnBackSend, pinLawnBackRecv)); break;    
+    //case SEN_LAWN_BACK: return(measureLawnCapacity(pinLawnBackSend, pinLawnBackRecv)); break;
 
 // imu-------------------------------------------------------------------------------------------------------
-    //case SEN_IMU: imuYaw=imu.ypr.yaw; imuPitch=imu.ypr.pitch; imuRoll=imu.ypr.roll; break;    
+    //case SEN_IMU: imuYaw=imu.ypr.yaw; imuPitch=imu.ypr.pitch; imuRoll=imu.ypr.roll; break;
 // rtc--------------------------------------------------------------------------------------------------------
     case SEN_RTC:
     //if (!readDS1307(datetime)) {
@@ -613,8 +579,8 @@ void Mower::setActuator(char type, int value)
     if (!setDS1307(datetime))
     {
       //Console.println("RTC comm error!");
-      //addErrorCounter(ERR_RTC_COMM); 
-      //setNextState(STATE_ERROR, 0);       
+      //addErrorCounter(ERR_RTC_COMM);
+      //setNextState(STATE_ERROR, 0);
     }
     break;
     case ACT_CHGRELAY:

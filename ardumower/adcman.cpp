@@ -22,9 +22,6 @@
  Private-use only! (you need to ask for a commercial-use)
  */
 
-#ifndef __AVR__
-#include <chip.h>
-#endif
 #include <Arduino.h>
 #include <limits.h>
 #include "adcman.h"
@@ -33,11 +30,7 @@
 #define ADDR 500
 #define MAGIC 1
 
-#ifdef __AVR__
 #define CHANNELS 16
-#else
-#define CHANNELS 12
-#endif
 
 #define NO_CHANNEL 255
 
@@ -80,24 +73,11 @@ ADCManager::ADCManager()
 
 void ADCManager::init()
 {
-#ifndef __AVR__
-  // free running ADC mode, f = ( adclock / 21 cycles per conversion )
-  // example f = 19231  Hz:  using ADCCLK=405797 will result in a adcclock=403846 (due to adc_init internal conversion)
-  uint32_t adcclk;
-  switch (sampleRate)
-  {
-    case SRATE_38462: adcclk = 811595; break;
-    case SRATE_19231: adcclk = 405797; break;
-    case SRATE_9615 : adcclk = 202898; break;
-  }
-  adc_init(ADC, SystemCoreClock, adcclk, ADC_STARTUP_FAST); // startup=768 clocks
-  adc_configure_timing(ADC, 0, ADC_SETTLING_TIME_3, 1);// tracking=0, settling=17, transfer=1
-  ADC->ADC_MR |= ADC_MR_FREERUN_ON;// free running
-  NVIC_EnableIRQ(ADC_IRQn);
-#endif
   delay(500); // wait for ADCRef to settle (stable ADCRef required for later calibration)
   if (loadCalib())
+  {
     printCalib();
+  }
 }
 
 void ADCManager::setCapture(byte pin, byte samplecount,
@@ -196,7 +176,6 @@ void ADCManager::startADC(int sampleCount)
 {
 //  Console.print("startADC ch");
 //  Console.println(channel);
-#ifdef __AVR__
   // http://www.atmel.com/images/doc2549.pdf
   /*  REFS0 : VCC use as a ref, IR_AUDIO : channel selection, ADEN : ADC Enable, ADSC : ADC Start, ADATE : ADC Auto Trigger Enable, ADIE : ADC Interrupt Enable,  ADPS : ADC Prescaler  */
   // free running ADC mode, f = ( 16MHz / prescaler ) / 13 cycles per conversion
@@ -235,11 +214,6 @@ void ADCManager::startADC(int sampleCount)
     DIDR2 |= (1 << (channel - 8));
   }
   //sei();
-#else
-  adc_enable_channel(ADC, (adc_channel_num_t)g_APinDescription[A0+channel].ulADCChannelNumber );
-  adc_enable_interrupt(ADC, ADC_IER_DRDY);
-  adc_start(ADC);
-#endif
 }
 
 void ADCManager::startCapture(int sampleCount)
@@ -251,20 +225,10 @@ void ADCManager::startCapture(int sampleCount)
   startADC(sampleCount);
 }
 
-#ifdef __AVR__  // Arduino Mega
 // free running ADC fills capture buffer
 ISR(ADC_vect)
 {
   volatile int16_t value = ADC;
-#else  // Arduino Due (ARM)
-  void ADC_Handler(void)
-  {
-    if ((adc_get_status(ADC) & ADC_ISR_DRDY) != ADC_ISR_DRDY)
-    {
-      return;
-    }
-    volatile int16_t value = adc_get_latest_value(ADC) >> 2;
-#endif
   if (!busy)
   {
     return;
@@ -296,12 +260,7 @@ void ADCManager::stopCapture()
   //Console.print("stopping capture ch");
   //Console.println(channel);
   position = 0;
-#ifdef __AVR__
   ADCSRA &= ~_BV(ADEN);
-#else
-  adc_disable_channel(ADC, (adc_channel_num_t)g_APinDescription[A0 + channel].ulADCChannelNumber );
-  adc_disable_interrupt(ADC, 0xFFFFFFFF); // Disable all ADC interrupts.
-#endif
 }
 
 void ADCManager::run()
@@ -466,7 +425,5 @@ boolean ADCManager::loadCalib()
 
 void ADCManager::saveCalib()
 {
-#ifdef __AVR__
   loadSaveCalib(false);
-#endif
 }

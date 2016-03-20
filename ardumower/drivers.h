@@ -28,18 +28,10 @@
 #define DRIVERS_H
 
 #include <Arduino.h>
-#ifdef __AVR__
-// Arduino Mega
 #include <EEPROM.h>
+
 #define Console Serial
 #define Bluetooth Serial2
-#else
-// Arduino Due
-#include "due.h"
-// Due has two serial ports: Native (SerialUSB) and Programming (Serial) - we want to use 'SerialUSB' for 'Console'
-#define Console SerialUSB
-#define Bluetooth Serial2
-#endif
 
 // ultrasonic sensor max echo time (WARNING: do not set too high, it consumes CPU time!)
 #define MAX_ECHO_TIME 3000

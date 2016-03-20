@@ -35,11 +35,7 @@ void StreamPrint_progmem(Print &out, PGM_P format, ...)
   // program memory version of printf - copy of format string and result share a buffer
   // so as to avoid too much memory use
   char formatString[128], *ptr;
-#ifdef __AVR__
   strncpy_P(formatString, format, sizeof(formatString)); // copy in from program mem
-#else
-  strncpy(formatString, format, sizeof(formatString)); // copy in from program mem
-#endif
   // null terminate - leave char since we might need it in worst case for result's \0
   formatString[sizeof(formatString) - 2] = '\0';
   ptr = &formatString[strlen(formatString) + 1];// our result buffer...

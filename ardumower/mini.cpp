@@ -36,7 +36,6 @@
 
 #include <Arduino.h>
 #include "mini.h"
-#include "due.h"
 
 // ------ pins---------------------------------------
 #define pinMotorEnable  37         // EN motors enable
@@ -87,17 +86,10 @@
 //#define pinMuxS0 28              // mux S0 (only TC-G158 board)
 //#define pinMuxS1 26              // mux S1 (only TC-G158 board)
 //#define pinMuxZ A7                 // mux Z (only TC-G158 board)
-#ifdef __AVR__
 #define pinOdometryLeft A12      // left odometry sensor
 #define pinOdometryLeft2 A13     // left odometry sensor (optional two-wire)
 #define pinOdometryRight A14     // right odometry sensor
 #define pinOdometryRight2 A15    // right odometry sensor (optional two-wire)
-#else
-#define pinOdometryLeft DAC0     // left odometry sensor
-#define pinOdometryLeft2 DAC1    // left odometry sensor (optional two-wire)
-#define pinOdometryRight CANTX   // right odometry sensor
-#define pinOdometryRight2 CANRX  // right odometry sensor (optional two-wire)
-#endif
 #define pinLawnFrontRecv 40        // lawn sensor front receive
 #define pinLawnFrontSend 41        // lawn sensor front sender
 #define pinLawnBackRecv 42         // lawn sensor back receive
@@ -259,10 +251,8 @@ void Mini::setup()
   rc.initSerial(PFOD_BAUDRATE);
 
   // http://sobisource.com/arduino-mega-pwm-pin-and-frequency-timer-control/
-#ifdef __AVR__
   // might be better to use default PWM freq (as perimeter v2 otherwise uses the same freq band)
   //  TCCR3B = (TCCR3B & 0xF8) | 0x02;    // set PWM frequency 3.9 Khz (pin2,3,5)
-#endif
 
   // i2c -- turn off internal pull-ups (and use external pull-ups)
   //digitalWrite(SDA, 0);
@@ -356,7 +346,6 @@ void Mini::setup()
   pinMode(pinUserSwitch3, OUTPUT);
 
   // enable interrupts
-#ifdef __AVR__
   // R/C
   PCICR |= (1<<PCIE0);
   PCMSK0 |= (1<<PCINT4);
@@ -373,20 +362,6 @@ void Mini::setup()
 
   // mower motor speed sensor interrupt
   attachInterrupt(5, rpm_interrupt, CHANGE);
-#else
-  // Due interrupts
-  attachInterrupt(pinOdometryLeft, PCINT2_vect, CHANGE);
-  attachInterrupt(pinOdometryLeft2, PCINT2_vect, CHANGE);
-  attachInterrupt(pinOdometryRight, PCINT2_vect, CHANGE);
-  attachInterrupt(pinOdometryRight2, PCINT2_vect, CHANGE);
-
-  attachInterrupt(pinRemoteSpeed, PCINT0_vect, CHANGE);
-  attachInterrupt(pinRemoteSteer, PCINT0_vect, CHANGE);
-  attachInterrupt(pinRemoteMow, PCINT0_vect, CHANGE);
-  attachInterrupt(pinRemoteSwitch, PCINT0_vect, CHANGE);
-
-  attachInterrupt(pinMotorMowRpm, rpm_interrupt, CHANGE);
-#endif
 
   // ADC
   ADCMan.init();

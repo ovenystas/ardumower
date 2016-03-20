@@ -28,13 +28,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 
-#ifdef __AVR__
-// Arduino Mega
 #include <EEPROM.h>
-#else
-// Arduino Due
-#include "due.h"
-#endif
 
 //#include <Servo.h>  // for RC brushless controller
 #include "drivers.h"
