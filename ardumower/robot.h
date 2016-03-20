@@ -44,6 +44,7 @@
 #include "perimeter.h"
 #include "gps.h"
 #include "pfod.h"
+#include "button.h"
 
 //#include "QueueList.h"
 //#include <limits.h>
@@ -418,6 +419,7 @@ class Robot
 
     // ----- other -----------------------------------------
     char buttonUse;       // has digital ON/OFF button?
+    Button button;
 
     // ----- user-defined switch ---------------------------
     char userSwitch1;       // user-defined switch 1 (default value)
@@ -469,7 +471,7 @@ class Robot
     int loopsPerSec;  // main loops per second
     float loopsTa;   // main loop-time factor (milliseconds)
     int loopsPerSecCounter;
-    byte buttonCounter;
+    //byte buttonCounter;
     byte ledState;
     byte consoleMode;
     unsigned long nextTimeButtonCheck;

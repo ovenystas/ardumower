@@ -259,6 +259,7 @@ Mower::Mower()
 
   // ----- other -----------------------------------------
   buttonUse = 1;       // has digital ON/OFF button?
+  button.setPin(pinButton);
 
   // ----- user-defined switch ---------------------------
   userSwitch1 = 0;       // user-defined switch 1 (default value)

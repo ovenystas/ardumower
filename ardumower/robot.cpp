@@ -176,7 +176,7 @@ Robot::Robot()
   loopsPerSec = 0;
   loopsTa = 5.0;
   loopsPerSecCounter = 0;
-  buttonCounter = 0;
+  //buttonCounter = 0;
   ledState = 0;
 
   consoleMode = CONSOLE_SENSOR_COUNTERS;
@@ -1991,8 +1991,8 @@ void Robot::checkButton()
   }
 
   nextTimeButtonCheck = millis() + 50;
-  boolean buttonPressed = (readSensor(SEN_BUTTON) == LOW);
-  if ((!buttonPressed && buttonCounter > 0) ||
+  boolean buttonPressed = button.isPressed();
+  if ((!buttonPressed && button.getCounter() > 0) ||
       (buttonPressed && millis() >= nextTimeButton))
   {
     nextTimeButton = millis() + 1000;
@@ -2001,7 +2001,7 @@ void Robot::checkButton()
       Console.println(F("buttonPressed"));
       // ON/OFF button pressed
       beep(1);
-      buttonCounter++;
+      button.incCounter();
       resetIdleTime();
     }
     else
@@ -2012,25 +2012,25 @@ void Robot::checkButton()
       {
         setNextState(STATE_OFF, 0);
       }
-      else if (buttonCounter == 2)
+      else if (button.getCounter() == 2)
       {
         motorMowEnable = true;
         mowPatternCurr = MOW_BIDIR;
         setNextState(STATE_FORWARD, 0);
       }
-      else if (buttonCounter == 3)
+      else if (button.getCounter() == 3)
       {
         // start remote control mode
         setNextState(STATE_REMOTE, 0);
       }
-      else if (buttonCounter == 4)
+      else if (button.getCounter() == 4)
       {
         // start normal without perimeter
         //motorMowEnable = false;
         perimeterUse = false;
         setNextState(STATE_FORWARD, 0);
       }
-      else if (buttonCounter == 7)
+      else if (button.getCounter() == 7)
       {
         // start normal with mowing in lanes
         motorMowEnable = true;
@@ -2038,17 +2038,17 @@ void Robot::checkButton()
         mowPatternCurr = MOW_LANES;
         setNextState(STATE_FORWARD, 0);
       }
-      else if (buttonCounter == 6)
+      else if (button.getCounter() == 6)
       {
         // track perimeter
         setNextState(STATE_PERI_TRACK, 0);
       }
-      else if (buttonCounter == 5)
+      else if (button.getCounter() == 5)
       {
         // drive home
         setNextState(STATE_PERI_FIND, 0);
       }
-      else if (buttonCounter == 1)
+      else if (button.getCounter() == 1)
       {
         /*if ((perimeterUse) && (!perimeter.isInside())){
          Console.println("start inside perimeter!");
@@ -2063,7 +2063,7 @@ void Robot::checkButton()
         //}
       }
 
-      buttonCounter = 0;
+      button.resetCounter();
     }
   }
 }
