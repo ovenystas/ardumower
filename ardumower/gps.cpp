@@ -110,7 +110,8 @@ bool GPS::encode(char c)
 }
 
 #ifndef _GPS_NO_STATS
-void GPS::stats(unsigned long *chars, unsigned short *sentences,
+void GPS::stats(unsigned long *chars,
+                unsigned short *sentences,
                 unsigned short *failed_cs)
 {
   if (chars)
@@ -427,7 +428,8 @@ void GPS::get_position(long *latitude, long *longitude, unsigned long *fix_age)
 }
 
 // date as ddmmyy, time as hhmmsscc, and age in milliseconds
-void GPS::get_datetime(unsigned long *date, unsigned long *time,
+void GPS::get_datetime(unsigned long *date,
+                       unsigned long *time,
                        unsigned long *age)
 {
   if (date)
@@ -445,7 +447,8 @@ void GPS::get_datetime(unsigned long *date, unsigned long *time,
   }
 }
 
-void GPS::f_get_position(float *latitude, float *longitude,
+void GPS::f_get_position(float *latitude,
+                         float *longitude,
                          unsigned long *fix_age)
 {
   long lat, lon;

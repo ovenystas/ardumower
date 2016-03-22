@@ -20,7 +20,6 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
  Private-use only! (you need to ask for a commercial-use)
-
  */
 
 // drivers (motor driver, sensor drivers, etc.)
@@ -46,42 +45,37 @@
 
 extern char *dayOfWeek[];
 
-struct timehm_t
+typedef struct timehm_t
 {
-    byte hour;
-    byte minute;
-};
+  byte hour;
+  byte minute;
+} timehm_t;
 
-typedef struct timehm_t timehm_t;
-
-struct date_t
+typedef struct date_t
 {
-    byte dayOfWeek;
-    byte day;
-    byte month;
-    short year;
-};
+  byte dayOfWeek;
+  byte day;
+  byte month;
+  short year;
+} date_t;
 
-typedef struct date_t date_t;
-
-struct datetime_t
+typedef struct datetime_t
 {
-    timehm_t time;
-    date_t date;
-};
+  timehm_t time;
+  date_t date;
+} datetime_t;
 
-typedef struct datetime_t datetime_t;
 
 // ---------- timers --------------------------------------
-struct ttimer_t
-{
-    boolean active;
-    timehm_t startTime;
-    timehm_t stopTime;
-    byte daysOfWeek;
-};
 
-typedef struct ttimer_t ttimer_t;
+typedef struct ttimer_t
+{
+  boolean active;
+  timehm_t startTime;
+  timehm_t stopTime;
+  byte daysOfWeek;
+} ttimer_t;
+
 
 // ---- other ----------------------------------
 
@@ -90,6 +84,7 @@ template<typename T> int sign(T val)
 {
   return (T(0) < val) - (val < T(0));
 }
+
 
 // ---------- EEPROM helpers ----------------------------------
 
@@ -133,15 +128,16 @@ template<class T> int eereadwrite(boolean readflag, int &ee, T& value)
   return i;
 }
 
+
 // ---------- driver functions ----------------------------------
 
-int freeRam();
+int freeRam(void);
 
 // print helpers
-void StreamPrint_progmem(Print &out, PGM_P format,...);
-#define Serialprint(format, ...) StreamPrint_progmem(Serial,PSTR(format),##__VA_ARGS__)
-#define Streamprint(stream,format, ...) StreamPrint_progmem(stream,PSTR(format),##__VA_ARGS__)
-String verToString(int v);
+void StreamPrint_progmem(Print &out, PGM_P format, ...);
+#define Serialprint(format, ...) StreamPrint_progmem(Serial, PSTR(format), ##__VA_ARGS__)
+#define Streamprint(stream, format, ...) StreamPrint_progmem(stream, PSTR(format), ##__VA_ARGS__)
+String verToString(const int v);
 
 // time helpers
 void minutes2time(const int minutes, timehm_t &time);
@@ -149,12 +145,10 @@ int time2minutes(const timehm_t time);
 String time2str(const timehm_t time);
 String date2str(const date_t date);
 
-String versionToStr(byte v[]);
-
 // I2C helpers
-void I2CwriteTo(uint8_t device, uint8_t address, uint8_t val);
-int I2CreadFrom(uint8_t device, uint8_t address, uint8_t num, uint8_t buff[],
-                int retryCount = 0);
+void I2CwriteTo(const uint8_t device, const uint8_t address, const uint8_t val);
+int I2CreadFrom(const uint8_t device, const uint8_t address, const uint8_t num,
+                uint8_t buff[], const int retryCount = 0);
 
 // rescale to -PI..+PI
 double scalePI(const double v);
@@ -178,9 +172,9 @@ int measureLawnCapacity(const uint8_t pinSend, const uint8_t pinReceive);
 
 // real time drivers
 boolean readDS1307(datetime_t &dt);
-boolean setDS1307(datetime_t &dt);
+boolean setDS1307(const datetime_t &dt);
 
 // Returns the day of week (0=Sunday, 6=Saturday) for a given date
-int getDayOfWeek(int month, int day, int year, int CalendarSystem);
+int getDayOfWeek(int month, const int day, int year, const int CalendarSystem);
 
 #endif

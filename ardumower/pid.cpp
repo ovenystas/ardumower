@@ -24,25 +24,14 @@
  How to find out P,I,D:
  1. Increase P until system starts to oscillate
  2. Set I =0.6 * P and D = 0.125 * P
-
- */
+*/
 
 #include "pid.h"
-
-PID::PID()
-{
-}
-
-PID::PID(float Kp, float Ki, float Kd)
-{
-  this->Kp = Kp;
-  this->Ki = Ki;
-  this->Kd = Kd;
-}
 
 float PID::compute()
 {
   unsigned long now = micros();
+
   Ta = ((now - lastControlTime) / 1000000.0);
   lastControlTime = now;
   if (Ta > 1.0)
@@ -85,17 +74,6 @@ float PID::compute()
 }
 
 // ---------------------------------
-
-VelocityPID::VelocityPID()
-{
-}
-
-VelocityPID::VelocityPID(float Kp, float Ki, float Kd)
-{
-  this->Kp = Kp;
-  this->Ki = Ki;
-  this->Kd = Kd;
-}
 
 float VelocityPID::compute()
 {

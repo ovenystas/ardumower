@@ -4,7 +4,7 @@
  Copyright (c) 2013-2014 by Sven Gennat
 
  Private-use only! (you need to ask for a commercial-use)
- 
+
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
@@ -91,9 +91,11 @@ void Perimeter::setPins(byte idx0Pin, byte idx1Pin)
 
   // use max. 255 samples and multiple of signalsize
   int adcSampleCount = sizeof sigcode_norm * subSample;
-  ADCMan.setCapture(idx0Pin, ((int) 255 / adcSampleCount) * adcSampleCount,
+  ADCMan.setCapture(idx0Pin,
+                    ((int)255 / adcSampleCount) * adcSampleCount,
                     true);
-  ADCMan.setCapture(idx1Pin, ((int) 255 / adcSampleCount) * adcSampleCount,
+  ADCMan.setCapture(idx1Pin,
+                    ((int)255 / adcSampleCount) * adcSampleCount,
                     true);
   // ADCMan.setCapture(idx0Pin, adcSampleCount*2, true);
   // ADCMan.setCapture(idx1Pin, adcSampleCount*2, true);
@@ -169,7 +171,7 @@ void Perimeter::matchedFilter(byte idx)
     }
     signalAvg[idx] = ((double) signalAvg[idx]) / ((double) (sampleCount));
   }
-  // magnitude for tracking (fast but inaccurate)    
+  // magnitude for tracking (fast but inaccurate)
   int16_t sigcode_size = sizeof sigcode_norm;
   int8_t *sigcode = sigcode_norm;
   if (useDifferentialPerimeterSignal)
@@ -248,9 +250,9 @@ boolean Perimeter::signalTimedOut(byte idx)
 // digital matched filter (cross correlation)
 // http://en.wikipedia.org/wiki/Cross-correlation
 // H[] holds the double sided filter coeffs, M = H.length (number of points in FIR)
-// subsample is the number of times for each filter coeff to repeat 
+// subsample is the number of times for each filter coeff to repeat
 // ip[] holds input data (length > nPts + M )
-// nPts is the length of the required output data 
+// nPts is the length of the required output data
 
 int16_t Perimeter::corrFilter(int8_t *H, int8_t subsample, int16_t M,
                               int8_t *ip, int16_t nPts, float &quality)
@@ -301,7 +303,7 @@ int16_t Perimeter::corrFilter(int8_t *H, int8_t subsample, int16_t M,
   sumMin = ((float) sumMin) / ((float) (Hsum * 127)) * 4095.0;
   sumMax = ((float) sumMax) / ((float) (Hsum * 127)) * 4095.0;
 
-  // compute ratio min/max 
+  // compute ratio min/max
   if (sumMax > -sumMin)
   {
     quality = ((float) sumMax) / ((float) -sumMin);

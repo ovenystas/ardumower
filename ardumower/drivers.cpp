@@ -20,49 +20,63 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
  Private-use only! (you need to ask for a commercial-use)
- */
+*/
 
 #include "drivers.h"
-//#include "ardumower.h"
 #include <Wire.h>
 
 char *dayOfWeek[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 
-// ---- print helpers ------------------------------------------------------------
+// ---- print helpers ----------------------------------------------------------
 
 void StreamPrint_progmem(Print &out, PGM_P format, ...)
 {
-  // program memory version of printf - copy of format string and result share a buffer
-  // so as to avoid too much memory use
-  char formatString[128], *ptr;
+  // program memory version of printf - copy of format string and result share a
+  // buffer so as to avoid too much memory use
+  char formatString[128];
+  char *ptr;
+
   strncpy_P(formatString, format, sizeof(formatString)); // copy in from program mem
+
   // null terminate - leave char since we might need it in worst case for result's \0
   formatString[sizeof(formatString) - 2] = '\0';
   ptr = &formatString[strlen(formatString) + 1];// our result buffer...
+
   va_list args;
   va_start (args, format);
-  vsnprintf(ptr, sizeof(formatString) - 1 - strlen(formatString),
+  vsnprintf(ptr,
+            sizeof(formatString) - 1 - strlen(formatString),
             formatString, args );
   va_end (args);
+
   formatString[sizeof(formatString) - 1] = '\0';
   out.print(ptr);
 }
 
+
 String verToString(const int v)
 {
   char buf[20] = { 0 };
+
   sprintf(buf,
           "%d.%d.%d.%d",
-          v >> 12, (v >> 8) & 0xF, (v >> 4) & 0xF, v & 0xF);
+          (v >> 12),
+          (v >> 8) & 0xF,
+          (v >> 4) & 0xF,
+          (v & 0xF));
+
   return String(buf);
 }
 
-int freeRam()
+
+int freeRam(void)
 {
   extern int __heap_start, *__brkval;
   int v;
+
   return (int)&v - (__brkval == 0 ? (int)&__heap_start : (int)__brkval);
 }
+
 
 // rescale to -PI..+PI
 double scalePI(const double v)
@@ -76,6 +90,7 @@ double scalePI(const double v)
   {
     d -= 2 * PI;
   }
+
   if (d >= PI)
   {
     return (-2 * PI + d);
@@ -90,6 +105,7 @@ double scalePI(const double v)
   }
 }
 
+
 // computes minimum distance between x radiant (current-value) and w radiant (set-value)
 double distancePI(const double x, const double w)
 {
@@ -99,7 +115,9 @@ double distancePI(const double x, const double w)
   // w=10  degree, x=350 degree =>  20 degree
   // w=0   degree, x=190 degree => 170 degree
   // w=190 degree, x=0   degree => -170 degree
+
   double d = scalePI(w - x);
+
   if (d < -PI)
   {
     d = d + 2 * PI;
@@ -108,19 +126,23 @@ double distancePI(const double x, const double w)
   {
     d = d - 2 * PI;
   }
+
   return d;
 }
+
 
 int time2minutes(const timehm_t time)
 {
   return (time.hour * 60 + time.minute);
 }
 
+
 void minutes2time(const int minutes, timehm_t &time)
 {
   time.hour = minutes / 60;
   time.minute = minutes % 60;
 }
+
 
 String time2str(const timehm_t time)
 {
@@ -129,8 +151,10 @@ String time2str(const timehm_t time)
   s += ":";
   s += (time.minute / 10);
   s += (time.minute % 10);
+
   return s;
 }
+
 
 String date2str(const date_t date)
 {
@@ -143,11 +167,13 @@ String date2str(const date_t date)
   s += date.month % 10;
   s += ".";
   s += date.year;
+
   return s;
 }
 
+
 // ---- I2C helpers --------------------------------------------------------------
-void I2CwriteTo(uint8_t device, uint8_t address, uint8_t val)
+void I2CwriteTo(const uint8_t device, const uint8_t address, const uint8_t val)
 {
   Wire.beginTransmission(device);
   Wire.write(address);
@@ -155,7 +181,9 @@ void I2CwriteTo(uint8_t device, uint8_t address, uint8_t val)
   Wire.endTransmission();
 }
 
-void I2CwriteTo(uint8_t device, uint8_t address, int num, uint8_t buff[])
+
+void I2CwriteTo(const uint8_t device, const uint8_t address,
+                const int num, const uint8_t buff[])
 {
   Wire.beginTransmission(device);
   Wire.write(address);
@@ -166,10 +194,12 @@ void I2CwriteTo(uint8_t device, uint8_t address, int num, uint8_t buff[])
   Wire.endTransmission();
 }
 
-int I2CreadFrom(uint8_t device, uint8_t address, uint8_t num, uint8_t buff[],
-                int retryCount)
+
+int I2CreadFrom(const uint8_t device, const uint8_t address,
+                const uint8_t num, uint8_t buff[], const int retryCount)
 {
   int i = 0;
+
   for (int j = 0; j < retryCount + 1; j++)
   {
     i = 0;
@@ -177,11 +207,11 @@ int I2CreadFrom(uint8_t device, uint8_t address, uint8_t num, uint8_t buff[],
     Wire.write(address);
     Wire.endTransmission();
 
-    Wire.requestFrom(device, num);    // request 6 bytes from device
+    Wire.requestFrom(device, num); // request 6 bytes from device
 
-    while (Wire.available())    //device may send less than requested (abnormal)
+    while (Wire.available())       // device may send less than requested (abnormal)
     {
-      buff[i] = Wire.read();    // receive a byte
+      buff[i] = Wire.read();       // receive a byte
       i++;
     }
     if (num == i)
@@ -193,8 +223,10 @@ int I2CreadFrom(uint8_t device, uint8_t address, uint8_t num, uint8_t buff[],
       delay(3);
     }
   }
+
   return i;
 }
+
 
 // L298N motor driver
 // IN2/C(10)/PinPWM   IN1/D(12)/PinDir
@@ -202,70 +234,21 @@ int I2CreadFrom(uint8_t device, uint8_t address, uint8_t num, uint8_t buff[],
 // L                  H     Reverse
 void setL298N(const uint8_t pinDir, const uint8_t pinPWM, const int speed)
 {
+  bool dir;
+
   if (speed < 0)
   {
-    digitalWrite(pinDir, HIGH);
+    dir = HIGH;
   }
   else
   {
-    digitalWrite(pinDir, LOW);
+    dir = LOW;
   }
+
+  digitalWrite(pinDir, HIGH);
   analogWrite(pinPWM, (byte)speed);
 }
 
-// DFRobot Romeo All in one V1.1 motor driver
-// D5/D6 PinPWM       D4/D7 PinDir
-// H                  L     Forward
-// H                  H     Reverse
-void setRomeoMotor(const uint8_t pinDir, const uint8_t pinPWM, const int speed)
-{
-  if (speed < 0)
-  {
-    digitalWrite(pinDir, HIGH);
-  }
-  else
-  {
-    digitalWrite(pinDir, LOW);
-  }
-  analogWrite(pinPWM, abs(speed));
-}
-
-// L9958 motor driver
-// PinPWM             PinDir
-// H                  H     Forward
-// H                  L     Reverse
-void setL9958(const uint8_t pinDir, const uint8_t pinPWM, const int speed)
-{
-  if (speed > 0)
-  {
-    digitalWrite(pinDir, HIGH);
-  }
-  else
-  {
-    digitalWrite(pinDir, LOW);
-  }
-  analogWrite(pinPWM, abs(speed));
-}
-
-// MC33926 motor driver
-// Check http://forum.pololu.com/viewtopic.php?f=15&t=5272#p25031 for explanations.
-//(8-bit PWM=255, 10-bit PWM=1023)
-// IN1 PinPWM         IN2 PinDir
-// PWM                L     Forward
-// nPWM               H     Reverse
-void setMC33926(const uint8_t pinDir, const uint8_t pinPWM, const int speed)
-{
-  if (speed < 0)
-  {
-    digitalWrite(pinDir, HIGH);
-    analogWrite(pinPWM, 255 - ((byte)abs(speed)));
-  }
-  else
-  {
-    digitalWrite(pinDir, LOW);
-    analogWrite(pinPWM, ((byte)speed));
-  }
-}
 
 // ---- sensor drivers --------------------------------------------------------------
 
@@ -273,13 +256,14 @@ void setMC33926(const uint8_t pinDir, const uint8_t pinPWM, const int speed)
 unsigned int readHCSR04(const uint8_t triggerPin, const uint8_t echoPin)
 {
   // TODO: Change from digitalWrite to raw port write to make it more accurate.
-  unsigned int uS;
   digitalWrite(triggerPin, LOW);
   delayMicroseconds(2);
   digitalWrite(triggerPin, HIGH);
   delayMicroseconds(10);
   digitalWrite(triggerPin, LOW);
-  uS = pulseIn(echoPin, HIGH, MAX_ECHO_TIME + 1000);
+
+  unsigned int uS = pulseIn(echoPin, HIGH, MAX_ECHO_TIME + 1000);
+
   if (uS > MAX_ECHO_TIME)
   {
     uS = NO_ECHO;
@@ -288,25 +272,30 @@ unsigned int readHCSR04(const uint8_t triggerPin, const uint8_t echoPin)
   {
     uS = NO_ECHO;
   }
+
   return uS;
 }
+
 
 // URM-37 ultrasonic sensor driver
 unsigned int readURM37(const uint8_t triggerPin, const uint8_t echoPin)
 {
-  unsigned int uS;
   digitalWrite(triggerPin, LOW);
   delayMicroseconds(2);
   digitalWrite(triggerPin, HIGH);
   delayMicroseconds(10);
   digitalWrite(triggerPin, LOW);
-  uS = pulseIn(echoPin, LOW, MAX_ECHO_TIME + 1000);
+
+  unsigned int uS = pulseIn(echoPin, LOW, MAX_ECHO_TIME + 1000);
+
   if (uS > MAX_ECHO_TIME)
   {
     uS = NO_ECHO;
   }
+
   return uS;
 }
+
 
 // DS1307 real time driver
 boolean readDS1307(datetime_t &dt)
@@ -318,9 +307,13 @@ boolean readDS1307(datetime_t &dt)
     //addErrorCounter(ERR_RTC_COMM);
     return false;
   }
-  if (((buf[0] >> 7) != 0) || ((buf[1] >> 7) != 0) || ((buf[2] >> 7) != 0)
-      || ((buf[3] >> 3) != 0) || ((buf[4] >> 6) != 0) || ((buf[5] >> 5) != 0)
-      || ((buf[7] & B01101100) != 0))
+  if ((buf[0] >> 7 != 0) ||
+      (buf[1] >> 7 != 0) ||
+      (buf[2] >> 7 != 0) ||
+      (buf[3] >> 3 != 0) ||
+      (buf[4] >> 6 != 0) ||
+      (buf[5] >> 5 != 0) ||
+      (buf[7] & B01101100 != 0))
   {
     Console.println("DS1307 data1 error");
     //addErrorCounter(ERR_RTC_DATA);
@@ -328,14 +321,19 @@ boolean readDS1307(datetime_t &dt)
   }
   datetime_t r;
   r.time.minute = 10 * ((buf[1] >> 4) & B00000111) + (buf[1] & B00001111);
-  r.time.hour = 10 * ((buf[2] >> 4) & B00000111) + (buf[2] & B00001111);
+  r.time.hour =   10 * ((buf[2] >> 4) & B00000111) + (buf[2] & B00001111);
   r.date.dayOfWeek = (buf[3] & B00000111);
-  r.date.day = 10 * ((buf[4] >> 4) & B00000011) + (buf[4] & B00001111);
+  r.date.day =   10 * ((buf[4] >> 4) & B00000011) + (buf[4] & B00001111);
   r.date.month = 10 * ((buf[5] >> 4) & B00000001) + (buf[5] & B00001111);
-  r.date.year = 10 * ((buf[6] >> 4) & B00001111) + (buf[6] & B00001111);
-  if ((r.time.minute > 59) || (r.time.hour > 23) || (r.date.dayOfWeek > 6)
-      || (r.date.month > 12) || (r.date.day > 31) || (r.date.day < 1)
-      || (r.date.month < 1) || (r.date.year > 99))
+  r.date.year =  10 * ((buf[6] >> 4) & B00001111) + (buf[6] & B00001111);
+  if ((r.time.minute > 59) ||
+      (r.time.hour > 23) ||
+      (r.date.dayOfWeek > 6) ||
+      (r.date.month > 12) ||
+      (r.date.day > 31) ||
+      (r.date.day < 1) ||
+      (r.date.month < 1) ||
+      (r.date.year > 99))
   {
     Console.println("DS1307 data2 error");
     //addErrorCounter(ERR_RTC_DATA);
@@ -343,10 +341,12 @@ boolean readDS1307(datetime_t &dt)
   }
   r.date.year += 2000;
   dt = r;
+
   return true;
 }
 
-boolean setDS1307(datetime_t &dt)
+
+boolean setDS1307(const datetime_t &dt)
 {
   byte buf[7];
   if (I2CreadFrom(DS1307_ADDRESS, 0x00, 7, buf, 3) != 7)
@@ -363,26 +363,34 @@ boolean setDS1307(datetime_t &dt)
   buf[5] = ((dt.date.month / 10) << 4) | (dt.date.month % 10);
   buf[6] = ((dt.date.year % 100 / 10) << 4) | (dt.date.year % 10);
   I2CwriteTo(DS1307_ADDRESS, 0x00, 7, buf);
+
   return true;
 }
+
 
 // measure lawn sensor capacity
 int measureLawnCapacity(const uint8_t pinSend, const uint8_t pinReceive)
 {
   int t = 0;
+
   digitalWrite(pinSend, HIGH);
+
   while (digitalRead(pinReceive) == LOW)
   {
     t++;
   }
+
   digitalWrite(pinSend, LOW);
   //t = pulseIn(pinReceive, HIGH);
   //Console.println(t);
+
   return t;
 }
 
+
 // Returns the day of week (0=Sunday, 6=Saturday) for a given date
-int getDayOfWeek(int month, int day, int year, int CalendarSystem)
+int getDayOfWeek(int month, const int day, int year,
+                 const int CalendarSystem)
 {
   // CalendarSystem = 1 for Gregorian Calendar, 0 for Julian Calendar
   if (month < 3)
@@ -390,6 +398,7 @@ int getDayOfWeek(int month, int day, int year, int CalendarSystem)
     month += 12;
     year--;
   }
-  return (day + (2 * month) + int(6 * (month + 1) / 10) + year + int(year / 4)
-      - int(year / 100) + int(year / 400) + CalendarSystem) % 7;
+  return ((day + (2 * month) + int(6 * (month + 1) / 10) +
+           year + int(year / 4) - int(year / 100) + int(year / 400) +
+           CalendarSystem) % 7);
 }

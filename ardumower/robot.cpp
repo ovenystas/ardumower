@@ -710,7 +710,8 @@ void Robot::checkErrorCounter()
 {
   if (millis() >= nextTimeErrorCounterReset)
   {
-    // reset all temporary error counters after 30 seconds (maximum error counters still continue to count)
+    // reset all temporary error counters after 30 seconds
+    // (maximum error counters still continue to count)
     for (int i = 0; i < ERR_ENUM_COUNT; i++)
     {
       errorCounter[i] = 0;
@@ -730,7 +731,7 @@ void Robot::checkErrorCounter()
   }
 }
 
-// ---- motor RPM (interrupt) --------------------------------------------------------------
+// ---- motor RPM (interrupt) --------------------------------------------------
 // mower motor RPM driver
 void Robot::setMotorMowRPMState(boolean motorMowRpmState)
 {
