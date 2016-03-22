@@ -32,11 +32,6 @@
 #define Console Serial
 #define Bluetooth Serial2
 
-// ultrasonic sensor max echo time (WARNING: do not set too high, it consumes CPU time!)
-#define MAX_ECHO_TIME 3000
-#define MIN_ECHO_TIME 150
-#define NO_ECHO 0
-
 // I2C addresses
 #define STEPPER_ADDRESS 0xBB
 #define DS1307_ADDRESS B1101000
@@ -155,10 +150,6 @@ double scalePI(const double v);
 
 // computes minimum distance between x radiant (current-value) and w radiant (set-value)
 double distancePI(const double x, const double w);
-
-// ultrasonic sensor
-unsigned int readHCSR04(const uint8_t triggerPin, const uint8_t echoPin);
-unsigned int readURM37(const uint8_t triggerPin, const uint8_t echoPin);
 
 // motor drivers
 void setPwmFrequency(uint8_t pin, int divisor);

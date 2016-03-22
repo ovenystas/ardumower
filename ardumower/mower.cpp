@@ -71,6 +71,7 @@
 #define pinSonarRightEcho 32
 #define pinSonarLeftTrigger 34
 #define pinSonarLeftEcho 36
+
 #define pinPerimeterRight A4       // perimeter
 #define pinPerimeterLeft A5
 
@@ -171,9 +172,9 @@ Mower::Mower()
 
   // ------ sonar ------------------------------------
   sonarUse = 0;             // use ultra sonic sensor? (WARNING: robot will slow down, if enabled but not connected!)
-  sonarLeftUse = 1;
-  sonarRightUse = 1;
-  sonarCenterUse = 0;
+  sonarUseArr[SONAR_LEFT] = 1;
+  sonarUseArr[SONAR_RIGHT] = 1;
+  sonarUseArr[SONAR_CENTER] = 0;
   sonarTriggerBelow = 1050; // ultrasonic sensor trigger distance
 
   // ------ perimeter ---------------------------------
@@ -377,12 +378,15 @@ void Mower::setup()
   pinMode(pinDropRight, INPUT_PULLUP); // Dropsensor - Absturzsensor - Intern Pullab Widerstand aktiviert (Auslösung erfolgt gegen GND)
 
   // sonar
-  pinMode(pinSonarCenterTrigger, OUTPUT);
-  pinMode(pinSonarCenterEcho, INPUT);
-  pinMode(pinSonarLeftTrigger, OUTPUT);
-  pinMode(pinSonarLeftEcho, INPUT);
-  pinMode(pinSonarRightTrigger, OUTPUT);
-  pinMode(pinSonarRightEcho, INPUT);
+  sonar[SONAR_CENTER].setup(pinSonarCenterTrigger, pinSonarCenterEcho);
+  sonar[SONAR_LEFT].setup(pinSonarLeftTrigger, pinSonarLeftEcho);
+  sonar[SONAR_RIGHT].setup(pinSonarRightTrigger, pinSonarRightEcho);
+//  pinMode(pinSonarCenterTrigger, OUTPUT);
+//  pinMode(pinSonarCenterEcho, INPUT);
+//  pinMode(pinSonarLeftTrigger, OUTPUT);
+//  pinMode(pinSonarLeftEcho, INPUT);
+//  pinMode(pinSonarRightTrigger, OUTPUT);
+//  pinMode(pinSonarRightEcho, INPUT);
 
   // rain
   pinMode(pinRain, INPUT);
@@ -565,18 +569,13 @@ int Mower::readSensor(char type)
       break;                                       // Dropsensor - Absturzsensor
 
 // sonar------------------------------------------------------------------------
-    //case SEN_SONAR_CENTER:
-    //  return (readURM37(pinSonarCenterTrigger, pinSonarCenterEcho));
-    //  break;
     case SEN_SONAR_CENTER:
-      return (readHCSR04(pinSonarCenterTrigger, pinSonarCenterEcho));
-      break;
     case SEN_SONAR_LEFT:
-      return (readHCSR04(pinSonarLeftTrigger, pinSonarLeftEcho));
-      break;
     case SEN_SONAR_RIGHT:
-      return (readHCSR04(pinSonarRightTrigger, pinSonarRightEcho));
+      return (sonar[type - SEN_SONAR_CENTER].ping());
       break;
+
+// lawn detector----------------------------------------------------------------
     //case SEN_LAWN_FRONT:
     //  return (measureLawnCapacity(pinLawnFrontSend, pinLawnFrontRecv));
     //  break;

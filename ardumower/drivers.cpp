@@ -252,51 +252,6 @@ void setL298N(const uint8_t pinDir, const uint8_t pinPWM, const int speed)
 
 // ---- sensor drivers --------------------------------------------------------------
 
-// HC-SR04 ultrasonic sensor driver
-unsigned int readHCSR04(const uint8_t triggerPin, const uint8_t echoPin)
-{
-  // TODO: Change from digitalWrite to raw port write to make it more accurate.
-  digitalWrite(triggerPin, LOW);
-  delayMicroseconds(2);
-  digitalWrite(triggerPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(triggerPin, LOW);
-
-  unsigned int uS = pulseIn(echoPin, HIGH, MAX_ECHO_TIME + 1000);
-
-  if (uS > MAX_ECHO_TIME)
-  {
-    uS = NO_ECHO;
-  }
-  else if (uS < MIN_ECHO_TIME)
-  {
-    uS = NO_ECHO;
-  }
-
-  return uS;
-}
-
-
-// URM-37 ultrasonic sensor driver
-unsigned int readURM37(const uint8_t triggerPin, const uint8_t echoPin)
-{
-  digitalWrite(triggerPin, LOW);
-  delayMicroseconds(2);
-  digitalWrite(triggerPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(triggerPin, LOW);
-
-  unsigned int uS = pulseIn(echoPin, LOW, MAX_ECHO_TIME + 1000);
-
-  if (uS > MAX_ECHO_TIME)
-  {
-    uS = NO_ECHO;
-  }
-
-  return uS;
-}
-
-
 // DS1307 real time driver
 boolean readDS1307(datetime_t &dt)
 {

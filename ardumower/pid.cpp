@@ -26,6 +26,7 @@
  2. Set I =0.6 * P and D = 0.125 * P
 */
 
+#include <Arduino.h>
 #include "pid.h"
 
 float PID::compute()

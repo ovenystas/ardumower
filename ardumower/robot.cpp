@@ -152,12 +152,11 @@ Robot::Robot()
   rain = false;
   rainCounter = 0;
 
-  sonarLeftUse = false;
-  sonarRightUse = false;
-  sonarCenterUse = false;
-  sonarDistCenter = 0;
-  sonarDistRight = 0;
-  sonarDistLeft = 0;
+  for (uint8_t i = 0; i < SONAR_END; i++)
+  {
+    sonarUseArr[i] = false;
+    sonarDist[i] = 0;
+  }
   sonarDistCounter = 0;
   tempSonarDistCounter = 0;
   sonarObstacleTimeout = 0;
@@ -333,9 +332,10 @@ void Robot::loadSaveUserSettings(boolean readflag)
   eereadwrite(readflag, addr, motorRightSwapDir);
   eereadwrite(readflag, addr, bumperUse);
   eereadwrite(readflag, addr, sonarUse);
-  eereadwrite(readflag, addr, sonarCenterUse);
-  eereadwrite(readflag, addr, sonarLeftUse);
-  eereadwrite(readflag, addr, sonarRightUse);
+  for (uint8_t i = 0; i < SONAR_END; i++)
+  {
+    eereadwrite(readflag, addr, sonarUseArr[i]);
+  }
   eereadwrite(readflag, addr, sonarTriggerBelow);
   eereadwrite(readflag, addr, perimeterUse);
   eereadwrite(readflag, addr, perimeter.timedOutIfBelowSmag);
@@ -490,12 +490,12 @@ void Robot::printSettingSerial()
   // ------ sonar ------------------------------------
   Console.print(F("sonarUse : "));
   Console.println(sonarUse);
-  Console.print(F("sonarLeftUse : "));
-  Console.println(sonarLeftUse);
-  Console.print(F("sonarRightUse : "));
-  Console.println(sonarRightUse);
-  Console.print(F("sonarCenterUse : "));
-  Console.println(sonarCenterUse);
+  Console.print(F("sonarUseArr[LEFT] : "));
+  Console.println(sonarUseArr[SONAR_LEFT]);
+  Console.print(F("sonarUseArr[CENTER] : "));
+  Console.println(sonarUseArr[SONAR_CENTER]);
+  Console.print(F("sonarUseArr[RIGHT] : "));
+  Console.println(sonarUseArr[SONAR_RIGHT]);
   Console.print(F("sonarTriggerBelow : "));
   Console.println(sonarTriggerBelow);
 
@@ -1636,8 +1636,10 @@ void Robot::printInfo(Stream &s)
                     (int)motorRightSense, (int)motorMowSense);
         Streamprint(s, "bum %4d %4d ", bumperLeft, bumperRight);
         Streamprint(s, "dro %4d %4d ", dropLeft, dropRight); // Dropsensor - Absturzsensor
-        Streamprint(s, "son %4d %4d %4d ", sonarDistLeft, sonarDistCenter,
-                    sonarDistRight);
+        Streamprint(s, "son %4u %4u %4u ",
+                    sonarDist[SONAR_LEFT],
+                    sonarDist[SONAR_CENTER],
+                    sonarDist[SONAR_RIGHT]);
         Streamprint(s, "yaw %3d ", (int)(imu.ypr.yaw/PI*180.0));
         Streamprint(s, "pit %3d ", (int)(imu.ypr.pitch/PI*180.0));
         Streamprint(s, "rol %3d ", (int)(imu.ypr.roll/PI*180.0));
@@ -2208,15 +2210,15 @@ void Robot::readSensors()
 
     /*switch(senSonarTurn) {
      case SEN_SONAR_RIGHT:
-     if (sonarRightUse) sonarDistRight = readSensor(SEN_SONAR_RIGHT);
+     if (sonarUseArr[RIGHT]) sonarDist[RIGHT] = readSensor(SEN_SONAR_RIGHT);
      senSonarTurn = SEN_SONAR_LEFT;
      break;
      case SEN_SONAR_LEFT:
-     if (sonarLeftUse) sonarDistLeft = readSensor(SEN_SONAR_LEFT);
+     if (sonarUseArr[LEFT]) sonarDist[LEFT] = readSensor(SEN_SONAR_LEFT);
      senSonarTurn = SEN_SONAR_CENTER;
      break;
      case SEN_SONAR_CENTER:
-     if (sonarCenterUse) sonarDistCenter = readSensor(SEN_SONAR_CENTER);
+     if (sonarUseArr[CENTER]) sonarDist[CENTER] = readSensor(SEN_SONAR_CENTER);
      senSonarTurn = SEN_SONAR_RIGHT;
      break;
      default:
@@ -2224,17 +2226,12 @@ void Robot::readSensors()
      break;
      }
      */
-    if (sonarRightUse)
+    for (uint8_t i = 0; i < SONAR_END; i++)
     {
-      sonarDistRight = readSensor(SEN_SONAR_RIGHT);
-    }
-    if (sonarLeftUse)
-    {
-      sonarDistLeft = readSensor(SEN_SONAR_LEFT);
-    }
-    if (sonarCenterUse)
-    {
-      sonarDistCenter = readSensor(SEN_SONAR_CENTER);
+      if (sonarUseArr[i])
+      {
+        sonarDist[i] = readSensor(SEN_SONAR_CENTER + i);
+      }
     }
   }
 
@@ -3179,9 +3176,16 @@ void Robot::checkSonar()
   {
     if (sonarObstacleTimeout == 0)
     {
-      if ((NO_ECHO != sonarDistCenter && sonarDistCenter < sonarTriggerBelow * 2) ||
-          (NO_ECHO != sonarDistRight && sonarDistRight < sonarTriggerBelow * 2) ||
-          (NO_ECHO != sonarDistLeft && sonarDistLeft < sonarTriggerBelow * 2))
+      bool isClose = false;
+      int triggerBelow = sonarTriggerBelow * 2;
+      for (uint8_t i = 0; i < SONAR_END; i++)
+      {
+        if (sonarDist[i] > 0 && sonarDist[i] < triggerBelow)
+        {
+          isClose = true;
+        }
+      }
+      if (isClose)
       {
         tempSonarDistCounter++;
         if (tempSonarDistCounter >= 5)
@@ -3207,7 +3211,7 @@ void Robot::checkSonar()
     }
   }
 
-  if (sonarDistCenter != NO_ECHO && sonarDistCenter < sonarTriggerBelow)
+  if (sonarDist[SONAR_CENTER] > 0 && sonarDist[SONAR_CENTER] < sonarTriggerBelow)
   {
     sonarDistCounter++;
     if (rollDir == RIGHT)
@@ -3219,12 +3223,12 @@ void Robot::checkSonar()
       reverseOrBidir(RIGHT);
     }
   }
-  if (sonarDistRight != NO_ECHO && sonarDistRight < sonarTriggerBelow)
+  if (sonarDist[SONAR_RIGHT] > 0 && sonarDist[SONAR_RIGHT] < sonarTriggerBelow)
   {
     sonarDistCounter++;
     reverseOrBidir(LEFT);
   }
-  if (sonarDistLeft != NO_ECHO && sonarDistLeft < sonarTriggerBelow)
+  if (sonarDist[SONAR_LEFT] > 0 && sonarDist[SONAR_LEFT] < sonarTriggerBelow)
   {
     sonarDistCounter++;
     reverseOrBidir(RIGHT);

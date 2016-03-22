@@ -725,19 +725,23 @@ void RemoteControl::sendSonarMenu(boolean update)
   Bluetooth.print(F("|d00~Use "));
   sendYesNo(robot->sonarUse);
   Bluetooth.print(F("|d04~Use left "));
-  sendYesNo(robot->sonarLeftUse);
+  sendYesNo(robot->sonarUseArr[SONAR_LEFT]);
   Bluetooth.print(F("|d05~Use center "));
-  sendYesNo(robot->sonarCenterUse);
+  sendYesNo(robot->sonarUseArr[SONAR_CENTER]);
   Bluetooth.print(F("|d06~Use right "));
-  sendYesNo(robot->sonarRightUse);
+  sendYesNo(robot->sonarUseArr[SONAR_RIGHT]);
   Bluetooth.print(F("|d01~Counter "));
   Bluetooth.print(robot->sonarDistCounter);
   Bluetooth.println(F("|d02~Value l, c, r"));
-  Bluetooth.print(robot->sonarDistLeft);
-  Bluetooth.print(", ");
-  Bluetooth.print(robot->sonarDistCenter);
-  Bluetooth.print(", ");
-  Bluetooth.print(robot->sonarDistRight);
+  for (uint8_t i = 0; i < SONAR_END; i++)
+  {
+    Bluetooth.print(robot->sonarDist[i]);
+    if (i == 2)
+    {
+      break;
+    }
+    Bluetooth.print(", ");
+  }
   sendSlider("d03", F("Trigger below"), robot->sonarTriggerBelow, "", 1, 3000);
   Bluetooth.println("}");
 }
@@ -754,15 +758,15 @@ void RemoteControl::processSonarMenu(String pfodCmd)
   }
   else if (pfodCmd == "d04")
   {
-    robot->sonarLeftUse = !robot->sonarLeftUse;
+    robot->sonarUseArr[SONAR_LEFT] = !robot->sonarUseArr[SONAR_LEFT];
   }
   else if (pfodCmd == "d05")
   {
-    robot->sonarCenterUse = !robot->sonarCenterUse;
+    robot->sonarUseArr[SONAR_CENTER] = !robot->sonarUseArr[SONAR_CENTER];
   }
   else if (pfodCmd == "d06")
   {
-    robot->sonarRightUse = !robot->sonarRightUse;
+    robot->sonarUseArr[SONAR_RIGHT] = !robot->sonarUseArr[SONAR_RIGHT];
   }
   sendSonarMenu(true);
 }
@@ -1675,12 +1679,11 @@ void RemoteControl::run()
     Bluetooth.print(",");
     Bluetooth.print(robot->motorMowSense);
     Bluetooth.print(",");
-    Bluetooth.print(robot->sonarDistLeft);
-    Bluetooth.print(",");
-    Bluetooth.print(robot->sonarDistCenter);
-    Bluetooth.print(",");
-    Bluetooth.print(robot->sonarDistRight);
-    Bluetooth.print(",");
+    for (uint8_t i = 0; i < SONAR_END; i++)
+    {
+      Bluetooth.print(robot->sonarDist[i]);
+      Bluetooth.print(",");
+    }
     Bluetooth.print(robot->perimeter.isInside(0));
     Bluetooth.print(",");
     Bluetooth.print(robot->perimeterMag);
@@ -1836,12 +1839,11 @@ void RemoteControl::run()
       Bluetooth.print(",");
       Bluetooth.print(robot->motorMowSense);
       Bluetooth.print(",");
-      Bluetooth.print(robot->sonarDistLeft);
-      Bluetooth.print(",");
-      Bluetooth.print(robot->sonarDistCenter);
-      Bluetooth.print(",");
-      Bluetooth.print(robot->sonarDistRight);
-      Bluetooth.print(",");
+      for (uint8_t i = 0; i < SONAR_END; i++)
+      {
+        Bluetooth.print(robot->sonarDist[i]);
+        Bluetooth.print(",");
+      }
       Bluetooth.print(robot->perimeter.isInside(0));
       Bluetooth.print(",");
       Bluetooth.print(robot->lawnSensor);

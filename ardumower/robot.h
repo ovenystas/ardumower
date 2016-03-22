@@ -39,6 +39,7 @@
 #include "gps.h"
 #include "pfod.h"
 #include "button.h"
+#include "sonar.h"
 
 //#include "QueueList.h"
 //#include <limits.h>
@@ -153,6 +154,11 @@ enum
 enum
 {
   LEFT, RIGHT
+};
+
+enum
+{
+  SONAR_LEFT, SONAR_CENTER, SONAR_RIGHT, SONAR_END
 };
 
 // mow patterns
@@ -394,13 +400,10 @@ class Robot
     // --------- sonar ----------------------------------
     // ultra sonic sensor distance-to-obstacle (cm)
     char sonarUse;      // use ultra sonic sensor?
-    char sonarLeftUse;
-    char sonarRightUse;
-    char sonarCenterUse;
+    char sonarUseArr[SONAR_END];
+    Sonar sonar[SONAR_END];
     int sonarTriggerBelow;    // ultrasonic sensor trigger distance
-    unsigned int sonarDistCenter;
-    unsigned int sonarDistRight;
-    unsigned int sonarDistLeft;
+    unsigned int sonarDist[SONAR_END];
     unsigned int sonarDistCounter;
     unsigned int tempSonarDistCounter;
     unsigned long sonarObstacleTimeout;

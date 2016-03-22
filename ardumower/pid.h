@@ -24,8 +24,6 @@
 #ifndef PID_H
 #define PID_H
 
-#include <Arduino.h>
-
 /*
  digital PID controller
  */
