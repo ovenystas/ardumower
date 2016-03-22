@@ -53,28 +53,4 @@ class PID
     unsigned long lastControlTime{};
 };
 
-class VelocityPID
-{
-  public:
-    VelocityPID(void) {};
-    VelocityPID(float Kp, float Ki, float Kd) : Kp(Kp), Ki(Ki), Kd(Kd) {};
-    float compute(void);
-
-    float Ta{};       // sampling time
-    float w{};        // set value
-    float x{};        // current value
-    float eold1{};    // last error
-    float eold2{};    // error n-2
-    int y{};          // control output
-    int yold{};       // last control output
-    int y_min{};      // minimum control output
-    int y_max{};      // maximum control output
-    int max_output{}; // maximum output
-    float Kp{};       // proportional control
-    float Ki{};       // integral control
-    float Kd{};       // differential control
-    unsigned long lastControlTime{};
-};
-
 #endif
-
