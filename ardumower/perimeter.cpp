@@ -27,7 +27,7 @@
 #include "adcman.h"
 #include "drivers.h"
 
-//#define pinLED 13
+//#define PIN_LED 13
 
 // developer test to be activated in mower.cpp:
 #ifdef USE_DEVELOPER_TEST
