@@ -256,7 +256,6 @@ Mower::Mower()
 
   // ----- other -----------------------------------------
   buttonUse = 0;            // has digital ON/OFF button?
-  button.setPin(PIN_BUTTON);
 
   // ----- user-defined switch ---------------------------
   userSwitch1 = 0; // user-defined switch 1 (default value)
@@ -332,9 +331,11 @@ void Mower::setup()
   pinMode(PIN_CHARGE_RELAY, OUTPUT);
   setActuator(ACT_CHGRELAY, 0);
 
-  // left wheel motor
+  // wheel motors
   pinMode(PIN_MOTOR_ENABLE, OUTPUT);
   digitalWrite(PIN_MOTOR_ENABLE, HIGH);
+
+  // left wheel motor
   pinMode(PIN_MOTOR_LEFT_PWM, OUTPUT);
   pinMode(PIN_MOTOR_LEFT_DIR, OUTPUT);
   pinMode(PIN_MOTOR_LEFT_SENSE, INPUT);
@@ -362,23 +363,17 @@ void Mower::setup()
   pinMode(PIN_LAWN_FRONT_SEND, OUTPUT);
 
   // perimeter
-  pinMode(PIN_PERIMETER_RIGHT, INPUT);
-  pinMode(PIN_PERIMETER_LEFT, INPUT);
+  perimeter.setup(PIN_PERIMETER_LEFT, PIN_PERIMETER_RIGHT);
 
   // button
-  pinMode(PIN_BUTTON, INPUT);
-  pinMode(PIN_BUTTON, INPUT_PULLUP);
+  button.setup(PIN_BUTTON);
 
   // bumpers
-  pinMode(PIN_BUMBER_LEFT, INPUT);
   pinMode(PIN_BUMBER_LEFT, INPUT_PULLUP);
-  pinMode(PIN_BUMBER_RIGHT, INPUT);
   pinMode(PIN_BUMBER_RIGHT, INPUT_PULLUP);
 
   // drops
-  pinMode(PIN_DROP_LEFT, INPUT);         // Dropsensor - Absturzsensor - Deklariert als Eingang
   pinMode(PIN_DROP_LEFT, INPUT_PULLUP);  // Dropsensor - Absturzsensor - Intern Pullab Widerstand aktiviert (Auslösung erfolgt gegen GND)
-  pinMode(PIN_DROP_RIGHT, INPUT);        // Dropsensor - Absturzsensor - Deklariert als Eingang
   pinMode(PIN_DROP_RIGHT, INPUT_PULLUP); // Dropsensor - Absturzsensor - Intern Pullab Widerstand aktiviert (Auslösung erfolgt gegen GND)
 
   // sonar
@@ -445,7 +440,6 @@ void Mower::setup()
   ADCMan.setCapture(PIN_BATTERY_VOLTAGE, 1, false);
   ADCMan.setCapture(PIN_CHARGE_VOLTAGE, 1, false);
   ADCMan.setCapture(PIN_VOLTAGE_MEASUREMENT, 1, false);
-  perimeter.setPins(PIN_PERIMETER_LEFT, PIN_PERIMETER_RIGHT);
 
   imu.init(PIN_BUZZER);
   gps.init();

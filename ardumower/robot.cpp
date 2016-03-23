@@ -2015,55 +2015,60 @@ void Robot::checkButton()
       {
         setNextState(STATE_OFF, 0);
       }
-      else if (button.getCounter() == 2)
+      else
       {
-        motorMowEnable = true;
-        mowPatternCurr = MOW_BIDIR;
-        setNextState(STATE_FORWARD, 0);
-      }
-      else if (button.getCounter() == 3)
-      {
-        // start remote control mode
-        setNextState(STATE_REMOTE, 0);
-      }
-      else if (button.getCounter() == 4)
-      {
-        // start normal without perimeter
-        //motorMowEnable = false;
-        perimeterUse = false;
-        setNextState(STATE_FORWARD, 0);
-      }
-      else if (button.getCounter() == 7)
-      {
-        // start normal with mowing in lanes
-        motorMowEnable = true;
-        //motorMowModulate = true;
-        mowPatternCurr = MOW_LANES;
-        setNextState(STATE_FORWARD, 0);
-      }
-      else if (button.getCounter() == 6)
-      {
-        // track perimeter
-        setNextState(STATE_PERI_TRACK, 0);
-      }
-      else if (button.getCounter() == 5)
-      {
-        // drive home
-        setNextState(STATE_PERI_FIND, 0);
-      }
-      else if (button.getCounter() == 1)
-      {
-        /*if ((perimeterUse) && (!perimeter.isInside())){
-         Console.println("start inside perimeter!");
-         addErrorCounter(ERR_PERIMETER_TIMEOUT);
-         setNextState(STATE_ERROR, 0);
-         } else {*/
-        // start normal with mowing
-        motorMowEnable = true;
-        //motorMowModulate = true;
-        mowPatternCurr = MOW_RANDOM;
-        setNextState(STATE_FORWARD, 0);
-        //}
+        switch (button.getCounter())
+        {
+          case 1:
+            /*if ((perimeterUse) && (!perimeter.isInside())){
+             Console.println("start inside perimeter!");
+             addErrorCounter(ERR_PERIMETER_TIMEOUT);
+             setNextState(STATE_ERROR, 0);
+             } else {*/
+            // start normal with mowing
+            motorMowEnable = true;
+            //motorMowModulate = true;
+            mowPatternCurr = MOW_RANDOM;
+            setNextState(STATE_FORWARD, 0);
+            //}
+            break;
+
+          case 2:
+            motorMowEnable = true;
+            mowPatternCurr = MOW_BIDIR;
+            setNextState(STATE_FORWARD, 0);
+            break;
+
+          case 3:
+            // start remote control mode
+            setNextState(STATE_REMOTE, 0);
+            break;
+
+          case 4:
+            // start normal without perimeter
+            //motorMowEnable = false;
+            perimeterUse = false;
+            setNextState(STATE_FORWARD, 0);
+            break;
+
+          case 5:
+            // drive home
+            setNextState(STATE_PERI_FIND, 0);
+            break;
+
+          case 6:
+            // track perimeter
+            setNextState(STATE_PERI_TRACK, 0);
+            break;
+
+          case 7:
+            // start normal with mowing in lanes
+            motorMowEnable = true;
+            //motorMowModulate = true;
+            mowPatternCurr = MOW_LANES;
+            setNextState(STATE_FORWARD, 0);
+            break;
+        }
       }
 
       button.resetCounter();

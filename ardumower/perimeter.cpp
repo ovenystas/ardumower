@@ -71,8 +71,11 @@ Perimeter::Perimeter()
   lastInsideTime[1] = 0;
 }
 
-void Perimeter::setPins(byte idx0Pin, byte idx1Pin)
+void Perimeter::setup(byte idx0Pin, byte idx1Pin)
 {
+  pinMode(idx0Pin, INPUT);
+  pinMode(idx1Pin, INPUT);
+
   idxPin[0] = idx0Pin;
   idxPin[1] = idx1Pin;
 
