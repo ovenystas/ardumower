@@ -369,8 +369,8 @@ void Mower::setup()
   button.setup(PIN_BUTTON);
 
   // bumpers
-  pinMode(PIN_BUMBER_LEFT, INPUT_PULLUP);
-  pinMode(PIN_BUMBER_RIGHT, INPUT_PULLUP);
+  bumper[LEFT].setup(PIN_BUMBER_LEFT);
+  bumper[RIGHT].setup(PIN_BUMBER_RIGHT);
 
   // drops
   pinMode(PIN_DROP_LEFT, INPUT_PULLUP);  // Dropsensor - Absturzsensor - Intern Pullab Widerstand aktiviert (Auslösung erfolgt gegen GND)
@@ -539,19 +539,6 @@ int Mower::readSensor(char type)
       return ADCMan.read(PIN_CHARGE_CURRENT);
       break;
 
-// buttons----------------------------------------------------------------------
-    case SEN_BUTTON:
-      return (digitalRead(PIN_BUTTON));
-      break;
-
-//bumper------------------------------------------------------------------------
-    case SEN_BUMPER_RIGHT:
-      return (digitalRead(PIN_BUMBER_RIGHT));
-      break;
-    case SEN_BUMPER_LEFT:
-      return (digitalRead(PIN_BUMBER_LEFT));
-      break;
-
 //drop--------------------------------------------------------------------------
     case SEN_DROP_RIGHT:
       return (digitalRead(PIN_DROP_RIGHT));
@@ -559,13 +546,6 @@ int Mower::readSensor(char type)
     case SEN_DROP_LEFT:
       return (digitalRead(PIN_DROP_LEFT));
       break;                                       // Dropsensor - Absturzsensor
-
-// sonar------------------------------------------------------------------------
-    case SEN_SONAR_CENTER:
-    case SEN_SONAR_LEFT:
-    case SEN_SONAR_RIGHT:
-      return (sonar[type - SEN_SONAR_CENTER].ping());
-      break;
 
 // lawn detector----------------------------------------------------------------
     //case SEN_LAWN_FRONT:

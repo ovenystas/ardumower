@@ -116,11 +116,6 @@ Robot::Robot()
   nextTimeCheckCurrent = 0;
   lastTimeMotorMowStucked = 0;
 
-  bumperLeftCounter = 0;
-  bumperRightCounter = 0;
-  bumperLeft = false;
-  bumperRight = false;
-
   dropLeftCounter = 0;
   dropRightCounter = 0;
   dropLeft = false;
@@ -175,7 +170,6 @@ Robot::Robot()
   loopsPerSec = 0;
   loopsTa = 5.0;
   loopsPerSecCounter = 0;
-  //buttonCounter = 0;
   ledState = 0;
 
   consoleMode = CONSOLE_SENSOR_COUNTERS;
@@ -1562,8 +1556,8 @@ void Robot::setup()
   Console.println(name);
   Console.println(F("press..."));
   Console.println(F("  d for menu"));
-  Console.println(
-      F("  v to change console output (sensor counters, values, perimeter etc.)"));
+  Console.println(F("  v to change console output @"
+                    "(sensor counters, values, perimeter etc.)"));
   Console.println(consoleModeNames[consoleMode]);
 }
 
@@ -1634,7 +1628,9 @@ void Robot::printInfo(Stream &s)
         // sensor values
         Streamprint(s, "sen %4d %4d %4d ", (int)motorLeftSense,
                     (int)motorRightSense, (int)motorMowSense);
-        Streamprint(s, "bum %4d %4d ", bumperLeft, bumperRight);
+        Streamprint(s, "bum %4d %4d ",
+                    bumper[LEFT].hasHit(),
+                    bumper[RIGHT].hasHit());
         Streamprint(s, "dro %4d %4d ", dropLeft, dropRight); // Dropsensor - Absturzsensor
         Streamprint(s, "son %4u %4u %4u ",
                     sonarDist[SONAR_LEFT],
@@ -1658,7 +1654,9 @@ void Robot::printInfo(Stream &s)
         // sensor counters
         Streamprint(s, "sen %4d %4d %4d ", motorLeftSenseCounter,
                     motorRightSenseCounter, motorMowSenseCounter);
-        Streamprint(s, "bum %4d %4d ", bumperLeftCounter, bumperRightCounter);
+        Streamprint(s, "bum %4d %4d ",
+                    bumper[LEFT].getCounter(),
+                    bumper[RIGHT].getCounter());
         Streamprint(s, "dro %4d %4d ", dropLeftCounter, dropRightCounter); // Dropsensor - Absturzsensor
         Streamprint(s, "son %3d ", sonarDistCounter);
         Streamprint(s, "yaw %3d ", (int)(imu.ypr.yaw/PI*180.0));
@@ -1921,12 +1919,10 @@ void Robot::readSerial()
         setNextState(STATE_PERI_TRACK, 0); // press 'p' to track perimeter
         break;
       case 'l':
-        bumperLeft = true; // press 'l' to simulate left bumper
-        bumperLeftCounter++;
+        bumper[LEFT].simHit();  // press 'l' to simulate left bumper
         break;
       case 'r':
-        bumperRight = true; // press 'r' to simulate right bumper
-        bumperRightCounter++;
+        bumper[RIGHT].simHit(); // press 'r' to simulate right bumper
         break;
       case 'j':                                    // Dropsensor - Absturzsensor
         dropLeft = true; // press 'j' to simulate left drop                                                                         // Dropsensor - Absturzsensor
@@ -1988,17 +1984,18 @@ void Robot::readSerial()
 
 void Robot::checkButton()
 {
-  if (!buttonUse || millis() < nextTimeButtonCheck)
+  uint32_t msNow = millis();
+  if (!buttonUse || msNow < nextTimeButtonCheck)
   {
     return;
   }
 
-  nextTimeButtonCheck = millis() + 50;
+  nextTimeButtonCheck = msNow + 50;
   boolean buttonPressed = button.isPressed();
   if ((!buttonPressed && button.getCounter() > 0) ||
-      (buttonPressed && millis() >= nextTimeButton))
+      (buttonPressed && msNow >= nextTimeButton))
   {
-    nextTimeButton = millis() + 1000;
+    nextTimeButton = msNow + 1000;
     if (buttonPressed)
     {
       Console.println(F("buttonPressed"));
@@ -2213,29 +2210,11 @@ void Robot::readSensors()
     //static char senSonarTurn = SEN_SONAR_RIGHT;
     nextTimeSonar = millis() + 250;
 
-    /*switch(senSonarTurn) {
-     case SEN_SONAR_RIGHT:
-     if (sonarUseArr[RIGHT]) sonarDist[RIGHT] = readSensor(SEN_SONAR_RIGHT);
-     senSonarTurn = SEN_SONAR_LEFT;
-     break;
-     case SEN_SONAR_LEFT:
-     if (sonarUseArr[LEFT]) sonarDist[LEFT] = readSensor(SEN_SONAR_LEFT);
-     senSonarTurn = SEN_SONAR_CENTER;
-     break;
-     case SEN_SONAR_CENTER:
-     if (sonarUseArr[CENTER]) sonarDist[CENTER] = readSensor(SEN_SONAR_CENTER);
-     senSonarTurn = SEN_SONAR_RIGHT;
-     break;
-     default:
-     senSonarTurn = SEN_SONAR_RIGHT;
-     break;
-     }
-     */
     for (uint8_t i = 0; i < SONAR_END; i++)
     {
       if (sonarUseArr[i])
       {
-        sonarDist[i] = readSensor(SEN_SONAR_CENTER + i);
+        sonarDist[i] = sonar[i].ping();
       }
     }
   }
@@ -2243,17 +2222,8 @@ void Robot::readSensors()
   if (bumperUse && millis() >= nextTimeBumper)
   {
     nextTimeBumper = millis() + 100;
-    if (readSensor(SEN_BUMPER_LEFT) == 0)
-    {
-      bumperLeftCounter++;
-      bumperLeft = true;
-    }
-
-    if (readSensor(SEN_BUMPER_RIGHT) == 0)
-    {
-      bumperRightCounter++;
-      bumperRight = true;
-    }
+    bumper[LEFT].check();
+    bumper[RIGHT].check();
   }
 
   if (dropUse && millis() >= nextTimeDrop)
@@ -2974,11 +2944,11 @@ void Robot::checkBumpers()
     return;
   }
 
-  if (bumperLeft)
+  if (bumper[LEFT].hasHit())
   {
     reverseOrBidir(RIGHT);
   }
-  if (bumperRight)
+  if (bumper[RIGHT].hasHit())
   {
     reverseOrBidir(LEFT);
   }
@@ -3004,11 +2974,21 @@ void Robot::checkDrop()
 }
 
 // check bumpers while tracking perimeter
+// Truth table
+//   LRT|N
+//   000|-
+//   001|-
+//   010|L
+//   011|R
+//   100|R
+//   101|R
+//   110|R
+//   111|R
 void Robot::checkBumpersPerimeter()
 {
-  if ((bumperLeft || bumperRight))
+  if (bumper[LEFT].hasHit() || bumper[RIGHT].hasHit())
   {
-    if ((bumperLeft) || (stateCurr == STATE_PERI_TRACK))
+    if (bumper[LEFT].hasHit() || stateCurr == STATE_PERI_TRACK)
     {
       setNextState(STATE_PERI_REV, RIGHT);
     }
@@ -3823,8 +3803,8 @@ void Robot::loop()
     motorMowSpeedPWMSet = motorMowSpeedMaxPwm;
   }
 
-  bumperRight = false;
-  bumperLeft = false;
+  bumper[LEFT].clearHit();
+  bumper[RIGHT].clearHit();
 
   dropRight = false;
   dropLeft = false;

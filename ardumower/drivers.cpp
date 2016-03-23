@@ -245,7 +245,7 @@ void setL298N(const uint8_t pinDir, const uint8_t pinPWM, const int speed)
     dir = LOW;
   }
 
-  digitalWrite(pinDir, HIGH);
+  digitalWrite(pinDir, dir);
   analogWrite(pinPWM, (byte)speed);
 }
 

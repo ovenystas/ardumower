@@ -13,11 +13,11 @@
 class Button
 {
   private:
-    uint8_t pin;
-    uint8_t counter;
+    uint8_t pin{};
+    uint8_t counter{};
 
   public:
-    void setup(uint8_t pin)
+    void setup(const uint8_t pin)
     {
       this->pin = pin;
       pinMode(pin, INPUT_PULLUP);
@@ -35,12 +35,12 @@ class Button
 
     void incCounter(void)
     {
-      this->counter++;
+      counter++;
     }
 
     void resetCounter(void)
     {
-      this->counter = 0;
+      counter = 0;
     }
 };
 

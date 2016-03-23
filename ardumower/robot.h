@@ -39,6 +39,7 @@
 #include "gps.h"
 #include "pfod.h"
 #include "button.h"
+#include "bumper.h"
 #include "sonar.h"
 
 //#include "QueueList.h"
@@ -67,13 +68,11 @@ enum
   SEN_MOTOR_RIGHT,       // 0..MAX_MOTOR_CURRENT
   SEN_MOTOR_MOW,         // 0..MAX_MOW_CURRENT
   SEN_BUMPER_LEFT,       // LOW = pressed
-  SEN_BUMPER_RIGHT,      // LOW = pressed
   SEN_DROP_LEFT,         // LOW = pressed // Dropsensor - Absturzsensor
   SEN_DROP_RIGHT,        // LOW = pressed // Dropsensor - Absturzsensor
   SEN_SONAR_CENTER,      // 0..SONAR_TRIGGER_DISTANCE
   SEN_SONAR_LEFT,        // 0..SONAR_TRIGGER_DISTANCE
   SEN_SONAR_RIGHT,       // 0..SONAR_TRIGGER_DISTANCE
-  SEN_BUTTON,            // LOW = pressed
   SEN_IMU,
   SEN_MOTOR_MOW_RPM,
   SEN_RTC,
@@ -330,21 +329,18 @@ class Robot
     // --------- bumper state ---------------------------
     // bumper state (true = pressed)
     char bumperUse;      // has bumpers?
-    int bumperLeftCounter;
-    boolean bumperLeft;
-    int bumperRightCounter;
-    boolean bumperRight;
+    Bumper bumper[2];
     unsigned long nextTimeBumper;
 
     // --------- drop state ---------------------------
     // bumper state (true = pressed)                                                                                                  // Dropsensor - Absturzsensor vorhanden ?
-    char dropUse; // has drops?                                                                                           // Dropsensor - Absturzsensor Zähler links
-    int dropLeftCounter;                           // Dropsensor - Absturzsensor
-    boolean dropLeft;             // Dropsensor - Absturzsensor links betätigt ?
-    int dropRightCounter;                          // Dropsensor - Absturzsensor
-    boolean dropRight;           // Dropsensor - Absturzsensor rechts betätigt ?
-    unsigned long nextTimeDrop;                    // Dropsensor - Absturzsensor
-    char dropcontact; // contact 0-openers 1-closers                                                                                 // Dropsensor Kontakt 0 für Öffner - 1 Schließer
+    char dropUse; // has drops? // Dropsensor - Absturzsensor Zähler links
+    int dropLeftCounter;        // Dropsensor - Absturzsensor
+    boolean dropLeft;           // Dropsensor - Absturzsensor links betätigt ?
+    int dropRightCounter;       // Dropsensor - Absturzsensor
+    boolean dropRight;          // Dropsensor - Absturzsensor rechts betätigt ?
+    unsigned long nextTimeDrop; // Dropsensor - Absturzsensor
+    char dropcontact;           // contact 0-openers 1-closers                                                                                 // Dropsensor Kontakt 0 für Öffner - 1 Schließer
 
     // ------- IMU state --------------------------------
     IMU imu;

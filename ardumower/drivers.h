@@ -154,9 +154,6 @@ double distancePI(const double x, const double w);
 // motor drivers
 void setPwmFrequency(uint8_t pin, int divisor);
 void setL298N(const uint8_t pinDir, const uint8_t pinPWM, const int speed);
-void setL9958(const uint8_t pinDir, const uint8_t pinPWM, const int speed);
-void setRomeoMotor(const uint8_t pinDir, const uint8_t pinPWM, const int speed);
-void setMC33926(const uint8_t pinDir, const uint8_t pinPWM, const int speed);
 
 // lawn sensor
 int measureLawnCapacity(const uint8_t pinSend, const uint8_t pinReceive);

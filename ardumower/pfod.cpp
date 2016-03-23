@@ -661,13 +661,13 @@ void RemoteControl::sendBumperMenu(boolean update)
   Bluetooth.print(F("|b00~Use "));
   sendYesNo(robot->bumperUse);
   Bluetooth.println(F("|b01~Counter l, r "));
-  Bluetooth.print(robot->bumperLeftCounter);
+  Bluetooth.print(robot->bumper[LEFT].getCounter());
   Bluetooth.print(", ");
-  Bluetooth.print(robot->bumperRightCounter);
+  Bluetooth.print(robot->bumper[RIGHT].getCounter());
   Bluetooth.println(F("|b02~Value l, r "));
-  Bluetooth.print(robot->bumperLeft);
+  Bluetooth.print(robot->bumper[LEFT].hasHit());
   Bluetooth.print(", ");
-  Bluetooth.print(robot->bumperRight);
+  Bluetooth.print(robot->bumper[RIGHT].hasHit());
   Bluetooth.println("}");
 }
 
@@ -1807,9 +1807,9 @@ void RemoteControl::run()
       Bluetooth.print(",");
       Bluetooth.print(robot->motorMowSenseCounter);
       Bluetooth.print(",");
-      Bluetooth.print(robot->bumperLeftCounter);
+      Bluetooth.print(robot->bumper[LEFT].getCounter());
       Bluetooth.print(",");
-      Bluetooth.print(robot->bumperRightCounter);
+      Bluetooth.print(robot->bumper[RIGHT].getCounter());
       Bluetooth.print(",");
       Bluetooth.print(robot->sonarDistCounter);
       Bluetooth.print(",");
