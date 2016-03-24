@@ -3240,7 +3240,8 @@ void Robot::checkTilt()
   }
 }
 
-// check if mower is stucked ToDo: take HDOP into consideration if gpsSpeed is reliable
+// check if mower is stucked
+// ToDo: take HDOP into consideration if gpsSpeed is reliable
 void Robot::checkIfStucked()
 {
   if (millis() < nextTimeCheckIfStucked)

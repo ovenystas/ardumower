@@ -25,7 +25,19 @@
 #include "drivers.h"
 #include <Wire.h>
 
-char *dayOfWeek[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+#define LOCALE_SWEDISH
+//#define LOCALE_ENGLISH
+//#define LOCALE_GERMAN
+//#define LANG_SWEDISH
+#define LANG_ENGLISH
+//#define LANG_GERMAN
+
+#ifdef LANG_SWEDISH
+  char *dayOfWeek[] = { "Sön", "Mån", "Tis", "Ons", "Tor", "Fre", "Lör" };
+#endif
+#ifdef LANG_ENGLISH
+  char *dayOfWeek[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+#endif
 
 // ---- print helpers ----------------------------------------------------------
 
@@ -158,6 +170,7 @@ String time2str(const timehm_t time)
 
 String date2str(const date_t date)
 {
+#ifdef LOCALE_GERMAN
   String s = dayOfWeek[date.dayOfWeek];
   s += " ";
   s += date.day / 10;
@@ -167,6 +180,19 @@ String date2str(const date_t date)
   s += date.month % 10;
   s += ".";
   s += date.year;
+#endif
+
+#ifdef LOCALE_SWEDISH
+  String s = dayOfWeek[date.dayOfWeek];
+  s += " ";
+  s += date.year;
+  s += "-";
+  s += date.month / 10;
+  s += date.month % 10;
+  s += "-";
+  s += date.day / 10;
+  s += date.day % 10;
+#endif
 
   return s;
 }
