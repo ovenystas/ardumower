@@ -116,11 +116,6 @@ Robot::Robot()
   nextTimeCheckCurrent = 0;
   lastTimeMotorMowStucked = 0;
 
-  dropLeftCounter = 0;
-  dropRightCounter = 0;
-  dropLeft = false;
-  dropRight = false;
-
   gpsLat = 0;
   gpsLon = 0;
   gpsX = 0;
@@ -475,7 +470,7 @@ void Robot::printSettingSerial()
   Console.println(dropUse);
 
   Console.print(F("dropContact : "));
-  Console.println(dropcontact);
+  Console.println(drop[LEFT].getContactType());  // Assume left and right has same contact type
 
   // ------ rain ------------------------------------
   Console.print(F("rainUse : "));
@@ -1629,9 +1624,11 @@ void Robot::printInfo(Stream &s)
         Streamprint(s, "sen %4d %4d %4d ", (int)motorLeftSense,
                     (int)motorRightSense, (int)motorMowSense);
         Streamprint(s, "bum %4d %4d ",
-                    bumper[LEFT].hasHit(),
-                    bumper[RIGHT].hasHit());
-        Streamprint(s, "dro %4d %4d ", dropLeft, dropRight); // Dropsensor - Absturzsensor
+                    bumper[LEFT].isHit(),
+                    bumper[RIGHT].isHit());
+        Streamprint(s, "dro %4d %4d ",
+                    drop[LEFT].isDetected(),
+                    drop[RIGHT].isDetected());
         Streamprint(s, "son %4u %4u %4u ",
                     sonarDist[SONAR_LEFT],
                     sonarDist[SONAR_CENTER],
@@ -1657,7 +1654,9 @@ void Robot::printInfo(Stream &s)
         Streamprint(s, "bum %4d %4d ",
                     bumper[LEFT].getCounter(),
                     bumper[RIGHT].getCounter());
-        Streamprint(s, "dro %4d %4d ", dropLeftCounter, dropRightCounter); // Dropsensor - Absturzsensor
+        Streamprint(s, "dro %4d %4d ",
+                    drop[LEFT].getCounter(),
+                    drop[RIGHT].getCounter());
         Streamprint(s, "son %3d ", sonarDistCounter);
         Streamprint(s, "yaw %3d ", (int)(imu.ypr.yaw/PI*180.0));
         Streamprint(s, "pit %3d ", (int)(imu.ypr.pitch/PI*180.0));
@@ -1924,14 +1923,12 @@ void Robot::readSerial()
       case 'r':
         bumper[RIGHT].simHit(); // press 'r' to simulate right bumper
         break;
-      case 'j':                                    // Dropsensor - Absturzsensor
-        dropLeft = true; // press 'j' to simulate left drop                                                                         // Dropsensor - Absturzsensor
-        dropLeftCounter++;                         // Dropsensor - Absturzsensor
-        break;                                     // Dropsensor - Absturzsensor
-      case 'k':                                    // Dropsensor - Absturzsensor
-        dropRight = true; // press 'k' to simulate right drop                                                                        // Dropsensor - Absturzsensor
-        dropRightCounter++;                        // Dropsensor - Absturzsensor
-        break;                                     // Dropsensor - Absturzsensor
+      case 'j':
+        drop[LEFT].simDetected(); // press 'j' to simulate left drop                                                                         // Dropsensor - Absturzsensor
+        break;
+      case 'k':
+        drop[RIGHT].simDetected(); // press 'k' to simulate right drop                                                                        // Dropsensor - Absturzsensor
+        break;
       case 's':
         lawnSensor = true; // press 's' to simulate lawn sensor
         lawnSensorCounter++;
@@ -2227,19 +2224,10 @@ void Robot::readSensors()
   }
 
   if (dropUse && millis() >= nextTimeDrop)
-  {                                                // Dropsensor - Absturzsensor
-    nextTimeDrop = millis() + 100;                 // Dropsensor - Absturzsensor
-    if (readSensor(SEN_DROP_LEFT) == dropcontact)
-    {                                              // Dropsensor - Absturzsensor
-      dropLeftCounter++;                           // Dropsensor - Absturzsensor
-      dropLeft = true;                             // Dropsensor - Absturzsensor
-    }                                              // Dropsensor - Absturzsensor
-
-    if (readSensor(SEN_DROP_RIGHT) == dropcontact)
-    {                                              // Dropsensor - Absturzsensor
-      dropRightCounter++;                          // Dropsensor - Absturzsensor
-      dropRight = true;                            // Dropsensor - Absturzsensor
-    }
+  {
+    nextTimeDrop = millis() + 100;
+    drop[LEFT].check();
+    drop[RIGHT].check();
   }
 
   //if ((timerUse) && (millis() >= nextTimeRTC)) {
@@ -2944,11 +2932,11 @@ void Robot::checkBumpers()
     return;
   }
 
-  if (bumper[LEFT].hasHit())
+  if (bumper[LEFT].isHit())
   {
     reverseOrBidir(RIGHT);
   }
-  if (bumper[RIGHT].hasHit())
+  if (bumper[RIGHT].isHit())
   {
     reverseOrBidir(LEFT);
   }
@@ -2963,11 +2951,11 @@ void Robot::checkDrop()
     return;
   }
 
-  if (dropLeft)
+  if (drop[LEFT].isDetected())
   {
     reverseOrBidir(RIGHT);
   }
-  if (dropRight)
+  if (drop[RIGHT].isDetected())
   {
     reverseOrBidir(LEFT);
   }
@@ -2986,9 +2974,9 @@ void Robot::checkDrop()
 //   111|R
 void Robot::checkBumpersPerimeter()
 {
-  if (bumper[LEFT].hasHit() || bumper[RIGHT].hasHit())
+  if (bumper[LEFT].isHit() || bumper[RIGHT].isHit())
   {
-    if (bumper[LEFT].hasHit() || stateCurr == STATE_PERI_TRACK)
+    if (bumper[LEFT].isHit() || stateCurr == STATE_PERI_TRACK)
     {
       setNextState(STATE_PERI_REV, RIGHT);
     }
@@ -3806,8 +3794,8 @@ void Robot::loop()
   bumper[LEFT].clearHit();
   bumper[RIGHT].clearHit();
 
-  dropRight = false;
-  dropLeft = false;
+  drop[LEFT].clearDetected();
+  drop[RIGHT].clearDetected();
 
   loopsPerSecCounter++;
 }

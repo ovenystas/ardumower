@@ -8,6 +8,8 @@
 #ifndef BUMPER_H
 #define BUMPER_H
 
+#include <Arduino.h>
+
 class Bumper
 {
 
@@ -23,7 +25,7 @@ class Bumper
       pinMode(pin, INPUT_PULLUP);
     }
 
-    bool hasHit(void)
+    bool isHit(void)
     {
       return hit;
     }

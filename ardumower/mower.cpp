@@ -169,7 +169,6 @@ Mower::Mower()
 
   //  ------ drop -----------------------------------
   dropUse = 0;     // has drops? - Dropsensor - Absturzsensor vorhanden ?
-  dropcontact = 1; // contact 0-openers 1-closers - Dropsensor - Kontakt 0-Öffner - 1-Schließer betätigt gegen GND
 
   // ------ rain ------------------------------------
   rainUse = 0; // use rain sensor?
@@ -373,8 +372,8 @@ void Mower::setup()
   bumper[RIGHT].setup(PIN_BUMBER_RIGHT);
 
   // drops
-  pinMode(PIN_DROP_LEFT, INPUT_PULLUP);  // Dropsensor - Absturzsensor - Intern Pullab Widerstand aktiviert (Auslösung erfolgt gegen GND)
-  pinMode(PIN_DROP_RIGHT, INPUT_PULLUP); // Dropsensor - Absturzsensor - Intern Pullab Widerstand aktiviert (Auslösung erfolgt gegen GND)
+  drop[LEFT].setup(PIN_DROP_LEFT, DROP_CONTACT_NO);
+  drop[RIGHT].setup(PIN_DROP_LEFT, DROP_CONTACT_NO);
 
   // sonar
   sonar[SONAR_CENTER].setup(PIN_SONAR_CENTER_TRIGGER, PIN_SONAR_CENTER_ECHO);
@@ -538,14 +537,6 @@ int Mower::readSensor(char type)
     case SEN_CHG_CURRENT:
       return ADCMan.read(PIN_CHARGE_CURRENT);
       break;
-
-//drop--------------------------------------------------------------------------
-    case SEN_DROP_RIGHT:
-      return (digitalRead(PIN_DROP_RIGHT));
-      break;                                       // Dropsensor - Absturzsensor
-    case SEN_DROP_LEFT:
-      return (digitalRead(PIN_DROP_LEFT));
-      break;                                       // Dropsensor - Absturzsensor
 
 // lawn detector----------------------------------------------------------------
     //case SEN_LAWN_FRONT:
