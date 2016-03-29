@@ -51,7 +51,7 @@ typedef struct date_t
   byte dayOfWeek;
   byte day;
   byte month;
-  uint16_t year;
+  short year;
 } date_t;
 
 typedef struct datetime_t
