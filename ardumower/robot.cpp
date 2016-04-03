@@ -1600,8 +1600,8 @@ void Robot::printInfo(Stream &s)
         if (lawnSensorUse)
         {
           Streamprint(s, "lawn %3d %3d ",
-                      (int)lawnSensor.getValue(FRONT),
-                      (int)lawnSensor.getValue(BACK));
+                      (int)lawnSensor.getValue(LawnSensor::FRONT),
+                      (int)lawnSensor.getValue(LawnSensor::BACK));
         }
       }
       else

@@ -8,12 +8,18 @@
 #ifndef LAWNSENSOR_H
 #define LAWNSENSOR_H
 
-#define FRONT 0
-#define BACK 1
-
 class LawnSensor
 {
   public:
+    enum
+    {
+      FRONT,
+      BACK
+    };
+
+    void setup(const uint8_t pinSendFront, const uint8_t pinReceiveFront,
+               const uint8_t pinSendBack, const uint8_t pinReceiveBack);
+
     float getValue(uint8_t index)
     {
       return value[index];

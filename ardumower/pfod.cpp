@@ -871,9 +871,9 @@ void RemoteControl::sendLawnSensorMenu(boolean update)
   Bluetooth.print(F("|f01~Counter "));
   Bluetooth.print(robot->lawnSensor.getCounter());
   Bluetooth.println(F("|f02~Value f, b"));
-  Bluetooth.print(robot->lawnSensor.getValue(FRONT));
+  Bluetooth.print(robot->lawnSensor.getValue(LawnSensor::FRONT));
   Bluetooth.print(", ");
-  Bluetooth.print(robot->lawnSensor.getValue(BACK));
+  Bluetooth.print(robot->lawnSensor.getValue(LawnSensor::BACK));
   Bluetooth.println("}");
 }
 

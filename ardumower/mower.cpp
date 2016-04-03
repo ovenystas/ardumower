@@ -364,10 +364,8 @@ void Mower::setup()
   pinMode(PIN_MOTOR_MOW_FAULT, INPUT);
 
   // lawn sensor
-  pinMode(PIN_LAWN_BACK_RECV, INPUT);
-  pinMode(PIN_LAWN_BACK_SEND, OUTPUT);
-  pinMode(PIN_LAWN_FRONT_RECV, INPUT);
-  pinMode(PIN_LAWN_FRONT_SEND, OUTPUT);
+  lawnSensor.setup(PIN_LAWN_FRONT_SEND, PIN_LAWN_FRONT_RECV,
+                   PIN_LAWN_BACK_SEND, PIN_LAWN_BACK_RECV);
 
   // perimeter
   perimeter.setup(PIN_PERIMETER_LEFT, PIN_PERIMETER_RIGHT);

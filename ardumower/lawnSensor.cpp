@@ -29,6 +29,20 @@ uint16_t LawnSensor::measureLawnCapacity(const uint8_t pinSend,
   return t;
 }
 
+void LawnSensor::setup(const uint8_t pinSendFront, const uint8_t pinReceiveFront,
+                       const uint8_t pinSendBack, const uint8_t pinReceiveBack)
+{
+  this->pinSend[FRONT] = pinSendFront;
+  this->pinReceive[FRONT] = pinReceiveFront;
+  this->pinSend[BACK] = pinSendBack;
+  this->pinReceive[BACK] = pinReceiveBack;
+
+  pinMode(pinSendFront, OUTPUT);
+  pinMode(pinReceiveFront, INPUT);
+  pinMode(pinSendBack, OUTPUT);
+  pinMode(pinReceiveBack, INPUT);
+}
+
 void LawnSensor::read()
 {
   const float accel = 0.03;
