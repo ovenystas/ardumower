@@ -1,0 +1,7 @@
+Motor object hierarchy
+----------------------
+                  Motor
+                /        \
+    MotorWheel               MotorMow
+     /       \                  |
+Ardumoto DeekRobotMotorShield Mosfet

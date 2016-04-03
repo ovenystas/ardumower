@@ -258,7 +258,7 @@ int I2CreadFrom(const uint8_t device, const uint8_t address,
 // IN2/C(10)/PinPWM   IN1/D(12)/PinDir
 // H                  L     Forward
 // L                  H     Reverse
-void setL298N(const uint8_t pinDir, const uint8_t pinPWM, const int speed)
+void setArdumoto(const uint8_t pinDir, const uint8_t pinPWM, const int speed)
 {
   bool dir;
 
@@ -346,26 +346,6 @@ boolean setDS1307(const datetime_t &dt)
   I2CwriteTo(DS1307_ADDRESS, 0x00, 7, buf);
 
   return true;
-}
-
-
-// measure lawn sensor capacity
-int measureLawnCapacity(const uint8_t pinSend, const uint8_t pinReceive)
-{
-  int t = 0;
-
-  digitalWrite(pinSend, HIGH);
-
-  while (digitalRead(pinReceive) == LOW)
-  {
-    t++;
-  }
-
-  digitalWrite(pinSend, LOW);
-  //t = pulseIn(pinReceive, HIGH);
-  //Console.println(t);
-
-  return t;
 }
 
 

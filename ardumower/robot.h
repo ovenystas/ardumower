@@ -42,6 +42,7 @@
 #include "bumper.h"
 #include "drop.h"
 #include "sonar.h"
+#include "lawnSensor.h"
 
 //#include "QueueList.h"
 //#include <limits.h>
@@ -147,12 +148,12 @@ enum
   STATE_PERI_OUT_ROLL,    // outside perimeter rolling driving without checkPerimeterBoundary()
 };
 
-// roll types
-enum
-{
-  LEFT,
-  RIGHT
-};
+#define LEFT 0
+#define RIGHT 1
+#define MOW 2
+#define CENTER 2
+#define FRONT 0
+#define BACK 1
 
 enum
 {
@@ -239,8 +240,7 @@ class Robot
     float odometryTheta; // theta angle (radiant)
     float odometryX;   // X map position (cm)
     float odometryY;   // Y map position (cm)
-    float motorLeftRpmCurr; // left wheel rpm
-    float motorRightRpmCurr; // right wheel rpm
+    float motorRpmCurr[2];               // wheel rpm
     unsigned long lastMotorRpmTime;
     unsigned long nextTimeOdometry;
     unsigned long nextTimeOdometryInfo;
@@ -269,40 +269,30 @@ class Robot
 
     // --------- wheel motor state ----------------------------
     // wheel motor speed ( <0 backward, >0 forward); range -motorSpeedMaxRpm..motorSpeedMaxRpm
-    float motorAccel; // motor wheel acceleration (warning: do not set too high)
-    int motorSpeedMaxRpm;   // motor wheel max RPM
-    int motorSpeedMaxPwm; // motor wheel max Pwm  (8-bit PWM=255, 10-bit PWM=1023)
-    float motorPowerMax;    // motor wheel max power (Watt)
-    PID motorLeftPID;              // motor left wheel PID controller
-    PID motorRightPID;              // motor right wheel PID controller
-    float motorSenseRightScale; // motor right sense scale (mA=(ADC-zero)/scale)
-    float motorSenseLeftScale; // motor left sense scale  (mA=(ADC-zero)/scale)
-    int motorRollTimeMax;  // max. roll time (ms)
-    int motorRollTimeMin; // min. roll time (ms)
-    int motorReverseTime;  // max. reverse time (ms)
-    long motorForwTimeMax; // max. forward time (ms) / timeout
-    float motorBiDirSpeedRatio1;   // bidir mow pattern speed ratio 1
-    float motorBiDirSpeedRatio2;   // bidir mow pattern speed ratio 2
-    bool motorRightSwapDir;    // inverse right motor direction?
-    bool motorLeftSwapDir;    // inverse left motor direction?
-    int motorLeftSpeedRpmSet; // set speed
-    int motorRightSpeedRpmSet;
-    float motorLeftPWMCurr; // current speed
-    float motorRightPWMCurr;
-    int motorRightSenseADC;
-    int motorLeftSenseADC;
-    float motorLeftSenseCurrent;
-    float motorRightSenseCurrent;
-    float motorLeftSense;      // motor power (range 0..MAX_MOTOR_POWER)
-    float motorRightSense;
+    float motorAccel;             // motor wheel acceleration (warning: do not set too high)
+    int motorSpeedMaxRpm;         // motor wheel max RPM
+    int motorSpeedMaxPwm;         // motor wheel max Pwm  (8-bit PWM=255, 10-bit PWM=1023)
+    float motorPowerMax;          // motor wheel max power (Watt)
+    PID motorPID[3];              // motor left wheel PID controller
+    float motorSenseScale[3];     // motor sense scale (mA=(ADC-zero)/scale)
+    int motorRollTimeMax;         // max. roll time (ms)
+    int motorRollTimeMin;         // min. roll time (ms)
+    int motorReverseTime;         // max. reverse time (ms)
+    long motorForwTimeMax;        // max. forward time (ms) / timeout
+    float motorBiDirSpeedRatio1;  // bidir mow pattern speed ratio 1
+    float motorBiDirSpeedRatio2;  // bidir mow pattern speed ratio 2
+    bool motorSwapDir[2];         // inverse motor direction
+    int motorSpeedRpmSet[2];      // set motor speed
+    float motorPWMCurr[2];        // current motor speed
+    int motorSenseADC[2];
+    float motorSenseCurrent[2];
+    float motorSense[2];          // motor power (range 0..MAX_MOTOR_POWER)
     int motorPowerIgnoreTime;
-    int motorZeroSettleTime; // how long (ms) to wait for motor to settle at zero speed
-    int motorLeftSenseCounter;  // motor current counter
-    int motorRightSenseCounter;
+    int motorZeroSettleTime;      // how long (ms) to wait for motor to settle at zero speed
+    int motorSenseCounter[2];     // motor current counter
     unsigned long nextTimeMotorSense;
     unsigned long lastSetMotorSpeedTime;
-    unsigned long motorLeftZeroTimeout;
-    unsigned long motorRightZeroTimeout;
+    unsigned long motorZeroTimeout[2];
     boolean rotateLeft;
     unsigned long nextTimeRotationChange;
 
@@ -381,13 +371,8 @@ class Robot
 
     //  --------- lawn state ----------------------------
     char lawnSensorUse;       // use capacitive Sensor
-    int lawnSensorCounter;
-    boolean lawnSensor;  // lawn capacity sensor state (true = no lawn detected)
-    float lawnSensorFront;  // front lawn sensor capacity (time)
-    float lawnSensorFrontOld;
-    float lawnSensorBack;   // back lawn sensor capacity (time)
-    float lawnSensorBackOld;
-    unsigned long nextTimeLawnSensor;
+    LawnSensor lawnSensor;
+    unsigned long nextTimeLawnSensorRead;
     unsigned long nextTimeLawnSensorCheck;
 
     // --------- rain -----------------------------------
@@ -518,7 +503,7 @@ class Robot
     virtual void setNextState(byte stateNew, byte dir);
 
     // motor
-    virtual void setMotorPWM(int pwmLeft, int pwmRight, boolean useAccel);
+    virtual void setMotorPWMs(int pwmLeft, int pwmRight, boolean useAccel);
     virtual void setMotorMowPWM(int pwm, boolean useAccel);
 
     // GPS
@@ -612,6 +597,9 @@ class Robot
     {
     }
     ;
+
+  private:
+    void setMotorPWM(int pwm, unsigned long TaC, uint8_t motor, boolean useAccel);
 };
 
 #endif

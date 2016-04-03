@@ -42,13 +42,14 @@
 
 // ------ pins---------------------------------------
 #define PIN_MOTOR_ENABLE  37          // EN motors enable
-#define PIN_MOTOR_LEFT_PWM 5          // M1_IN1 left motor PWM pin
-#define PIN_MOTOR_LEFT_DIR 31         // M1_IN2 left motor Dir pin
+
+#define PIN_MOTOR_LEFT_PWM 3          // M1_IN1 left motor PWM pin
+#define PIN_MOTOR_LEFT_DIR 12         // M1_IN2 left motor Dir pin
 #define PIN_MOTOR_LEFT_SENSE A1       // M1_FB  left motor current sense
 #define PIN_MOTOR_LEFT_FAULT 25       // M1_SF  left motor fault
 
-#define PIN_MOTOR_RIGHT_PWM  3        // M2_IN1 right motor PWM pin
-#define PIN_MOTOR_RIGHT_DIR 33        // M2_IN2 right motor Dir pin
+#define PIN_MOTOR_RIGHT_PWM  11       // M2_IN1 right motor PWM pin
+#define PIN_MOTOR_RIGHT_DIR 13        // M2_IN2 right motor Dir pin
 #define PIN_MOTOR_RIGHT_SENSE A0      // M2_FB  right motor current sense
 #define PIN_MOTOR_RIGHT_FAULT 27      // M2_SF  right motor fault
 
@@ -129,8 +130,8 @@ Mower::Mower()
   motorSpeedMaxRpm = 25;        // motor wheel max RPM (WARNING: do not set too high, so there's still speed control when battery is low!)
   motorSpeedMaxPwm = 255;       // motor wheel max Pwm  (8-bit PWM=255, 10-bit PWM=1023)
   motorPowerMax = 75;           // motor wheel max power (Watt)
-  motorSenseRightScale = 15.3;  // motor right sense scale (mA=(ADC-zero)/scale)
-  motorSenseLeftScale = 15.3;   // motor left sense scale  (mA=(ADC-zero)/scale)
+  motorSenseScale[RIGHT] = 15.3;  // motor right sense scale (mA=(ADC-zero)/scale)
+  motorSenseScale[LEFT] = 15.3;   // motor left sense scale  (mA=(ADC-zero)/scale)
   motorPowerIgnoreTime = 2000;  // time to ignore motor power (ms)
   motorZeroSettleTime = 3000;   // how long (ms) to wait for motors to settle at zero speed
   motorRollTimeMax = 1500;      // max. roll time (ms)
@@ -141,17 +142,24 @@ Mower::Mower()
   motorBiDirSpeedRatio2 = 0.92; // bidir mow pattern speed ratio 2
 
   // ---- normal control ---
-  motorLeftPID.Kp = 1.5;        // motor wheel PID controller
-  motorLeftPID.Ki = 0.29;
-  motorLeftPID.Kd = 0.25;
+  motorPID[LEFT].Kp = 1.5;        // motor wheel PID controller
+  motorPID[LEFT].Ki = 0.29;
+  motorPID[LEFT].Kd = 0.25;
+  motorPID[RIGHT].Kp = 1.5;        // motor wheel PID controller
+  motorPID[RIGHT].Ki = 0.29;
+  motorPID[RIGHT].Kd = 0.25;
 
-  /*// ---- fast control ---
-   motorLeftPID.Kp       = 1.76;    // motor wheel PID controller
-   motorLeftPID.Ki       = 0.87;
-   motorLeftPID.Kd       = 0.4;*/
+  // ---- fast control ---
+  /*
+  motorPID[LEFT].Kp = 1.76;    // motor wheel PID controller
+  motorPID[LEFT].Ki = 0.87;
+  motorPID[LEFT].Kd = 0.4;
+  motorPID[RIGHT].Kp = 1.76;    // motor wheel PID controller
+  motorPID[RIGHT].Ki = 0.87;
+  motorPID[RIGHT].Kd = 0.4;*/
 
-  motorRightSwapDir = 0; // inverse right motor direction?
-  motorLeftSwapDir = 0;  // inverse left motor direction?
+  motorSwapDir[RIGHT] = 0; // inverse right motor direction?
+  motorSwapDir[LEFT] = 0;  // inverse left motor direction?
 
   // ------ mower motor -------------------------------
   motorMowAccel = 2000;      // motor mower acceleration (warning: do not set too low) 2000 seems to fit best considerating start time and power consumption
@@ -159,10 +167,10 @@ Mower::Mower()
   motorMowPowerMax = 75.0;   // motor mower max power (Watt)
   motorMowModulate = 0;      // motor mower cutter modulation?
   motorMowRPMSet = 3300;     // motor mower RPM (only for cutter modulation)
-  motorMowSenseScale = 15.3; // motor mower sense scale (mA=(ADC-zero)/scale)
-  motorMowPID.Kp = 0.005;    // motor mower RPM PID controller
-  motorMowPID.Ki = 0.01;
-  motorMowPID.Kd = 0.01;
+  motorSenseScale[MOW] = 15.3; // motor mower sense scale (mA=(ADC-zero)/scale)
+  motorPID[MOW].Kp = 0.005;  // motor mower RPM PID controller
+  motorPID[MOW].Ki = 0.01;
+  motorPID[MOW].Kd = 0.01;
 
   //  ------ bumper -----------------------------------
   bumperUse = 0; // has bumpers?
@@ -580,13 +588,13 @@ void Mower::setActuator(char type, int value)
   switch (type)
   {
     case ACT_MOTOR_MOW:
-      setL298N(PIN_MOTOR_MOW_DIR, PIN_MOTOR_MOW_PWM, value);
+      setArdumoto(PIN_MOTOR_MOW_DIR, PIN_MOTOR_MOW_PWM, value);
       break;
     case ACT_MOTOR_LEFT:
-      setL298N(PIN_MOTOR_LEFT_DIR, PIN_MOTOR_LEFT_PWM, value);
+      setArdumoto(PIN_MOTOR_LEFT_DIR, PIN_MOTOR_LEFT_PWM, value);
       break;
     case ACT_MOTOR_RIGHT:
-      setL298N(PIN_MOTOR_RIGHT_DIR, PIN_MOTOR_RIGHT_PWM, value);
+      setArdumoto(PIN_MOTOR_RIGHT_DIR, PIN_MOTOR_RIGHT_PWM, value);
       break;
     case ACT_BUZZER:
       if (value == 0)

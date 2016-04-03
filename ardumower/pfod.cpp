@@ -396,28 +396,28 @@ void RemoteControl::sendMotorMenu(boolean update)
     Bluetooth.print(F("{.Motor`1000"));
   }
   Bluetooth.println(F("|a00~Overload Counter l, r "));
-  Bluetooth.print(robot->motorLeftSenseCounter);
+  Bluetooth.print(robot->motorSenseCounter[LEFT]);
   Bluetooth.print(", ");
-  Bluetooth.print(robot->motorRightSenseCounter);
+  Bluetooth.print(robot->motorSenseCounter[RIGHT]);
   Bluetooth.println(F("|a01~Power in Watt l, r "));
-  Bluetooth.print(robot->motorLeftSense);
+  Bluetooth.print(robot->motorSense[LEFT]);
   Bluetooth.print(", ");
-  Bluetooth.print(robot->motorRightSense);
+  Bluetooth.print(robot->motorSense[RIGHT]);
   Bluetooth.println(F("|a05~motor current in mA l, r "));
-  Bluetooth.print(robot->motorLeftSenseCurrent);
+  Bluetooth.print(robot->motorSenseCurrent[LEFT]);
   Bluetooth.print(", ");
-  Bluetooth.print(robot->motorRightSenseCurrent);
+  Bluetooth.print(robot->motorSenseCurrent[RIGHT]);
   //Console.print("motorpowermax=");
   //Console.println(robot->motorPowerMax);
   sendSlider("a02", F("Power max"), robot->motorPowerMax, "", 0.1, 100);
-  sendSlider("a03", F("calibrate left motor "), robot->motorLeftSenseCurrent,
+  sendSlider("a03", F("calibrate left motor "), robot->motorSenseCurrent[LEFT],
              "", 1, 1000, 0);
-  sendSlider("a04", F("calibrate right motor"), robot->motorRightSenseCurrent,
+  sendSlider("a04", F("calibrate right motor"), robot->motorSenseCurrent[RIGHT],
              "", 1, 1000, 0);
   Bluetooth.print(F("|a05~Speed l, r"));
-  Bluetooth.print(robot->motorLeftPWMCurr);
+  Bluetooth.print(robot->motorPWMCurr[LEFT]);
   Bluetooth.print(", ");
-  Bluetooth.print(robot->motorRightPWMCurr);
+  Bluetooth.print(robot->motorPWMCurr[RIGHT]);
   sendSlider("a06", F("Speed max in rpm"), robot->motorSpeedMaxRpm, "", 1, 100);
   sendSlider("a15", F("Speed max in pwm"), robot->motorSpeedMaxPwm, "", 1, 255);
   sendSlider("a11", F("Accel"), robot->motorAccel, "", 1, 2000, 500);
@@ -432,7 +432,7 @@ void RemoteControl::sendMotorMenu(boolean update)
              0.01, 1.0);
   sendSlider("a13", F("Bidir speed ratio 2"), robot->motorBiDirSpeedRatio2, "",
              0.01, 1.0);
-  sendPIDSlider("a14", "RPM", robot->motorLeftPID, 0.01, 3.0);
+  sendPIDSlider("a14", "RPM", robot->motorPID[LEFT], 0.01, 3.0);
   Bluetooth.println(F("|a10~Testing is"));
   switch (testmode)
   {
@@ -448,13 +448,13 @@ void RemoteControl::sendMotorMenu(boolean update)
   }
   Bluetooth.print(F("|a14~for config file:"));
   Bluetooth.print(F("motorSenseScale l, r"));
-  Bluetooth.print(robot->motorSenseLeftScale);
+  Bluetooth.print(robot->motorSenseScale[LEFT]);
   Bluetooth.print(", ");
-  Bluetooth.print(robot->motorSenseRightScale);
+  Bluetooth.print(robot->motorSenseScale[RIGHT]);
   Bluetooth.print(F("|a16~Swap left direction "));
-  sendYesNo(robot->motorLeftSwapDir);
+  sendYesNo(robot->motorSwapDir[LEFT]);
   Bluetooth.print(F("|a17~Swap right direction "));
-  sendYesNo(robot->motorRightSwapDir);
+  sendYesNo(robot->motorSwapDir[RIGHT]);
   Bluetooth.println("}");
 }
 
@@ -469,15 +469,15 @@ void RemoteControl::processMotorMenu(String pfodCmd)
 
   else if (pfodCmd.startsWith("a03"))
   {
-    processSlider(pfodCmd, robot->motorLeftSenseCurrent, 1);
-    robot->motorSenseLeftScale = robot->motorLeftSenseCurrent /
-        max(0, (float)robot->motorLeftSenseADC);
+    processSlider(pfodCmd, robot->motorSenseCurrent[LEFT], 1);
+    robot->motorSenseScale[LEFT] = robot->motorSenseCurrent[LEFT] /
+        max(0, (float)robot->motorSenseADC[LEFT]);
   }
   else if (pfodCmd.startsWith("a04"))
   {
-    processSlider(pfodCmd, robot->motorRightSenseCurrent, 1);
-    robot->motorSenseRightScale = robot->motorRightSenseCurrent /
-        max(0, (float )robot->motorRightSenseADC);
+    processSlider(pfodCmd, robot->motorSenseCurrent[RIGHT], 1);
+    robot->motorSenseScale[RIGHT] = robot->motorSenseCurrent[RIGHT] /
+        max(0, (float )robot->motorSenseADC[RIGHT]);
   }
   else if (pfodCmd.startsWith("a06"))
   {
@@ -517,15 +517,15 @@ void RemoteControl::processMotorMenu(String pfodCmd)
   }
   else if (pfodCmd.startsWith("a14"))
   {
-    processPIDSlider(pfodCmd, "a14", robot->motorLeftPID, 0.01, 3.0);
+    processPIDSlider(pfodCmd, "a14", robot->motorPID[LEFT], 0.01, 3.0);
   }
   else if (pfodCmd.startsWith("a16"))
   {
-    robot->motorLeftSwapDir = !robot->motorLeftSwapDir;
+    robot->motorSwapDir[LEFT] = !robot->motorSwapDir[LEFT];
   }
   else if (pfodCmd.startsWith("a17"))
   {
-    robot->motorRightSwapDir = !robot->motorRightSwapDir;
+    robot->motorSwapDir[RIGHT] = !robot->motorSwapDir[RIGHT];
   }
   else if (pfodCmd.startsWith("a18"))
   {
@@ -541,13 +541,13 @@ void RemoteControl::processMotorMenu(String pfodCmd)
         break;
       case 1:
         robot->setNextState(STATE_MANUAL, 0);
-        robot->motorRightSpeedRpmSet = 0;
-        robot->motorLeftSpeedRpmSet = robot->motorSpeedMaxRpm;
+        robot->motorSpeedRpmSet[RIGHT] = 0;
+        robot->motorSpeedRpmSet[LEFT] = robot->motorSpeedMaxRpm;
         break;
       case 2:
         robot->setNextState(STATE_MANUAL, 0);
-        robot->motorLeftSpeedRpmSet = 0;
-        robot->motorRightSpeedRpmSet = robot->motorSpeedMaxRpm;
+        robot->motorSpeedRpmSet[LEFT] = 0;
+        robot->motorSpeedRpmSet[RIGHT] = robot->motorSpeedMaxRpm;
         break;
     }
   }
@@ -584,7 +584,7 @@ void RemoteControl::sendMowMenu(boolean update)
   Bluetooth.print(F("|o07~RPM "));
   Bluetooth.print(robot->motorMowRpmCurr);
   sendSlider("o08", F("RPM set"), robot->motorMowRPMSet, "", 1, 4500);
-  sendPIDSlider("o09", "RPM", robot->motorMowPID, 0.01, 1.0);
+  sendPIDSlider("o09", "RPM", robot->motorPID[MOW], 0.01, 1.0);
   Bluetooth.println(F("|o10~Testing is"));
   switch (testmode)
   {
@@ -597,7 +597,7 @@ void RemoteControl::sendMowMenu(boolean update)
   }
   Bluetooth.println(F("|o04~for config file:"));
   Bluetooth.println(F("motorMowSenseScale:"));
-  Bluetooth.print(robot->motorMowSenseScale);
+  Bluetooth.print(robot->motorSenseScale[MOW]);
   Bluetooth.println("}");
 }
 
@@ -610,7 +610,7 @@ void RemoteControl::processMowMenu(String pfodCmd)
   else if (pfodCmd.startsWith("o03"))
   {
     processSlider(pfodCmd, robot->motorMowSenseCurrent, 1);
-    robot->motorMowSenseScale = robot->motorMowSenseCurrent /
+    robot->motorSenseScale[MOW] = robot->motorMowSenseCurrent /
         max(0, (float )robot->motorMowSenseADC);
   }
   else if (pfodCmd.startsWith("o05"))
@@ -627,7 +627,7 @@ void RemoteControl::processMowMenu(String pfodCmd)
   }
   else if (pfodCmd.startsWith("o09"))
   {
-    processPIDSlider(pfodCmd, "o09", robot->motorMowPID, 0.01, 1.0);
+    processPIDSlider(pfodCmd, "o09", robot->motorPID[MOW], 0.01, 1.0);
   }
   else if (pfodCmd == "o10")
   {
@@ -869,11 +869,11 @@ void RemoteControl::sendLawnSensorMenu(boolean update)
   Bluetooth.print(F("|f00~Use "));
   sendYesNo(robot->lawnSensorUse);
   Bluetooth.print(F("|f01~Counter "));
-  Bluetooth.print(robot->lawnSensorCounter);
+  Bluetooth.print(robot->lawnSensor.getCounter());
   Bluetooth.println(F("|f02~Value f, b"));
-  Bluetooth.print(robot->lawnSensorFront);
+  Bluetooth.print(robot->lawnSensor.getValue(FRONT));
   Bluetooth.print(", ");
-  Bluetooth.print(robot->lawnSensorBack);
+  Bluetooth.print(robot->lawnSensor.getValue(BACK));
   Bluetooth.println("}");
 }
 
@@ -1104,9 +1104,9 @@ void RemoteControl::sendOdometryMenu(boolean update)
   Bluetooth.print(", ");
   Bluetooth.println(robot->odometryRight);
   Bluetooth.println(F("|l03~RPM Motor l, r "));
-  Bluetooth.print(robot->motorLeftRpmCurr);
+  Bluetooth.print(robot->motorRpmCurr[LEFT]);
   Bluetooth.print(", ");
-  Bluetooth.println(robot->motorRightRpmCurr);
+  Bluetooth.println(robot->motorRpmCurr[RIGHT]);
   sendSlider("l04", F("Ticks per one full revolution"),
              robot->odometryTicksPerRevolution, "", 1, 2000);
   sendSlider("l01", F("Ticks per cm"), robot->odometryTicksPerCm, "", 0.1, 30);
@@ -1396,7 +1396,7 @@ void RemoteControl::sendCommandMenu(boolean update)
   Bluetooth.print(F("|rh~Home|rk~Track|rs~State is "));
   Bluetooth.print(robot->stateName());
   Bluetooth.print(F("|rr~Auto rotate is "));
-  Bluetooth.print(robot->motorLeftPWMCurr);
+  Bluetooth.print(robot->motorPWMCurr[LEFT]);
   Bluetooth.print(F("|r1~User switch 1 is "));
   sendOnOff(robot->userSwitch1);
   Bluetooth.print(F("|r2~User switch 2 is "));
@@ -1424,8 +1424,8 @@ void RemoteControl::processCommandMenu(String pfodCmd)
   else if (pfodCmd == "rr")
   {
     robot->setNextState(STATE_MANUAL, 0);
-    robot->motorLeftSpeedRpmSet += 10;
-    robot->motorRightSpeedRpmSet = -robot->motorLeftSpeedRpmSet;
+    robot->motorSpeedRpmSet[LEFT] += 10;
+    robot->motorSpeedRpmSet[RIGHT] = -robot->motorSpeedRpmSet[LEFT];
     sendCommandMenu(true);
   }
   else if (pfodCmd == "rk")
@@ -1498,11 +1498,11 @@ void RemoteControl::sendManualMenu(boolean update)
   else
     Bluetooth.println(F("{^Manual navigation`1000"));
   Bluetooth.print(F("|nl~Left|nr~Right|nf~Forward"));
-  if (((robot->motorLeftSpeedRpmSet < 5) && (robot->motorLeftSpeedRpmSet > -5)) && ((robot
-      ->motorRightSpeedRpmSet
+  if (((robot->motorSpeedRpmSet[LEFT] < 5) && (robot->motorSpeedRpmSet[LEFT] > -5)) && ((robot
+      ->motorSpeedRpmSet[RIGHT]
                                                                                      < 5)
                                                                                     && (robot
-                                                                                        ->motorRightSpeedRpmSet
+                                                                                        ->motorSpeedRpmSet[RIGHT]
                                                                                         > -5)))
   {
     Bluetooth.print(F("|nb~Reverse"));
@@ -1565,14 +1565,14 @@ void RemoteControl::processManualMenu(String pfodCmd)
     // manual: left
     robot->setNextState(STATE_MANUAL, 0);
     float sign = 1.0;
-    if (robot->motorLeftSpeedRpmSet < 0)
+    if (robot->motorSpeedRpmSet[LEFT] < 0)
       sign = -1.0;
-    if (sign * robot->motorLeftSpeedRpmSet >= sign
-        * robot->motorRightSpeedRpmSet)
-      robot->motorLeftSpeedRpmSet = sign * robot->motorSpeedMaxRpm / 2;
+    if (sign * robot->motorSpeedRpmSet[LEFT] >= sign
+        * robot->motorSpeedRpmSet[RIGHT])
+      robot->motorSpeedRpmSet[LEFT] = sign * robot->motorSpeedMaxRpm / 2;
     else
-      robot->motorLeftSpeedRpmSet /= 2;
-    robot->motorRightSpeedRpmSet = sign * robot->motorSpeedMaxRpm;
+      robot->motorSpeedRpmSet[LEFT] /= 2;
+    robot->motorSpeedRpmSet[RIGHT] = sign * robot->motorSpeedMaxRpm;
     sendManualMenu(true);
   }
   else if (pfodCmd == "nr")
@@ -1580,30 +1580,30 @@ void RemoteControl::processManualMenu(String pfodCmd)
     // manual: right
     robot->setNextState(STATE_MANUAL, 0);
     float sign = 1.0;
-    if (robot->motorRightSpeedRpmSet < 0)
+    if (robot->motorSpeedRpmSet[RIGHT] < 0)
       sign = -1.0;
-    if (sign * robot->motorRightSpeedRpmSet >= sign
-        * robot->motorLeftSpeedRpmSet)
-      robot->motorRightSpeedRpmSet = sign * robot->motorSpeedMaxRpm / 2;
+    if (sign * robot->motorSpeedRpmSet[RIGHT] >= sign
+        * robot->motorSpeedRpmSet[LEFT])
+      robot->motorSpeedRpmSet[RIGHT] = sign * robot->motorSpeedMaxRpm / 2;
     else
-      robot->motorRightSpeedRpmSet /= 2;
-    robot->motorLeftSpeedRpmSet = sign * robot->motorSpeedMaxRpm;
+      robot->motorSpeedRpmSet[RIGHT] /= 2;
+    robot->motorSpeedRpmSet[LEFT] = sign * robot->motorSpeedMaxRpm;
     sendManualMenu(true);
   }
   else if (pfodCmd == "nf")
   {
     // manual: forward
     robot->setNextState(STATE_MANUAL, 0);
-    robot->motorLeftSpeedRpmSet = robot->motorSpeedMaxRpm;
-    robot->motorRightSpeedRpmSet = robot->motorSpeedMaxRpm;
+    robot->motorSpeedRpmSet[LEFT] = robot->motorSpeedMaxRpm;
+    robot->motorSpeedRpmSet[RIGHT] = robot->motorSpeedMaxRpm;
     sendManualMenu(true);
   }
   else if (pfodCmd == "nb")
   {
     // manual: reverse
     robot->setNextState(STATE_MANUAL, 0);
-    robot->motorLeftSpeedRpmSet = -robot->motorSpeedMaxRpm;
-    robot->motorRightSpeedRpmSet = -robot->motorSpeedMaxRpm;
+    robot->motorSpeedRpmSet[LEFT] = -robot->motorSpeedMaxRpm;
+    robot->motorSpeedRpmSet[RIGHT] = -robot->motorSpeedMaxRpm;
     sendManualMenu(true);
   }
   else if (pfodCmd == "nm")
@@ -1616,7 +1616,7 @@ void RemoteControl::processManualMenu(String pfodCmd)
   {
     // manual: stop
     //setNextState(STATE_OFF, 0);
-    robot->motorLeftSpeedRpmSet = robot->motorRightSpeedRpmSet = 0;
+    robot->motorSpeedRpmSet[LEFT] = robot->motorSpeedRpmSet[RIGHT] = 0;
     sendManualMenu(true);
   }
 }
@@ -1673,9 +1673,9 @@ void RemoteControl::run()
     //Bluetooth.println("test");
     Bluetooth.print((float(millis()) / 1000.0f));
     Bluetooth.print(",");
-    Bluetooth.print(robot->motorLeftSense);
+    Bluetooth.print(robot->motorSense[LEFT]);
     Bluetooth.print(",");
-    Bluetooth.print(robot->motorRightSense);
+    Bluetooth.print(robot->motorSense[RIGHT]);
     Bluetooth.print(",");
     Bluetooth.print(robot->motorMowSense);
     Bluetooth.print(",");
@@ -1801,9 +1801,9 @@ void RemoteControl::run()
       Bluetooth.print(",");
       Bluetooth.print(robot->stateCurr);
       Bluetooth.print(",");
-      Bluetooth.print(robot->motorLeftSenseCounter);
+      Bluetooth.print(robot->motorSenseCounter[LEFT]);
       Bluetooth.print(",");
-      Bluetooth.print(robot->motorRightSenseCounter);
+      Bluetooth.print(robot->motorSenseCounter[RIGHT]);
       Bluetooth.print(",");
       Bluetooth.print(robot->motorMowSenseCounter);
       Bluetooth.print(",");
@@ -1815,7 +1815,7 @@ void RemoteControl::run()
       Bluetooth.print(",");
       Bluetooth.print(robot->perimeterCounter);
       Bluetooth.print(",");
-      Bluetooth.print(robot->lawnSensorCounter);
+      Bluetooth.print(robot->lawnSensor.getCounter());
       Bluetooth.print(",");
       Bluetooth.print(robot->rainCounter);
       Bluetooth.print(",");
@@ -1833,9 +1833,9 @@ void RemoteControl::run()
       Bluetooth.print(",");
       Bluetooth.print(robot->stateCurr);
       Bluetooth.print(",");
-      Bluetooth.print(robot->motorLeftSense);
+      Bluetooth.print(robot->motorSense[LEFT]);
       Bluetooth.print(",");
-      Bluetooth.print(robot->motorRightSense);
+      Bluetooth.print(robot->motorSense[RIGHT]);
       Bluetooth.print(",");
       Bluetooth.print(robot->motorMowSense);
       Bluetooth.print(",");
@@ -1846,7 +1846,7 @@ void RemoteControl::run()
       }
       Bluetooth.print(robot->perimeter.isInside(0));
       Bluetooth.print(",");
-      Bluetooth.print(robot->lawnSensor);
+      Bluetooth.print(robot->lawnSensor.isDetected());
       Bluetooth.print(",");
       Bluetooth.print(robot->rain);
       Bluetooth.print(",");
@@ -1930,23 +1930,23 @@ void RemoteControl::run()
       nextPlotTime = millis() + 50;
       Bluetooth.print((float(millis()) / 1000.0f));
       Bluetooth.print(",");
-      Bluetooth.print(robot->motorLeftRpmCurr);
+      Bluetooth.print(robot->motorRpmCurr[LEFT]);
       Bluetooth.print(",");
-      Bluetooth.print(robot->motorRightRpmCurr);
+      Bluetooth.print(robot->motorRpmCurr[RIGHT]);
       Bluetooth.print(",");
       //      Bluetooth.print(robot->motorLeftSpeedRpmSet);
-      Bluetooth.print(robot->motorLeftPID.w);
+      Bluetooth.print(robot->motorPID[LEFT].w);
       Bluetooth.print(",");
       //      Bluetooth.print(robot->motorRightSpeedRpmSet);
-      Bluetooth.print(robot->motorRightPID.w);
+      Bluetooth.print(robot->motorPID[RIGHT].w);
       Bluetooth.print(",");
-      Bluetooth.print(robot->motorLeftPWMCurr);
+      Bluetooth.print(robot->motorPWMCurr[LEFT]);
       Bluetooth.print(",");
-      Bluetooth.print(robot->motorRightPWMCurr);
+      Bluetooth.print(robot->motorPWMCurr[RIGHT]);
       Bluetooth.print(",");
-      Bluetooth.print(robot->motorLeftPID.eold);
+      Bluetooth.print(robot->motorPID[LEFT].eold);
       Bluetooth.print(",");
-      Bluetooth.println(robot->motorRightPID.eold);
+      Bluetooth.println(robot->motorPID[RIGHT].eold);
     }
   }
 }

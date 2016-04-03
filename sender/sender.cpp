@@ -23,42 +23,12 @@
  */
 
 #include <Arduino.h>
+#include "config.h"
 #include "TimerOne.h"
-#include "EEPROM.h"
-#include "RunningMedian.h"
+//#include "EEPROM.h"
+//#include "RunningMedian.h"
 
 // #define USE_DEVELOPER_TEST    1      // uncomment for new perimeter signal test (developers)
-
-// --- MC33926 motor driver ---
-#define USE_DOUBLE_AMPLTIUDE    1         // uncomment to use +/- input voltage for amplitude (default),
-// comment to use only +input/GND voltage for amplitude
-
-#define PIN_IN1       9  // M1_IN1         (if using old L298N driver, connect this pin to L298N-IN1)
-#define PIN_IN2       2  // M1_IN2         (if using old L298N driver, connect this pin to L298N-IN2)
-#define PIN_PWM       3  // M1_PWM / nD2   (if using old L298N driver, leave open)
-#define PIN_ENABLE    5  // EN             (connect to motor driver enable)
-
-// motor driver fault pin
-#define PIN_FAULT     4  // M1_nSF
-#define USE_PERI_FAULT        0     // use pinFault for driver fault detection? (set to '0' if not connected!)
-
-// motor driver feedback pin (=perimeter open/close detection, used for status LED)
-#define USE_PERI_CURRENT      1     // use pinFeedback for perimeter current measurements? (set to '0' if not connected!)
-#define PIN_FEEDBACK A0  // M1_FB
-#define PERI_CURRENT_MIN    0.03     // minimum Ampere for perimeter-is-closed detection
-
-// ---- sender current control (via potentiometer) ----
-// sender modulates signal (PWM), based on duty-cycle set via this potentiometer
-#define PIN_POT      A3  // 100k potentiometer (current control)
-
-// ---- sender automatic standby (via current sensor for charger) ----
-// sender detects robot via a charging current through the charging pins
-#define USE_CHG_CURRENT       0     // use charging current sensor for robot detection? (set to '0' if not connected!)
-#define PIN_CHARGE_CURRENT    A2     // ACS712-05 current sensor OUT
-#define CHG_CURRENT_MIN   0.008      // minimum Ampere for charging detection
-
-// ---- sender status LED ----
-#define  PIN_LED 13  // ON: perimeter closed, OFF: perimeter open, BLINK: robot is charging
 
 // code version
 #define VER "600"
@@ -68,16 +38,16 @@
 volatile int step = 0;
 volatile boolean enableSender = true;
 
-uint8_t dutyPWM = 0;
-float chargeCurrent = 0;
-float periCurrentAvg = 0;
-float periCurrentMax = 0;
-int faults = 0;
-boolean isCharging = false;
+//uint8_t dutyPWM = 0;
+//float chargeCurrent = 0;
+//float periCurrentAvg = 0;
+//float periCurrentMax = 0;
+//int faults = 0;
+//boolean isCharging = false;
 boolean stateLED = false;
-unsigned int chargeADCZero = 0;
-RunningMedian<unsigned int, 16> periCurrentMeasurements;
-RunningMedian<unsigned int, 96> chargeCurrentMeasurements;
+//unsigned int chargeADCZero = 0;
+//RunningMedian<unsigned int, 16> periCurrentMeasurements;
+//RunningMedian<unsigned int, 96> chargeCurrentMeasurements;
 
 unsigned long nextTimeControl = 0;
 unsigned long nextTimeInfo = 0;
@@ -126,7 +96,7 @@ void timerCallback(void)
       digitalWrite(PIN_ENABLE, LOW);
     }
     step++;
-    if (step == sizeof sigcode)
+    if (step == sizeof(sigcode))
     {
       step = 0;
     }
@@ -138,64 +108,64 @@ void timerCallback(void)
 }
 
 
-void readEEPROM()
-{
-  if (EEPROM.read(0) == 43)
-  {
-    // EEPROM data available
-    chargeADCZero = (EEPROM.read(1) << 8) | EEPROM.read(2);
-  }
-  else
-  {
-    Serial.println("no EEPROM data found, using default calibration (INA169)");
-  }
-  Serial.print("chargeADCZero=");
-  Serial.println(chargeADCZero);
-}
+//void readEEPROM()
+//{
+//  if (EEPROM.read(0) == 43)
+//  {
+//    // EEPROM data available
+//    chargeADCZero = (EEPROM.read(1) << 8) | EEPROM.read(2);
+//  }
+//  else
+//  {
+//    Serial.println("no EEPROM data found, using default calibration (INA169)");
+//  }
+//  Serial.print("chargeADCZero=");
+//  Serial.println(chargeADCZero);
+//}
 
 
-void calibrateChargeCurrentSensor()
-{
-  Serial.println("calibrateChargeCurrentSensor "
-                 "(note: robot must be outside charging station!)");
-  RunningMedian<unsigned int, 32> measurements;
-  for (unsigned int i = 0; i < measurements.getSize(); i++)
-  {
-    unsigned int m = analogRead(PIN_CHARGE_CURRENT);
-    //Serial.println(m);
-    measurements.add(m);
-    delay(50);
-  }
-  float v;
-  measurements.getAverage(v);
-  chargeADCZero = v;
-  EEPROM.write(0, 43);
-  EEPROM.write(1, chargeADCZero >> 8);
-  EEPROM.write(2, chargeADCZero & 0xFF);
-  Serial.println("calibration done");
-  readEEPROM();
-}
+//void calibrateChargeCurrentSensor()
+//{
+//  Serial.println("calibrateChargeCurrentSensor "
+//                 "(note: robot must be outside charging station!)");
+//  RunningMedian<unsigned int, 32> measurements;
+//  for (unsigned int i = 0; i < measurements.getSize(); i++)
+//  {
+//    unsigned int m = analogRead(PIN_CHARGE_CURRENT);
+//    //Serial.println(m);
+//    measurements.add(m);
+//    delay(50);
+//  }
+//  float v;
+//  measurements.getAverage(v);
+//  chargeADCZero = v;
+//  EEPROM.write(0, 43);
+//  EEPROM.write(1, chargeADCZero >> 8);
+//  EEPROM.write(2, chargeADCZero & 0xFF);
+//  Serial.println("calibration done");
+//  readEEPROM();
+//}
 
 
-void checkKey()
-{
-  if (Serial.available() > 0)
-  {
-    char ch = (char)Serial.read();
-    Serial.print("received key=");
-    Serial.println(ch);
-    while (Serial.available())
-    {
-      Serial.read();
-    }
-    switch (ch)
-    {
-      case '1':
-        calibrateChargeCurrentSensor();
-        break;
-    }
-  }
-}
+//void checkKey()
+//{
+//  if (Serial.available() > 0)
+//  {
+//    char ch = (char)Serial.read();
+//    Serial.print("received key=");
+//    Serial.println(ch);
+//    while (Serial.available())
+//    {
+//      Serial.read();
+//    }
+//    switch (ch)
+//    {
+//      case '1':
+//        calibrateChargeCurrentSensor();
+//        break;
+//    }
+//  }
+//}
 
 
 // Interrupt service run when Timer/Counter2 reaches OCR2A
@@ -205,18 +175,18 @@ void checkKey()
 //fault = true;
 
 
-void fault()
-{
-  Serial.println("MC_FAULT");
-  for (int i = 0; i < 10; i++)
-  {
-    digitalWrite(PIN_LED, HIGH);
-    delay(50);
-    digitalWrite(PIN_LED, LOW);
-    delay(50);
-  }
-  faults++;
-}
+//void fault()
+//{
+//  Serial.println("MC_FAULT");
+//  for (int i = 0; i < 10; i++)
+//  {
+//    digitalWrite(PIN_LED, HIGH);
+//    delay(50);
+//    digitalWrite(PIN_LED, LOW);
+//    delay(50);
+//  }
+//  faults++;
+//}
 
 
 void setup()
@@ -224,16 +194,16 @@ void setup()
   pinMode(PIN_IN1, OUTPUT);
   pinMode(PIN_IN2, OUTPUT);
   pinMode(PIN_ENABLE, OUTPUT);
-  pinMode(PIN_PWM, OUTPUT);
+  //pinMode(PIN_PWM, OUTPUT);
 
-  pinMode(PIN_FEEDBACK, INPUT);
-  pinMode(PIN_FAULT, INPUT);
-  pinMode(PIN_POT, INPUT);
-  pinMode(PIN_CHARGE_CURRENT, INPUT);
+  //pinMode(PIN_FEEDBACK, INPUT);
+  //pinMode(PIN_FAULT, INPUT);
+  //pinMode(PIN_POT, INPUT);
+  //pinMode(PIN_CHARGE_CURRENT, INPUT);
 
   // configure ADC reference
   // analogReference(DEFAULT); // ADC 5.0v ref
-  analogReference(INTERNAL); // ADC 1.1v ref
+  //analogReference(INTERNAL); // ADC 1.1v ref
 
   // sample rate 9615 Hz (19230,76923076923 / 2 => 9615.38)
   int T = 1000.0 * 1000.0 / 9615.38;
@@ -245,11 +215,11 @@ void setup()
 #ifdef USE_DEVELOPER_TEST
   Serial.println("Warning: USE_DEVELOPER_TEST activated");
 #endif
-  //Serial.println("press...");
-  //Serial.println("  1  for current sensor calibration");
-  //Serial.println();
+  Serial.println("press...");
+  Serial.println("  1  for current sensor calibration");
+  Serial.println();
 
-  readEEPROM();
+//  readEEPROM();
   Serial.print("T=");
   Serial.println(T);
   Serial.print("f=");
@@ -264,7 +234,7 @@ void setup()
   // http://playground.arduino.cc/Main/TimerPWMCheatsheet
   // timer 2 pwm freq 31 khz
   //cli();
-  TCCR2B = (TCCR2B & 0b11111000) | 0x01;
+//  TCCR2B = (TCCR2B & 0b11111000) | 0x01;
   //TIMSK2 |= (1 << OCIE2A);     // Enable Output Compare Match A Interrupt
   //OCR2A = 255;                 // Set compared value
   //sei();
@@ -275,106 +245,107 @@ void loop()
 {
   unsigned long curMillis;
 
-  curMillis = millis();
-  if (curMillis >= nextTimeControl)
-  {
-    nextTimeControl = curMillis + 100;
-    dutyPWM = 255;
-    if (isCharging)
-    {
-      // switch off perimeter
-      enableSender = false;
-    }
-    else
-    {
+//  curMillis = millis();
+//  if (curMillis >= nextTimeControl)
+//  {
+//    nextTimeControl = curMillis + 100;
+//    dutyPWM = 255;
+//    if (isCharging)
+//    {
+//      // switch off perimeter
+//      enableSender = false;
+//    }
+//    else
+//    {
       // switch on perimeter
-      enableSender = true;
+      //enableSender = true;
       //analogWrite(pinPWM, 255);
-      analogWrite(PIN_PWM, dutyPWM);
-      if (USE_PERI_FAULT
-          && dutyPWM == 255
-          && digitalRead(PIN_FAULT) == LOW)
-      {
-        enableSender = false;
-        dutyPWM = 0;
-        analogWrite(PIN_PWM, dutyPWM);
-        fault();
-      }
-    }
-  }
+      //analogWrite(PIN_PWM, dutyPWM);
+//      if (USE_PERI_FAULT
+//          && dutyPWM == 255
+//          && digitalRead(PIN_FAULT) == LOW)
+//      {
+//        enableSender = false;
+//        dutyPWM = 0;
+//        analogWrite(PIN_PWM, dutyPWM);
+//        fault();
+//      }
+//    }
+//  }
 
   curMillis = millis();
   if (curMillis >= nextTimeInfo)
   {
     nextTimeInfo = curMillis + 500;
-    checkKey();
+//    checkKey();
 
     //unsigned int v = 0;
-    float v = 0;
+//    float v = 0;
     // determine charging current (Ampere)
-    if (USE_CHG_CURRENT)
-    {
-      chargeCurrentMeasurements.getAverage(v);
-      chargeCurrent = ((float)((int)v - (int)chargeADCZero)) / 1023.0 * 1.1;
-      isCharging = abs(chargeCurrent) >= CHG_CURRENT_MIN;
-    }
-
-    if (USE_PERI_CURRENT)
-    {
-      // determine perimeter current (Ampere)
-      periCurrentMeasurements.getAverage(v);
-      periCurrentAvg = (float)v / 1023.0 * 1.1 / 0.525;   // 525 mV per amp
-      unsigned int h;
-      periCurrentMeasurements.getHighest(h);
-      periCurrentMax = (float)h / 1023.0 * 1.1 / 0.525;   // 525 mV per amp
-    }
+//    if (USE_CHG_CURRENT)
+//    {
+//      chargeCurrentMeasurements.getAverage(v);
+//      chargeCurrent = ((float)((int)v - (int)chargeADCZero)) / 1023.0 * 1.1;
+//      isCharging = abs(chargeCurrent) >= CHG_CURRENT_MIN;
+//    }
+//
+//    if (USE_PERI_CURRENT)
+//    {
+//      // determine perimeter current (Ampere)
+//      periCurrentMeasurements.getAverage(v);
+//      periCurrentAvg = (float)v / 1023.0 * 1.1 / 0.525;   // 525 mV per amp
+//      unsigned int h;
+//      periCurrentMeasurements.getHighest(h);
+//      periCurrentMax = (float)h / 1023.0 * 1.1 / 0.525;   // 525 mV per amp
+//    }
 
     Serial.print("time=");
-    Serial.print(millis() / 1000);
-    Serial.print("\tchgCurrent=");
-    Serial.print(chargeCurrent, 3);
-    Serial.print("\tchgCurrentADC=");
-    chargeCurrentMeasurements.getAverage(v);
-    Serial.print(v);
-    Serial.print("\tisCharging=");
-    Serial.print(isCharging);
-    Serial.print("\tperiCurrent avg=");
-    Serial.print(periCurrentAvg);
-    Serial.print("\tmax=");
-    Serial.print(periCurrentMax);
-    Serial.print("\tdutyPWM=");
-    Serial.print(dutyPWM);
-    Serial.print("\tfaults=");
-    Serial.print(faults);
+    Serial.print(curMillis / 1000);
+//    Serial.print("\tchgCurrent=");
+//    Serial.print(chargeCurrent, 3);
+//    Serial.print("\tchgCurrentADC=");
+//    chargeCurrentMeasurements.getAverage(v);
+//    Serial.print(v);
+//    Serial.print("\tisCharging=");
+//    Serial.print(isCharging);
+//    Serial.print("\tperiCurrent avg=");
+//    Serial.print(periCurrentAvg);
+//    Serial.print("\tmax=");
+//    Serial.print(periCurrentMax);
+//    Serial.print("\tdutyPWM=");
+//    Serial.print(dutyPWM);
+//    Serial.print("\tfaults=");
+//    Serial.print(faults);
     Serial.println();
   }
 
-  if (USE_PERI_CURRENT)
-  {
-    periCurrentMeasurements.add(analogRead(PIN_FEEDBACK));
-  }
-
-  if (USE_CHG_CURRENT)
-  {
-    // determine charging current (Ampere)
-    chargeCurrentMeasurements.add(analogRead(PIN_CHARGE_CURRENT));
-  }
+//  if (USE_PERI_CURRENT)
+//  {
+//    periCurrentMeasurements.add(analogRead(PIN_FEEDBACK));
+//  }
+//
+//  if (USE_CHG_CURRENT)
+//  {
+//    // determine charging current (Ampere)
+//    chargeCurrentMeasurements.add(analogRead(PIN_CHARGE_CURRENT));
+//  }
 
   // LED status
-  if (isCharging)
-  {
-    // charging
-    curMillis = millis();
-    if (curMillis >= nextTimeToggleLED)
-    {
-      nextTimeToggleLED = curMillis + 500;
-      stateLED = !stateLED;
-    }
-  }
-  else
-  {
+//  if (isCharging)
+//  {
+//    // charging
+//    curMillis = millis();
+//    if (curMillis >= nextTimeToggleLED)
+//    {
+//      nextTimeToggleLED = curMillis + 500;
+//      stateLED = !stateLED;
+//    }
+//  }
+//  else
+//  {
     // not charging => indicate perimeter wire state (OFF=broken)
-    stateLED = periCurrentAvg >= PERI_CURRENT_MIN;
-  }
+    //stateLED = periCurrentAvg >= PERI_CURRENT_MIN;
+    stateLED = true;
+//  }
   digitalWrite(PIN_LED, stateLED);
 }
