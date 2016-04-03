@@ -23,6 +23,13 @@ class Drop
     boolean detected{false};
 
   public:
+    enum
+    {
+      LEFT,
+      RIGHT,
+      END
+    };
+
     void setup(const uint8_t pin, const boolean contactType)
     {
       this->pin = pin;

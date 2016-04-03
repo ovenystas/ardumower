@@ -135,7 +135,7 @@ Robot::Robot()
   rain = false;
   rainCounter = 0;
 
-  for (uint8_t i = 0; i < SONAR_END; i++)
+  for (uint8_t i = 0; i < Sonar::END; i++)
   {
     sonarUseArr[i] = false;
     sonarDist[i] = 0;
@@ -314,7 +314,7 @@ void Robot::loadSaveUserSettings(boolean readflag)
   eereadwrite(readflag, addr, motorSwapDir[RIGHT]);
   eereadwrite(readflag, addr, bumperUse);
   eereadwrite(readflag, addr, sonarUse);
-  for (uint8_t i = 0; i < SONAR_END; i++)
+  for (uint8_t i = 0; i < Sonar::END; i++)
   {
     eereadwrite(readflag, addr, sonarUseArr[i]);
   }
@@ -463,7 +463,7 @@ void Robot::printSettingSerial()
   Console.println(dropUse);
 
   Console.print(F("dropContact : "));
-  Console.println(drop[LEFT].getContactType());  // Assume left and right has same contact type
+  Console.println(drop[Drop::LEFT].getContactType());  // Assume left and right has same contact type
 
   // ------ rain ------------------------------------
   Console.print(F("rainUse : "));
@@ -473,11 +473,11 @@ void Robot::printSettingSerial()
   Console.print(F("sonarUse : "));
   Console.println(sonarUse);
   Console.print(F("sonarUseArr[LEFT] : "));
-  Console.println(sonarUseArr[SONAR_LEFT]);
+  Console.println(sonarUseArr[Sonar::LEFT]);
   Console.print(F("sonarUseArr[CENTER] : "));
-  Console.println(sonarUseArr[SONAR_CENTER]);
+  Console.println(sonarUseArr[Sonar::CENTER]);
   Console.print(F("sonarUseArr[RIGHT] : "));
-  Console.println(sonarUseArr[SONAR_RIGHT]);
+  Console.println(sonarUseArr[Sonar::RIGHT]);
   Console.print(F("sonarTriggerBelow : "));
   Console.println(sonarTriggerBelow);
 
@@ -1581,15 +1581,15 @@ void Robot::printInfo(Stream &s)
         Streamprint(s, "sen %4d %4d %4d ", (int)motorSense[LEFT],
                     (int)motorSense[RIGHT], (int)motorMowSense);
         Streamprint(s, "bum %4d %4d ",
-                    bumper[LEFT].isHit(),
-                    bumper[RIGHT].isHit());
+                    bumper[Bumper::LEFT].isHit(),
+                    bumper[Bumper::RIGHT].isHit());
         Streamprint(s, "dro %4d %4d ",
-                    drop[LEFT].isDetected(),
-                    drop[RIGHT].isDetected());
+                    drop[Drop::LEFT].isDetected(),
+                    drop[Drop::RIGHT].isDetected());
         Streamprint(s, "son %4u %4u %4u ",
-                    sonarDist[SONAR_LEFT],
-                    sonarDist[SONAR_CENTER],
-                    sonarDist[SONAR_RIGHT]);
+                    sonarDist[Sonar::LEFT],
+                    sonarDist[Sonar::CENTER],
+                    sonarDist[Sonar::RIGHT]);
         Streamprint(s, "yaw %3d ", (int)(imu.ypr.yaw / PI * 180.0));
         Streamprint(s, "pit %3d ", (int)(imu.ypr.pitch / PI * 180.0));
         Streamprint(s, "rol %3d ", (int)(imu.ypr.roll / PI * 180.0));
@@ -1610,11 +1610,11 @@ void Robot::printInfo(Stream &s)
         Streamprint(s, "sen %4d %4d %4d ", motorSenseCounter[LEFT],
                     motorSenseCounter[RIGHT], motorMowSenseCounter);
         Streamprint(s, "bum %4d %4d ",
-                    bumper[LEFT].getCounter(),
-                    bumper[RIGHT].getCounter());
+                    bumper[Bumper::LEFT].getCounter(),
+                    bumper[Bumper::RIGHT].getCounter());
         Streamprint(s, "dro %4d %4d ",
-                    drop[LEFT].getCounter(),
-                    drop[RIGHT].getCounter());
+                    drop[Drop::LEFT].getCounter(),
+                    drop[Drop::RIGHT].getCounter());
         Streamprint(s, "son %3d ", sonarDistCounter);
         Streamprint(s, "yaw %3d ", (int)(imu.ypr.yaw / PI * 180.0));
         Streamprint(s, "pit %3d ", (int)(imu.ypr.pitch / PI * 180.0));
@@ -1877,16 +1877,16 @@ void Robot::readSerial()
         setNextState(STATE_PERI_TRACK, 0); // press 'p' to track perimeter
         break;
       case 'l':
-        bumper[LEFT].simHit();  // press 'l' to simulate left bumper
+        bumper[Bumper::LEFT].simHit();  // press 'l' to simulate left bumper
         break;
       case 'r':
-        bumper[RIGHT].simHit(); // press 'r' to simulate right bumper
+        bumper[Bumper::RIGHT].simHit(); // press 'r' to simulate right bumper
         break;
       case 'j':
-        drop[LEFT].simDetected(); // press 'j' to simulate left drop                                                                         // Dropsensor - Absturzsensor
+        drop[Drop::LEFT].simDetected(); // press 'j' to simulate left drop                                                                         // Dropsensor - Absturzsensor
         break;
       case 'k':
-        drop[RIGHT].simDetected(); // press 'k' to simulate right drop                                                                        // Dropsensor - Absturzsensor
+        drop[Drop::RIGHT].simDetected(); // press 'k' to simulate right drop                                                                        // Dropsensor - Absturzsensor
         break;
       case 's':
         lawnSensor.simDetected(); // press 's' to simulate lawn sensor
@@ -2153,10 +2153,9 @@ void Robot::readSensors()
 
   if (sonarUse && curMillis >= nextTimeSonar)
   {
-    //static char senSonarTurn = SEN_SONAR_RIGHT;
     nextTimeSonar = curMillis + 250;
 
-    for (uint8_t i = 0; i < SONAR_END; i++)
+    for (uint8_t i = 0; i < Sonar::END; i++)
     {
       if (sonarUseArr[i])
       {
@@ -2168,15 +2167,15 @@ void Robot::readSensors()
   if (bumperUse && curMillis >= nextTimeBumper)
   {
     nextTimeBumper = curMillis + 100;
-    bumper[LEFT].check();
-    bumper[RIGHT].check();
+    bumper[Bumper::LEFT].check();
+    bumper[Bumper::RIGHT].check();
   }
 
   if (dropUse && curMillis >= nextTimeDrop)
   {
     nextTimeDrop = curMillis + 100;
-    drop[LEFT].check();
-    drop[RIGHT].check();
+    drop[Drop::LEFT].check();
+    drop[Drop::RIGHT].check();
   }
 
   //if ((timerUse) && (millis() >= nextTimeRTC)) {
@@ -2888,11 +2887,11 @@ void Robot::checkBumpers()
     return;
   }
 
-  if (bumper[LEFT].isHit())
+  if (bumper[Bumper::LEFT].isHit())
   {
     reverseOrBidir(RIGHT);
   }
-  if (bumper[RIGHT].isHit())
+  if (bumper[Bumper::RIGHT].isHit())
   {
     reverseOrBidir(LEFT);
   }
@@ -2908,11 +2907,11 @@ void Robot::checkDrop()
     return;
   }
 
-  if (drop[LEFT].isDetected())
+  if (drop[Drop::LEFT].isDetected())
   {
     reverseOrBidir(RIGHT);
   }
-  if (drop[RIGHT].isDetected())
+  if (drop[Drop::RIGHT].isDetected())
   {
     reverseOrBidir(LEFT);
   }
@@ -2931,9 +2930,9 @@ void Robot::checkDrop()
 //   111|R
 void Robot::checkBumpersPerimeter()
 {
-  if (bumper[LEFT].isHit() || bumper[RIGHT].isHit())
+  if (bumper[Bumper::LEFT].isHit() || bumper[Bumper::RIGHT].isHit())
   {
-    if (bumper[LEFT].isHit() || stateCurr == STATE_PERI_TRACK)
+    if (bumper[Bumper::LEFT].isHit() || stateCurr == STATE_PERI_TRACK)
     {
       setNextState(STATE_PERI_REV, RIGHT);
     }
@@ -3113,7 +3112,7 @@ void Robot::checkSonar()
     {
       bool isClose = false;
       int triggerBelow = sonarTriggerBelow * 2;
-      for (uint8_t i = 0; i < SONAR_END; i++)
+      for (uint8_t i = 0; i < Sonar::END; i++)
       {
         if (sonarDist[i] > 0 && sonarDist[i] < triggerBelow)
         {
@@ -3146,7 +3145,7 @@ void Robot::checkSonar()
     }
   }
 
-  if (sonarDist[SONAR_CENTER] > 0 && sonarDist[SONAR_CENTER] < sonarTriggerBelow)
+  if (sonarDist[Sonar::CENTER] > 0 && sonarDist[Sonar::CENTER] < sonarTriggerBelow)
   {
     sonarDistCounter++;
     if (rollDir == RIGHT)
@@ -3158,12 +3157,12 @@ void Robot::checkSonar()
       reverseOrBidir(RIGHT);
     }
   }
-  if (sonarDist[SONAR_RIGHT] > 0 && sonarDist[SONAR_RIGHT] < sonarTriggerBelow)
+  if (sonarDist[Sonar::RIGHT] > 0 && sonarDist[Sonar::RIGHT] < sonarTriggerBelow)
   {
     sonarDistCounter++;
     reverseOrBidir(LEFT);
   }
-  if (sonarDist[SONAR_LEFT] > 0 && sonarDist[SONAR_LEFT] < sonarTriggerBelow)
+  if (sonarDist[Sonar::LEFT] > 0 && sonarDist[Sonar::LEFT] < sonarTriggerBelow)
   {
     sonarDistCounter++;
     reverseOrBidir(RIGHT);
@@ -3765,11 +3764,11 @@ void Robot::loop()
     motorMowSpeedPWMSet = motorMowSpeedMaxPwm;
   }
 
-  bumper[LEFT].clearHit();
-  bumper[RIGHT].clearHit();
+  bumper[Bumper::LEFT].clearHit();
+  bumper[Bumper::RIGHT].clearHit();
 
-  drop[LEFT].clearDetected();
-  drop[RIGHT].clearDetected();
+  drop[Drop::LEFT].clearDetected();
+  drop[Drop::RIGHT].clearDetected();
 
   loopsPerSecCounter++;
 }

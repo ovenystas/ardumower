@@ -143,17 +143,12 @@ enum
   STATE_PERI_OUT_ROLL,    // outside perimeter rolling driving without checkPerimeterBoundary()
 };
 
-#define LEFT 0
-#define RIGHT 1
 #define MOW 2
-#define CENTER 2
 
 enum
 {
-  SONAR_LEFT,
-  SONAR_CENTER,
-  SONAR_RIGHT,
-  SONAR_END
+  LEFT,
+  RIGHT
 };
 
 // mow patterns
@@ -377,10 +372,10 @@ class Robot
     // --------- sonar ----------------------------------
     // ultra sonic sensor distance-to-obstacle (cm)
     char sonarUse;      // use ultra sonic sensor?
-    char sonarUseArr[SONAR_END];
-    Sonar sonar[SONAR_END];
+    char sonarUseArr[Sonar::END];
+    Sonar sonar[Sonar::END];
     int sonarTriggerBelow;    // ultrasonic sensor trigger distance
-    unsigned int sonarDist[SONAR_END];
+    unsigned int sonarDist[Sonar::END];
     unsigned int sonarDistCounter;
     unsigned int tempSonarDistCounter;
     unsigned long sonarObstacleTimeout;

@@ -19,6 +19,13 @@ class Bumper
     boolean hit{false};
 
   public:
+    enum
+    {
+      LEFT,
+      RIGHT,
+      END
+    };
+
     void setup(const uint8_t pin)
     {
       this->pin = pin;

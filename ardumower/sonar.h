@@ -28,6 +28,14 @@
 class Sonar
 {
   public:
+    enum
+    {
+      LEFT,
+      RIGHT,
+      CENTER,
+      END
+    };
+
     Sonar() {};
 
     void setup(const uint8_t triggerPin, const uint8_t echoPin);

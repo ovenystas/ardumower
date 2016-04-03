@@ -183,9 +183,9 @@ Mower::Mower()
 
   // ------ sonar ------------------------------------
   sonarUse = 0;             // use ultra sonic sensor? (WARNING: robot will slow down, if enabled but not connected!)
-  sonarUseArr[SONAR_LEFT] = 1;
-  sonarUseArr[SONAR_RIGHT] = 1;
-  sonarUseArr[SONAR_CENTER] = 0;
+  sonarUseArr[Sonar::LEFT] = 1;
+  sonarUseArr[Sonar::RIGHT] = 1;
+  sonarUseArr[Sonar::CENTER] = 0;
   sonarTriggerBelow = 1050; // ultrasonic sensor trigger distance
 
   // ------ perimeter ---------------------------------
@@ -374,17 +374,17 @@ void Mower::setup()
   button.setup(PIN_BUTTON);
 
   // bumpers
-  bumper[LEFT].setup(PIN_BUMBER_LEFT);
-  bumper[RIGHT].setup(PIN_BUMBER_RIGHT);
+  bumper[Bumper::LEFT].setup(PIN_BUMBER_LEFT);
+  bumper[Bumper::RIGHT].setup(PIN_BUMBER_RIGHT);
 
   // drops
-  drop[LEFT].setup(PIN_DROP_LEFT, DROP_CONTACT_NO);
-  drop[RIGHT].setup(PIN_DROP_LEFT, DROP_CONTACT_NO);
+  drop[Drop::LEFT].setup(PIN_DROP_LEFT, DROP_CONTACT_NO);
+  drop[Drop::RIGHT].setup(PIN_DROP_LEFT, DROP_CONTACT_NO);
 
   // sonar
-  sonar[SONAR_CENTER].setup(PIN_SONAR_CENTER_TRIGGER, PIN_SONAR_CENTER_ECHO);
-  sonar[SONAR_LEFT].setup(PIN_SONAR_LEFT_TRIGGER, PIN_SONAR_LEFT_ECHO);
-  sonar[SONAR_RIGHT].setup(PIN_SONAR_RIGHT_TRIGGER, PIN_SONAR_RIGHT_ECHO);
+  sonar[Sonar::LEFT].setup(PIN_SONAR_LEFT_TRIGGER, PIN_SONAR_LEFT_ECHO);
+  sonar[Sonar::RIGHT].setup(PIN_SONAR_RIGHT_TRIGGER, PIN_SONAR_RIGHT_ECHO);
+  sonar[Sonar::CENTER].setup(PIN_SONAR_CENTER_TRIGGER, PIN_SONAR_CENTER_ECHO);
 
   // rain
   pinMode(PIN_RAIN, INPUT);

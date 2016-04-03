@@ -661,13 +661,13 @@ void RemoteControl::sendBumperMenu(boolean update)
   Bluetooth.print(F("|b00~Use "));
   sendYesNo(robot->bumperUse);
   Bluetooth.println(F("|b01~Counter l, r "));
-  Bluetooth.print(robot->bumper[LEFT].getCounter());
+  Bluetooth.print(robot->bumper[Bumper::LEFT].getCounter());
   Bluetooth.print(", ");
-  Bluetooth.print(robot->bumper[RIGHT].getCounter());
+  Bluetooth.print(robot->bumper[Bumper::RIGHT].getCounter());
   Bluetooth.println(F("|b02~Value l, r "));
-  Bluetooth.print(robot->bumper[LEFT].isHit());
+  Bluetooth.print(robot->bumper[Bumper::LEFT].isHit());
   Bluetooth.print(", ");
-  Bluetooth.print(robot->bumper[RIGHT].isHit());
+  Bluetooth.print(robot->bumper[Bumper::RIGHT].isHit());
   Bluetooth.println("}");
 }
 
@@ -684,13 +684,13 @@ void RemoteControl::sendDropMenu(boolean update)
   Bluetooth.print(F("|u00~Use "));
   sendYesNo(robot->dropUse);
   Bluetooth.println(F("|u01~Counter l, r "));
-  Bluetooth.print(robot->drop[LEFT].getCounter());
+  Bluetooth.print(robot->drop[Drop::LEFT].getCounter());
   Bluetooth.print(", ");
-  Bluetooth.print(robot->drop[RIGHT].getCounter());
+  Bluetooth.print(robot->drop[Drop::RIGHT].getCounter());
   Bluetooth.println(F("|u02~Value l, r "));
-  Bluetooth.print(robot->drop[LEFT].isDetected());
+  Bluetooth.print(robot->drop[Drop::LEFT].isDetected());
   Bluetooth.print(", ");
-  Bluetooth.print(robot->drop[RIGHT].isDetected());
+  Bluetooth.print(robot->drop[Drop::RIGHT].isDetected());
   Bluetooth.println("}");
 }
 
@@ -725,15 +725,15 @@ void RemoteControl::sendSonarMenu(boolean update)
   Bluetooth.print(F("|d00~Use "));
   sendYesNo(robot->sonarUse);
   Bluetooth.print(F("|d04~Use left "));
-  sendYesNo(robot->sonarUseArr[SONAR_LEFT]);
+  sendYesNo(robot->sonarUseArr[Sonar::LEFT]);
   Bluetooth.print(F("|d05~Use center "));
-  sendYesNo(robot->sonarUseArr[SONAR_CENTER]);
+  sendYesNo(robot->sonarUseArr[Sonar::CENTER]);
   Bluetooth.print(F("|d06~Use right "));
-  sendYesNo(robot->sonarUseArr[SONAR_RIGHT]);
+  sendYesNo(robot->sonarUseArr[Sonar::RIGHT]);
   Bluetooth.print(F("|d01~Counter "));
   Bluetooth.print(robot->sonarDistCounter);
   Bluetooth.println(F("|d02~Value l, c, r"));
-  for (uint8_t i = 0; i < SONAR_END; i++)
+  for (uint8_t i = 0; i < Sonar::END; i++)
   {
     Bluetooth.print(robot->sonarDist[i]);
     if (i == 2)
@@ -758,15 +758,15 @@ void RemoteControl::processSonarMenu(String pfodCmd)
   }
   else if (pfodCmd == "d04")
   {
-    robot->sonarUseArr[SONAR_LEFT] = !robot->sonarUseArr[SONAR_LEFT];
+    robot->sonarUseArr[Sonar::LEFT] = !robot->sonarUseArr[Sonar::LEFT];
   }
   else if (pfodCmd == "d05")
   {
-    robot->sonarUseArr[SONAR_CENTER] = !robot->sonarUseArr[SONAR_CENTER];
+    robot->sonarUseArr[Sonar::CENTER] = !robot->sonarUseArr[Sonar::CENTER];
   }
   else if (pfodCmd == "d06")
   {
-    robot->sonarUseArr[SONAR_RIGHT] = !robot->sonarUseArr[SONAR_RIGHT];
+    robot->sonarUseArr[Sonar::RIGHT] = !robot->sonarUseArr[Sonar::RIGHT];
   }
   sendSonarMenu(true);
 }
@@ -1679,7 +1679,7 @@ void RemoteControl::run()
     Bluetooth.print(",");
     Bluetooth.print(robot->motorMowSense);
     Bluetooth.print(",");
-    for (uint8_t i = 0; i < SONAR_END; i++)
+    for (uint8_t i = 0; i < Sonar::END; i++)
     {
       Bluetooth.print(robot->sonarDist[i]);
       Bluetooth.print(",");
@@ -1807,9 +1807,9 @@ void RemoteControl::run()
       Bluetooth.print(",");
       Bluetooth.print(robot->motorMowSenseCounter);
       Bluetooth.print(",");
-      Bluetooth.print(robot->bumper[LEFT].getCounter());
+      Bluetooth.print(robot->bumper[Bumper::LEFT].getCounter());
       Bluetooth.print(",");
-      Bluetooth.print(robot->bumper[RIGHT].getCounter());
+      Bluetooth.print(robot->bumper[Bumper::RIGHT].getCounter());
       Bluetooth.print(",");
       Bluetooth.print(robot->sonarDistCounter);
       Bluetooth.print(",");
@@ -1819,9 +1819,9 @@ void RemoteControl::run()
       Bluetooth.print(",");
       Bluetooth.print(robot->rainCounter);
       Bluetooth.print(",");
-      Bluetooth.print(robot->drop[LEFT].getCounter());
+      Bluetooth.print(robot->drop[Drop::LEFT].getCounter());
       Bluetooth.print(",");
-      Bluetooth.println(robot->drop[RIGHT].getCounter());
+      Bluetooth.println(robot->drop[Drop::RIGHT].getCounter());
     }
   }
   else if (pfodState == PFOD_PLOT_SENSORS)
@@ -1839,7 +1839,7 @@ void RemoteControl::run()
       Bluetooth.print(",");
       Bluetooth.print(robot->motorMowSense);
       Bluetooth.print(",");
-      for (uint8_t i = 0; i < SONAR_END; i++)
+      for (uint8_t i = 0; i < Sonar::END; i++)
       {
         Bluetooth.print(robot->sonarDist[i]);
         Bluetooth.print(",");
@@ -1850,9 +1850,9 @@ void RemoteControl::run()
       Bluetooth.print(",");
       Bluetooth.print(robot->rain);
       Bluetooth.print(",");
-      Bluetooth.print(robot->drop[LEFT].isDetected());
+      Bluetooth.print(robot->drop[Drop::LEFT].isDetected());
       Bluetooth.print(",");
-      Bluetooth.println(robot->drop[RIGHT].isDetected());
+      Bluetooth.println(robot->drop[Drop::RIGHT].isDetected());
     }
   }
   else if (pfodState == PFOD_PLOT_PERIMETER)
