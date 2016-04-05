@@ -28,6 +28,24 @@
 class Sonar
 {
   public:
+    bool use { false };
+    unsigned int distance {};  // As time in us
+
+    void setup(const uint8_t triggerPin, const uint8_t echoPin);
+    void setup(const uint8_t triggerPin, const uint8_t echoPin,
+               const uint16_t maxEchoTime, const uint16_t minEchoTime);
+    void ping(void);
+
+  private:
+    uint8_t triggerPin {};
+    uint8_t echoPin {};
+    uint16_t maxEchoTime {};
+    uint16_t minEchoTime {};
+};
+
+class Sonars
+{
+  public:
     enum sonarE
     {
       LEFT,
@@ -36,20 +54,17 @@ class Sonar
       END
     };
 
-    Sonar() {};
+    bool use { false };
+    unsigned long nextTime {};
+    Sonar sonar[END];
 
-    void setup(const uint8_t triggerPin, const uint8_t echoPin);
+    void ping()
+    {
+      for (uint8_t i = 0; i < END; i++)
+      {
+        sonar[i].ping();
+      }
+    }
 
-    void setup(const uint8_t triggerPin, const uint8_t echoPin,
-               const uint16_t maxEchoTime, const uint16_t minEchoTime);
-
-    uint32_t ping(void);
-
-  protected:
-    uint8_t triggerPin{};
-    uint8_t echoPin{};
-    uint16_t maxEchoTime{};
-    uint16_t minEchoTime{};
 };
-
 #endif /* SONAR_H_ */

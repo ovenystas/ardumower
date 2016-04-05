@@ -213,13 +213,7 @@ class Robot
     int robotIsStuckedCounter;
 
     // -------- odometer state --------------------------
-    char odometerUse;               // use odometer?
-    char twoWayOdometerSensorUse;   // use optional two-wire odometer sensor?
     Odometer odometer;
-
-    unsigned long lastMotorRpmTime;
-    unsigned long nextTimeOdometer;
-    unsigned long nextTimeOdometerInfo;
 
     // -------- RC remote control state -----------------
     char remoteUse;       // use model remote control (R/C)?
@@ -301,19 +295,13 @@ class Robot
 
     // --------- bumper state ---------------------------
     // bumper state (true = pressed)
-    char bumperUse;      // has bumpers?
-    Bumper bumper[2];
-    unsigned long nextTimeBumper;
+    Bumpers bumpers;
 
     // --------- drop state ---------------------------
-    // bumper state (true = pressed)                                                                                                  // Dropsensor - Absturzsensor vorhanden ?
-    char dropUse; // has drops? // Dropsensor - Absturzsensor Zähler links
-    DropSensor dropSensor[2];
-    unsigned long nextTimeDrop; // Dropsensor - Absturzsensor
+    DropSensors dropSensors;
 
     // ------- IMU state --------------------------------
     IMU imu;
-    char imuUse;       // use IMU?
     char imuCorrectDir;       // correct direction by compass?
     PID imuDirPID;    // direction PID controller
     PID imuRollPID;    // roll PID controller
@@ -322,7 +310,6 @@ class Robot
     byte imuRollDir;
     //point_float_t accMin;
     //point_float_t accMax;
-    unsigned long nextTimeIMU; //read IMU data
     unsigned long nextTimeCheckTilt; // check if
 
     // ------- perimeter state --------------------------
@@ -359,15 +346,11 @@ class Robot
 
     // --------- sonar ----------------------------------
     // ultra sonic sensor distance-to-obstacle (cm)
-    char sonarUse;      // use ultra sonic sensor?
-    char sonarUseArr[Sonar::END];
-    Sonar sonar[Sonar::END];
+    Sonars sonars;
     int sonarTriggerBelow;    // ultrasonic sensor trigger distance
-    unsigned int sonarDist[Sonar::END];
     unsigned int sonarDistCounter;
     unsigned int tempSonarDistCounter;
     unsigned long sonarObstacleTimeout;
-    unsigned long nextTimeSonar;
     unsigned long nextTimeCheckSonar;
 
     // --------- pfodApp ----------------------------------
@@ -525,7 +508,7 @@ class Robot
     virtual void checkTimer();
     virtual void checkCurrent();
     virtual void checkBumpers();
-    virtual void checkDrop();                      // Dropsensor - Absturzsensor
+    virtual void checkDrop();
     virtual void checkBumpersPerimeter();
     virtual void checkPerimeterBoundary();
     virtual void checkPerimeterFind();
@@ -560,7 +543,6 @@ class Robot
     virtual void testMotors();
     virtual void setDefaults();
     virtual void receiveGPSTime();
-    virtual void calcOdometer();
     virtual void menu();
     virtual void configureBluetooth(boolean quick)
     {

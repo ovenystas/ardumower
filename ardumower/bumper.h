@@ -14,17 +14,11 @@ class Bumper
 {
 
   private:
-    uint8_t pin{};
-    uint16_t counter{};
-    boolean hit{false};
+    uint8_t pin {};
 
   public:
-    enum
-    {
-      LEFT,
-      RIGHT,
-      END
-    };
+    uint16_t counter {};
+    boolean hit { false };
 
     void setup(const uint8_t pin)
     {
@@ -57,14 +51,36 @@ class Bumper
       }
     }
 
-    uint16_t getCounter(void)
-    {
-      return counter;
-    }
-
     void resetCounter(void)
     {
       counter = 0;
+    }
+};
+
+class Bumpers
+{
+  public:
+    enum bumpersE
+    {
+      LEFT,
+      RIGHT,
+      END
+    };
+
+    bool use;
+    unsigned long nextTime;
+    Bumper bumper[END];
+
+    void check()
+    {
+      bumper[LEFT].check();
+      bumper[RIGHT].check();
+    }
+
+    void clearHit()
+    {
+      bumper[LEFT].clearHit();
+      bumper[RIGHT].clearHit();
     }
 };
 

@@ -79,6 +79,10 @@ class IMU
     int getCallCounter(void);
     int getErrorCounter(void);
     void deleteCalib(void);
+
+    boolean use { false };
+    unsigned long nextTime {};
+
     int callCounter;
     int errorCounter;
     boolean hardwareInitialized;

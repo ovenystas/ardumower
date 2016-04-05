@@ -7,15 +7,6 @@
 
 #include "encoder.h"
 
-void Encoder::setup(const uint8_t pin, const bool swapDir)
-{
-  this->twoWay = false;
-  this->pin = pin;
-  this->swapDir = swapDir;
-
-  pinMode(pin, INPUT_PULLUP);
-}
-
 void Encoder::setup(const uint8_t pin, const uint8_t pin2, const bool swapDir)
 {
   this->twoWay = true;

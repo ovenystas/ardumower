@@ -54,7 +54,6 @@ Robot::Robot()
   statsMowTimeTotalStart = false;
   mowPatternCurr = MOW_RANDOM;
 
-  lastMotorRpmTime = 0;
   lastSetMotorSpeedTime = 0;
   motorSpeedRpmSet[LEFT] = 0;
   motorSpeedRpmSet[RIGHT] = 0;
@@ -123,11 +122,6 @@ Robot::Robot()
   rain = false;
   rainCounter = 0;
 
-  for (uint8_t i = 0; i < Sonar::END; i++)
-  {
-    sonarUseArr[i] = false;
-    sonarDist[i] = 0;
-  }
   sonarDistCounter = 0;
   tempSonarDistCounter = 0;
   sonarObstacleTimeout = 0;
@@ -152,13 +146,7 @@ Robot::Robot()
   nextTimeButtonCheck = 0;
   nextTimeInfo = 0;
   nextTimeMotorSense = 0;
-  nextTimeIMU = 0;
   nextTimeCheckTilt = 0;
-  nextTimeOdometer = 0;
-  nextTimeOdometerInfo = 0;
-  nextTimeBumper = 0;
-  nextTimeDrop = 0;
-  nextTimeSonar = 0;
   nextTimeBattery = 0;
   nextTimeCheckBattery = 0;
   nextTimePerimeter = 0;
@@ -300,11 +288,11 @@ void Robot::loadSaveUserSettings(boolean readflag)
   eereadwrite(readflag, addr, motorBiDirSpeedRatio2);
   eereadwrite(readflag, addr, motorSwapDir[LEFT]);
   eereadwrite(readflag, addr, motorSwapDir[RIGHT]);
-  eereadwrite(readflag, addr, bumperUse);
-  eereadwrite(readflag, addr, sonarUse);
-  for (uint8_t i = 0; i < Sonar::END; i++)
+  eereadwrite(readflag, addr, bumpers.use);
+  eereadwrite(readflag, addr, sonars.use);
+  for (uint8_t i = 0; i < Sonars::END; i++)
   {
-    eereadwrite(readflag, addr, sonarUseArr[i]);
+    eereadwrite(readflag, addr, sonars.sonar[i].use);
   }
   eereadwrite(readflag, addr, sonarTriggerBelow);
   eereadwrite(readflag, addr, perimeterUse);
@@ -323,7 +311,7 @@ void Robot::loadSaveUserSettings(boolean readflag)
   eereadwrite(readflag, addr, perimeter.timeOutSecIfNotInside);
   eereadwrite(readflag, addr, trackingBlockInnerWheelWhilePerimeterStruggling);
   eereadwrite(readflag, addr, lawnSensorUse);
-  eereadwrite(readflag, addr, imuUse);
+  eereadwrite(readflag, addr, imu.use);
   eereadwrite(readflag, addr, imuCorrectDir);
   eereadwrite(readflag, addr, imuDirPID.Kp);
   eereadwrite(readflag, addr, imuDirPID.Ki);
@@ -346,13 +334,13 @@ void Robot::loadSaveUserSettings(boolean readflag)
   eereadwrite(readflag, addr, stationRollTime);
   eereadwrite(readflag, addr, stationForwTime);
   eereadwrite(readflag, addr, stationCheckTime);
-  eereadwrite(readflag, addr, odometerUse);
+  eereadwrite(readflag, addr, odometer.use);
   eereadwrite(readflag, addr, odometer.ticksPerRevolution);
   eereadwrite(readflag, addr, odometer.ticksPerCm);
   eereadwrite(readflag, addr, odometer.wheelBaseCm);
   eereadwrite(readflag, addr, odometer.encoder[Odometer::LEFT].swapDir);
   eereadwrite(readflag, addr, odometer.encoder[Odometer::RIGHT].swapDir);
-  eereadwrite(readflag, addr, twoWayOdometerSensorUse);
+  eereadwrite(readflag, addr, odometer.encoder[Odometer::LEFT].twoWay);
   eereadwrite(readflag, addr, buttonUse);
   eereadwrite(readflag, addr, userSwitch1);
   eereadwrite(readflag, addr, userSwitch2);
@@ -363,7 +351,7 @@ void Robot::loadSaveUserSettings(boolean readflag)
   eereadwrite(readflag, addr, gpsUse);
   eereadwrite(readflag, addr, stuckedIfGpsSpeedBelow);
   eereadwrite(readflag, addr, gpsSpeedIgnoreTime);
-  eereadwrite(readflag, addr, dropUse);
+  eereadwrite(readflag, addr, dropSensors.use);
   eereadwrite(readflag, addr, statsOverride);
   Console.print(F("loadSaveUserSettings addrstop="));
   Console.println(addr);
@@ -443,29 +431,29 @@ void Robot::printSettingSerial()
   Console.println(motorPID[MOW].Kd);
 
   // ------ bumper ------------------------------------
-  Console.print(F("bumperUse : "));
-  Console.println(bumperUse);
+  Console.print(F("bumpers.use : "));
+  Console.println(bumpers.use);
 
   // ------ drop ------------------------------------
-  Console.print(F("dropUse : "));
-  Console.println(dropUse);
+  Console.print(F("dropSensors.use : "));
+  Console.println(dropSensors.use);
 
   Console.print(F("dropContact : "));
-  Console.println(dropSensor[DropSensor::LEFT].getContactType());  // Assume left and right has same contact type
+  Console.println(dropSensors.dropSensor[DropSensors::LEFT].contactType);  // Assume left and right has same contact type
 
   // ------ rain ------------------------------------
   Console.print(F("rainUse : "));
   Console.println(rainUse);
 
   // ------ sonar ------------------------------------
-  Console.print(F("sonarUse : "));
-  Console.println(sonarUse);
-  Console.print(F("sonarUseArr[LEFT] : "));
-  Console.println(sonarUseArr[Sonar::LEFT]);
-  Console.print(F("sonarUseArr[CENTER] : "));
-  Console.println(sonarUseArr[Sonar::CENTER]);
-  Console.print(F("sonarUseArr[RIGHT] : "));
-  Console.println(sonarUseArr[Sonar::RIGHT]);
+  Console.print(F("sonars.use : "));
+  Console.println(sonars.use);
+  Console.print(F("sonar[LEFT].use : "));
+  Console.println(sonars.sonar[Sonars::LEFT].use);
+  Console.print(F("sonar[CENTER].use : "));
+  Console.println(sonars.sonar[Sonars::CENTER].use);
+  Console.print(F("sonar[RIGHT].use : "));
+  Console.println(sonars.sonar[Sonars::RIGHT].use);
   Console.print(F("sonarTriggerBelow : "));
   Console.println(sonarTriggerBelow);
 
@@ -502,8 +490,8 @@ void Robot::printSettingSerial()
   Console.println(lawnSensorUse);
 
   // ------  IMU (compass/accel/gyro) ----------------------
-  Console.print(F("imuUse : "));
-  Console.println(imuUse);
+  Console.print(F("imu.use : "));
+  Console.println(imu.use);
   Console.print(F("imuCorrectDir : "));
   Console.println(imuCorrectDir);
   Console.print(F("imuDirPID.Kp : "));
@@ -571,9 +559,9 @@ void Robot::printSettingSerial()
 
   // ------ odometer ------------------------------------
   Console.print(F("odometerUse : "));
-  Console.println(odometerUse);
-  Console.print(F("twoWayOdometerSensorUse : "));
-  Console.println(twoWayOdometerSensorUse);
+  Console.println(odometer.use);
+  Console.print(F("twoWay : "));
+  Console.println(odometer.encoder[Odometer::LEFT].twoWay);
   Console.print(F("odometerTicksPerRevolution : "));
   Console.println(odometer.ticksPerRevolution);
   Console.print(F("odometerTicksPerCm : "));
@@ -811,7 +799,7 @@ void Robot::setMotorPWM(int pwm, unsigned long TaC, uint8_t motor, boolean useAc
     }
   }
 
-  if (odometerUse)
+  if (odometer.use)
   {
     motorPWMCurr[motor] = pwm;
     if (abs(odometer.encoder[motor].wheelRpmCurr) < 1)
@@ -1095,7 +1083,7 @@ void Robot::motorControlImuDir()
 // check for odometersensor faults
 void Robot::checkOdometerFaults()
 {
-  if (!odometerUse)
+  if (!odometer.use)
   {
     return;
   }
@@ -1161,7 +1149,7 @@ void Robot::motorControl()
   static unsigned long nextMotorControlOutputTime = 0;
 
   int speed[2];
-  if (odometerUse)
+  if (odometer.use)
   {
     for (uint8_t i = LEFT; i <= RIGHT; i++)
     {
@@ -1455,7 +1443,7 @@ void Robot::printInfo(Stream &s)
     }
     else
     {
-      if (odometerUse)
+      if (odometer.use)
       {
         Streamprint(s, "odo %4d %4d ",
                     odometer.encoder[Odometer::LEFT].counter,
@@ -1473,15 +1461,15 @@ void Robot::printInfo(Stream &s)
                     (int)motorSense[RIGHT],
                     (int)motorMowSense);
         Streamprint(s, "bum %4d %4d ",
-                    bumper[Bumper::LEFT].isHit(),
-                    bumper[Bumper::RIGHT].isHit());
+                    bumpers.bumper[Bumpers::LEFT].isHit(),
+                    bumpers.bumper[Bumpers::RIGHT].isHit());
         Streamprint(s, "dro %4d %4d ",
-                    dropSensor[DropSensor::LEFT].isDetected(),
-                    dropSensor[DropSensor::RIGHT].isDetected());
+                    dropSensors.dropSensor[DropSensors::LEFT].isDetected(),
+                    dropSensors.dropSensor[DropSensors::RIGHT].isDetected());
         Streamprint(s, "son %4u %4u %4u ",
-                    sonarDist[Sonar::LEFT],
-                    sonarDist[Sonar::CENTER],
-                    sonarDist[Sonar::RIGHT]);
+                    sonars.sonar[Sonars::LEFT].distance,
+                    sonars.sonar[Sonars::CENTER].distance,
+                    sonars.sonar[Sonars::RIGHT].distance);
         Streamprint(s, "yaw %3d ", (int)(imu.ypr.yaw / PI * 180.0));
         Streamprint(s, "pit %3d ", (int)(imu.ypr.pitch / PI * 180.0));
         Streamprint(s, "rol %3d ", (int)(imu.ypr.roll / PI * 180.0));
@@ -1502,11 +1490,11 @@ void Robot::printInfo(Stream &s)
         Streamprint(s, "sen %4d %4d %4d ", motorSenseCounter[LEFT],
                     motorSenseCounter[RIGHT], motorMowSenseCounter);
         Streamprint(s, "bum %4d %4d ",
-                    bumper[Bumper::LEFT].getCounter(),
-                    bumper[Bumper::RIGHT].getCounter());
+                    bumpers.bumper[Bumpers::LEFT].counter,
+                    bumpers.bumper[Bumpers::RIGHT].counter);
         Streamprint(s, "dro %4d %4d ",
-                    dropSensor[DropSensor::LEFT].getCounter(),
-                    dropSensor[DropSensor::RIGHT].getCounter());
+                    dropSensors.dropSensor[DropSensors::LEFT].counter,
+                    dropSensors.dropSensor[DropSensors::RIGHT].counter);
         Streamprint(s, "son %3d ", sonarDistCounter);
         Streamprint(s, "yaw %3d ", (int)(imu.ypr.yaw / PI * 180.0));
         Streamprint(s, "pit %3d ", (int)(imu.ypr.pitch / PI * 180.0));
@@ -1773,16 +1761,16 @@ void Robot::readSerial()
         setNextState(STATE_PERI_TRACK, 0); // press 'p' to track perimeter
         break;
       case 'l':
-        bumper[Bumper::LEFT].simHit();  // press 'l' to simulate left bumper
+        bumpers.bumper[Bumpers::LEFT].simHit();  // press 'l' to simulate left bumper
         break;
       case 'r':
-        bumper[Bumper::RIGHT].simHit(); // press 'r' to simulate right bumper
+        bumpers.bumper[Bumpers::RIGHT].simHit(); // press 'r' to simulate right bumper
         break;
       case 'j':
-        dropSensor[DropSensor::LEFT].simDetected(); // press 'j' to simulate left drop                                                                         // Dropsensor - Absturzsensor
+        dropSensors.dropSensor[DropSensors::LEFT].simDetected(); // press 'j' to simulate left drop                                                                         // Dropsensor - Absturzsensor
         break;
       case 'k':
-        dropSensor[DropSensor::RIGHT].simDetected(); // press 'k' to simulate right drop                                                                        // Dropsensor - Absturzsensor
+        dropSensors.dropSensor[DropSensors::RIGHT].simDetected(); // press 'k' to simulate right drop                                                                        // Dropsensor - Absturzsensor
         break;
       case 's':
         lawnSensor.simDetected(); // press 's' to simulate lawn sensor
@@ -1813,8 +1801,8 @@ void Robot::readSerial()
         imuRollHeading = scalePI(imuRollHeading - PI / 2);
         break;
       case 'i':
-        // press 'i' to toggle imuUse
-        imuUse = !imuUse;
+        // press 'i' to toggle imu.use
+        imu.use = !imu.use;
         break;
       case '3':
         setNextState(STATE_REMOTE, 0); // press '3' to activate model RC
@@ -2047,31 +2035,23 @@ void Robot::readSensors()
     lawnSensor.check();
   }
 
-  if (sonarUse && curMillis >= nextTimeSonar)
+  if (sonars.use && curMillis >= sonars.nextTime)
   {
-    nextTimeSonar = curMillis + 250;
+    sonars.nextTime = curMillis + 250;
 
-    for (uint8_t i = 0; i < Sonar::END; i++)
-    {
-      if (sonarUseArr[i])
-      {
-        sonarDist[i] = sonar[i].ping();
-      }
-    }
+    sonars.ping();
   }
 
-  if (bumperUse && curMillis >= nextTimeBumper)
+  if (bumpers.use && curMillis >= bumpers.nextTime)
   {
-    nextTimeBumper = curMillis + 100;
-    bumper[Bumper::LEFT].check();
-    bumper[Bumper::RIGHT].check();
+    bumpers.nextTime = curMillis + 100;
+    bumpers.check();
   }
 
-  if (dropUse && curMillis >= nextTimeDrop)
+  if (dropSensors.use && curMillis >= dropSensors.nextTime)
   {
-    nextTimeDrop = curMillis + 100;
-    dropSensor[DropSensor::LEFT].check();
-    dropSensor[DropSensor::RIGHT].check();
+    dropSensors.nextTime = curMillis + 100;
+    dropSensors.check();
   }
 
   //if ((timerUse) && (millis() >= nextTimeRTC)) {
@@ -2083,11 +2063,11 @@ void Robot::readSensors()
     Console.println(date2str(datetime.date));
   }
 
-  if (imuUse && curMillis >= nextTimeIMU)
+  if (imu.use && curMillis >= imu.nextTime)
   {
     // IMU
     readSensor(SEN_IMU);
-    nextTimeIMU = curMillis + 200;   // 5 hz
+    imu.nextTime = curMillis + 200;   // 5 hz
     if (imu.getErrorCounter() > 0)
     {
       addErrorCounter(ERR_IMU_COMM);
@@ -2783,17 +2763,17 @@ void Robot::checkBumpers()
     return;
   }
 
-  if (bumper[Bumper::LEFT].isHit())
+  if (bumpers.bumper[Bumpers::LEFT].isHit())
   {
     reverseOrBidir(RIGHT);
   }
-  if (bumper[Bumper::RIGHT].isHit())
+  if (bumpers.bumper[Bumpers::RIGHT].isHit())
   {
     reverseOrBidir(LEFT);
   }
 }
 
-// check drop                                                                                                                       // Dropsensor - Absturzsensor
+// check drop
 void Robot::checkDrop()
 {
   unsigned long curMillis = millis();
@@ -2803,11 +2783,11 @@ void Robot::checkDrop()
     return;
   }
 
-  if (dropSensor[DropSensor::LEFT].isDetected())
+  if (dropSensors.dropSensor[DropSensors::LEFT].isDetected())
   {
     reverseOrBidir(RIGHT);
   }
-  if (dropSensor[DropSensor::RIGHT].isDetected())
+  if (dropSensors.dropSensor[DropSensors::RIGHT].isDetected())
   {
     reverseOrBidir(LEFT);
   }
@@ -2826,9 +2806,11 @@ void Robot::checkDrop()
 //   111|R
 void Robot::checkBumpersPerimeter()
 {
-  if (bumper[Bumper::LEFT].isHit() || bumper[Bumper::RIGHT].isHit())
+  if (bumpers.bumper[Bumpers::LEFT].isHit() ||
+      bumpers.bumper[Bumpers::RIGHT].isHit())
   {
-    if (bumper[Bumper::LEFT].isHit() || stateCurr == STATE_PERI_TRACK)
+    if (bumpers.bumper[Bumpers::LEFT].isHit() ||
+        stateCurr == STATE_PERI_TRACK)
     {
       setNextState(STATE_PERI_REV, RIGHT);
     }
@@ -2983,7 +2965,7 @@ void Robot::checkRain()
 // check sonar
 void Robot::checkSonar()
 {
-  if (!sonarUse)
+  if (!sonars.use)
   {
     return;
   }
@@ -3007,10 +2989,11 @@ void Robot::checkSonar()
     if (sonarObstacleTimeout == 0)
     {
       bool isClose = false;
-      int triggerBelow = sonarTriggerBelow * 2;
-      for (uint8_t i = 0; i < Sonar::END; i++)
+      int triggerBelow = sonarTriggerBelow << 1;
+      for (uint8_t i = 0; i < Sonars::END; i++)
       {
-        if (sonarDist[i] > 0 && sonarDist[i] < triggerBelow)
+        if (sonars.sonar[i].distance > 0 &&
+            sonars.sonar[i].distance < triggerBelow)
         {
           isClose = true;
         }
@@ -3041,7 +3024,8 @@ void Robot::checkSonar()
     }
   }
 
-  if (sonarDist[Sonar::CENTER] > 0 && sonarDist[Sonar::CENTER] < sonarTriggerBelow)
+  if (sonars.sonar[Sonars::CENTER].distance > 0 &&
+      sonars.sonar[Sonars::CENTER].distance < sonarTriggerBelow)
   {
     sonarDistCounter++;
     if (rollDir == RIGHT)
@@ -3053,12 +3037,16 @@ void Robot::checkSonar()
       reverseOrBidir(RIGHT);
     }
   }
-  if (sonarDist[Sonar::RIGHT] > 0 && sonarDist[Sonar::RIGHT] < sonarTriggerBelow)
+
+  if (sonars.sonar[Sonars::RIGHT].distance > 0 &&
+      sonars.sonar[Sonars::RIGHT].distance < sonarTriggerBelow)
   {
     sonarDistCounter++;
     reverseOrBidir(LEFT);
   }
-  if (sonarDist[Sonar::LEFT] > 0 && sonarDist[Sonar::LEFT] < sonarTriggerBelow)
+
+  if (sonars.sonar[Sonars::LEFT].distance > 0 &&
+      sonars.sonar[Sonars::LEFT].distance < sonarTriggerBelow)
   {
     sonarDistCounter++;
     reverseOrBidir(RIGHT);
@@ -3068,7 +3056,7 @@ void Robot::checkSonar()
 // check IMU (tilt)
 void Robot::checkTilt()
 {
-  if (!imuUse)
+  if (!imu.use)
   {
     return;
   }
@@ -3078,7 +3066,7 @@ void Robot::checkTilt()
   {
     return;
   }
-  nextTimeCheckTilt = curMillis + 200; // 5Hz same as nextTimeImu
+  nextTimeCheckTilt = curMillis + 200; // 5Hz same as imu.nextTime
 
   int pitchAngle = (imu.ypr.pitch / PI * 180.0);
   int rollAngle = (imu.ypr.roll / PI * 180.0);
@@ -3214,52 +3202,6 @@ void Robot::processGPSData()
   gpsY = gps.distance_between(gpsLat, nlon, gpsLat, gpsLon);
 }
 
-// calculate map position by odometer sensors
-void Robot::calcOdometer()
-{
-  unsigned long curMillis = millis();
-  if (!odometerUse || curMillis < nextTimeOdometer)
-  {
-    return;
-  }
-  nextTimeOdometer = curMillis + 300;
-
-  static int lastOdoLeft = 0;
-  static int lastOdoRight = 0;
-  int odoLeft = odometer.encoder[Odometer::LEFT].counter;
-  int odoRight = odometer.encoder[Odometer::RIGHT].counter;
-  int ticksLeft = odoLeft - lastOdoLeft;
-  int ticksRight = odoRight - lastOdoRight;
-  lastOdoLeft = odoLeft;
-  lastOdoRight = odoRight;
-  float left_cm = (float)ticksLeft / odometer.ticksPerCm;
-  float right_cm = (float)ticksRight / odometer.ticksPerCm;
-  float avg_cm = (left_cm + right_cm) / 2.0;
-  float wheel_theta = (left_cm - right_cm) / odometer.wheelBaseCm;
-  odometer.theta += wheel_theta;
-
-  odometer.encoder[Odometer::LEFT].wheelRpmCurr =
-      double((((float)ticksLeft / (float)odometer.ticksPerRevolution) /
-              (float)(millis() - lastMotorRpmTime)) * 60000.0);
-
-  odometer.encoder[Odometer::RIGHT].wheelRpmCurr =
-      double((((float)ticksRight / (float)odometer.ticksPerRevolution) /
-              (float)(millis() - lastMotorRpmTime)) * 60000.0);
-
-  lastMotorRpmTime = millis();
-
-  if (imuUse)
-  {
-    odometer.x += avg_cm * sin(imu.ypr.yaw);
-    odometer.y += avg_cm * cos(imu.ypr.yaw);
-  }
-  else
-  {
-    // FIXME: theta should be old theta, not new theta?
-    odometer.x += avg_cm * sin(odometer.theta);
-    odometer.y += avg_cm * cos(odometer.theta);
-  }
-}
 
 void Robot::checkTimeout()
 {
@@ -3293,13 +3235,13 @@ void Robot::loop()
   checkBattery();
   checkIfStucked();
   checkRobotStats();
-  calcOdometer();
+  odometer.calc(imu);
   checkOdometerFaults();
   checkButton();
   motorMowControl();
   checkTilt();
 
-  if (imuUse)
+  if (imu.use)
   {
     imu.update();
   }
@@ -3647,7 +3589,7 @@ void Robot::loop()
   }
   else if (stateCurr == STATE_FORWARD &&
            // mowPatternCurr == MOW_RANDOM &&
-           imuUse && (imuCorrectDir || mowPatternCurr == MOW_LANES))
+      imu.use && (imuCorrectDir || mowPatternCurr == MOW_LANES))
   {
     motorControlImuDir();                //&& (millis() > stateStartTime + 3000)
   }
@@ -3661,11 +3603,8 @@ void Robot::loop()
     motorMowSpeedPWMSet = motorMowSpeedMaxPwm;
   }
 
-  bumper[Bumper::LEFT].clearHit();
-  bumper[Bumper::RIGHT].clearHit();
-
-  dropSensor[DropSensor::LEFT].clearDetected();
-  dropSensor[DropSensor::RIGHT].clearDetected();
+  bumpers.clearHit();
+  dropSensors.clearDetected();
 
   loopsPerSecCounter++;
 }

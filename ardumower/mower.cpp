@@ -63,8 +63,8 @@
 #define PIN_BUMBER_LEFT 39            // bumper pins
 #define PIN_BUMBER_RIGHT 38
 
-#define PIN_DROP_LEFT 45              // drop pins - Dropsensor - Absturzsensor
-#define PIN_DROP_RIGHT 23             // drop pins - Dropsensor - Absturzsensor
+#define PIN_DROP_LEFT 45              // drop pins - Dropsensor
+#define PIN_DROP_RIGHT 23             // drop pins - Dropsensor
 
 #define PIN_SONAR_CENTER_TRIGGER 24   // ultrasonic sensor pins
 #define PIN_SONAR_CENTER_ECHO 22
@@ -180,20 +180,10 @@ Mower::Mower()
   motorPID[MOW].Ki = 0.01;
   motorPID[MOW].Kd = 0.01;
 
-  //  ------ bumper -----------------------------------
-  bumperUse = 0; // has bumpers?
-
-  //  ------ drop -----------------------------------
-  dropUse = 0;     // has drops? - Dropsensor - Absturzsensor vorhanden ?
-
   // ------ rain ------------------------------------
   rainUse = 0; // use rain sensor?
 
   // ------ sonar ------------------------------------
-  sonarUse = 0;             // use ultra sonic sensor? (WARNING: robot will slow down, if enabled but not connected!)
-  sonarUseArr[Sonar::LEFT] = 1;
-  sonarUseArr[Sonar::RIGHT] = 1;
-  sonarUseArr[Sonar::CENTER] = 0;
   sonarTriggerBelow = 1050; // ultrasonic sensor trigger distance
 
   // ------ perimeter ---------------------------------
@@ -215,7 +205,6 @@ Mower::Mower()
   lawnSensorUse = 0; // use capacitive Sensor
 
   // ------  IMU (compass/accel/gyro) ----------------------
-  imuUse = 0;          // use IMU?
   imuCorrectDir = 0;   // correct direction by compass?
   imuDirPID.Kp = 5.0;  // direction PID controller
   imuDirPID.Ki = 1.0;
@@ -254,10 +243,6 @@ Mower::Mower()
   stationRollTime = 1000;  // charge station roll time (ms)
   stationForwTime = 1500;  // charge station forward time (ms)
   stationCheckTime = 1700; // charge station reverse check time (ms)
-
-  // ------ odometer ------------------------------------
-  odometerUse = 0;                   // use odometer?
-  twoWayOdometerSensorUse = 0;       // use optional two-wire odometer sensor?
 
   // ----- GPS -------------------------------------------
   gpsUse = 0;                   // use GPS?
@@ -376,17 +361,17 @@ void Mower::setup()
   button.setup(PIN_BUTTON);
 
   // bumpers
-  bumper[Bumper::LEFT].setup(PIN_BUMBER_LEFT);
-  bumper[Bumper::RIGHT].setup(PIN_BUMBER_RIGHT);
+  bumpers.bumper[Bumpers::LEFT].setup(PIN_BUMBER_LEFT);
+  bumpers.bumper[Bumpers::RIGHT].setup(PIN_BUMBER_RIGHT);
 
   // drop sensor
-  dropSensor[DropSensor::LEFT].setup(PIN_DROP_LEFT, DropSensor::NO);
-  dropSensor[DropSensor::RIGHT].setup(PIN_DROP_LEFT, DropSensor::NO);
+  dropSensors.dropSensor[DropSensors::LEFT].setup(PIN_DROP_LEFT, DropSensor::NO);
+  dropSensors.dropSensor[DropSensors::RIGHT].setup(PIN_DROP_LEFT, DropSensor::NO);
 
   // sonar
-  sonar[Sonar::LEFT].setup(PIN_SONAR_LEFT_TRIGGER, PIN_SONAR_LEFT_ECHO);
-  sonar[Sonar::RIGHT].setup(PIN_SONAR_RIGHT_TRIGGER, PIN_SONAR_RIGHT_ECHO);
-  sonar[Sonar::CENTER].setup(PIN_SONAR_CENTER_TRIGGER, PIN_SONAR_CENTER_ECHO);
+  sonars.sonar[Sonars::LEFT].setup(PIN_SONAR_LEFT_TRIGGER, PIN_SONAR_LEFT_ECHO);
+  sonars.sonar[Sonars::RIGHT].setup(PIN_SONAR_RIGHT_TRIGGER, PIN_SONAR_RIGHT_ECHO);
+  sonars.sonar[Sonars::CENTER].setup(PIN_SONAR_CENTER_TRIGGER, PIN_SONAR_CENTER_ECHO);
 
   // rain
   pinMode(PIN_RAIN, INPUT);

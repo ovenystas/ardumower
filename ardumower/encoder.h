@@ -13,20 +13,11 @@
 class Encoder
 {
   public:
-    /**
-     * Setup function to use with 1-pin encoder.
-     */
-    void setup(const uint8_t pin, const bool swapDir);
-
-    /**
-     * Setup function to use with 1-pin encoder.
-     */
     void setup(const uint8_t pin, const uint8_t pin2, const bool swapDir);
-
     void read();
-
     void setState(unsigned long timeMicros);
 
+    bool twoWay;                // using 2-pin encoder
     bool swapDir;               // inverse encoder direction?
     int counter{};              // wheel counter
     boolean lastState { LOW };  // last state
@@ -34,7 +25,6 @@ class Encoder
     float wheelRpmCurr {};      // wheel rpm
 
   private:
-    bool twoWay;
     uint8_t pin;
     uint8_t pin2;
     boolean curState { LOW };   // current state

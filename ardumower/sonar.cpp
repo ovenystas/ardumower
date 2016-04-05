@@ -51,8 +51,13 @@ void Sonar::setup(const uint8_t triggerPin, const uint8_t echoPin,
  * @return Time until echo arrives in us.
  *         To get distance in cm divide value with 58.8.
  */
-uint32_t Sonar::ping(void)
+void Sonar::ping(void)
 {
+  if (!use)
+  {
+    return;
+  }
+
   // TODO: Change from digitalWrite to raw port write to make it more accurate.
   digitalWrite(triggerPin, LOW);
   delayMicroseconds(4);
@@ -68,5 +73,5 @@ uint32_t Sonar::ping(void)
     uS = NO_ECHO;
   }
 
-  return uS;
+  distance = uS;
 }

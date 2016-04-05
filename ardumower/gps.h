@@ -52,8 +52,9 @@ class GPS
       GPS_INVALID_HDOP = 0xFFFFFFFF
     };
 
-    static const float GPS_INVALID_F_ANGLE, GPS_INVALID_F_ALTITUDE,
-        GPS_INVALID_F_SPEED;
+    static const float GPS_INVALID_F_ANGLE;
+    static const float GPS_INVALID_F_ALTITUDE;
+    static const float GPS_INVALID_F_SPEED;
 
     GPS();
     bool encode(char c); // process one character received from GPS

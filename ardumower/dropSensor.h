@@ -12,20 +12,13 @@
 
 class DropSensor
 {
-
   private:
     uint8_t pin {};
-    uint8_t contactType { NO }; // contact 1=NC 0=NO against GND
-    uint16_t counter {};
     boolean detected { false };
 
   public:
-    enum dropSensorE
-    {
-      LEFT,
-      RIGHT,
-      END
-    };
+    uint8_t contactType { NO }; // contact 1=NC 0=NO against GND
+    uint16_t counter {};
 
     enum dropSensorContactE
     {
@@ -46,15 +39,15 @@ class DropSensor
       return detected;
     }
 
-    void clearDetected(void)
-    {
-      detected = false;
-    }
-
     void simDetected(void)
     {
       detected = true;
       counter++;
+    }
+
+    void clearDetected(void)
+    {
+      detected = false;
     }
 
     void check(void)
@@ -66,19 +59,36 @@ class DropSensor
       }
     }
 
-    uint16_t getCounter(void)
-    {
-      return counter;
-    }
-
     void resetCounter(void)
     {
       counter = 0;
     }
+};
 
-    uint8_t getContactType(void)
+class DropSensors
+{
+  public:
+    enum dropSensorE
     {
-      return contactType;
+      LEFT,
+      RIGHT,
+      END
+    };
+
+    bool use;
+    unsigned long nextTime;
+    DropSensor dropSensor[END];
+
+    void check(void)
+    {
+      dropSensor[LEFT].check();
+      dropSensor[RIGHT].check();
+    }
+
+    void clearDetected(void)
+    {
+      dropSensor[LEFT].clearDetected();
+      dropSensor[RIGHT].clearDetected();
     }
 };
 
