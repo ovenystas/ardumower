@@ -5,3 +5,15 @@ Motor object hierarchy
     MotorWheel               MotorMow
      /       \                  |
 Ardumoto DeekRobotMotorShield Mosfet
+
+
+New classes
+-----------
+Rain
+Odometer
+Motor
+MotorWheel
+MotorMow
+Ardumoto
+DeekRobotMotorShield
+Mosfet

@@ -28,7 +28,7 @@
 class Sonar
 {
   public:
-    enum
+    enum sonarE
     {
       LEFT,
       RIGHT,

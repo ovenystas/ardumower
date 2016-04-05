@@ -54,18 +54,6 @@ Robot::Robot()
   statsMowTimeTotalStart = false;
   mowPatternCurr = MOW_RANDOM;
 
-  odometryLeft = 0;
-  odometryRight = 0;
-  odometryLeftLastState = LOW;
-  odometryLeftLastState2 = LOW;
-  odometryRightLastState = LOW;
-  odometryRightLastState2 = LOW;
-  odometryTheta = 0;
-  odometryX = 0;
-  odometryY = 0;
-
-  motorRpmCurr[RIGHT] = 0;
-  motorRpmCurr[LEFT] = 0;
   lastMotorRpmTime = 0;
   lastSetMotorSpeedTime = 0;
   motorSpeedRpmSet[LEFT] = 0;
@@ -166,8 +154,8 @@ Robot::Robot()
   nextTimeMotorSense = 0;
   nextTimeIMU = 0;
   nextTimeCheckTilt = 0;
-  nextTimeOdometry = 0;
-  nextTimeOdometryInfo = 0;
+  nextTimeOdometer = 0;
+  nextTimeOdometerInfo = 0;
   nextTimeBumper = 0;
   nextTimeDrop = 0;
   nextTimeSonar = 0;
@@ -358,13 +346,13 @@ void Robot::loadSaveUserSettings(boolean readflag)
   eereadwrite(readflag, addr, stationRollTime);
   eereadwrite(readflag, addr, stationForwTime);
   eereadwrite(readflag, addr, stationCheckTime);
-  eereadwrite(readflag, addr, odometryUse);
-  eereadwrite(readflag, addr, odometryTicksPerRevolution);
-  eereadwrite(readflag, addr, odometryTicksPerCm);
-  eereadwrite(readflag, addr, odometryWheelBaseCm);
-  eereadwrite(readflag, addr, odometryLeftSwapDir);
-  eereadwrite(readflag, addr, odometryRightSwapDir);
-  eereadwrite(readflag, addr, twoWayOdometrySensorUse);
+  eereadwrite(readflag, addr, odometerUse);
+  eereadwrite(readflag, addr, odometer.ticksPerRevolution);
+  eereadwrite(readflag, addr, odometer.ticksPerCm);
+  eereadwrite(readflag, addr, odometer.wheelBaseCm);
+  eereadwrite(readflag, addr, odometer.encoder[Odometer::LEFT].swapDir);
+  eereadwrite(readflag, addr, odometer.encoder[Odometer::RIGHT].swapDir);
+  eereadwrite(readflag, addr, twoWayOdometerSensorUse);
   eereadwrite(readflag, addr, buttonUse);
   eereadwrite(readflag, addr, userSwitch1);
   eereadwrite(readflag, addr, userSwitch2);
@@ -463,7 +451,7 @@ void Robot::printSettingSerial()
   Console.println(dropUse);
 
   Console.print(F("dropContact : "));
-  Console.println(drop[Drop::LEFT].getContactType());  // Assume left and right has same contact type
+  Console.println(dropSensor[DropSensor::LEFT].getContactType());  // Assume left and right has same contact type
 
   // ------ rain ------------------------------------
   Console.print(F("rainUse : "));
@@ -581,21 +569,21 @@ void Robot::printSettingSerial()
   Console.print(F("stationCheckTime : "));
   Console.println(stationCheckTime);
 
-  // ------ odometry ------------------------------------
-  Console.print(F("odometryUse : "));
-  Console.println(odometryUse);
-  Console.print(F("twoWayOdometrySensorUse : "));
-  Console.println(twoWayOdometrySensorUse);
-  Console.print(F("odometryTicksPerRevolution : "));
-  Console.println(odometryTicksPerRevolution);
-  Console.print(F("odometryTicksPerCm : "));
-  Console.println(odometryTicksPerCm);
-  Console.print(F("odometryWheelBaseCm : "));
-  Console.println(odometryWheelBaseCm);
-  Console.print(F("odometryRightSwapDir : "));
-  Console.println(odometryRightSwapDir);
-  Console.print(F("odometryLeftSwapDir : "));
-  Console.println(odometryLeftSwapDir);
+  // ------ odometer ------------------------------------
+  Console.print(F("odometerUse : "));
+  Console.println(odometerUse);
+  Console.print(F("twoWayOdometerSensorUse : "));
+  Console.println(twoWayOdometerSensorUse);
+  Console.print(F("odometerTicksPerRevolution : "));
+  Console.println(odometer.ticksPerRevolution);
+  Console.print(F("odometerTicksPerCm : "));
+  Console.println(odometer.ticksPerCm);
+  Console.print(F("odometerWheelBaseCm : "));
+  Console.println(odometer.wheelBaseCm);
+  Console.print(F("odometerRightSwapDir : "));
+  Console.println(odometer.encoder[Odometer::RIGHT].swapDir);
+  Console.print(F("odometerLeftSwapDir : "));
+  Console.println(odometer.encoder[Odometer::LEFT].swapDir);
 
   // ----- GPS -------------------------------------------
   Console.print(F("gpsUse : "));
@@ -727,104 +715,6 @@ void Robot::setMotorMowRPMState(boolean motorMowRpmState)
   }
 }
 
-// ---- odometry (interrupt) --------------------------------------------------------
-// Determines the rotation count and direction of the odometry encoders. Called in the odometry pins interrupt.
-// encoder signal/Ardumower pinout etc. at http://wiki.ardumower.de/index.php?title=Odometry
-// Logic is:
-//    If the pin1 change transition (odometryLeftState) is LOW -> HIGH...
-//      If the pin2 current state is HIGH :  step count forward   (odometryLeft++)
-//        Otherwise :  step count reverse   (odometryLeft--)
-// odometryState:  1st left and right odometry signal
-// odometryState2: 2nd left and right odometry signal (optional two-wire encoders)
-void Robot::setOdometryState(unsigned long timeMicros,
-                             boolean odometryLeftState,
-                             boolean odometryRightState,
-                             boolean odometryLeftState2,
-                             boolean odometryRightState2)
-{
-  int leftStep = 1;
-  int rightStep = 1;
-  if (odometryLeftSwapDir)
-  {
-    leftStep = -1;
-  }
-  if (odometryRightSwapDir)
-  {
-    rightStep = -1;
-  }
-  if (odometryLeftState != odometryLeftLastState)
-  {
-    if (odometryLeftState)
-    { // pin1 makes LOW->HIGH transition
-      if (twoWayOdometrySensorUse)
-      {
-        // pin2 = HIGH? => forward
-        if (odometryLeftState2)
-        {
-          odometryLeft += leftStep;
-        }
-        else
-        {
-          odometryLeft -= leftStep;
-        }
-      }
-      else
-      {
-        if (motorPWMCurr[LEFT] >= 0)
-        {
-          odometryLeft++;
-        }
-        else
-        {
-          odometryLeft--;
-        }
-      }
-    }
-    odometryLeftLastState = odometryLeftState;
-  }
-
-  if (odometryRightState != odometryRightLastState)
-  {
-    if (odometryRightState)
-    { // pin1 makes LOW->HIGH transition
-      if (twoWayOdometrySensorUse)
-      {
-        // pin2 = HIGH? => forward
-        if (odometryRightState2)
-        {
-          odometryRight += rightStep;
-        }
-        else
-        {
-          odometryRight -= rightStep;
-        }
-      }
-      else
-      {
-        if (motorPWMCurr[RIGHT] >= 0)
-        {
-          odometryRight++;
-        }
-        else
-        {
-          odometryRight--;
-        }
-      }
-    }
-    odometryRightLastState = odometryRightState;
-  }
-  if (twoWayOdometrySensorUse)
-  {
-    if (odometryRightState2 != odometryRightLastState2)
-    {
-      odometryRightLastState2 = odometryRightState2;
-    }
-    if (odometryLeftState2 != odometryLeftLastState2)
-    {
-      odometryLeftLastState2 = odometryLeftState2;
-    }
-  }
-}
 
 // ---- RC (interrupt) --------------------------------------------------------------
 // RC remote control helper
@@ -921,10 +811,10 @@ void Robot::setMotorPWM(int pwm, unsigned long TaC, uint8_t motor, boolean useAc
     }
   }
 
-  if (odometryUse)
+  if (odometerUse)
   {
     motorPWMCurr[motor] = pwm;
-    if (abs(motorRpmCurr[motor]) < 1)
+    if (abs(odometer.encoder[motor].wheelRpmCurr) < 1)
     {
       motorZeroTimeout[motor] = max(0, ((int)(motorZeroTimeout[motor] - TaC)));
     }
@@ -1018,7 +908,7 @@ void Robot::motorControlImuRoll()
   imuRollPID.compute();
 
   // Regelbereich entspricht maximaler PWM am Antriebsrad (motorSpeedMaxPwm), um auch an Steigungen höchstes Drehmoment für die Solldrehzahl zu gewährleisten
-  motorPID[LEFT].x = motorRpmCurr[LEFT];                 // IST
+  motorPID[LEFT].x = odometer.encoder[LEFT].wheelRpmCurr;                 // IST
   motorPID[LEFT].w = -imuRollPID.y;                // SOLL
   motorPID[LEFT].y_min = -motorSpeedMaxPwm;        // Regel-MIN
   motorPID[LEFT].y_max = motorSpeedMaxPwm;   // Regel-MAX
@@ -1030,7 +920,7 @@ void Robot::motorControlImuRoll()
   //if((motorLeftSpeedRpmSet <= 0 ) && (leftSpeed >0 )) leftSpeed = 0;
 
   // Regelbereich entspricht maximaler PWM am Antriebsrad (motorSpeedMaxPwm), um auch an Steigungen höchstes Drehmoment für die Solldrehzahl zu gewährleisten
-  motorPID[RIGHT].x = motorRpmCurr[RIGHT];               // IST
+  motorPID[RIGHT].x = odometer.encoder[RIGHT].wheelRpmCurr;               // IST
   motorPID[RIGHT].w = imuRollPID.y;                // SOLL
   motorPID[RIGHT].y_min = -motorSpeedMaxPwm;       // Regel-MIN
   motorPID[RIGHT].y_max = motorSpeedMaxPwm;  // Regel-MAX
@@ -1156,7 +1046,7 @@ void Robot::motorControlImuDir()
 
   // Korrektur erfolgt über Abbremsen des linken Antriebsrades, falls Kursabweichung nach rechts
   // Regelbereich entspricht maximaler PWM am Antriebsrad (motorSpeedMaxPwm), um auch an Steigungen höchstes Drehmoment für die Solldrehzahl zu gewährleisten
-  motorPID[LEFT].x = motorRpmCurr[LEFT];                     // IST
+  motorPID[LEFT].x = odometer.encoder[LEFT].wheelRpmCurr;                     // IST
   motorPID[LEFT].w = motorSpeedRpmSet[LEFT] - correctLeft;     // SOLL
   motorPID[LEFT].y_min = -motorSpeedMaxPwm;            // Regel-MIN
   motorPID[LEFT].y_max = motorSpeedMaxPwm;       // Regel-MAX
@@ -1175,7 +1065,7 @@ void Robot::motorControlImuDir()
 
   // Korrektur erfolgt über Abbremsen des rechten Antriebsrades, falls Kursabweichung nach links
   // Regelbereich entspricht maximaler PWM am Antriebsrad (motorSpeedMaxPwm), um auch an Steigungen höchstes Drehmoment für die Solldrehzahl zu gewährleisten
-  motorPID[RIGHT].x = motorRpmCurr[RIGHT];                   // IST
+  motorPID[RIGHT].x = odometer.encoder[RIGHT].wheelRpmCurr;                   // IST
   motorPID[RIGHT].w = motorSpeedRpmSet[RIGHT] - correctRight;  // SOLL
   motorPID[RIGHT].y_min = -motorSpeedMaxPwm;           // Regel-MIN
   motorPID[RIGHT].y_max = motorSpeedMaxPwm;      // Regel-MAX
@@ -1202,10 +1092,10 @@ void Robot::motorControlImuDir()
   setMotorPWMs(leftSpeed, rightSpeed, false);
 }
 
-// check for odometry sensor faults
-void Robot::checkOdometryFaults()
+// check for odometersensor faults
+void Robot::checkOdometerFaults()
 {
-  if (!odometryUse)
+  if (!odometerUse)
   {
     return;
   }
@@ -1215,10 +1105,10 @@ void Robot::checkOdometryFaults()
 
   if ((stateCurr == STATE_FORWARD) && (curMillis - stateStartTime > 8000))
   {
-    // just check if odometry sensors may not be working at all
+    // just check if odometer sensors may not be working at all
     for (uint8_t i = LEFT; i <= RIGHT; i++)
     {
-      if (motorPWMCurr[i] > 100 && abs(motorRpmCurr[i]) < 1)
+      if (motorPWMCurr[i] > 100 && abs(odometer.encoder[i].wheelRpmCurr) < 1)
       {
         err[i] = true;
       }
@@ -1227,11 +1117,11 @@ void Robot::checkOdometryFaults()
 
   if (stateCurr == STATE_ROLL && (curMillis - stateStartTime) > 1000)
   {
-    // just check if odometry sensors may be turning in the wrong direction
+    // just check if odometer sensors may be turning in the wrong direction
     for (uint8_t i = LEFT; i <= RIGHT; i++)
     {
-      if ((motorPWMCurr[i] > 100 && motorRpmCurr[i] < -3) ||
-          (motorPWMCurr[i] < -100 && motorRpmCurr[i] > 3))
+      if ((motorPWMCurr[i] > 100 && odometer.encoder[i].wheelRpmCurr < -3) ||
+          (motorPWMCurr[i] < -100 && odometer.encoder[i].wheelRpmCurr > 3))
       {
         err[i] = true;
       }
@@ -1240,21 +1130,21 @@ void Robot::checkOdometryFaults()
 
   if (err[LEFT])
   {
-    Console.print("Left odometry error: PWM=");
+    Console.print("Left odometer error: PWM=");
     Console.print(motorPWMCurr[LEFT]);
     Console.print("\tRPM=");
-    Console.println(motorRpmCurr[LEFT]);
-    addErrorCounter(ERR_ODOMETRY_LEFT);
+    Console.println(odometer.encoder[Odometer::LEFT].wheelRpmCurr);
+    addErrorCounter(ERR_ODOMETER_LEFT);
     setNextState(STATE_ERROR, 0);
   }
 
   if (err[RIGHT])
   {
-    Console.print("Right odometry error: PWM=");
+    Console.print("Right odometer error: PWM=");
     Console.print(motorPWMCurr[RIGHT]);
     Console.print("\tRPM=");
-    Console.println(motorRpmCurr[RIGHT]);
-    addErrorCounter(ERR_ODOMETRY_RIGHT);
+    Console.println(odometer.encoder[Odometer::RIGHT].wheelRpmCurr);
+    addErrorCounter(ERR_ODOMETER_RIGHT);
     setNextState(STATE_ERROR, 0);
   }
 }
@@ -1271,13 +1161,13 @@ void Robot::motorControl()
   static unsigned long nextMotorControlOutputTime = 0;
 
   int speed[2];
-  if (odometryUse)
+  if (odometerUse)
   {
     for (uint8_t i = LEFT; i <= RIGHT; i++)
     {
       // Regelbereich entspricht maximaler PWM am Antriebsrad (motorSpeedMaxPwm),
       // um auch an Steigungen höchstes Drehmoment für die Solldrehzahl zu gewährleisten
-      motorPID[i].x = motorRpmCurr[i];               // IST
+      motorPID[i].x = odometer.encoder[i].wheelRpmCurr;               // IST
       if (curMillis < stateStartTime + motorZeroSettleTime)
       {
         motorPID[i].w = 0; // get zero speed first after state change
@@ -1523,16 +1413,12 @@ void Robot::printRemote()
   Console.println(remoteMow);
 }
 
-void Robot::printOdometry()
+void Robot::printOdometer()
 {
   Console.print(F("ODO,"));
-  Console.print(odometryX);
+  Console.print(odometer.x);
   Console.print(", ");
-  Console.println(odometryY);
-  Console.print(F("ODO,"));
-  Console.print(odometryX);
-  Console.print(", ");
-  Console.println(odometryY);
+  Console.println(odometer.y);
 }
 
 void Robot::printInfo(Stream &s)
@@ -1569,23 +1455,29 @@ void Robot::printInfo(Stream &s)
     }
     else
     {
-      if (odometryUse)
+      if (odometerUse)
       {
-        Streamprint(s, "odo %4d %4d ", (int)odometryLeft, (int)odometryRight);
+        Streamprint(s, "odo %4d %4d ",
+                    odometer.encoder[Odometer::LEFT].counter,
+                    odometer.encoder[Odometer::RIGHT].counter);
       }
-      Streamprint(s, "spd %4d %4d %4d ", (int)motorSpeedRpmSet[LEFT],
-                  (int)motorSpeedRpmSet[RIGHT], (int)motorMowRpmCurr);
+      Streamprint(s, "spd %4d %4d %4d ",
+                  motorSpeedRpmSet[LEFT],
+                  motorSpeedRpmSet[RIGHT],
+                  motorMowRpmCurr);
       if (consoleMode == CONSOLE_SENSOR_VALUES)
       {
         // sensor values
-        Streamprint(s, "sen %4d %4d %4d ", (int)motorSense[LEFT],
-                    (int)motorSense[RIGHT], (int)motorMowSense);
+        Streamprint(s, "sen %4d %4d %4d ",
+                    (int)motorSense[LEFT],
+                    (int)motorSense[RIGHT],
+                    (int)motorMowSense);
         Streamprint(s, "bum %4d %4d ",
                     bumper[Bumper::LEFT].isHit(),
                     bumper[Bumper::RIGHT].isHit());
         Streamprint(s, "dro %4d %4d ",
-                    drop[Drop::LEFT].isDetected(),
-                    drop[Drop::RIGHT].isDetected());
+                    dropSensor[DropSensor::LEFT].isDetected(),
+                    dropSensor[DropSensor::RIGHT].isDetected());
         Streamprint(s, "son %4u %4u %4u ",
                     sonarDist[Sonar::LEFT],
                     sonarDist[Sonar::CENTER],
@@ -1613,8 +1505,8 @@ void Robot::printInfo(Stream &s)
                     bumper[Bumper::LEFT].getCounter(),
                     bumper[Bumper::RIGHT].getCounter());
         Streamprint(s, "dro %4d %4d ",
-                    drop[Drop::LEFT].getCounter(),
-                    drop[Drop::RIGHT].getCounter());
+                    dropSensor[DropSensor::LEFT].getCounter(),
+                    dropSensor[DropSensor::RIGHT].getCounter());
         Streamprint(s, "son %3d ", sonarDistCounter);
         Streamprint(s, "yaw %3d ", (int)(imu.ypr.yaw / PI * 180.0));
         Streamprint(s, "pit %3d ", (int)(imu.ypr.pitch / PI * 180.0));
@@ -1633,9 +1525,11 @@ void Robot::printInfo(Stream &s)
           Streamprint(s, "gps %2d ", (int)gps.satellites());
         }
       }
-      Streamprint(s, "bat %2d.%01d ", (int)batVoltage,
+      Streamprint(s, "bat %2d.%01d ",
+                  (int)batVoltage,
                   (int)((batVoltage * 10) - ((int)batVoltage * 10)));
-      Streamprint(s, "chg %2d.%01d %2d.%01d ", (int)chgVoltage,
+      Streamprint(s, "chg %2d.%01d %2d.%01d ",
+                  (int)chgVoltage,
                   (int)((chgVoltage * 10) - ((int)chgVoltage * 10)),
                   (int)chgCurrent,
                   (int)((abs(chgCurrent) *10) - ((int)abs(chgCurrent)*10)));
@@ -1650,7 +1544,7 @@ void Robot::printMenu()
 {
   Console.println();
   Console.println(F("1 = Test motors"));
-  Console.println(F("2 = Test odometry"));
+  Console.println(F("2 = Test odometer"));
   Console.println(F("3 = Setup BT module config (quick baudscan/recommended)"));
   Console.println(F("4 = Setup BT module config (extensive baudscan)"));
   Console.println(F("5 = Calibrate IMU acc next side"));
@@ -1677,7 +1571,7 @@ void Robot::delayInfo(int ms)
   }
 }
 
-void Robot::testOdometry()
+void Robot::testOdometer()
 {
   char ch;
   int lastLeft = 0;
@@ -1689,15 +1583,17 @@ void Robot::testOdometry()
   for (;;)
   {
     resetIdleTime();
-    if (odometryLeft != lastLeft || odometryRight != lastRight)
+    int odoCountLeft = odometer.encoder[Odometer::LEFT].counter;
+    int odoCountRight = odometer.encoder[Odometer::RIGHT].counter;
+    if (odoCountLeft != lastLeft || odoCountRight != lastRight)
     {
       Console.print(F("Press'f' forward, 'r' reverse, 'z' reset  "));
       Console.print(F("left="));
-      Console.print(odometryLeft);
+      Console.print(odoCountLeft);
       Console.print(F("  right="));
-      Console.println(odometryRight);
-      lastLeft = odometryLeft;
-      lastRight = odometryRight;
+      Console.println(odoCountRight);
+      lastLeft = odoCountLeft;
+      lastRight = odoCountRight;
     }
     delay(100);
     if (Console.available() > 0)
@@ -1721,8 +1617,8 @@ void Robot::testOdometry()
       }
       if (ch == 'z')
       {
-        odometryLeft = 0;
-        odometryRight = 0;
+        odometer.encoder[Odometer::LEFT].counter = 0;
+        odometer.encoder[Odometer::RIGHT].counter = 0;
       }
     }
   };
@@ -1798,7 +1694,7 @@ void Robot::menu()
           printMenu();
           break;
         case '2':
-          testOdometry();
+          testOdometer();
           printMenu();
           break;
         case '3':
@@ -1883,10 +1779,10 @@ void Robot::readSerial()
         bumper[Bumper::RIGHT].simHit(); // press 'r' to simulate right bumper
         break;
       case 'j':
-        drop[Drop::LEFT].simDetected(); // press 'j' to simulate left drop                                                                         // Dropsensor - Absturzsensor
+        dropSensor[DropSensor::LEFT].simDetected(); // press 'j' to simulate left drop                                                                         // Dropsensor - Absturzsensor
         break;
       case 'k':
-        drop[Drop::RIGHT].simDetected(); // press 'k' to simulate right drop                                                                        // Dropsensor - Absturzsensor
+        dropSensor[DropSensor::RIGHT].simDetected(); // press 'k' to simulate right drop                                                                        // Dropsensor - Absturzsensor
         break;
       case 's':
         lawnSensor.simDetected(); // press 's' to simulate lawn sensor
@@ -2174,8 +2070,8 @@ void Robot::readSensors()
   if (dropUse && curMillis >= nextTimeDrop)
   {
     nextTimeDrop = curMillis + 100;
-    drop[Drop::LEFT].check();
-    drop[Drop::RIGHT].check();
+    dropSensor[DropSensor::LEFT].check();
+    dropSensor[DropSensor::RIGHT].check();
   }
 
   //if ((timerUse) && (millis() >= nextTimeRTC)) {
@@ -2907,11 +2803,11 @@ void Robot::checkDrop()
     return;
   }
 
-  if (drop[Drop::LEFT].isDetected())
+  if (dropSensor[DropSensor::LEFT].isDetected())
   {
     reverseOrBidir(RIGHT);
   }
-  if (drop[Drop::RIGHT].isDetected())
+  if (dropSensor[DropSensor::RIGHT].isDetected())
   {
     reverseOrBidir(LEFT);
   }
@@ -3231,22 +3127,25 @@ void Robot::checkIfStucked()
     if (stateCurr != STATE_MANUAL &&
         stateCurr != STATE_REMOTE &&
         gpsSpeed <= stuckedIfGpsSpeedBelow &&
-        motorRpmCurr[LEFT] != 0 &&
-        motorRpmCurr[RIGHT] != 0 &&
+        odometer.encoder[LEFT].wheelRpmCurr != 0 &&
+        odometer.encoder[RIGHT].wheelRpmCurr != 0 &&
         millis() > stateStartTime + gpsSpeedIgnoreTime)
     {
       robotIsStuckedCounter++;
     }
 
     else
-    { // if mower gets unstucked it resets errorCounterMax to zero and reenabling motorMow
+    { // if mower gets unstuck it resets errorCounterMax to zero and re-enables motorMow
       robotIsStuckedCounter = 0;    // resets temporary counter to zero
-      if ((errorCounter[ERR_STUCK] == 0) && (stateCurr != STATE_OFF)
-          && (stateCurr != STATE_MANUAL) && (stateCurr != STATE_STATION)
+      if (errorCounter[ERR_STUCK] == 0
+          && (stateCurr != STATE_OFF)
+          && (stateCurr != STATE_MANUAL)
+          && (stateCurr != STATE_STATION)
           && (stateCurr != STATE_STATION_CHARGING)
           && (stateCurr != STATE_STATION_CHECK)
           && (stateCurr != STATE_STATION_REV)
-          && (stateCurr != STATE_STATION_ROLL) && (stateCurr != STATE_REMOTE)
+          && (stateCurr != STATE_STATION_ROLL)
+          && (stateCurr != STATE_REMOTE)
           && (stateCurr != STATE_ERROR))
       {
         motorMowEnable = true;
@@ -3315,52 +3214,50 @@ void Robot::processGPSData()
   gpsY = gps.distance_between(gpsLat, nlon, gpsLat, gpsLon);
 }
 
-// calculate map position by odometry sensors
-void Robot::calcOdometry()
+// calculate map position by odometer sensors
+void Robot::calcOdometer()
 {
   unsigned long curMillis = millis();
-  if (!odometryUse || curMillis < nextTimeOdometry)
+  if (!odometerUse || curMillis < nextTimeOdometer)
   {
     return;
   }
-  nextTimeOdometry = curMillis + 300;
+  nextTimeOdometer = curMillis + 300;
 
   static int lastOdoLeft = 0;
   static int lastOdoRight = 0;
-  int odoLeft = odometryLeft;
-  int odoRight = odometryRight;
+  int odoLeft = odometer.encoder[Odometer::LEFT].counter;
+  int odoRight = odometer.encoder[Odometer::RIGHT].counter;
   int ticksLeft = odoLeft - lastOdoLeft;
   int ticksRight = odoRight - lastOdoRight;
   lastOdoLeft = odoLeft;
   lastOdoRight = odoRight;
-  double left_cm = ((double) ticksLeft) / ((double) odometryTicksPerCm);
-  double right_cm = ((double) ticksRight) / ((double) odometryTicksPerCm);
-  double avg_cm = (left_cm + right_cm) / 2.0;
-  double wheel_theta = (left_cm - right_cm) / ((double) odometryWheelBaseCm);
-  odometryTheta += wheel_theta;
+  float left_cm = (float)ticksLeft / odometer.ticksPerCm;
+  float right_cm = (float)ticksRight / odometer.ticksPerCm;
+  float avg_cm = (left_cm + right_cm) / 2.0;
+  float wheel_theta = (left_cm - right_cm) / odometer.wheelBaseCm;
+  odometer.theta += wheel_theta;
 
-  motorRpmCurr[LEFT] =
-      double(
-          ((((double) ticksLeft) / ((double) odometryTicksPerRevolution)) / ((double) (millis()
-              - lastMotorRpmTime)))
-          * 60000.0);
-  motorRpmCurr[RIGHT] =
-      double(
-          ((((double) ticksRight) / ((double) odometryTicksPerRevolution)) / ((double) (millis()
-              - lastMotorRpmTime)))
-          * 60000.0);
+  odometer.encoder[Odometer::LEFT].wheelRpmCurr =
+      double((((float)ticksLeft / (float)odometer.ticksPerRevolution) /
+              (float)(millis() - lastMotorRpmTime)) * 60000.0);
+
+  odometer.encoder[Odometer::RIGHT].wheelRpmCurr =
+      double((((float)ticksRight / (float)odometer.ticksPerRevolution) /
+              (float)(millis() - lastMotorRpmTime)) * 60000.0);
+
   lastMotorRpmTime = millis();
 
   if (imuUse)
   {
-    odometryX += avg_cm * sin(imu.ypr.yaw);
-    odometryY += avg_cm * cos(imu.ypr.yaw);
+    odometer.x += avg_cm * sin(imu.ypr.yaw);
+    odometer.y += avg_cm * cos(imu.ypr.yaw);
   }
   else
   {
     // FIXME: theta should be old theta, not new theta?
-    odometryX += avg_cm * sin(odometryTheta);
-    odometryY += avg_cm * cos(odometryTheta);
+    odometer.x += avg_cm * sin(odometer.theta);
+    odometer.y += avg_cm * cos(odometer.theta);
   }
 }
 
@@ -3396,8 +3293,8 @@ void Robot::loop()
   checkBattery();
   checkIfStucked();
   checkRobotStats();
-  calcOdometry();
-  checkOdometryFaults();
+  calcOdometer();
+  checkOdometerFaults();
   checkButton();
   motorMowControl();
   checkTilt();
@@ -3767,8 +3664,8 @@ void Robot::loop()
   bumper[Bumper::LEFT].clearHit();
   bumper[Bumper::RIGHT].clearHit();
 
-  drop[Drop::LEFT].clearDetected();
-  drop[Drop::RIGHT].clearDetected();
+  dropSensor[DropSensor::LEFT].clearDetected();
+  dropSensor[DropSensor::RIGHT].clearDetected();
 
   loopsPerSecCounter++;
 }

@@ -5,35 +5,39 @@
  *      Author: ove
  */
 
-#ifndef DROP_H
-#define DROP_H
-
-#define DROP_CONTACT_NC 1
-#define DROP_CONTACT_NO 0
+#ifndef DROP_SENSOR_H
+#define DROP_SENSOR_H
 
 #include <Arduino.h>
 
-class Drop
+class DropSensor
 {
 
   private:
-    uint8_t pin{};
-    uint8_t contactType{DROP_CONTACT_NO}; // contact 1=NC 0=NO against GND
-    uint16_t counter{};
-    boolean detected{false};
+    uint8_t pin {};
+    uint8_t contactType { NO }; // contact 1=NC 0=NO against GND
+    uint16_t counter {};
+    boolean detected { false };
 
   public:
-    enum
+    enum dropSensorE
     {
       LEFT,
       RIGHT,
       END
     };
 
+    enum dropSensorContactE
+    {
+      NO = 0,
+      NC = 1
+    };
+
     void setup(const uint8_t pin, const boolean contactType)
     {
       this->pin = pin;
       this->contactType = contactType;
+
       pinMode(pin, INPUT_PULLUP);
     }
 
@@ -78,4 +82,4 @@ class Drop
     }
 };
 
-#endif /* DROP_H */
+#endif /* DROP_SENSOR_H */

@@ -94,10 +94,10 @@
 #define PIN_REMOTE_SWITCH 52          // remote control switch
 
 
-#define PIN_ODOMETRY_LEFT A12         // left odometry sensor
-#define PIN_ODOMETRY_LEFT_2 A13       // left odometry sensor (optional two-wire)
-#define PIN_ODOMETRY_RIGHT A14        // right odometry sensor
-#define PIN_ODOMETRY_RIGHT_2 A15      // right odometry sensor (optional two-wire)
+#define PIN_ODOMETER_LEFT A12         // left odometer sensor
+#define PIN_ODOMETER_LEFT_2 A13       // left odometer sensor (optional two-wire)
+#define PIN_ODOMETER_RIGHT A14        // right odometer sensor
+#define PIN_ODOMETER_RIGHT_2 A15      // right odometer sensor (optional two-wire)
 
 #define PIN_LAWN_FRONT_RECV 40        // lawn sensor front receive
 #define PIN_LAWN_FRONT_SEND 41        // lawn sensor front sender
@@ -119,6 +119,14 @@
 
 //#define USE_DEVELOPER_TEST     1      // uncomment for new perimeter signal test (developers)
 
+// ------- odometer ---------------------------------
+#define ODOMETER_TICKS_PER_REVOLUTION 1060  // encoder ticks per one full resolution
+#define ODOMETER_TICKS_PER_CM 13.49F        // encoder ticks per cm
+#define ODOMETER_WHEELBASE_CM 36.0F         // wheel-to-wheel distance (cm)
+#define ODOMETER_SWAP_DIR_LEFT true         // inverse left encoder direction?
+#define ODOMETER_SWAP_DIR_RIGHT false       // inverse right encoder direction?
+
+
 Mower robot;
 
 Mower::Mower()
@@ -126,7 +134,7 @@ Mower::Mower()
   name = "Ardumower";
 
   // ------- wheel motors -----------------------------
-  motorAccel = 1000;            // motor wheel acceleration - only functional when odometry is not in use (warning: do not set too low)
+  motorAccel = 1000;            // motor wheel acceleration - only functional when odometer is not in use (warning: do not set too low)
   motorSpeedMaxRpm = 25;        // motor wheel max RPM (WARNING: do not set too high, so there's still speed control when battery is low!)
   motorSpeedMaxPwm = 255;       // motor wheel max Pwm  (8-bit PWM=255, 10-bit PWM=1023)
   motorPowerMax = 75;           // motor wheel max power (Watt)
@@ -247,14 +255,9 @@ Mower::Mower()
   stationForwTime = 1500;  // charge station forward time (ms)
   stationCheckTime = 1700; // charge station reverse check time (ms)
 
-  // ------ odometry ------------------------------------
-  odometryUse = 0;                   // use odometry?
-  twoWayOdometrySensorUse = 0;       // use optional two-wire odometry sensor?
-  odometryTicksPerRevolution = 1060; // encoder ticks per one full resolution
-  odometryTicksPerCm = 13.49;        // encoder ticks per cm
-  odometryWheelBaseCm = 36;          // wheel-to-wheel distance (cm)
-  odometryRightSwapDir = 0;          // inverse right encoder direction?
-  odometryLeftSwapDir = 1;           // inverse left encoder direction?
+  // ------ odometer ------------------------------------
+  odometerUse = 0;                   // use odometer?
+  twoWayOdometerSensorUse = 0;       // use optional two-wire odometer sensor?
 
   // ----- GPS -------------------------------------------
   gpsUse = 0;                   // use GPS?
@@ -293,25 +296,24 @@ ISR(PCINT0_vect)
                           remoteMowState, remoteSwitchState);
 }
 
-// odometry signal change interrupt
+// odometer signal change interrupt
 // mower motor speed sensor interrupt
-// NOTE: when choosing a higher perimeter sample rate (38 kHz) and using odometry interrupts,
+// NOTE: when choosing a higher perimeter sample rate (38 kHz) and using odometer interrupts,
 // the Arduino Mega cannot handle all ADC interrupts anymore - the result will be a 'noisy'
-// perimeter filter output (mag value) which disappears when disabling odometry interrupts.
-// SOLUTION: allow odometry interrupt handler nesting (see odometry interrupt function)
+// perimeter filter output (mag value) which disappears when disabling odometer interrupts.
+// SOLUTION: allow odometer interrupt handler nesting (see odometer interrupt function)
 // http://www.nongnu.org/avr-libc/user-manual/group__avr__interrupts.html
 ISR(PCINT2_vect, ISR_NOBLOCK)
 {
   unsigned long timeMicros = micros();
-  boolean odometryLeftState = digitalRead(PIN_ODOMETRY_LEFT);
-  boolean odometryLeftState2 = digitalRead(PIN_ODOMETRY_LEFT_2);
-  boolean odometryRightState = digitalRead(PIN_ODOMETRY_RIGHT);
-  boolean odometryRightState2 = digitalRead(PIN_ODOMETRY_RIGHT_2);
+  robot.odometer.read();
+  robot.odometer.setState(timeMicros);
+
+  // TODO: Move this elsewhere
   boolean motorMowRpmState = digitalRead(PIN_MOTOR_MOW_RPM);
-  robot.setOdometryState(timeMicros, odometryLeftState, odometryRightState,
-                         odometryLeftState2, odometryRightState2);
   robot.setMotorMowRPMState(motorMowRpmState);
 }
+
 
 // mower motor speed sensor interrupt
 //void rpm_interrupt(){
@@ -377,9 +379,9 @@ void Mower::setup()
   bumper[Bumper::LEFT].setup(PIN_BUMBER_LEFT);
   bumper[Bumper::RIGHT].setup(PIN_BUMBER_RIGHT);
 
-  // drops
-  drop[Drop::LEFT].setup(PIN_DROP_LEFT, DROP_CONTACT_NO);
-  drop[Drop::RIGHT].setup(PIN_DROP_LEFT, DROP_CONTACT_NO);
+  // drop sensor
+  dropSensor[DropSensor::LEFT].setup(PIN_DROP_LEFT, DropSensor::NO);
+  dropSensor[DropSensor::RIGHT].setup(PIN_DROP_LEFT, DropSensor::NO);
 
   // sonar
   sonar[Sonar::LEFT].setup(PIN_SONAR_LEFT_TRIGGER, PIN_SONAR_LEFT_ECHO);
@@ -395,11 +397,16 @@ void Mower::setup()
   pinMode(PIN_REMOTE_SPEED, INPUT);
   pinMode(PIN_REMOTE_SWITCH, INPUT);
 
-  // odometry
-  pinMode(PIN_ODOMETRY_LEFT, INPUT_PULLUP);
-  pinMode(PIN_ODOMETRY_LEFT_2, INPUT_PULLUP);
-  pinMode(PIN_ODOMETRY_RIGHT, INPUT_PULLUP);
-  pinMode(PIN_ODOMETRY_RIGHT_2, INPUT_PULLUP);
+  // odometer
+  const uint8_t odometerPins[] = { PIN_ODOMETER_LEFT, PIN_ODOMETER_RIGHT };
+  const uint8_t odometerPins2[] = { PIN_ODOMETER_LEFT_2, PIN_ODOMETER_RIGHT_2 };
+  const bool odometerSwaps[] = { ODOMETER_SWAP_DIR_LEFT, ODOMETER_SWAP_DIR_RIGHT };
+  odometer.setup(ODOMETER_TICKS_PER_REVOLUTION,
+                 ODOMETER_TICKS_PER_CM,
+                 ODOMETER_WHEELBASE_CM,
+                 odometerPins,
+                 odometerPins2,
+                 odometerSwaps);
 
   // user switches
   pinMode(PIN_USER_SWITCH_1, OUTPUT);
@@ -425,7 +432,7 @@ void Mower::setup()
   PCMSK0 |= (1 << PCINT6);
   PCMSK0 |= (1 << PCINT1);
 
-  // odometry
+  // odometer
   PCICR  |= (1 << PCIE2);
   PCMSK2 |= (1 << PCINT20);
   PCMSK2 |= (1 << PCINT21);

@@ -126,7 +126,7 @@ class RemoteControl
     void sendRemoteMenu(boolean update);
     void sendBatteryMenu(boolean update);
     void sendStationMenu(boolean update);
-    void sendOdometryMenu(boolean update);
+    void sendOdometerMenu(boolean update);
     void sendRainMenu(boolean update);
     void sendGPSMenu(boolean update);
     void sendDateTimeMenu(boolean update);
@@ -147,7 +147,7 @@ class RemoteControl
     void processRemoteMenu(String pfodCmd);
     void processBatteryMenu(String pfodCmd);
     void processStationMenu(String pfodCmd);
-    void processOdometryMenu(String pfodCmd);
+    void processOdometerMenu(String pfodCmd);
     void processDateTimeMenu(String pfodCmd);
     void processFactorySettingsMenu(String pfodCmd);
     void processInfoMenu(String pfodCmd);

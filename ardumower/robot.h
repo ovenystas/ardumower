@@ -40,9 +40,10 @@
 #include "pfod.h"
 #include "button.h"
 #include "bumper.h"
-#include "drop.h"
+#include "dropSensor.h"
 #include "sonar.h"
 #include "lawnSensor.h"
+#include "odometer.h"
 
 //#include "QueueList.h"
 //#include <limits.h>
@@ -102,8 +103,8 @@ enum
   ERR_RTC_DATA,
   ERR_PERIMETER_TIMEOUT,
   ERR_TRACKING,
-  ERR_ODOMETRY_LEFT,
-  ERR_ODOMETRY_RIGHT,
+  ERR_ODOMETER_LEFT,
+  ERR_ODOMETER_RIGHT,
   ERR_BATTERY,
   ERR_CHARGER,
   ERR_GPS_COMM,
@@ -211,27 +212,14 @@ class Robot
     int gpsSpeedIgnoreTime; // how long gpsSpeed is ignored when robot switches into a new STATE (in ms)
     int robotIsStuckedCounter;
 
-    // -------- odometry state --------------------------
-    char odometryUse;       // use odometry?
-    char twoWayOdometrySensorUse;  // use optional two-wire odometry sensor?
-    int odometryTicksPerRevolution;   // encoder ticks per one full resolution
-    float odometryTicksPerCm;  // encoder ticks per cm
-    float odometryWheelBaseCm;    // wheel-to-wheel distance (cm)
-    bool odometryRightSwapDir;       // inverse right encoder direction?
-    bool odometryLeftSwapDir;       // inverse left encoder direction?
-    int odometryLeft;   // left wheel counter
-    int odometryRight;  // right wheel counter
-    boolean odometryLeftLastState;
-    boolean odometryLeftLastState2;
-    boolean odometryRightLastState;
-    boolean odometryRightLastState2;
-    float odometryTheta; // theta angle (radiant)
-    float odometryX;   // X map position (cm)
-    float odometryY;   // Y map position (cm)
-    float motorRpmCurr[2];               // wheel rpm
+    // -------- odometer state --------------------------
+    char odometerUse;               // use odometer?
+    char twoWayOdometerSensorUse;   // use optional two-wire odometer sensor?
+    Odometer odometer;
+
     unsigned long lastMotorRpmTime;
-    unsigned long nextTimeOdometry;
-    unsigned long nextTimeOdometryInfo;
+    unsigned long nextTimeOdometer;
+    unsigned long nextTimeOdometerInfo;
 
     // -------- RC remote control state -----------------
     char remoteUse;       // use model remote control (R/C)?
@@ -320,7 +308,7 @@ class Robot
     // --------- drop state ---------------------------
     // bumper state (true = pressed)                                                                                                  // Dropsensor - Absturzsensor vorhanden ?
     char dropUse; // has drops? // Dropsensor - Absturzsensor Zähler links
-    Drop drop[2];
+    DropSensor dropSensor[2];
     unsigned long nextTimeDrop; // Dropsensor - Absturzsensor
 
     // ------- IMU state --------------------------------
@@ -477,13 +465,6 @@ class Robot
                                    boolean remoteMowState,
                                    boolean remoteSwitchState);
 
-    // call this from odometry interrupt
-    virtual void setOdometryState(unsigned long timeMicros,
-                                  boolean odometryLeftState,
-                                  boolean odometryRightState,
-                                  boolean odometryLeftState2,
-                                  boolean odometryRightState2);
-
     // call this from hall sensor interrupt
     virtual void setMotorMowRPMState(boolean motorMowRpmState);
 
@@ -553,7 +534,7 @@ class Robot
     virtual void checkTilt();
     virtual void checkRain();
     virtual void checkTimeout();
-    virtual void checkOdometryFaults();
+    virtual void checkOdometerFaults();
     virtual void checkIfStucked();
     virtual void checkRobotStats();
 
@@ -572,14 +553,14 @@ class Robot
 
     // other
     virtual void printRemote();
-    virtual void printOdometry();
+    virtual void printOdometer();
     virtual void printMenu();
     virtual void delayInfo(int ms);
-    virtual void testOdometry();
+    virtual void testOdometer();
     virtual void testMotors();
     virtual void setDefaults();
     virtual void receiveGPSTime();
-    virtual void calcOdometry();
+    virtual void calcOdometer();
     virtual void menu();
     virtual void configureBluetooth(boolean quick)
     {

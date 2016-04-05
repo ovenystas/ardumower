@@ -11,7 +11,7 @@
 class LawnSensor
 {
   public:
-    enum
+    enum lawnSensorE
     {
       FRONT,
       BACK
