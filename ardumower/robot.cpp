@@ -122,10 +122,6 @@ Robot::Robot()
   rain = false;
   rainCounter = 0;
 
-  sonarDistCounter = 0;
-  tempSonarDistCounter = 0;
-  sonarObstacleTimeout = 0;
-
   batADC = 0;
   batVoltage = 0;
   batRefFactor = 0;
@@ -143,15 +139,12 @@ Robot::Robot()
   ledState = 0;
 
   consoleMode = CONSOLE_SENSOR_COUNTERS;
-  nextTimeButtonCheck = 0;
   nextTimeInfo = 0;
   nextTimeMotorSense = 0;
   nextTimeCheckTilt = 0;
   nextTimeBattery = 0;
   nextTimeCheckBattery = 0;
   nextTimePerimeter = 0;
-  nextTimeLawnSensorRead = 0;
-  nextTimeLawnSensorCheck = 0;
   nextTimeTimer = millis() + 60000;
   nextTimeRTC = 0;
   nextTimeGPS = 0;
@@ -159,7 +152,6 @@ Robot::Robot()
   nextTimePfodLoop = 0;
   nextTimeRain = 0;
   lastMotorMowRpmTime = millis();
-  nextTimeButton = 0;
   nextTimeErrorCounterReset = 0;
   nextTimeErrorBeep = 0;
   nextTimeMotorControl = 0;
@@ -294,7 +286,7 @@ void Robot::loadSaveUserSettings(boolean readflag)
   {
     eereadwrite(readflag, addr, sonars.sonar[i].use);
   }
-  eereadwrite(readflag, addr, sonarTriggerBelow);
+  eereadwrite(readflag, addr, sonars.triggerBelow);
   eereadwrite(readflag, addr, perimeterUse);
   eereadwrite(readflag, addr, perimeter.timedOutIfBelowSmag);
   eereadwrite(readflag, addr, perimeterTriggerTimeout);
@@ -310,7 +302,7 @@ void Robot::loadSaveUserSettings(boolean readflag)
   eereadwrite(readflag, addr, perimeter.swapCoilPolarity);
   eereadwrite(readflag, addr, perimeter.timeOutSecIfNotInside);
   eereadwrite(readflag, addr, trackingBlockInnerWheelWhilePerimeterStruggling);
-  eereadwrite(readflag, addr, lawnSensorUse);
+  eereadwrite(readflag, addr, lawnSensor.use);
   eereadwrite(readflag, addr, imu.use);
   eereadwrite(readflag, addr, imuCorrectDir);
   eereadwrite(readflag, addr, imuDirPID.Kp);
@@ -341,7 +333,7 @@ void Robot::loadSaveUserSettings(boolean readflag)
   eereadwrite(readflag, addr, odometer.encoder[Odometer::LEFT].swapDir);
   eereadwrite(readflag, addr, odometer.encoder[Odometer::RIGHT].swapDir);
   eereadwrite(readflag, addr, odometer.encoder[Odometer::LEFT].twoWay);
-  eereadwrite(readflag, addr, buttonUse);
+  eereadwrite(readflag, addr, button.use);
   eereadwrite(readflag, addr, userSwitch1);
   eereadwrite(readflag, addr, userSwitch2);
   eereadwrite(readflag, addr, userSwitch3);
@@ -454,8 +446,8 @@ void Robot::printSettingSerial()
   Console.println(sonars.sonar[Sonars::CENTER].use);
   Console.print(F("sonar[RIGHT].use : "));
   Console.println(sonars.sonar[Sonars::RIGHT].use);
-  Console.print(F("sonarTriggerBelow : "));
-  Console.println(sonarTriggerBelow);
+  Console.print(F("sonars.triggerBelow : "));
+  Console.println(sonars.triggerBelow);
 
   // ------ perimeter ---------------------------------
   Console.print(F("perimeterUse : "));
@@ -486,8 +478,8 @@ void Robot::printSettingSerial()
   Console.println(trackingBlockInnerWheelWhilePerimeterStruggling);
 
   // ------ lawn sensor --------------------------------
-  Console.print(F("lawnSensorUse : "));
-  Console.println(lawnSensorUse);
+  Console.print(F("lawnSensor.use : "));
+  Console.println(lawnSensor.use);
 
   // ------  IMU (compass/accel/gyro) ----------------------
   Console.print(F("imu.use : "));
@@ -582,8 +574,8 @@ void Robot::printSettingSerial()
   Console.println(gpsSpeedIgnoreTime);
 
   // ----- other -----------------------------------------
-  Console.print(F("buttonUse : "));
-  Console.println(buttonUse);
+  Console.print(F("button.use : "));
+  Console.println(button.use);
 
   // ----- user-defined switch ---------------------------
   Console.print(F("userSwitch1 : "));
@@ -1366,7 +1358,7 @@ void Robot::setup()
   }
   setUserSwitches();
 
-  if (!buttonUse)
+  if (!button.use)
   {
     // robot has no ON/OFF button => start immediately
     setNextState(STATE_FORWARD, 0);
@@ -1477,7 +1469,7 @@ void Robot::printInfo(Stream &s)
         {
           Streamprint(s, "per %3d ", (int)perimeterInside);
         }
-        if (lawnSensorUse)
+        if (lawnSensor.use)
         {
           Streamprint(s, "lawn %3d %3d ",
                       (int)lawnSensor.getValue(LawnSensor::FRONT),
@@ -1495,7 +1487,7 @@ void Robot::printInfo(Stream &s)
         Streamprint(s, "dro %4d %4d ",
                     dropSensors.dropSensor[DropSensors::LEFT].counter,
                     dropSensors.dropSensor[DropSensors::RIGHT].counter);
-        Streamprint(s, "son %3d ", sonarDistCounter);
+        Streamprint(s, "son %3d ", sonars.distanceCounter);
         Streamprint(s, "yaw %3d ", (int)(imu.ypr.yaw / PI * 180.0));
         Streamprint(s, "pit %3d ", (int)(imu.ypr.pitch / PI * 180.0));
         Streamprint(s, "rol %3d ", (int)(imu.ypr.roll / PI * 180.0));
@@ -1504,7 +1496,7 @@ void Robot::printInfo(Stream &s)
         {
           Streamprint(s, "per %3d ", perimeterCounter);
         }
-        if (lawnSensorUse)
+        if (lawnSensor.use)
         {
           Streamprint(s, "lawn %3d ", lawnSensor.getCounter());
         }
@@ -1824,17 +1816,17 @@ void Robot::readSerial()
 void Robot::checkButton()
 {
   unsigned long curMillis = millis();
-  if (!buttonUse || curMillis < nextTimeButtonCheck)
+  if (!button.use || curMillis < button.nextTimeCheck)
   {
     return;
   }
 
-  nextTimeButtonCheck = curMillis + 50;
+  button.nextTimeCheck = curMillis + 50;
   boolean buttonPressed = button.isPressed();
   if ((!buttonPressed && button.getCounter() > 0) ||
-      (buttonPressed && curMillis >= nextTimeButton))
+      (buttonPressed && curMillis >= button.nextTime))
   {
-    nextTimeButton = curMillis + 1000;
+    button.nextTime = curMillis + 1000;
     if (buttonPressed)
     {
       Console.println(F("buttonPressed"));
@@ -2023,15 +2015,15 @@ void Robot::readSensors()
     }
   }
 
-  if (lawnSensorUse && curMillis >= nextTimeLawnSensorRead)
+  if (lawnSensor.use && curMillis >= lawnSensor.nextTimeRead)
   {
-    nextTimeLawnSensorRead = curMillis + 100;
+    lawnSensor.nextTimeRead = curMillis + 100;
     lawnSensor.read();
   }
 
-  if (lawnSensorUse && curMillis >= nextTimeLawnSensorCheck)
+  if (lawnSensor.use && curMillis >= lawnSensor.nextTimeCheck)
   {
-    nextTimeLawnSensorCheck = curMillis + 2000;
+    lawnSensor.nextTimeCheck = curMillis + 2000;
     lawnSensor.check();
   }
 
@@ -2398,7 +2390,7 @@ void Robot::setNextState(byte stateNew, byte dir)
     motorMowSpeedPWMSet = motorMowSpeedMaxPwm;
   }
 
-  sonarObstacleTimeout = 0;
+  sonars.obstacleTimeout = 0;
   // state has changed
   stateStartTime = curMillis;
   stateLast = stateCurr;
@@ -2919,7 +2911,7 @@ void Robot::checkPerimeterFind()
 // check lawn
 void Robot::checkLawn()
 {
-  if (!lawnSensorUse)
+  if (!lawnSensor.use)
   {
     return;
   }
@@ -2971,11 +2963,12 @@ void Robot::checkSonar()
   }
 
   unsigned long curMillis = millis();
-  if (curMillis < nextTimeCheckSonar)
+  if (curMillis < sonars.nextTimeCheck)
   {
     return;
   }
-  nextTimeCheckSonar = curMillis + 200;
+  sonars.nextTimeCheck = curMillis + 200;
+
   if (mowPatternCurr == MOW_BIDIR && curMillis < (stateStartTime + 4000))
   {
     return;
@@ -2986,48 +2979,47 @@ void Robot::checkSonar()
       (mowPatternCurr == MOW_BIDIR &&
        (stateCurr == STATE_FORWARD || stateCurr == STATE_REVERSE)))
   {
-    if (sonarObstacleTimeout == 0)
+    if (sonars.obstacleTimeout == 0)
     {
       bool isClose = false;
-      int triggerBelow = sonarTriggerBelow << 1;
       for (uint8_t i = 0; i < Sonars::END; i++)
       {
         if (sonars.sonar[i].distance > 0 &&
-            sonars.sonar[i].distance < triggerBelow)
+            sonars.sonar[i].distance < (sonars.triggerBelow << 1))
         {
           isClose = true;
         }
       }
       if (isClose)
       {
-        tempSonarDistCounter++;
-        if (tempSonarDistCounter >= 5)
+        sonars.tempDistanceCounter++;
+        if (sonars.tempDistanceCounter >= 5)
         {
           // Console.println("sonar slow down");
           motorSpeedRpmSet[LEFT] /= 1.5;
           motorSpeedRpmSet[RIGHT] /= 1.5;
-          sonarObstacleTimeout = curMillis + 3000;
+          sonars.obstacleTimeout = curMillis + 3000;
         }
       }
       else
       {
-        tempSonarDistCounter = 0;
+        sonars.tempDistanceCounter = 0;
       }
     }
-    else if (sonarObstacleTimeout != 0 && curMillis > sonarObstacleTimeout)
+    else if (sonars.obstacleTimeout != 0 && curMillis > sonars.obstacleTimeout)
     {
       //Console.println("no sonar");
-      sonarObstacleTimeout = 0;
-      tempSonarDistCounter = 0;
+      sonars.obstacleTimeout = 0;
+      sonars.tempDistanceCounter = 0;
       motorSpeedRpmSet[LEFT] *= 1.5;
       motorSpeedRpmSet[RIGHT] *= 1.5;
     }
   }
 
   if (sonars.sonar[Sonars::CENTER].distance > 0 &&
-      sonars.sonar[Sonars::CENTER].distance < sonarTriggerBelow)
+      sonars.sonar[Sonars::CENTER].distance < sonars.triggerBelow)
   {
-    sonarDistCounter++;
+    sonars.distanceCounter++;
     if (rollDir == RIGHT)
     {
       reverseOrBidir(LEFT); // toggle roll dir
@@ -3039,16 +3031,16 @@ void Robot::checkSonar()
   }
 
   if (sonars.sonar[Sonars::RIGHT].distance > 0 &&
-      sonars.sonar[Sonars::RIGHT].distance < sonarTriggerBelow)
+      sonars.sonar[Sonars::RIGHT].distance < sonars.triggerBelow)
   {
-    sonarDistCounter++;
+    sonars.distanceCounter++;
     reverseOrBidir(LEFT);
   }
 
   if (sonars.sonar[Sonars::LEFT].distance > 0 &&
-      sonars.sonar[Sonars::LEFT].distance < sonarTriggerBelow)
+      sonars.sonar[Sonars::LEFT].distance < sonars.triggerBelow)
   {
-    sonarDistCounter++;
+    sonars.distanceCounter++;
     reverseOrBidir(RIGHT);
   }
 }

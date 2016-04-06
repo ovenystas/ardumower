@@ -228,6 +228,13 @@ void RemoteControl::processSlider(String result, int &value, double scale)
   value = v;
 }
 
+void RemoteControl::processSlider(String result, unsigned int &value, double scale)
+{
+  float v;
+  processSlider(result, v, scale);
+  value = v;
+}
+
 void RemoteControl::processSlider(String result, byte &value, double scale)
 {
   float v;
@@ -731,7 +738,7 @@ void RemoteControl::sendSonarMenu(boolean update)
   Bluetooth.print(F("|d06~Use right "));
   sendYesNo(robot->sonars.sonar[Sonars::RIGHT].use);
   Bluetooth.print(F("|d01~Counter "));
-  Bluetooth.print(robot->sonarDistCounter);
+  Bluetooth.print(robot->sonars.distanceCounter);
   Bluetooth.println(F("|d02~Value l, c, r"));
   for (uint8_t i = 0; i < Sonars::END; i++)
   {
@@ -741,7 +748,7 @@ void RemoteControl::sendSonarMenu(boolean update)
       Bluetooth.print(", ");
     }
   }
-  sendSlider("d03", F("Trigger below"), robot->sonarTriggerBelow, "", 1, 3000);
+  sendSlider("d03", F("Trigger below"), robot->sonars.triggerBelow, "", 1, 3000);
   Bluetooth.println("}");
 }
 
@@ -753,7 +760,7 @@ void RemoteControl::processSonarMenu(String pfodCmd)
   }
   else if (pfodCmd.startsWith("d03"))
   {
-    processSlider(pfodCmd, robot->sonarTriggerBelow, 1);
+    processSlider(pfodCmd, robot->sonars.triggerBelow, 1);
   }
   else if (pfodCmd == "d04")
   {
@@ -869,7 +876,7 @@ void RemoteControl::sendLawnSensorMenu(boolean update)
   else
     Bluetooth.print(F("{.Lawn sensor`1000"));
   Bluetooth.print(F("|f00~Use "));
-  sendYesNo(robot->lawnSensorUse);
+  sendYesNo(robot->lawnSensor.use);
   Bluetooth.print(F("|f01~Counter "));
   Bluetooth.print(robot->lawnSensor.getCounter());
   Bluetooth.println(F("|f02~Value f, b"));
@@ -882,7 +889,7 @@ void RemoteControl::sendLawnSensorMenu(boolean update)
 void RemoteControl::processLawnSensorMenu(String pfodCmd)
 {
   if (pfodCmd == "f00")
-    robot->lawnSensorUse = !robot->lawnSensorUse;
+    robot->lawnSensor.use = !robot->lawnSensor.use;
   sendLawnSensorMenu(true);
 }
 
@@ -1957,7 +1964,7 @@ void RemoteControl::run()
       Bluetooth.print(",");
       Bluetooth.print(robot->bumpers.bumper[Bumpers::RIGHT].counter);
       Bluetooth.print(",");
-      Bluetooth.print(robot->sonarDistCounter);
+      Bluetooth.print(robot->sonars.distanceCounter);
       Bluetooth.print(",");
       Bluetooth.print(robot->perimeterCounter);
       Bluetooth.print(",");

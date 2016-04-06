@@ -29,7 +29,7 @@ class Sonar
 {
   public:
     bool use { false };
-    unsigned int distance {};  // As time in us
+    unsigned int distance {};   // As time in us
 
     void setup(const uint8_t triggerPin, const uint8_t echoPin);
     void setup(const uint8_t triggerPin, const uint8_t echoPin,
@@ -56,7 +56,12 @@ class Sonars
 
     bool use { false };
     unsigned long nextTime {};
-    Sonar sonar[END];
+    unsigned int triggerBelow { 1050 };  // trigger distance
+    unsigned int distanceCounter {};
+    unsigned int tempDistanceCounter {};
+    unsigned long obstacleTimeout {};
+    unsigned long nextTimeCheck {};
+   Sonar sonar[END];
 
     void ping()
     {

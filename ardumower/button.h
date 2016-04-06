@@ -17,6 +17,10 @@ class Button
     uint8_t counter{};
 
   public:
+    bool use { false };
+    unsigned long nextTime {};
+    unsigned long nextTimeCheck {};
+
     void setup(const uint8_t pin)
     {
       this->pin = pin;

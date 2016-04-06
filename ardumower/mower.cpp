@@ -183,9 +183,6 @@ Mower::Mower()
   // ------ rain ------------------------------------
   rainUse = 0; // use rain sensor?
 
-  // ------ sonar ------------------------------------
-  sonarTriggerBelow = 1050; // ultrasonic sensor trigger distance
-
   // ------ perimeter ---------------------------------
   perimeterUse = 0;               // use perimeter?
   perimeterTriggerTimeout = 0;    // perimeter trigger timeout when escaping from inside (ms)
@@ -200,9 +197,6 @@ Mower::Mower()
   trackingPerimeterTransitionTimeOut = 2000;
   trackingErrorTimeOut = 10000;
   trackingBlockInnerWheelWhilePerimeterStruggling = 1;
-
-  // ------ lawn sensor --------------------------------
-  lawnSensorUse = 0; // use capacitive Sensor
 
   // ------  IMU (compass/accel/gyro) ----------------------
   imuCorrectDir = 0;   // correct direction by compass?
@@ -248,9 +242,6 @@ Mower::Mower()
   gpsUse = 0;                   // use GPS?
   stuckedIfGpsSpeedBelow = 0.2; // if Gps speed is below given value the mower is stuck
   gpsSpeedIgnoreTime = 5000;    // how long gpsSpeed is ignored when robot switches into a new STATE (in ms)
-
-  // ----- other -----------------------------------------
-  buttonUse = 0;            // has digital ON/OFF button?
 
   // ----- user-defined switch ---------------------------
   userSwitch1 = 0; // user-defined switch 1 (default value)

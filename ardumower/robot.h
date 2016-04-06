@@ -333,10 +333,7 @@ class Robot
     char trackingBlockInnerWheelWhilePerimeterStruggling;
 
     //  --------- lawn state ----------------------------
-    char lawnSensorUse;       // use capacitive Sensor
     LawnSensor lawnSensor;
-    unsigned long nextTimeLawnSensorRead;
-    unsigned long nextTimeLawnSensorCheck;
 
     // --------- rain -----------------------------------
     boolean rain;
@@ -347,18 +344,12 @@ class Robot
     // --------- sonar ----------------------------------
     // ultra sonic sensor distance-to-obstacle (cm)
     Sonars sonars;
-    int sonarTriggerBelow;    // ultrasonic sensor trigger distance
-    unsigned int sonarDistCounter;
-    unsigned int tempSonarDistCounter;
-    unsigned long sonarObstacleTimeout;
-    unsigned long nextTimeCheckSonar;
 
     // --------- pfodApp ----------------------------------
     RemoteControl rc; // pfodApp
     unsigned long nextTimePfodLoop;
 
     // ----- other -----------------------------------------
-    char buttonUse;       // has digital ON/OFF button?
     Button button;
 
     // ----- user-defined switch ---------------------------
@@ -414,10 +405,8 @@ class Robot
     //byte buttonCounter;
     byte ledState;
     byte consoleMode;
-    unsigned long nextTimeButtonCheck;
     unsigned long nextTimeInfo;
     byte rollDir;
-    unsigned long nextTimeButton;
     unsigned long nextTimeErrorCounterReset;
     unsigned long nextTimeErrorBeep;
 

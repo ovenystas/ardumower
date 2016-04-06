@@ -11,6 +11,9 @@
 class LawnSensor
 {
   public:
+    bool use { false };
+    unsigned long nextTimeRead {};
+    unsigned long nextTimeCheck {};
     enum lawnSensorE
     {
       FRONT,
