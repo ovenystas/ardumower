@@ -119,9 +119,6 @@ Robot::Robot()
   perimeterLastTransitionTime = 0;
   perimeterTriggerTime = 0;
 
-  rain = false;
-  rainCounter = 0;
-
   batADC = 0;
   batVoltage = 0;
   batRefFactor = 0;
@@ -150,7 +147,6 @@ Robot::Robot()
   nextTimeGPS = 0;
   nextTimeCheckIfStucked = 0;
   nextTimePfodLoop = 0;
-  nextTimeRain = 0;
   lastMotorMowRpmTime = millis();
   nextTimeErrorCounterReset = 0;
   nextTimeErrorBeep = 0;
@@ -304,13 +300,13 @@ void Robot::loadSaveUserSettings(boolean readflag)
   eereadwrite(readflag, addr, trackingBlockInnerWheelWhilePerimeterStruggling);
   eereadwrite(readflag, addr, lawnSensor.use);
   eereadwrite(readflag, addr, imu.use);
-  eereadwrite(readflag, addr, imuCorrectDir);
-  eereadwrite(readflag, addr, imuDirPID.Kp);
-  eereadwrite(readflag, addr, imuDirPID.Ki);
-  eereadwrite(readflag, addr, imuDirPID.Kd);
-  eereadwrite(readflag, addr, imuRollPID.Kp);
-  eereadwrite(readflag, addr, imuRollPID.Ki);
-  eereadwrite(readflag, addr, imuRollPID.Kd);
+  eereadwrite(readflag, addr, imu.correctDir);
+  eereadwrite(readflag, addr, imu.pid[IMU::DIR].Kp);
+  eereadwrite(readflag, addr, imu.pid[IMU::DIR].Ki);
+  eereadwrite(readflag, addr, imu.pid[IMU::DIR].Kd);
+  eereadwrite(readflag, addr, imu.pid[IMU::ROLL].Kp);
+  eereadwrite(readflag, addr, imu.pid[IMU::ROLL].Ki);
+  eereadwrite(readflag, addr, imu.pid[IMU::ROLL].Kd);
   eereadwrite(readflag, addr, remoteUse);
   eereadwrite(readflag, addr, batMonitor);
   eereadwrite(readflag, addr, batGoHomeIfBelow);
@@ -339,7 +335,7 @@ void Robot::loadSaveUserSettings(boolean readflag)
   eereadwrite(readflag, addr, userSwitch3);
   eereadwrite(readflag, addr, timerUse);
   eereadwrite(readflag, addr, timer);
-  eereadwrite(readflag, addr, rainUse);
+  eereadwrite(readflag, addr, rainSensor.use);
   eereadwrite(readflag, addr, gpsUse);
   eereadwrite(readflag, addr, stuckedIfGpsSpeedBelow);
   eereadwrite(readflag, addr, gpsSpeedIgnoreTime);
@@ -434,8 +430,8 @@ void Robot::printSettingSerial()
   Console.println(dropSensors.dropSensor[DropSensors::LEFT].contactType);  // Assume left and right has same contact type
 
   // ------ rain ------------------------------------
-  Console.print(F("rainUse : "));
-  Console.println(rainUse);
+  Console.print(F("rainSensor.use : "));
+  Console.println(rainSensor.use);
 
   // ------ sonar ------------------------------------
   Console.print(F("sonars.use : "));
@@ -484,20 +480,20 @@ void Robot::printSettingSerial()
   // ------  IMU (compass/accel/gyro) ----------------------
   Console.print(F("imu.use : "));
   Console.println(imu.use);
-  Console.print(F("imuCorrectDir : "));
-  Console.println(imuCorrectDir);
-  Console.print(F("imuDirPID.Kp : "));
-  Console.println(imuDirPID.Kp);
-  Console.print(F("imuDirPID.Ki : "));
-  Console.println(imuDirPID.Ki);
-  Console.print(F("imuDirPID.Kd : "));
-  Console.println(imuDirPID.Kd);
-  Console.print(F("imuRollPID.Kp : "));
-  Console.println(imuRollPID.Kp);
-  Console.print(F("imuRollPID.Ki : "));
-  Console.println(imuRollPID.Ki);
-  Console.print(F("imuRollPID.Kd : "));
-  Console.println(imuRollPID.Kd);
+  Console.print(F("imu.correctDir : "));
+  Console.println(imu.correctDir);
+  Console.print(F("imu.pid[IMU::DIR].Kp : "));
+  Console.println(imu.pid[IMU::DIR].Kp);
+  Console.print(F("imu.pid[IMU::DIR].Ki : "));
+  Console.println(imu.pid[IMU::DIR].Ki);
+  Console.print(F("imu.pid[IMU::DIR].Kd : "));
+  Console.println(imu.pid[IMU::DIR].Kd);
+  Console.print(F("imu.pid[ROLL].Kp : "));
+  Console.println(imu.pid[IMU::ROLL].Kp);
+  Console.print(F("imu.pid[ROLL].Ki : "));
+  Console.println(imu.pid[IMU::ROLL].Ki);
+  Console.print(F("imu.pid[ROLL].Kd : "));
+  Console.println(imu.pid[IMU::ROLL].Kd);
 
   // ------ model R/C ------------------------------------
   Console.print(F("remoteUse : "));
@@ -880,16 +876,16 @@ void Robot::motorControlImuRoll()
   nextTimeMotorImuControl = millis() + 100;
 
   // Regelbereich entspricht 80% der maximalen Drehzahl am Antriebsrad (motorSpeedMaxRpm)
-  imuRollPID.x = distancePI(imu.ypr.yaw, imuRollHeading) / PI * 180.0;
-  imuRollPID.w = 0;
-  imuRollPID.y_min = -motorSpeedMaxRpm / 1.25; // da der Roll generell langsamer erfolgen soll
-  imuRollPID.y_max = motorSpeedMaxRpm / 1.25;   //
-  imuRollPID.max_output = motorSpeedMaxRpm / 1.25;    //
-  imuRollPID.compute();
+  imu.pid[IMU::ROLL].x = distancePI(imu.ypr.yaw, imuRollHeading) / PI * 180.0;
+  imu.pid[IMU::ROLL].w = 0;
+  imu.pid[IMU::ROLL].y_min = -motorSpeedMaxRpm / 1.25; // da der Roll generell langsamer erfolgen soll
+  imu.pid[IMU::ROLL].y_max = motorSpeedMaxRpm / 1.25;   //
+  imu.pid[IMU::ROLL].max_output = motorSpeedMaxRpm / 1.25;    //
+  imu.pid[IMU::ROLL].compute();
 
   // Regelbereich entspricht maximaler PWM am Antriebsrad (motorSpeedMaxPwm), um auch an Steigungen höchstes Drehmoment für die Solldrehzahl zu gewährleisten
   motorPID[LEFT].x = odometer.encoder[LEFT].wheelRpmCurr;                 // IST
-  motorPID[LEFT].w = -imuRollPID.y;                // SOLL
+  motorPID[LEFT].w = -imu.pid[IMU::ROLL].y;                // SOLL
   motorPID[LEFT].y_min = -motorSpeedMaxPwm;        // Regel-MIN
   motorPID[LEFT].y_max = motorSpeedMaxPwm;   // Regel-MAX
   motorPID[LEFT].max_output = motorSpeedMaxPwm;    // Begrenzung
@@ -901,7 +897,7 @@ void Robot::motorControlImuRoll()
 
   // Regelbereich entspricht maximaler PWM am Antriebsrad (motorSpeedMaxPwm), um auch an Steigungen höchstes Drehmoment für die Solldrehzahl zu gewährleisten
   motorPID[RIGHT].x = odometer.encoder[RIGHT].wheelRpmCurr;               // IST
-  motorPID[RIGHT].w = imuRollPID.y;                // SOLL
+  motorPID[RIGHT].w = imu.pid[IMU::ROLL].y;                // SOLL
   motorPID[RIGHT].y_min = -motorSpeedMaxPwm;       // Regel-MIN
   motorPID[RIGHT].y_max = motorSpeedMaxPwm;  // Regel-MAX
   motorPID[RIGHT].max_output = motorSpeedMaxPwm;   // Begrenzung
@@ -1008,20 +1004,20 @@ void Robot::motorControlImuDir()
   int correctRight = 0;
 
   // Regelbereich entspricht maximaler Drehzahl am Antriebsrad (motorSpeedMaxRpm)
-  imuDirPID.x = distancePI(imu.ypr.yaw, imuDriveHeading) / PI * 180.0;
-  imuDirPID.w = 0;
-  imuDirPID.y_min = -motorSpeedMaxRpm;
-  imuDirPID.y_max = motorSpeedMaxRpm;
-  imuDirPID.max_output = motorSpeedMaxRpm;
-  imuDirPID.compute();
+  imu.pid[IMU::DIR].x = distancePI(imu.ypr.yaw, imuDriveHeading) / PI * 180.0;
+  imu.pid[IMU::DIR].w = 0;
+  imu.pid[IMU::DIR].y_min = -motorSpeedMaxRpm;
+  imu.pid[IMU::DIR].y_max = motorSpeedMaxRpm;
+  imu.pid[IMU::DIR].max_output = motorSpeedMaxRpm;
+  imu.pid[IMU::DIR].compute();
 
-  if (imuDirPID.y < 0)
+  if (imu.pid[IMU::DIR].y < 0)
   {
-    correctRight = abs(imuDirPID.y);
+    correctRight = abs(imu.pid[IMU::DIR].y);
   }
-  if (imuDirPID.y > 0)
+  if (imu.pid[IMU::DIR].y > 0)
   {
-    correctLeft = abs(imuDirPID.y);
+    correctLeft = abs(imu.pid[IMU::DIR].y);
   }
 
   // Korrektur erfolgt über Abbremsen des linken Antriebsrades, falls Kursabweichung nach rechts
@@ -2176,15 +2172,11 @@ void Robot::readSensors()
     //chgCurrent = current;
   }
 
-  if (rainUse && curMillis >= nextTimeRain)
+  if (rainSensor.use && curMillis >= rainSensor.nextTime)
   {
     // read rain sensor
-    nextTimeRain = curMillis + 5000;
-    rain = (readSensor(SEN_RAIN) != 0);
-    if (rain)
-    {
-      rainCounter++;
-    }
+    rainSensor.nextTime = curMillis + 5000;
+    rainSensor.check();
   }
 }
 
@@ -2935,12 +2927,12 @@ void Robot::checkLawn()
 
 void Robot::checkRain()
 {
-  if (!rainUse)
+  if (!rainSensor.use)
   {
     return;
   }
 
-  if (rain)
+  if (rainSensor.raining)
   {
     Console.println(F("RAIN"));
     if (perimeterUse)
@@ -3581,7 +3573,7 @@ void Robot::loop()
   }
   else if (stateCurr == STATE_FORWARD &&
            // mowPatternCurr == MOW_RANDOM &&
-      imu.use && (imuCorrectDir || mowPatternCurr == MOW_LANES))
+      imu.use && (imu.correctDir || mowPatternCurr == MOW_LANES))
   {
     motorControlImuDir();                //&& (millis() > stateStartTime + 3000)
   }

@@ -180,9 +180,6 @@ Mower::Mower()
   motorPID[MOW].Ki = 0.01;
   motorPID[MOW].Kd = 0.01;
 
-  // ------ rain ------------------------------------
-  rainUse = 0; // use rain sensor?
-
   // ------ perimeter ---------------------------------
   perimeterUse = 0;               // use perimeter?
   perimeterTriggerTimeout = 0;    // perimeter trigger timeout when escaping from inside (ms)
@@ -199,13 +196,8 @@ Mower::Mower()
   trackingBlockInnerWheelWhilePerimeterStruggling = 1;
 
   // ------  IMU (compass/accel/gyro) ----------------------
-  imuCorrectDir = 0;   // correct direction by compass?
-  imuDirPID.Kp = 5.0;  // direction PID controller
-  imuDirPID.Ki = 1.0;
-  imuDirPID.Kd = 1.0;
-  imuRollPID.Kp = 0.8; // roll PID controller
-  imuRollPID.Ki = 21;
-  imuRollPID.Kd = 0;
+  imu.pid[IMU::DIR].setup(5.0, 1.0, 1.0);  // direction PID controller
+  imu.pid[IMU::ROLL].setup(0.8, 21, 0);    // roll PID controller
 
   // ------ model R/C ------------------------------------
   remoteUse = 0; // use model remote control (R/C)?
@@ -365,7 +357,7 @@ void Mower::setup()
   sonars.sonar[Sonars::CENTER].setup(PIN_SONAR_CENTER_TRIGGER, PIN_SONAR_CENTER_ECHO);
 
   // rain
-  pinMode(PIN_RAIN, INPUT);
+  rainSensor.setup(PIN_RAIN);
 
   // R/C
   pinMode(PIN_REMOTE_MOW, INPUT);
@@ -551,15 +543,6 @@ int Mower::readSensor(char type)
         setNextState(STATE_ERROR, 0);
       }
       break;
-
-// rain-------------------------------------------------------------------------
-    case SEN_RAIN:
-      if (digitalRead(PIN_RAIN) == LOW)
-      {
-        return 1;
-      }
-      break;
-
   }
   return 0;
 }

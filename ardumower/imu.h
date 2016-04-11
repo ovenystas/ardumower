@@ -34,6 +34,7 @@
 #define IMU_H
 
 #include <Arduino.h>
+#include "pid.h"
 
 // IMU state
 enum
@@ -73,6 +74,12 @@ typedef struct ypr_t
 class IMU
 {
   public:
+    enum imuE
+    {
+      DIR,
+      ROLL
+    };
+
     IMU();
     boolean init(int aPinBuzzer);
     void update(void);
@@ -82,6 +89,9 @@ class IMU
 
     boolean use { false };
     unsigned long nextTime {};
+    bool correctDir { false };  // correct direction by compass?
+    PID pid[2];                 // direction and roll PID controllers
+
 
     int callCounter;
     int errorCounter;

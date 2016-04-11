@@ -835,46 +835,79 @@ void RemoteControl::sendPerimeterMenu(boolean update)
 void RemoteControl::processPerimeterMenu(String pfodCmd)
 {
   if (pfodCmd == "e00")
+  {
     robot->perimeterUse = !robot->perimeterUse;
+  }
   else if (pfodCmd.startsWith("e04"))
+  {
     processSlider(pfodCmd, robot->perimeterTriggerTimeout, 1);
+  }
   else if (pfodCmd.startsWith("e05"))
+  {
     processSlider(pfodCmd, robot->perimeterOutRollTimeMax, 1);
+  }
   else if (pfodCmd.startsWith("e06"))
+  {
     processSlider(pfodCmd, robot->perimeterOutRollTimeMin, 1);
+  }
   else if (pfodCmd.startsWith("e15"))
+  {
     processSlider(pfodCmd, robot->perimeterOutRevTime, 1);
+  }
   else if (pfodCmd.startsWith("e16"))
+  {
     processSlider(pfodCmd, robot->perimeterTrackRollTime, 1);
+  }
   else if (pfodCmd.startsWith("e17"))
+  {
     processSlider(pfodCmd, robot->perimeterTrackRevTime, 1);
+  }
   else if (pfodCmd.startsWith("e07"))
+  {
     processPIDSlider(pfodCmd, "e07", robot->perimeterPID, 0.1, 100);
+  }
   else if (pfodCmd.startsWith("e08"))
+  {
     processSlider(pfodCmd, robot->perimeter.timedOutIfBelowSmag, 1);
+  }
   else if (pfodCmd.startsWith("e09"))
+  {
     robot->perimeter.useDifferentialPerimeterSignal = !robot->perimeter
         .useDifferentialPerimeterSignal;
+  }
   else if (pfodCmd.startsWith("e10"))
+  {
     robot->perimeter.swapCoilPolarity = !robot->perimeter.swapCoilPolarity;
+  }
   else if (pfodCmd.startsWith("e11"))
+  {
     processSlider(pfodCmd, robot->trackingPerimeterTransitionTimeOut, 1);
+  }
   else if (pfodCmd.startsWith("e12"))
+  {
     processSlider(pfodCmd, robot->trackingErrorTimeOut, 1);
+  }
   else if (pfodCmd.startsWith("e13"))
-    robot->trackingBlockInnerWheelWhilePerimeterStruggling = !robot
+  {  robot->trackingBlockInnerWheelWhilePerimeterStruggling = !robot
         ->trackingBlockInnerWheelWhilePerimeterStruggling;
+  }
   else if (pfodCmd.startsWith("e14"))
+  {
     processSlider(pfodCmd, robot->perimeter.timeOutSecIfNotInside, 1);
+  }
   sendPerimeterMenu(true);
 }
 
 void RemoteControl::sendLawnSensorMenu(boolean update)
 {
   if (update)
+  {
     Bluetooth.print("{:");
+  }
   else
+  {
     Bluetooth.print(F("{.Lawn sensor`1000"));
+  }
   Bluetooth.print(F("|f00~Use "));
   sendYesNo(robot->lawnSensor.use);
   Bluetooth.print(F("|f01~Counter "));
@@ -896,31 +929,41 @@ void RemoteControl::processLawnSensorMenu(String pfodCmd)
 void RemoteControl::sendRainMenu(boolean update)
 {
   if (update)
+  {
     Bluetooth.print("{:");
+  }
   else
+  {
     Bluetooth.print(F("{.Rain`1000"));
+  }
   Bluetooth.print(F("|m00~Use "));
-  sendYesNo(robot->rainUse);
+  sendYesNo(robot->rainSensor.use);
   Bluetooth.print(F("|m01~Counter "));
-  Bluetooth.print(robot->rainCounter);
+  Bluetooth.print(robot->rainSensor.counter);
   Bluetooth.println(F("|m02~Value"));
-  Bluetooth.print(robot->rain);
+  Bluetooth.print(robot->rainSensor.raining);
   Bluetooth.println("}");
 }
 
 void RemoteControl::processRainMenu(String pfodCmd)
 {
   if (pfodCmd == "m00")
-    robot->rainUse = !robot->rainUse;
+  {
+    robot->rainSensor.use = !robot->rainSensor.use;
+  }
   sendRainMenu(true);
 }
 
 void RemoteControl::sendGPSMenu(boolean update)
 {
   if (update)
+  {
     Bluetooth.print("{:");
+  }
   else
+  {
     Bluetooth.print(F("{.GPS`1000"));
+  }
   Bluetooth.print(F("|q00~Use "));
   sendYesNo(robot->gpsUse);
   sendSlider("q01", F("Stucked if GPS speed is below"),
@@ -933,20 +976,30 @@ void RemoteControl::sendGPSMenu(boolean update)
 void RemoteControl::processGPSMenu(String pfodCmd)
 {
   if (pfodCmd == "q00")
+  {
     robot->gpsUse = !robot->gpsUse;
+  }
   else if (pfodCmd.startsWith("q01"))
+  {
     processSlider(pfodCmd, robot->stuckedIfGpsSpeedBelow, 0.1);
+  }
   else if (pfodCmd.startsWith("q02"))
+  {
     processSlider(pfodCmd, robot->gpsSpeedIgnoreTime, 1);
+  }
   sendGPSMenu(true);
 }
 
 void RemoteControl::sendImuMenu(boolean update)
 {
   if (update)
+  {
     Bluetooth.print("{:");
+  }
   else
+  {
     Bluetooth.print(F("{.IMU`1000"));
+  }
   Bluetooth.print(F("|g00~Use "));
   sendYesNo(robot->imu.use);
   Bluetooth.print(F("|g01~Yaw "));
@@ -962,9 +1015,9 @@ void RemoteControl::sendImuMenu(boolean update)
   Bluetooth.print(robot->imu.ypr.roll / PI * 180);
   Bluetooth.print(F(" deg"));
   Bluetooth.print(F("|g04~Correct dir "));
-  sendYesNo(robot->imuCorrectDir);
-  sendPIDSlider("g05", F("Dir"), robot->imuDirPID, 0.1, 20);
-  sendPIDSlider("g06", F("Roll"), robot->imuRollPID, 0.1, 30);
+  sendYesNo(robot->imu.correctDir);
+  sendPIDSlider("g05", F("Dir"), robot->imu.pid[IMU::DIR], 0.1, 20);
+  sendPIDSlider("g06", F("Roll"), robot->imu.pid[IMU::ROLL], 0.1, 30);
   Bluetooth.print(F("|g07~Acc cal next side"));
   Bluetooth.print(F("|g08~Com cal start/stop"));
   Bluetooth.println("}");
@@ -978,15 +1031,15 @@ void RemoteControl::processImuMenu(String pfodCmd)
   }
   else if (pfodCmd == "g04")
   {
-    robot->imuCorrectDir = !robot->imuCorrectDir;
+    robot->imu.correctDir = !robot->imu.correctDir;
   }
   else if (pfodCmd.startsWith("g05"))
   {
-    processPIDSlider(pfodCmd, "g05", robot->imuDirPID, 0.1, 20);
+    processPIDSlider(pfodCmd, "g05", robot->imu.pid[IMU::DIR], 0.1, 20);
   }
   else if (pfodCmd.startsWith("g06"))
   {
-    processPIDSlider(pfodCmd, "g06", robot->imuRollPID, 0.1, 30);
+    processPIDSlider(pfodCmd, "g06", robot->imu.pid[IMU::ROLL], 0.1, 30);
   }
   else if (pfodCmd == "g07")
   {
@@ -1970,7 +2023,7 @@ void RemoteControl::run()
       Bluetooth.print(",");
       Bluetooth.print(robot->lawnSensor.getCounter());
       Bluetooth.print(",");
-      Bluetooth.print(robot->rainCounter);
+      Bluetooth.print(robot->rainSensor.counter);
       Bluetooth.print(",");
       Bluetooth.print(robot->dropSensors.dropSensor[DropSensors::LEFT].counter);
       Bluetooth.print(",");
@@ -2001,7 +2054,7 @@ void RemoteControl::run()
       Bluetooth.print(",");
       Bluetooth.print(robot->lawnSensor.isDetected());
       Bluetooth.print(",");
-      Bluetooth.print(robot->rain);
+      Bluetooth.print(robot->rainSensor.raining);
       Bluetooth.print(",");
       Bluetooth.print(robot->dropSensors.dropSensor[DropSensors::LEFT].isDetected());
       Bluetooth.print(",");

@@ -44,6 +44,7 @@
 #include "sonar.h"
 #include "lawnSensor.h"
 #include "odometer.h"
+#include "rainSensor.h"
 
 //#include "QueueList.h"
 //#include <limits.h>
@@ -71,7 +72,6 @@ enum
   SEN_IMU,
   SEN_MOTOR_MOW_RPM,
   SEN_RTC,
-  SEN_RAIN,
 };
 
 // actuators
@@ -302,9 +302,6 @@ class Robot
 
     // ------- IMU state --------------------------------
     IMU imu;
-    char imuCorrectDir;       // correct direction by compass?
-    PID imuDirPID;    // direction PID controller
-    PID imuRollPID;    // roll PID controller
     float imuDriveHeading;       // drive heading (IMU)
     float imuRollHeading;      // roll heading  (IMU)
     byte imuRollDir;
@@ -336,10 +333,7 @@ class Robot
     LawnSensor lawnSensor;
 
     // --------- rain -----------------------------------
-    boolean rain;
-    boolean rainUse;
-    int rainCounter;
-    unsigned long nextTimeRain;
+    RainSensor rainSensor;
 
     // --------- sonar ----------------------------------
     // ultra sonic sensor distance-to-obstacle (cm)

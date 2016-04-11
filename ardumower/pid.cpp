@@ -29,6 +29,12 @@
 #include <Arduino.h>
 #include "pid.h"
 
+void PID::setup(const float Kp, const float Ki, const float Kd)
+{
+  this->Kp = Kp;
+  this->Ki = Ki;
+  this->Kd = Kd;
+}
 float PID::compute()
 {
   unsigned long now = micros();

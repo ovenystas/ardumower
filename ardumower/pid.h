@@ -33,7 +33,7 @@ class PID
   public:
     PID(void) {};
     PID(float Kp, float Ki, float Kd) : Kp(Kp), Ki(Ki), Kd(Kd) {};
-
+    void setup(const float Kp, const float Ki, const float Kd);
     float compute(void);
 
     float Ta{};         // sampling time
