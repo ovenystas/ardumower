@@ -45,6 +45,8 @@
 #include "lawnSensor.h"
 #include "odometer.h"
 #include "rainSensor.h"
+#include "cutter.h"
+#include "wheel.h"
 
 //#include "QueueList.h"
 //#include <limits.h>
@@ -117,7 +119,7 @@ enum
   ERR_ENUM_COUNT,
 };
 
-// finate state machine states
+// finite state machine states
 enum
 {
   STATE_OFF,              // off
@@ -231,12 +233,6 @@ class Robot
     boolean remoteSwitchLastState;
     unsigned long nextTimeRTC;
 
-    // -------- mower motor state -----------------------
-    int motorMowRpmCounter;  // mower motor speed state
-    boolean motorMowRpmLastState;
-    boolean motorMowEnable;
-    boolean motorMowEnableOverride; // user switch for mower motor on/off has highest priority
-
     // --------- wheel motor state ----------------------------
     // wheel motor speed ( <0 backward, >0 forward); range -motorSpeedMaxRpm..motorSpeedMaxRpm
     float motorAccel;             // motor wheel acceleration (warning: do not set too high)
@@ -265,33 +261,12 @@ class Robot
     unsigned long motorZeroTimeout[2];
     boolean rotateLeft;
     unsigned long nextTimeRotationChange;
-
-    // -------- mower motor state -----------------------
-    // mower motor sppeed; range 0..motorMowSpeedMaxPwm
-    float motorMowAccel; // motor mower acceleration (warning: do not set too high)
-    int motorMowSpeedMaxPwm;    // motor mower max PWM
-    float motorMowPowerMax;     // motor mower max power (Watt)
-    char motorMowModulate;      // motor mower cutter modulation?
-    int motorMowRPMSet;   // motor mower RPM (only for cutter modulation)
-    float motorMowSenseScale; // motor mower sense scale (mA=(ADC-zero)/scale)
-    PID motorMowPID;    // motor mower RPM PID controller
-    int motorMowSpeedPWMSet;
-    float motorMowPWMCurr;         // current speed
-    int motorMowSenseADC;
-    float motorMowSenseCurrent;
-    float motorMowSense;       // motor power (range 0..MAX_MOW_POWER)
-    int motorMowSenseCounter;
-    int motorMowSenseErrorCounter;
-    int motorMowRpmCurr;            // motor rpm (range 0..MOW_RPM)
-    unsigned long lastMotorMowRpmTime;
     unsigned long nextTimeMotorControl;
     unsigned long nextTimeMotorImuControl;
     unsigned long nextTimeMotorPerimeterControl;
-    unsigned long nextTimeMotorMowControl;
-    int lastMowSpeedPWM;
-    unsigned long lastSetMotorMowSpeedTime;
-    unsigned long nextTimeCheckCurrent;
-    unsigned long lastTimeMotorMowStucked;
+
+    // -------- mower motor state -----------------------
+    Cutter cutter;
 
     // --------- bumper state ---------------------------
     // bumper state (true = pressed)

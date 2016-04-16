@@ -85,23 +85,21 @@ Robot::Robot()
   remoteMowLastState = 0;
   remoteSwitchLastState = LOW;
 
-  motorMowRpmCounter = 0;
-  motorMowRpmLastState = LOW;
-  motorMowEnable = false;
-  motorMowEnableOverride = false;
-  motorMowSpeedPWMSet = 0;
+  cutter.motor.rpmCounter = 0;
+  cutter.motor.rpmLastState = LOW;
+  cutter.enable = false;
+  cutter.enableOverride = false;
+  cutter.motor.setPwm = 0;
   motorSpeedMaxRpm = 0;
-  motorMowPWMCurr = 0;
-  motorMowSenseADC = 0;
-  motorMowSenseCurrent = 0;
-  motorMowSense = 0;
-  motorMowSenseCounter = 0;
-  motorMowSenseErrorCounter = 0;
-  motorMowRpmCurr = 0;
-  lastMowSpeedPWM = 0;
-  lastSetMotorMowSpeedTime = 0;
-  nextTimeCheckCurrent = 0;
-  lastTimeMotorMowStucked = 0;
+  cutter.motor.curPwm = 0;
+  cutter.motor.senseAdc = 0;
+  cutter.motor.senseCurrent = 0;
+  cutter.motor.sensePower = 0;
+  cutter.motor.overloadCounter = 0;
+  cutter.motor.curRpm = 0;
+  cutter.motor.lastSpeedPWM = 0;
+  cutter.motor.lastSetpeedTime = 0;
+  cutter.motor.lastTimeStucked = 0;
 
   gpsLat = 0;
   gpsLon = 0;
@@ -147,13 +145,12 @@ Robot::Robot()
   nextTimeGPS = 0;
   nextTimeCheckIfStucked = 0;
   nextTimePfodLoop = 0;
-  lastMotorMowRpmTime = millis();
+  cutter.motor.lastRpmTime = millis();
   nextTimeErrorCounterReset = 0;
   nextTimeErrorBeep = 0;
   nextTimeMotorControl = 0;
   nextTimeMotorImuControl = 0;
   nextTimeMotorPerimeterControl = 0;
-  nextTimeMotorMowControl = 0;
   nextTimeRotationChange = 0;
 
   nextTimeRobotStats = 0;
@@ -262,16 +259,16 @@ void Robot::loadSaveUserSettings(boolean readflag)
   eereadwrite(readflag, addr, motorReverseTime);
   eereadwrite(readflag, addr, motorPowerIgnoreTime);
   eereadwrite(readflag, addr, motorForwTimeMax);
-  eereadwrite(readflag, addr, motorMowSpeedMaxPwm);
-  eereadwrite(readflag, addr, motorMowPowerMax);
-  eereadwrite(readflag, addr, motorMowRPMSet);
+  eereadwrite(readflag, addr, cutter.motor.maxPwm);
+  eereadwrite(readflag, addr, cutter.motor.maxPower);
+  eereadwrite(readflag, addr, cutter.motor.setRpm);
   eereadwrite(readflag, addr, motorSenseScale[MOW]);
   eereadwrite(readflag, addr, motorPID[LEFT].Kp);
   eereadwrite(readflag, addr, motorPID[LEFT].Ki);
   eereadwrite(readflag, addr, motorPID[LEFT].Kd);
-  eereadwrite(readflag, addr, motorPID[MOW].Kp);
-  eereadwrite(readflag, addr, motorPID[MOW].Ki);
-  eereadwrite(readflag, addr, motorPID[MOW].Kd);
+  eereadwrite(readflag, addr, cutter.motor.pid.Kp);
+  eereadwrite(readflag, addr, cutter.motor.pid.Ki);
+  eereadwrite(readflag, addr, cutter.motor.pid.Kd);
   eereadwrite(readflag, addr, motorBiDirSpeedRatio1);
   eereadwrite(readflag, addr, motorBiDirSpeedRatio2);
   eereadwrite(readflag, addr, motorSwapDir[LEFT]);
@@ -399,24 +396,24 @@ void Robot::printSettingSerial()
   Console.println(motorSwapDir[LEFT]);
 
   // ------ mower motor -------------------------------
-  Console.print(F("motorMowAccel : "));
-  Console.println(motorMowAccel);
+  Console.print(F("cutter.motor.acceleration : "));
+  Console.println(cutter.motor.acceleration);
   Console.print(F("motorMowSpeedMaxPwm : "));
-  Console.println(motorMowSpeedMaxPwm);
+  Console.println(cutter.motor.maxPwm);
   Console.print(F("motorMowPowerMax : "));
-  Console.println(motorMowPowerMax);
+  Console.println(cutter.motor.maxPower);
   Console.print(F("motorMowModulate : "));
-  Console.println(motorMowModulate);
+  Console.println(cutter.motor.modulate);
   Console.print(F("motorMowRPMSet : "));
-  Console.println(motorMowRPMSet);
+  Console.println(cutter.motor.setRpm);
   Console.print(F("motorMowSenseScale : "));
   Console.println(motorSenseScale[MOW]);
   Console.print(F("motorMowPID.Kp : "));
-  Console.println(motorPID[MOW].Kp);
+  Console.println(cutter.motor.pid.Kp);
   Console.print(F("motorMowPID.Ki : "));
-  Console.println(motorPID[MOW].Ki);
+  Console.println(cutter.motor.pid.Ki);
   Console.print(F("motorMowPID.Kd : "));
-  Console.println(motorPID[MOW].Kd);
+  Console.println(cutter.motor.pid.Kd);
 
   // ------ bumper ------------------------------------
   Console.print(F("bumpers.use : "));
@@ -681,12 +678,12 @@ void Robot::checkErrorCounter()
 // mower motor RPM driver
 void Robot::setMotorMowRPMState(boolean motorMowRpmState)
 {
-  if (motorMowRpmState != motorMowRpmLastState)
+  if (motorMowRpmState != cutter.motor.rpmLastState)
   {
-    motorMowRpmLastState = motorMowRpmState;
-    if (motorMowRpmLastState)
+    cutter.motor.rpmLastState = motorMowRpmState;
+    if (cutter.motor.rpmLastState)
     {
-      motorMowRpmCounter++;
+      cutter.motor.rpmCounter++;
     }
   }
 }
@@ -842,28 +839,28 @@ void Robot::setMotorPWMs(int pwmLeft, int pwmRight, boolean useAccel)
 }
 
 // sets mower motor actuator
-// - ensures that the motor is not switched to 100% too fast (motorMowAccel)
+// - ensures that the motor is not switched to 100% too fast (cutter.motor.acceleration)
 // - ensures that the motor voltage is not higher than motorMowSpeedMaxPwm
 void Robot::setMotorMowPWM(int pwm, boolean useAccel)
 {
-  unsigned long TaC = millis() - lastSetMotorMowSpeedTime; // sampling time in millis
-  lastSetMotorMowSpeedTime = millis();
+  unsigned long TaC = millis() - cutter.motor.lastSetpeedTime; // sampling time in millis
+  cutter.motor.lastSetpeedTime = millis();
   if (TaC > 1000)
   {
     TaC = 1;
   }
   // we need to ignore acceleration for PID control, and we can ignore if speed is lowered (e.g. motor is shut down)
-  if (!useAccel || pwm < motorMowPWMCurr)
+  if (!useAccel || pwm < cutter.motor.curPwm)
   {
-    motorMowPWMCurr = pwm;
+    cutter.motor.curPwm = pwm;
   }
   else
   {
     // http://phrogz.net/js/framerate-independent-low-pass-filter.html
     // smoothed += elapsedTime * ( newValue - smoothed ) / smoothing;
-    motorMowPWMCurr += TaC * (pwm - motorMowPWMCurr) / motorMowAccel;
+    cutter.motor.curPwm += TaC * (pwm - cutter.motor.curPwm) / cutter.motor.acceleration;
   }
-  setActuator(ACT_MOTOR_MOW, min(motorMowSpeedMaxPwm, max(0, motorMowPWMCurr)));
+  setActuator(ACT_MOTOR_MOW, min(cutter.motor.maxPwm, max(0, cutter.motor.curPwm)));
 }
 
 // PID controller: roll robot to heading (requires IMU)
@@ -1217,64 +1214,64 @@ void Robot::motorControl()
 void Robot::motorMowControl()
 {
   unsigned long curMillis = millis();
-  if (curMillis < nextTimeMotorMowControl)
+  if (curMillis < cutter.motor.nextTimeControl)
   {
     return;
   }
-  nextTimeMotorMowControl = curMillis + 100;
+  cutter.motor.nextTimeControl = curMillis + 100;
 
-  if (motorMowEnableOverride)
+  if (cutter.enableOverride)
   {
-    motorMowEnable = false;
+    cutter.enable = false;
   }
   double mowSpeed;
-  if (!motorMowEnable)
+  if (!cutter.enable)
   {
     mowSpeed = 0;
-    lastMowSpeedPWM = mowSpeed;
-    motorPID[MOW].esum = 0;
-    motorPID[MOW].x = 0;
+    cutter.motor.lastSpeedPWM = mowSpeed;
+    cutter.motor.pid.esum = 0;
+    cutter.motor.pid.x = 0;
     setMotorMowPWM(mowSpeed, true);
   }
   else
   {
     //if ((motorMowModulate) && (motorMowRpmCurr != 0)){
     // speed sensor available
-    if (motorMowModulate)
+    if (cutter.motor.modulate)
     {
-      if (mowSpeed < motorMowRPMSet)
+      if (mowSpeed < cutter.motor.setRpm)
       {
-        mowSpeed = lastMowSpeedPWM + 200;
-        if (mowSpeed > motorMowRPMSet)
+        mowSpeed = cutter.motor.lastSpeedPWM + 200;
+        if (mowSpeed > cutter.motor.setRpm)
         {
-          mowSpeed = motorMowRPMSet;
+          mowSpeed = cutter.motor.setRpm;
         }
       }
-      else if (mowSpeed > motorMowRPMSet)
+      else if (mowSpeed > cutter.motor.setRpm)
       {
-        mowSpeed = lastMowSpeedPWM - 200;
-        if (mowSpeed < motorMowRPMSet)
+        mowSpeed = cutter.motor.lastSpeedPWM - 200;
+        if (mowSpeed < cutter.motor.setRpm)
         {
-          mowSpeed = motorMowRPMSet;
+          mowSpeed = cutter.motor.setRpm;
         }
       }
 
-      motorPID[MOW].x = 0.2 * motorMowRpmCurr + 0.8 * motorPID[MOW].x;
-      motorPID[MOW].w = mowSpeed; // 3300 => 2300
-      motorPID[MOW].y_min = -motorMowSpeedMaxPwm / 2;
-      motorPID[MOW].y_max = motorMowSpeedMaxPwm / 2;
-      motorPID[MOW].max_output = motorMowSpeedMaxPwm / 2;
-      motorPID[MOW].compute();
+      cutter.motor.pid.x = 0.2 * cutter.motor.curRpm + 0.8 * cutter.motor.pid.x;
+      cutter.motor.pid.w = mowSpeed; // 3300 => 2300
+      cutter.motor.pid.y_min = -cutter.motor.maxPwm / 2;
+      cutter.motor.pid.y_max = cutter.motor.maxPwm / 2;
+      cutter.motor.pid.max_output = cutter.motor.maxPwm / 2;
+      cutter.motor.pid.compute();
 
-      setMotorMowPWM(mowSpeed / 20.0 + motorPID[MOW].y, false);
-      lastMowSpeedPWM = mowSpeed;
+      setMotorMowPWM(mowSpeed / 20.0 + cutter.motor.pid.y, false);
+      cutter.motor.lastSpeedPWM = mowSpeed;
     }
     else
     {
       if (errorCounter[ERR_MOW_SENSE] == 0 && errorCounter[ERR_STUCK] == 0)
       {
         // no speed sensor available
-        mowSpeed = motorMowSpeedPWMSet;
+        mowSpeed = cutter.motor.setPwm;
         setMotorMowPWM(mowSpeed, true);
       }
     }
@@ -1440,14 +1437,14 @@ void Robot::printInfo(Stream &s)
       Streamprint(s, "spd %4d %4d %4d ",
                   motorSpeedRpmSet[LEFT],
                   motorSpeedRpmSet[RIGHT],
-                  motorMowRpmCurr);
+                  cutter.motor.curRpm);
       if (consoleMode == CONSOLE_SENSOR_VALUES)
       {
         // sensor values
         Streamprint(s, "sen %4d %4d %4d ",
                     (int)motorSense[LEFT],
                     (int)motorSense[RIGHT],
-                    (int)motorMowSense);
+                    (int)cutter.motor.sensePower);
         Streamprint(s, "bum %4d %4d ",
                     bumpers.bumper[Bumpers::LEFT].isHit(),
                     bumpers.bumper[Bumpers::RIGHT].isHit());
@@ -1476,7 +1473,7 @@ void Robot::printInfo(Stream &s)
       {
         // sensor counters
         Streamprint(s, "sen %4d %4d %4d ", motorSenseCounter[LEFT],
-                    motorSenseCounter[RIGHT], motorMowSenseCounter);
+                    motorSenseCounter[RIGHT], cutter.motor.overloadCounter);
         Streamprint(s, "bum %4d %4d ",
                     bumpers.bumper[Bumpers::LEFT].counter,
                     bumpers.bumper[Bumpers::RIGHT].counter);
@@ -1766,13 +1763,13 @@ void Robot::readSerial()
       case 'm':
         if (stateCurr == STATE_OFF || stateCurr == STATE_MANUAL)
         {
-          motorMowEnableOverride = false;
+          cutter.enableOverride = false;
         }
         else
         {
-          motorMowEnableOverride = !motorMowEnableOverride;
+          cutter.enableOverride = !cutter.enableOverride;
         }
-        motorMowEnable = !motorMowEnable; // press 'm' to toggle mower motor
+        cutter.enable = !cutter.enable; // press 'm' to toggle mower motor
         break;
       case 'c':
         setNextState(STATE_STATION, 0); // press 'c' to simulate in station
@@ -1801,7 +1798,7 @@ void Robot::readSerial()
         break;
       case '1':
         // press '1' for Automode
-        motorMowEnable = true;
+        cutter.enable = true;
         //motorMowModulate = false;
         setNextState(STATE_FORWARD, 0);
         break;
@@ -1850,7 +1847,7 @@ void Robot::checkButton()
              setNextState(STATE_ERROR, 0);
              } else {*/
             // start normal with mowing
-            motorMowEnable = true;
+            cutter.enable = true;
             //motorMowModulate = true;
             mowPatternCurr = MOW_RANDOM;
             setNextState(STATE_FORWARD, 0);
@@ -1858,7 +1855,7 @@ void Robot::checkButton()
             break;
 
           case 2:
-            motorMowEnable = true;
+            cutter.enable = true;
             mowPatternCurr = MOW_BIDIR;
             setNextState(STATE_FORWARD, 0);
             break;
@@ -1887,7 +1884,7 @@ void Robot::checkButton()
 
           case 7:
             // start normal with mowing in lanes
-            motorMowEnable = true;
+            cutter.enable = true;
             //motorMowModulate = true;
             mowPatternCurr = MOW_LANES;
             setNextState(STATE_FORWARD, 0);
@@ -1912,14 +1909,14 @@ void Robot::readSensors()
     double accel = 0.05;
     motorSenseADC[RIGHT] = readSensor(SEN_MOTOR_RIGHT);
     motorSenseADC[LEFT] = readSensor(SEN_MOTOR_LEFT);
-    motorMowSenseADC = readSensor(SEN_MOTOR_MOW);
+    cutter.motor.senseAdc = readSensor(SEN_MOTOR_MOW);
 
     motorSenseCurrent[RIGHT] = motorSenseCurrent[RIGHT] * (1.0 - accel)
         + ((double)motorSenseADC[RIGHT]) * motorSenseScale[RIGHT] * accel;
     motorSenseCurrent[LEFT] = motorSenseCurrent[LEFT] * (1.0 - accel)
         + ((double)motorSenseADC[LEFT]) * motorSenseScale[LEFT] * accel;
-    motorMowSenseCurrent = motorMowSenseCurrent * (1.0 - accel)
-        + ((double)motorMowSenseADC) * motorSenseScale[MOW] * accel;
+    cutter.motor.senseCurrent = cutter.motor.senseCurrent * (1.0 - accel)
+        + ((double)cutter.motor.senseAdc) * motorSenseScale[MOW] * accel;
 
     float batV;
     if (batVoltage > 8)
@@ -1936,20 +1933,20 @@ void Robot::readSensors()
     // Conversion to power in Watts
     motorSense[RIGHT] = motorSenseCurrent[RIGHT] * batV / 1000;
     motorSense[LEFT] = motorSenseCurrent[LEFT] * batV / 1000;
-    motorMowSense = motorMowSenseCurrent * batV / 1000;
+    cutter.motor.sensePower = cutter.motor.senseCurrent * batV / 1000;
 
-    if ((curMillis - lastMotorMowRpmTime) >= 500)
+    if ((curMillis - cutter.motor.lastRpmTime) >= 500)
     {
-      motorMowRpmCurr = readSensor(SEN_MOTOR_MOW_RPM);
-      if ((motorMowRpmCurr == 0) && (motorMowRpmCounter != 0))
+      cutter.motor.curRpm = readSensor(SEN_MOTOR_MOW_RPM);
+      if ((cutter.motor.curRpm == 0) && (cutter.motor.rpmCounter != 0))
       {
         // rpm may be updated via interrupt
-        motorMowRpmCurr = (int)(((double)motorMowRpmCounter
-            / ((double)(curMillis - lastMotorMowRpmTime)))
+        cutter.motor.curRpm = (int)(((double)cutter.motor.rpmCounter
+            / ((double)(curMillis - cutter.motor.lastRpmTime)))
                                  * 60000.0);
-        motorMowRpmCounter = 0;
+        cutter.motor.rpmCounter = 0;
       }
-      lastMotorMowRpmTime = curMillis;
+      cutter.motor.lastRpmTime = curMillis;
       if (!ADCMan.calibrationDataAvail())
       {
         Console.println(F("Error: missing ADC calibration data"));
@@ -2184,7 +2181,7 @@ void Robot::setDefaults()
 {
   motorSpeedRpmSet[LEFT] = 0;
   motorSpeedRpmSet[RIGHT] = 0;
-  motorMowEnable = false;
+  cutter.enable = false;
 }
 
 // set state machine new state
@@ -2223,7 +2220,7 @@ void Robot::setNextState(byte stateNew, byte dir)
     {
       stateNew = STATE_STATION_CHECK;
       setActuator(ACT_CHGRELAY, 0);
-      motorMowEnable = false;
+      cutter.enable = false;
     }
   }
   // evaluate new state
@@ -2243,7 +2240,7 @@ void Robot::setNextState(byte stateNew, byte dir)
   else if (stateNew == STATE_STATION_FORW)
   {
     motorSpeedRpmSet[LEFT] = motorSpeedRpmSet[RIGHT] = motorSpeedMaxRpm;
-    motorMowEnable = true;
+    cutter.enable = true;
     stateEndTime = curMillis + stationForwTime + motorZeroSettleTime;
   }
   else if (stateNew == STATE_STATION_CHECK)
@@ -2334,7 +2331,7 @@ void Robot::setNextState(byte stateNew, byte dir)
   }
   if (stateNew == STATE_REMOTE)
   {
-    motorMowEnable = true;
+    cutter.enable = true;
     //motorMowModulate = false;
   }
   if (stateNew == STATE_STATION)
@@ -2359,7 +2356,7 @@ void Robot::setNextState(byte stateNew, byte dir)
   }
   if (stateNew == STATE_ERROR)
   {
-    motorMowEnable = false;
+    cutter.enable = false;
     motorSpeedRpmSet[LEFT] = motorSpeedRpmSet[RIGHT] = 0;
     setActuator(ACT_CHGRELAY, 0);
     statsMowTimeTotalStart = false;
@@ -2379,7 +2376,7 @@ void Robot::setNextState(byte stateNew, byte dir)
   }
   if (stateNew != STATE_REMOTE)
   {
-    motorMowSpeedPWMSet = motorMowSpeedMaxPwm;
+    cutter.motor.setPwm = cutter.motor.maxPwm;
   }
 
   sonars.obstacleTimeout = 0;
@@ -2601,7 +2598,7 @@ void Robot::checkTimer()
             if (stateCurr == STATE_STATION || stateCurr == STATE_OFF)
             {
               Console.println(F("timer start triggered"));
-              motorMowEnable = true;
+              cutter.enable = true;
               setNextState(STATE_FORWARD, 0);
             }
           }
@@ -2649,33 +2646,33 @@ void Robot::reverseOrBidir(byte aRollDir)
 void Robot::checkCurrent()
 {
   unsigned long curMillis = millis();
-  if (curMillis < nextTimeCheckCurrent)
+  if (curMillis < cutter.motor.nextTimeCheckCurrent)
   {
     return;
   }
-  nextTimeCheckCurrent = curMillis + 100;
+  cutter.motor.nextTimeCheckCurrent = curMillis + 100;
 
-  if (motorMowSense >= motorMowPowerMax)
+  if (cutter.motor.sensePower >= cutter.motor.maxPower)
   {
-    motorMowSenseCounter++;
+    cutter.motor.overloadCounter++;
   }
   else
   {
     errorCounterMax[ERR_MOW_SENSE] = 0;
-    motorMowSenseCounter = 0;
-    if (curMillis >= lastTimeMotorMowStucked + 30000)
+    cutter.motor.overloadCounter = 0;
+    if (curMillis >= cutter.motor.lastTimeStucked + 30000)
     { // wait 30 seconds before switching on again
       errorCounter[ERR_MOW_SENSE] = 0;
-      motorMowEnable = true;
+      cutter.enable = true;
     }
   }
 
-  if (motorMowSenseCounter >= 30)
+  if (cutter.motor.overloadCounter >= 30)
   { //ignore motorMowPower for 3 seconds
-    motorMowEnable = false;
+    cutter.enable = false;
     Console.println("Error: Motor mow current");
     addErrorCounter(ERR_MOW_SENSE);
-    lastTimeMotorMowStucked = curMillis;
+    cutter.motor.lastTimeStucked = curMillis;
     // if (rollDir == RIGHT) reverseOrBidir(LEFT); // toggle roll dir
     //else reverseOrBidir(RIGHT);
   }
@@ -3120,7 +3117,7 @@ void Robot::checkIfStucked()
           && (stateCurr != STATE_REMOTE)
           && (stateCurr != STATE_ERROR))
       {
-        motorMowEnable = true;
+        cutter.enable = true;
         errorCounterMax[ERR_STUCK] = 0;
       }
       return;
@@ -3128,7 +3125,7 @@ void Robot::checkIfStucked()
 
     if (robotIsStuckedCounter >= 5)
     {
-      motorMowEnable = false;
+      cutter.enable = false;
       if (errorCounterMax[ERR_STUCK] >= 3)
       {   // robot is definately stucked and unable to move
         Console.println(F("Error: Mower is stucked"));
@@ -3140,14 +3137,14 @@ void Robot::checkIfStucked()
       {   // mower tries 3 times to get unstucked
         if (stateCurr == STATE_FORWARD)
         {
-          motorMowEnable = false;
+          cutter.enable = false;
           addErrorCounter(ERR_STUCK);
           setMotorPWMs(0, 0, false);
           reverseOrBidir(RIGHT);
         }
         else if (stateCurr == STATE_ROLL)
         {
-          motorMowEnable = false;
+          cutter.enable = false;
           addErrorCounter(ERR_STUCK);
           setMotorPWMs(0, 0, false);
           setNextState(STATE_FORWARD, 0);
@@ -3192,7 +3189,6 @@ void Robot::checkTimeout()
   if (stateTime > motorForwTimeMax)
   {
     // timeout
-    motorMowSenseErrorCounter = 0;
     if (rollDir == RIGHT)
     {
       setNextState(STATE_REVERSE, LEFT); // toggle roll dir
@@ -3308,8 +3304,7 @@ void Robot::loop()
                                  min(motorSpeedMaxRpm, motorSpeedRpmSet[LEFT]));
       motorSpeedRpmSet[RIGHT] = max(-motorSpeedMaxRpm,
                                   min(motorSpeedMaxRpm, motorSpeedRpmSet[RIGHT]));
-      motorMowSpeedPWMSet = ((double) motorMowSpeedMaxPwm)
-          * (((double) remoteMow) / 100.0);
+      cutter.motor.setPwm = (double)cutter.motor.maxPwm * ((double)remoteMow / 100.0);
       break;
     case STATE_MANUAL:
       break;
@@ -3584,7 +3579,7 @@ void Robot::loop()
 
   if (stateCurr != STATE_REMOTE)
   {
-    motorMowSpeedPWMSet = motorMowSpeedMaxPwm;
+    cutter.motor.setPwm = cutter.motor.maxPwm;
   }
 
   bumpers.clearHit();

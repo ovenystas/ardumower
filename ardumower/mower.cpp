@@ -169,17 +169,6 @@ Mower::Mower()
   motorSwapDir[RIGHT] = 0; // inverse right motor direction?
   motorSwapDir[LEFT] = 0;  // inverse left motor direction?
 
-  // ------ mower motor -------------------------------
-  motorMowAccel = 2000;      // motor mower acceleration (warning: do not set too low) 2000 seems to fit best considerating start time and power consumption
-  motorMowSpeedMaxPwm = 255; // motor mower max PWM
-  motorMowPowerMax = 75.0;   // motor mower max power (Watt)
-  motorMowModulate = 0;      // motor mower cutter modulation?
-  motorMowRPMSet = 3300;     // motor mower RPM (only for cutter modulation)
-  motorSenseScale[MOW] = 15.3; // motor mower sense scale (mA=(ADC-zero)/scale)
-  motorPID[MOW].Kp = 0.005;  // motor mower RPM PID controller
-  motorPID[MOW].Ki = 0.01;
-  motorPID[MOW].Kd = 0.01;
-
   // ------ perimeter ---------------------------------
   perimeterUse = 0;               // use perimeter?
   perimeterTriggerTimeout = 0;    // perimeter trigger timeout when escaping from inside (ms)
@@ -325,13 +314,20 @@ void Mower::setup()
   pinMode(PIN_MOTOR_RIGHT_FAULT, INPUT);
 
   // mower motor
-  pinMode(PIN_MOTOR_MOW_DIR, OUTPUT);
-  pinMode(PIN_MOTOR_MOW_PWM, OUTPUT);
-  pinMode(PIN_MOTOR_MOW_SENSE, INPUT);
-  pinMode(PIN_MOTOR_MOW_RPM, INPUT);
-  pinMode(PIN_MOTOR_MOW_ENABLE, OUTPUT);
-  digitalWrite(PIN_MOTOR_MOW_ENABLE, HIGH);
-  pinMode(PIN_MOTOR_MOW_FAULT, INPUT);
+  cutter.motor.setup(
+      2000.0,  // Acceleration
+      255,     // Max PWM
+      75.0,    // Max Power
+      false,   // Modulation
+      3300,    // Set RPM
+      15.3,    // Sense scale
+      PIN_MOTOR_MOW_DIR,
+      PIN_MOTOR_MOW_PWM,
+      PIN_MOTOR_MOW_SENSE,
+      PIN_MOTOR_MOW_RPM,
+      PIN_MOTOR_MOW_ENABLE,
+      PIN_MOTOR_MOW_FAULT);
+  cutter.motor.pid.setup(0.005, 0.01, 0.01);  // Kp, Ki, Kd
 
   // lawn sensor
   lawnSensor.setup(PIN_LAWN_FRONT_SEND, PIN_LAWN_FRONT_RECV,

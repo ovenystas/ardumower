@@ -572,26 +572,26 @@ void RemoteControl::sendMowMenu(boolean update)
     Bluetooth.print(F("{.Mow`1000"));
   }
   Bluetooth.print(F("|o00~Overload Counter "));
-  Bluetooth.print(robot->motorMowSenseCounter);
+  Bluetooth.print(robot->cutter.motor.overloadCounter);
   Bluetooth.print(F("|o01~Power in Watt "));
-  Bluetooth.print(robot->motorMowSense);
+  Bluetooth.print(robot->cutter.motor.sensePower);
   Bluetooth.print(F("|o11~current in mA "));
-  Bluetooth.print(robot->motorMowSenseCurrent);
-  sendSlider("o02", F("Power max"), robot->motorMowPowerMax, "", 0.1, 100);
-  sendSlider("o03", F("calibrate mow motor "), robot->motorMowSenseCurrent, "",
+  Bluetooth.print(robot->cutter.motor.senseCurrent);
+  sendSlider("o02", F("Power max"), robot->cutter.motor.maxPower, "", 0.1, 100);
+  sendSlider("o03", F("calibrate mow motor "), robot->cutter.motor.senseCurrent, "",
              1, 3000, 0);
   Bluetooth.print(F("|o04~Speed "));
-  Bluetooth.print(robot->motorMowPWMCurr);
-  sendSlider("o05", F("Speed max"), robot->motorMowSpeedMaxPwm, "", 1, 255);
+  Bluetooth.print(robot->cutter.motor.curPwm);
+  sendSlider("o05", F("Speed max"), robot->cutter.motor.maxPwm, "", 1, 255);
   if (robot->developerActive)
   {
     Bluetooth.print(F("|o06~Modulate "));
-    sendYesNo(robot->motorMowModulate);
+    sendYesNo(robot->cutter.motor.modulate);
   }
   Bluetooth.print(F("|o07~RPM "));
-  Bluetooth.print(robot->motorMowRpmCurr);
-  sendSlider("o08", F("RPM set"), robot->motorMowRPMSet, "", 1, 4500);
-  sendPIDSlider("o09", "RPM", robot->motorPID[MOW], 0.01, 1.0);
+  Bluetooth.print(robot->cutter.motor.curRpm);
+  sendSlider("o08", F("RPM set"), robot->cutter.motor.setRpm, "", 1, 4500);
+  sendPIDSlider("o09", "RPM", robot->cutter.motor.pid, 0.01, 1.0);
   Bluetooth.println(F("|o10~Testing is"));
   switch (testmode)
   {
@@ -612,29 +612,29 @@ void RemoteControl::processMowMenu(String pfodCmd)
 {
   if (pfodCmd.startsWith("o02"))
   {
-    processSlider(pfodCmd, robot->motorMowPowerMax, 0.1);
+    processSlider(pfodCmd, robot->cutter.motor.maxPower, 0.1);
   }
   else if (pfodCmd.startsWith("o03"))
   {
-    processSlider(pfodCmd, robot->motorMowSenseCurrent, 1);
-    robot->motorSenseScale[MOW] = robot->motorMowSenseCurrent /
-        max(0, (float )robot->motorMowSenseADC);
+    processSlider(pfodCmd, robot->cutter.motor.senseCurrent, 1);
+    robot->motorSenseScale[MOW] = robot->cutter.motor.senseCurrent /
+        max(0, (float )robot->cutter.motor.senseAdc);
   }
   else if (pfodCmd.startsWith("o05"))
   {
-    processSlider(pfodCmd, robot->motorMowSpeedMaxPwm, 1);
+    processSlider(pfodCmd, robot->cutter.motor.maxPwm, 1);
   }
   else if (pfodCmd == "o06")
   {
-    robot->motorMowModulate = !robot->motorMowModulate;
+    robot->cutter.motor.modulate = !robot->cutter.motor.modulate;
   }
   else if (pfodCmd.startsWith("o08"))
   {
-    processSlider(pfodCmd, robot->motorMowRPMSet, 1);
+    processSlider(pfodCmd, robot->cutter.motor.setRpm, 1);
   }
   else if (pfodCmd.startsWith("o09"))
   {
-    processPIDSlider(pfodCmd, "o09", robot->motorPID[MOW], 0.01, 1.0);
+    processPIDSlider(pfodCmd, "o09", robot->cutter.motor.pid, 0.01, 1.0);
   }
   else if (pfodCmd == "o10")
   {
@@ -643,12 +643,12 @@ void RemoteControl::processMowMenu(String pfodCmd)
     {
       case 0:
         robot->setNextState(STATE_OFF, 0);
-        robot->motorMowRpmCurr = 0;
-        robot->motorMowEnable = false;
+        robot->cutter.motor.curRpm = 0;
+        robot->cutter.enable = false;
         break;
       case 1:
         robot->setNextState(STATE_MANUAL, 0);
-        robot->motorMowEnable = true;
+        robot->cutter.enable = true;
         break;
     }
   }
@@ -1536,7 +1536,7 @@ void RemoteControl::sendCommandMenu(boolean update)
   }
   Bluetooth.print(F("|ro~OFF|ra~Auto mode|rc~RC mode|"));
   Bluetooth.print(F("rm~Mowing is "));
-  sendOnOff(robot->motorMowEnable);
+  sendOnOff(robot->cutter.enable);
   Bluetooth.print(F("|rp~Pattern is "));
   Bluetooth.print(robot->mowPatternName());
   Bluetooth.print(F("|rh~Home|rk~Track|rs~State is "));
@@ -1583,15 +1583,15 @@ void RemoteControl::processCommandMenu(String pfodCmd)
   else if (pfodCmd == "ra")
   {
     // cmd: start auto mowing
-    robot->motorMowEnable = true;
+    robot->cutter.enable = true;
     robot->setNextState(STATE_FORWARD, 0);
     sendCommandMenu(true);
   }
   else if (pfodCmd == "rc")
   {
     // cmd: start remote control (RC)
-    robot->motorMowEnable = true;
-    robot->motorMowModulate = false;
+    robot->cutter.enable = true;
+    robot->cutter.motor.modulate = false;
     robot->setNextState(STATE_REMOTE, 0);
     sendCommandMenu(true);
   }
@@ -1600,13 +1600,13 @@ void RemoteControl::processCommandMenu(String pfodCmd)
     // cmd: mower motor on/off
     if (robot->stateCurr == STATE_OFF || robot->stateCurr == STATE_MANUAL)
     {
-      robot->motorMowEnableOverride = false;
+      robot->cutter.enableOverride = false;
     }
     else
     {
-      robot->motorMowEnableOverride = !robot->motorMowEnableOverride;
+      robot->cutter.enableOverride = !robot->cutter.enableOverride;
     }
-    robot->motorMowEnable = !robot->motorMowEnable;
+    robot->cutter.enable = !robot->cutter.enable;
     sendCommandMenu(true);
   }
   else if (pfodCmd == "rs")
@@ -1666,7 +1666,7 @@ void RemoteControl::sendManualMenu(boolean update)
     Bluetooth.print(F("|ns~Stop"));
   }
   Bluetooth.print(F("|nm~Mow is "));
-  sendOnOff(robot->motorMowEnable);
+  sendOnOff(robot->cutter.enable);
   Bluetooth.println("}");
 }
 
@@ -1689,7 +1689,7 @@ void RemoteControl::processCompassMenu(String pfodCmd)
 {
   if (pfodCmd == "cm")
   {
-    robot->motorMowEnable = !robot->motorMowEnable;
+    robot->cutter.enable = !robot->cutter.enable;
     sendCompassMenu(true);
   }
   else if (pfodCmd == "cn")
@@ -1781,7 +1781,7 @@ void RemoteControl::processManualMenu(String pfodCmd)
   else if (pfodCmd == "nm")
   {
     // manual: mower ON/OFF
-    robot->motorMowEnable = !robot->motorMowEnable;
+    robot->cutter.enable = !robot->cutter.enable;
     sendManualMenu(true);
   }
   else if (pfodCmd == "ns")
@@ -1883,7 +1883,7 @@ void RemoteControl::run()
     Bluetooth.print(",");
     Bluetooth.print(robot->motorSense[RIGHT]);
     Bluetooth.print(",");
-    Bluetooth.print(robot->motorMowSense);
+    Bluetooth.print(robot->cutter.motor.sensePower);
     Bluetooth.print(",");
     for (uint8_t i = 0; i < Sonars::END; i++)
     {
@@ -2011,7 +2011,7 @@ void RemoteControl::run()
       Bluetooth.print(",");
       Bluetooth.print(robot->motorSenseCounter[RIGHT]);
       Bluetooth.print(",");
-      Bluetooth.print(robot->motorMowSenseCounter);
+      Bluetooth.print(robot->cutter.motor.overloadCounter);
       Bluetooth.print(",");
       Bluetooth.print(robot->bumpers.bumper[Bumpers::LEFT].counter);
       Bluetooth.print(",");
@@ -2043,7 +2043,7 @@ void RemoteControl::run()
       Bluetooth.print(",");
       Bluetooth.print(robot->motorSense[RIGHT]);
       Bluetooth.print(",");
-      Bluetooth.print(robot->motorMowSense);
+      Bluetooth.print(robot->cutter.motor.sensePower);
       Bluetooth.print(",");
       for (uint8_t i = 0; i < Sonars::END; i++)
       {
