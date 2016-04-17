@@ -89,6 +89,7 @@ class IMU
 
     boolean use { false };
     unsigned long nextTime {};
+    unsigned long nextTimeControl {};
     bool correctDir { false };  // correct direction by compass?
     PID pid[2];                 // direction and roll PID controllers
 

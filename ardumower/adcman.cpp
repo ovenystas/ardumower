@@ -157,16 +157,16 @@ void ADCManager::printCalib()
   {
     Console.print(F("AD"));
     Console.print(ch);
-    Console.print(F("\t"));
+    Console.print(F(", "));
     Console.print(F("min="));
     Console.print(ADCMin[ch]);
-    Console.print(F("\t"));
+    Console.print(F(", "));
     Console.print(F("max="));
     Console.print(ADCMax[ch]);
-    Console.print(F("\t"));
+    Console.print(F(", "));
     Console.print(F("diff="));
     Console.print(ADCMax[ch] - ADCMin[ch]);
-    Console.print(F("\t"));
+    Console.print(F(", "));
     Console.print(F("ofs="));
     Console.println(ofs[ch]);
   }

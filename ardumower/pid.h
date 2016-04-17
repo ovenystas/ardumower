@@ -34,13 +34,16 @@ class PID
     PID(void) {};
     PID(float Kp, float Ki, float Kd) : Kp(Kp), Ki(Ki), Kd(Kd) {};
     void setup(const float Kp, const float Ki, const float Kd);
+    void setup(const float Kp, const float Ki, const float Kd,
+               const float y_min, const float y_max,
+               const float max_output);
     float compute(void);
+    float compute(float x);
+    float getEold() { return eold; };
 
-    float Ta{};         // sampling time
     float w{};          // set value
     float x{};          // current value
     float esum{};       // error sum
-    float eold{};       // last error
     float y{};          // control output
     float y_min{};      // minimum control output
     float y_max{};      // maximum control output
@@ -49,6 +52,9 @@ class PID
     float Ki{};         // integral control
     float Kd{};         // differential control
     unsigned long lastControlTime{};
+
+  private:
+    float eold{};       // last error
 };
 
 #endif

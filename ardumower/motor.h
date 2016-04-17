@@ -10,60 +10,134 @@
 
 #include "pid.h"
 #include <Arduino.h>
+#include "adcman.h"
+#include "drivers.h"
+#include "filter.h"
 
 class Motor
 {
   public:
     PID pid;
-    float acceleration;
-    bool modulate;
-    float maxPower;
-    int setRpm;
-    int curRpm;
-    int maxPwm;
-    int setPwm;
-    float curPwm;
+    float acceleration {};
+    bool regulate { false };
+    int rpmMax {};
+    int rpmSet {};
+    int rpmMeas {};
+    int pwmMax {};
+    int pwmSet {};
+    float pwmCur {};
     float senseScale;
-    int senseAdc;
-    float senseCurrent;
-    float sensePower;
-    int overloadCounter;
+    int senseAdc {};
+    float currentMeas {};
+    float powerMax {};
+    float powerMeas {};
+    int overloadCounter {};
+    bool swapDir { false };
 
-    unsigned long lastRpmTime;
-    unsigned long nextTimeControl;
-    int lastSpeedPWM;
-    unsigned long lastSetpeedTime;
-    unsigned long nextTimeCheckCurrent;
-    unsigned long lastTimeStucked;
-    int rpmCounter;
-    bool rpmLastState;
+    unsigned long lastRpmTime {};
+    unsigned long nextTimeControl {};
+    int lastSpeedPWM {};
+    unsigned long lastSetpeedTime {};
+    unsigned long nextTimeCheckPower {};
+    unsigned long nextTimeReadSensor {};
+    unsigned long lastTimeStucked {};
+    unsigned long lastSetSpeedTime {};
+    int rpmCounter {};
+    bool rpmLastState { false };
+    int powerIgnoreTime {};
+    int zeroSettleTime {};
+    unsigned long zeroTimeout {};
 
-    void setup(const float acceleration, const int maxPwm,
-               const float maxPower, const bool modulate,
-               const int setRpm, const float senseScale,
-               const uint8_t pinDir, const uint8_t pinPwm,
-               const uint8_t pinSense, const uint8_t pinRpm,
-               const uint8_t pinEnable, const uint8_t pinFault)
+    void setup(const float acceleration, const int maxPwm, const float maxPower,
+               const bool modulate, const int maxRpm, const int setRpm,
+               const float senseScale, const uint8_t pinDir,
+               const uint8_t pinPwm, const uint8_t pinSense,
+               const uint8_t pinRpm, const uint8_t pinBrake)
     {
       this->acceleration = acceleration;
-      this->maxPwm = maxPwm;
-      this->maxPower = maxPower;
-      this->modulate = modulate;
-      this->setRpm = setRpm;
+      this->pwmMax = maxPwm;
+      this->powerMax = maxPower;
+      this->regulate = modulate;
+      this->rpmMax = maxRpm;
+      this->rpmSet = setRpm;
       this->senseScale = senseScale;
       this->pinDir = pinDir;
       this->pinPwm = pinPwm;
       this->pinSense = pinSense;
       this->pinRpm = pinRpm;
-      this->pinEnable = pinEnable;
-      this->pinFault = pinFault;
+      this->pinBrake = pinBrake;
       pinMode(pinDir, OUTPUT);
       pinMode(pinPwm, OUTPUT);
       pinMode(pinSense, INPUT);
       pinMode(pinRpm, INPUT);
-      pinMode(pinEnable, OUTPUT);
-      digitalWrite(pinEnable, HIGH);
-      pinMode(pinFault, INPUT);
+      pinMode(pinBrake, OUTPUT);
+    }
+
+    bool readRpmPin()
+    {
+      return digitalRead(pinRpm);
+    }
+
+    int readSensePin()
+    {
+      senseAdc = ADCMan.read(pinSense);
+      return senseAdc;
+    }
+
+    float calcCurrent(double alpha)
+    {
+      // Exponential Moving Average (EMA) filter (ardumower version)
+      currentMeas = currentMeas * (1.0 - alpha) + (double)senseAdc * senseScale * alpha;
+      // Exponential Moving Average (EMA) filter (Ove's version)
+      //senseCurrent = dsp_ema_i16((double)senseAdc * senseScale, senseCurrent, DSP_EMA_I16_ALPHA(0.05));
+      return currentMeas;
+    }
+
+    float calcPower(float batV)
+    {
+      powerMeas = currentMeas * batV / 1000;
+      return powerMeas;
+    }
+
+    // call this from hall sensor interrupt
+    void setRpmState()
+    {
+      boolean newRpmState = readRpmPin();
+      if (newRpmState != rpmLastState)
+      {
+        rpmLastState = newRpmState;
+        if (rpmLastState)
+        {
+          rpmCounter++;
+        }
+      }
+    }
+
+    unsigned long getSamplingTime()
+    {
+      unsigned long curMillis = millis();
+      unsigned long samplingTime = curMillis - lastSetSpeedTime;
+      lastSetSpeedTime = curMillis;
+
+      if (samplingTime > 1000)
+      {
+        samplingTime = 1;
+      }
+      return samplingTime;
+    }
+
+    void setSpeed()
+    {
+      int speed;
+      if (swapDir)
+      {
+        speed = -pwmCur;
+      }
+      else
+      {
+        speed = pwmCur;
+      }
+      setArdumoto(pinDir, pinPwm, speed);
     }
 
   private:
@@ -71,8 +145,7 @@ class Motor
     uint8_t pinPwm;
     uint8_t pinSense;
     uint8_t pinRpm;
-    uint8_t pinEnable;
-    uint8_t pinFault;
+    uint8_t pinBrake;
 };
 
 #endif /* MOTOR_H */

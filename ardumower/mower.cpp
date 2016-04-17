@@ -41,23 +41,22 @@
 #include "mower.h"
 
 // ------ pins---------------------------------------
-#define PIN_MOTOR_ENABLE  37          // EN motors enable
+//#define PIN_MOTOR_ENABLE  37          // EN motors enable
 
 #define PIN_MOTOR_LEFT_PWM 3          // M1_IN1 left motor PWM pin
 #define PIN_MOTOR_LEFT_DIR 12         // M1_IN2 left motor Dir pin
 #define PIN_MOTOR_LEFT_SENSE A1       // M1_FB  left motor current sense
-#define PIN_MOTOR_LEFT_FAULT 25       // M1_SF  left motor fault
+#define PIN_MOTOR_LEFT_BRAKE 9        // M1_SF  left motor brake
 
 #define PIN_MOTOR_RIGHT_PWM  11       // M2_IN1 right motor PWM pin
 #define PIN_MOTOR_RIGHT_DIR 13        // M2_IN2 right motor Dir pin
 #define PIN_MOTOR_RIGHT_SENSE A0      // M2_FB  right motor current sense
-#define PIN_MOTOR_RIGHT_FAULT 27      // M2_SF  right motor fault
+#define PIN_MOTOR_RIGHT_BRAKE 8       // M2_SF  right motor brake
 
 #define PIN_MOTOR_MOW_PWM 2           // M1_IN1 mower motor PWM pin (if using MOSFET, use this pin)
 #define PIN_MOTOR_MOW_DIR 29          // M1_IN2 mower motor Dir pin (if using MOSFET, keep unconnected)
 #define PIN_MOTOR_MOW_SENSE A3        // M1_FB  mower motor current sense
-#define PIN_MOTOR_MOW_FAULT 26        // M1_SF  mower motor fault   (if using MOSFET/L298N, keep unconnected)
-#define PIN_MOTOR_MOW_ENABLE 28       // EN mower motor enable      (if using MOSFET/L298N, keep unconnected)
+#define PIN_MOTOR_MOW_BRAKE 26        // M1_SF  mower motor brake   (if using MOSFET/L298N, keep unconnected)
 #define PIN_MOTOR_MOW_RPM A11
 
 #define PIN_BUMBER_LEFT 39            // bumper pins
@@ -76,7 +75,7 @@
 #define PIN_PERIMETER_RIGHT A4        // perimeter
 #define PIN_PERIMETER_LEFT A5
 
-#define PIN_LED 13                    // LED
+#define PIN_LED 5                     // LED
 #define PIN_BUZZER 53                 // Buzzer
 #define PIN_TILT 35                   // Tilt sensor (required for TC-G158 board)
 #define PIN_BUTTON 51                 // digital ON/OFF button
@@ -88,8 +87,8 @@
 #define PIN_VOLTAGE_MEASUREMENT A7    // test pin for your own voltage measurements
 #define PIN_RAIN 44                   // rain sensor
 
-#define PIN_REMOTE_MOW 12             // remote control mower motor
-#define PIN_REMOTE_STEER 11           // remote control steering
+#define PIN_REMOTE_MOW 53             // remote control mower motor
+#define PIN_REMOTE_STEER 6           // remote control steering
 #define PIN_REMOTE_SPEED 10           // remote control speed
 #define PIN_REMOTE_SWITCH 52          // remote control switch
 
@@ -133,53 +132,17 @@ Mower::Mower()
 {
   name = "Ardumower";
 
-  // ------- wheel motors -----------------------------
-  motorAccel = 1000;            // motor wheel acceleration - only functional when odometer is not in use (warning: do not set too low)
-  motorSpeedMaxRpm = 25;        // motor wheel max RPM (WARNING: do not set too high, so there's still speed control when battery is low!)
-  motorSpeedMaxPwm = 255;       // motor wheel max Pwm  (8-bit PWM=255, 10-bit PWM=1023)
-  motorPowerMax = 75;           // motor wheel max power (Watt)
-  motorSenseScale[RIGHT] = 15.3;  // motor right sense scale (mA=(ADC-zero)/scale)
-  motorSenseScale[LEFT] = 15.3;   // motor left sense scale  (mA=(ADC-zero)/scale)
-  motorPowerIgnoreTime = 2000;  // time to ignore motor power (ms)
-  motorZeroSettleTime = 3000;   // how long (ms) to wait for motors to settle at zero speed
-  motorRollTimeMax = 1500;      // max. roll time (ms)
-  motorRollTimeMin = 750;       // min. roll time (ms) should be smaller than motorRollTimeMax
-  motorReverseTime = 1200;      // max. reverse time (ms)
-  motorForwTimeMax = 80000;     // max. forward time (ms) / timeout
-  motorBiDirSpeedRatio1 = 0.3;  // bidir mow pattern speed ratio 1
-  motorBiDirSpeedRatio2 = 0.92; // bidir mow pattern speed ratio 2
-
-  // ---- normal control ---
-  motorPID[LEFT].Kp = 1.5;        // motor wheel PID controller
-  motorPID[LEFT].Ki = 0.29;
-  motorPID[LEFT].Kd = 0.25;
-  motorPID[RIGHT].Kp = 1.5;        // motor wheel PID controller
-  motorPID[RIGHT].Ki = 0.29;
-  motorPID[RIGHT].Kd = 0.25;
-
-  // ---- fast control ---
-  /*
-  motorPID[LEFT].Kp = 1.76;    // motor wheel PID controller
-  motorPID[LEFT].Ki = 0.87;
-  motorPID[LEFT].Kd = 0.4;
-  motorPID[RIGHT].Kp = 1.76;    // motor wheel PID controller
-  motorPID[RIGHT].Ki = 0.87;
-  motorPID[RIGHT].Kd = 0.4;*/
-
-  motorSwapDir[RIGHT] = 0; // inverse right motor direction?
-  motorSwapDir[LEFT] = 0;  // inverse left motor direction?
-
   // ------ perimeter ---------------------------------
-  perimeterUse = 0;               // use perimeter?
+  perimeterUse = false;           // use perimeter?
   perimeterTriggerTimeout = 0;    // perimeter trigger timeout when escaping from inside (ms)
   perimeterOutRollTimeMax = 2000; // roll time max after perimeter out (ms)
   perimeterOutRollTimeMin = 750;  // roll time min after perimeter out (ms)
   perimeterOutRevTime = 2200;     // reverse time after perimeter out (ms)
   perimeterTrackRollTime = 1500;  // roll time during perimeter tracking
   perimeterTrackRevTime = 2200;   // reverse time during perimeter tracking
-  perimeterPID.Kp = 51.0;         // perimeter PID controller
-  perimeterPID.Ki = 12.5;
-  perimeterPID.Kd = 0.8;
+  perimeter.pid.Kp = 51.0;        // perimeter PID controller
+  perimeter.pid.Ki = 12.5;
+  perimeter.pid.Kd = 0.8;
   trackingPerimeterTransitionTimeOut = 2000;
   trackingErrorTimeOut = 10000;
   trackingBlockInnerWheelWhilePerimeterStruggling = 1;
@@ -189,19 +152,19 @@ Mower::Mower()
   imu.pid[IMU::ROLL].setup(0.8, 21, 0);    // roll PID controller
 
   // ------ model R/C ------------------------------------
-  remoteUse = 0; // use model remote control (R/C)?
+  remoteUse = false; // use model remote control (R/C)?
 
   // ------ battery -------------------------------------
-  batMonitor = 0;              // monitor battery and charge voltage?
-  batGoHomeIfBelow = 23.7;     // drive home voltage (Volt)
-  batSwitchOffIfBelow = 21.7;  // switch off battery if below voltage (Volt)
+  batMonitor = false;          // monitor battery and charge voltage?
+  batGoHomeIfBelow = 11.8;     // drive home voltage (Volt)
+  batSwitchOffIfBelow = 10.8;  // switch off battery if below voltage (Volt)
   batSwitchOffIfIdle = 1;      // switch off battery if idle (minutes)
   batFactor = 0.495;           // battery conversion factor  / 10 due to arduremote bug, can be removed after fixing (look in robot.cpp)
   batChgFactor = 0.495;        // battery conversion factor  / 10 due to arduremote bug, can be removed after fixing (look in robot.cpp)
-  batFull = 29.4;              // battery reference Voltage (fully charged) PLEASE ADJUST IF USING A DIFFERENT BATTERY VOLTAGE! FOR a 12V SYSTEM TO 14.4V
-  batChargingCurrentMax = 1.6; // maximum current your charger can devliver
+  batFull = 14.7;              // battery reference Voltage (fully charged) PLEASE ADJUST IF USING A DIFFERENT BATTERY VOLTAGE! FOR a 12V SYSTEM TO 14.4V
+  batChargingCurrentMax = 1.6; // maximum current your charger can deliver
   batFullCurrent = 0.3;        // current flowing when battery is fully charged
-  startChargingIfBelow = 27.0; // start charging if battery Voltage is below
+  startChargingIfBelow = 13.5; // start charging if battery Voltage is below
   chargingTimeout = 12600000;  // safety timer for charging (ms) 12600000 = 3.5hrs
   // Sensorausgabe Konsole      (chgSelection = 0)
   // Einstellungen ACS712 5A    (chgSelection = 1 / chgSenseZero ~ 511 / chgFactor = 39 / chgSense = 185.0 / chgChange = 0 oder 1 (je nach Stromrichtung) / chgNull  = 2)
@@ -220,17 +183,17 @@ Mower::Mower()
   stationCheckTime = 1700; // charge station reverse check time (ms)
 
   // ----- GPS -------------------------------------------
-  gpsUse = 0;                   // use GPS?
+  gpsUse = false;                   // use GPS?
   stuckedIfGpsSpeedBelow = 0.2; // if Gps speed is below given value the mower is stuck
   gpsSpeedIgnoreTime = 5000;    // how long gpsSpeed is ignored when robot switches into a new STATE (in ms)
 
   // ----- user-defined switch ---------------------------
-  userSwitch1 = 0; // user-defined switch 1 (default value)
-  userSwitch2 = 0; // user-defined switch 2 (default value)
-  userSwitch3 = 0; // user-defined switch 3 (default value)
+  userSwitch1 = false; // user-defined switch 1 (default value)
+  userSwitch2 = false; // user-defined switch 2 (default value)
+  userSwitch3 = false; // user-defined switch 3 (default value)
 
   // ----- timer -----------------------------------------
-  timerUse = 0; // use RTC and timer?
+  timerUse = false; // use RTC and timer?
 
   // ------ mower stats-------------------------------------------
   statsOverride = false; // if set to true mower stats are overwritten with the values below - be careful
@@ -267,8 +230,7 @@ ISR(PCINT2_vect, ISR_NOBLOCK)
   robot.odometer.setState(timeMicros);
 
   // TODO: Move this elsewhere
-  boolean motorMowRpmState = digitalRead(PIN_MOTOR_MOW_RPM);
-  robot.setMotorMowRPMState(motorMowRpmState);
+  robot.cutter.motor.setRpmState();
 }
 
 
@@ -297,37 +259,73 @@ void Mower::setup()
   pinMode(PIN_CHARGE_RELAY, OUTPUT);
   setActuator(ACT_CHGRELAY, 0);
 
-  // wheel motors
-  pinMode(PIN_MOTOR_ENABLE, OUTPUT);
-  digitalWrite(PIN_MOTOR_ENABLE, HIGH);
+  // ------- wheel motors -----------------------------
+  wheels.rollTimeMax = 1500;      // max. roll time (ms)
+  wheels.rollTimeMin = 750;       // min. roll time (ms) should be smaller than motorRollTimeMax
+  wheels.reverseTime = 1200;      // max. reverse time (ms)
+  wheels.forwardTimeMax = 80000;  // max. forward time (ms) / timeout
+  wheels.biDirSpeedRatio1 = 0.3;  // bidir mow pattern speed ratio 1
+  wheels.biDirSpeedRatio2 = 0.92; // bidir mow pattern speed ratio 2
 
   // left wheel motor
-  pinMode(PIN_MOTOR_LEFT_PWM, OUTPUT);
-  pinMode(PIN_MOTOR_LEFT_DIR, OUTPUT);
-  pinMode(PIN_MOTOR_LEFT_SENSE, INPUT);
-  pinMode(PIN_MOTOR_LEFT_FAULT, INPUT);
-
-  // right wheel motor
-  pinMode(PIN_MOTOR_RIGHT_PWM, OUTPUT);
-  pinMode(PIN_MOTOR_RIGHT_DIR, OUTPUT);
-  pinMode(PIN_MOTOR_RIGHT_SENSE, INPUT);
-  pinMode(PIN_MOTOR_RIGHT_FAULT, INPUT);
-
-  // mower motor
-  cutter.motor.setup(
-      2000.0,  // Acceleration
+  wheels.wheel[Wheel::LEFT].motor.setup(
+      1000.0,  // Acceleration
       255,     // Max PWM
       75.0,    // Max Power
       false,   // Modulation
-      3300,    // Set RPM
+      25,      // Max RPM
+      0.0,     // Set RPM
       15.3,    // Sense scale
+      PIN_MOTOR_LEFT_DIR,
+      PIN_MOTOR_LEFT_PWM,
+      PIN_MOTOR_LEFT_SENSE,
+      0,
+      PIN_MOTOR_LEFT_BRAKE);
+  // Normal control
+  wheels.wheel[Wheel::LEFT].motor.pid.setup(1.5, 0.29, 0.25);  // Kp, Ki, Kd
+  // Fast control
+  //wheels.wheel[Wheel::LEFT].motor.pid.setup(1.76, 0.87, 0.4);  // Kp, Ki, Kd
+  wheels.wheel[Wheel::LEFT].motor.powerIgnoreTime = 2000;  // time to ignore motor power (ms)
+  wheels.wheel[Wheel::LEFT].motor.zeroSettleTime = 3000;   // how long (ms) to wait for motors to settle at zero speed
+  wheels.wheel[Wheel::LEFT].motor.swapDir = 0;  // inverse left motor direction?
+
+  // right wheel motor
+  wheels.wheel[Wheel::RIGHT].motor.setup(
+      1000.0,  // Acceleration
+      255,     // Max PWM
+      75.0,    // Max Power
+      false,   // Modulation
+      25,      // Max RPM
+      0.0,     // Set RPM
+      15.3,    // Sense scale
+      PIN_MOTOR_RIGHT_DIR,
+      PIN_MOTOR_RIGHT_PWM,
+      PIN_MOTOR_RIGHT_SENSE,
+      0,
+      PIN_MOTOR_RIGHT_BRAKE);
+  // Normal control
+  wheels.wheel[Wheel::RIGHT].motor.pid.setup(1.5, 0.29, 0.25);  // Kp, Ki, Kd
+  // Fast control
+  //wheels.wheel[Wheel::RIGHT].motor.pid.setup(1.76, 0.87, 0.4);  // Kp, Ki, Kd
+  wheels.wheel[Wheel::RIGHT].motor.powerIgnoreTime = 2000;  // time to ignore motor power (ms)
+  wheels.wheel[Wheel::RIGHT].motor.zeroSettleTime = 3000;   // how long (ms) to wait for motors to settle at zero speed
+  wheels.wheel[Wheel::RIGHT].motor.swapDir = 0; // inverse right motor direction?
+
+  // mower motor
+  cutter.motor.setup(
+      2000.0,     // Acceleration
+      255,        // Max PWM
+      75.0,       // Max Power
+      false,      // Modulation
+      0,          // Max RPM
+      3300,       // Set RPM
+      15.3,       // Sense scale
       PIN_MOTOR_MOW_DIR,
       PIN_MOTOR_MOW_PWM,
       PIN_MOTOR_MOW_SENSE,
       PIN_MOTOR_MOW_RPM,
-      PIN_MOTOR_MOW_ENABLE,
-      PIN_MOTOR_MOW_FAULT);
-  cutter.motor.pid.setup(0.005, 0.01, 0.01);  // Kp, Ki, Kd
+      PIN_MOTOR_MOW_BRAKE);
+  cutter.motor.pid.setup(0.005, 0.01, 0.01, -127, 127, 127);  // Kp, Ki, Kd
 
   // lawn sensor
   lawnSensor.setup(PIN_LAWN_FRONT_SEND, PIN_LAWN_FRONT_RECV,
@@ -423,75 +421,10 @@ void Mower::setup()
   Robot::setup();
 }
 
-void checkMotorFault()
-{
-  if (digitalRead(PIN_MOTOR_LEFT_FAULT) == LOW)
-  {
-    robot.addErrorCounter(ERR_MOTOR_LEFT);
-    Console.println(F("Error: motor left fault"));
-    robot.setNextState(STATE_ERROR, 0);
-    //digitalWrite(pinMotorEnable, LOW);
-    //digitalWrite(pinMotorEnable, HIGH);
-  }
-  if (digitalRead(PIN_MOTOR_RIGHT_FAULT) == LOW)
-  {
-    robot.addErrorCounter(ERR_MOTOR_RIGHT);
-    Console.println(F("Error: motor right fault"));
-    robot.setNextState(STATE_ERROR, 0);
-    //digitalWrite(pinMotorEnable, LOW);
-    //digitalWrite(pinMotorEnable, HIGH);
-  }
-  if (digitalRead(PIN_MOTOR_MOW_FAULT) == LOW)
-  {
-    robot.addErrorCounter(ERR_MOTOR_MOW);
-    Console.println(F("Error: motor mow fault"));
-    robot.setNextState(STATE_ERROR, 0);
-    //digitalWrite(pinMotorMowEnable, LOW);
-    //digitalWrite(pinMotorMowEnable, HIGH);
-  }
-}
-
-void Mower::resetMotorFault(void)
-{
-  if (digitalRead(PIN_MOTOR_LEFT_FAULT) == LOW)
-  {
-    digitalWrite(PIN_MOTOR_ENABLE, LOW);
-    digitalWrite(PIN_MOTOR_ENABLE, HIGH);
-    Console.println(F("Reset motor left fault"));
-  }
-  if (digitalRead(PIN_MOTOR_RIGHT_FAULT) == LOW)
-  {
-    digitalWrite(PIN_MOTOR_ENABLE, LOW);
-    digitalWrite(PIN_MOTOR_ENABLE, HIGH);
-    Console.println(F("Reset motor right fault"));
-  }
-  if (digitalRead(PIN_MOTOR_MOW_FAULT) == LOW)
-  {
-    digitalWrite(PIN_MOTOR_MOW_ENABLE, LOW);
-    digitalWrite(PIN_MOTOR_MOW_ENABLE, HIGH);
-    Console.println(F("Reset motor mow fault"));
-  }
-}
-
 int Mower::readSensor(char type)
 {
   switch (type)
   {
-// motors-----------------------------------------------------------------------
-    case SEN_MOTOR_MOW:
-      return ADCMan.read(PIN_MOTOR_MOW_SENSE);
-      break;
-    case SEN_MOTOR_RIGHT:
-      checkMotorFault();
-      return ADCMan.read(PIN_MOTOR_RIGHT_SENSE);
-      break;
-    case SEN_MOTOR_LEFT:
-      checkMotorFault();
-      return ADCMan.read(PIN_MOTOR_LEFT_SENSE);
-      break;
-    //case SEN_MOTOR_MOW_RPM:
-    //  break; // not used - rpm is upated via interrupt
-
 // perimeter--------------------------------------------------------------------
     case SEN_PERIM_LEFT:
       return perimeter.getMagnitude(0);
@@ -547,15 +480,6 @@ void Mower::setActuator(char type, int value)
 {
   switch (type)
   {
-    case ACT_MOTOR_MOW:
-      setArdumoto(PIN_MOTOR_MOW_DIR, PIN_MOTOR_MOW_PWM, value);
-      break;
-    case ACT_MOTOR_LEFT:
-      setArdumoto(PIN_MOTOR_LEFT_DIR, PIN_MOTOR_LEFT_PWM, value);
-      break;
-    case ACT_MOTOR_RIGHT:
-      setArdumoto(PIN_MOTOR_RIGHT_DIR, PIN_MOTOR_RIGHT_PWM, value);
-      break;
     case ACT_BUZZER:
       if (value == 0)
       {

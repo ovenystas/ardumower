@@ -5,15 +5,37 @@
  *      Author: ove
  */
 
-#ifndef WHEEL_H_
-#define WHEEL_H_
+#ifndef WHEEL_H
+#define WHEEL_H
 
 #include "motor.h"
 
 class Wheel
 {
   public:
+    enum wheelE
+    {
+      LEFT,
+      RIGHT,
+      END
+    };
+
     Motor motor;
 };
 
-#endif /* WHEEL_H_ */
+class Wheels
+{
+  public:
+    Wheel wheel[Wheel::END];
+    int rollTimeMax{};         // max. roll time (ms)
+    int rollTimeMin{};         // min. roll time (ms)
+    int reverseTime{};         // max. reverse time (ms)
+    long forwardTimeMax{};     // max. forward time (ms) / timeout
+    float biDirSpeedRatio1{};  // bidir mow pattern speed ratio 1
+    float biDirSpeedRatio2{};  // bidir mow pattern speed ratio 2
+    Wheel::wheelE rotateDir{Wheel::LEFT};
+    unsigned long nextTimeRotationChange{};
+};
+
+
+#endif /* WHEEL_H */

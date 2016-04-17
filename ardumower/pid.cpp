@@ -35,11 +35,27 @@ void PID::setup(const float Kp, const float Ki, const float Kd)
   this->Ki = Ki;
   this->Kd = Kd;
 }
+
+void PID::setup(const float Kp, const float Ki, const float Kd,
+                const float y_min, const float y_max,
+                const float max_output)
+{
+  setup(Kp, Kd, Ki);
+  this->y_min = y_min;
+  this->y_max = y_max;
+  this->max_output = max_output;
+}
+
 float PID::compute()
+{
+  compute(this->x);
+}
+
+float PID::compute(float x)
 {
   unsigned long now = micros();
 
-  Ta = ((now - lastControlTime) / 1000000.0);
+  float Ta = ((now - lastControlTime) / 1000000.0);
   lastControlTime = now;
   if (Ta > 1.0)
   {

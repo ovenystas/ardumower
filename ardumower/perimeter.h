@@ -37,6 +37,7 @@
 #define PERIMETER_H
 
 #include <Arduino.h>
+#include "pid.h"
 
 class Perimeter
 {
@@ -56,6 +57,8 @@ class Perimeter
     int16_t getSignalAvg(byte idx);
     float getFilterQuality(byte idx);
     void speedTest();
+
+    PID pid;             // perimeter PID controller
     int16_t timedOutIfBelowSmag;
     int16_t timeOutSecIfNotInside;
     // use differential perimeter signal as input for the matched filter?
@@ -63,6 +66,7 @@ class Perimeter
     // swap coil polarity?
     bool swapCoilPolarity;
     char subSample;
+    unsigned long nextTimeControl{};
 
   private:
     unsigned long lastInsideTime[2];

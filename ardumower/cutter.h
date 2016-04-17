@@ -14,8 +14,8 @@ class Cutter
 {
   public:
     Motor motor;
-    bool enable;
-    bool enableOverride;
+    bool enable{false};
+    bool enableOverride{false};
 };
 
 #endif /* CUTTER_H */

@@ -68,9 +68,6 @@ enum
   SEN_BAT_VOLTAGE,       // Volt * 100
   SEN_CHG_CURRENT,       // Ampere * 100
   SEN_CHG_VOLTAGE,       // Volt * 100
-  SEN_MOTOR_LEFT,        // 0..MAX_MOTOR_CURRENT
-  SEN_MOTOR_RIGHT,       // 0..MAX_MOTOR_CURRENT
-  SEN_MOTOR_MOW,         // 0..MAX_MOW_CURRENT
   SEN_IMU,
   SEN_MOTOR_MOW_RPM,
   SEN_RTC,
@@ -79,9 +76,6 @@ enum
 // actuators
 enum
 {
-  ACT_MOTOR_LEFT,
-  ACT_MOTOR_RIGHT,
-  ACT_MOTOR_MOW,
   ACT_BUZZER,
   ACT_LED,
   ACT_USER_SW1,
@@ -93,7 +87,7 @@ enum
 };
 
 // error types
-enum
+enum errorE
 {
   ERR_MOTOR_LEFT,
   ERR_MOTOR_RIGHT,
@@ -163,7 +157,7 @@ enum
 };
 
 // console mode
-enum
+enum consoleE
 {
   CONSOLE_SENSOR_COUNTERS,
   CONSOLE_SENSOR_VALUES,
@@ -182,28 +176,28 @@ class Robot
     bool developerActive;
 
     // --------- state machine --------------------------
-    byte stateCurr;
-    byte stateLast;
-    byte stateNext;
-    unsigned long stateTime;
+    byte stateCurr { STATE_OFF };
+    byte stateLast { STATE_OFF };
+    byte stateNext { STATE_OFF };
+    unsigned long stateTime {};
     char* stateName();
     unsigned long stateStartTime;
     unsigned long stateEndTime;
-    int idleTimeSec;
+    int idleTimeSec {};
 
     // --------- timer ----------------------------------
     ttimer_t timer[MAX_TIMERS];
     datetime_t datetime;
-    char timerUse;       // use timer?
+    boolean timerUse;       // use timer?
     unsigned long nextTimeTimer;
 
     // -------- mow pattern -----------------------------
-    byte mowPatternCurr;
+    byte mowPatternCurr { MOW_RANDOM };
     char *mowPatternName();
 
     // -------- gps state -------------------------------
     GPS gps;
-    char gpsUse;       // use GPS?
+    boolean gpsUse;       // use GPS?
     float gpsLat;
     float gpsLon;
     float gpsX;   // X position (m)
@@ -218,7 +212,7 @@ class Robot
     Odometer odometer;
 
     // -------- RC remote control state -----------------
-    char remoteUse;       // use model remote control (R/C)?
+    boolean remoteUse;       // use model remote control (R/C)?
     int remoteSteer;  // range -100..100
     int remoteSpeed;  // range -100..100
     int remoteMow;    // range 0..100
@@ -235,34 +229,8 @@ class Robot
 
     // --------- wheel motor state ----------------------------
     // wheel motor speed ( <0 backward, >0 forward); range -motorSpeedMaxRpm..motorSpeedMaxRpm
-    float motorAccel;             // motor wheel acceleration (warning: do not set too high)
-    int motorSpeedMaxRpm;         // motor wheel max RPM
-    int motorSpeedMaxPwm;         // motor wheel max Pwm  (8-bit PWM=255, 10-bit PWM=1023)
-    float motorPowerMax;          // motor wheel max power (Watt)
-    PID motorPID[3];              // motor left wheel PID controller
-    float motorSenseScale[3];     // motor sense scale (mA=(ADC-zero)/scale)
-    int motorRollTimeMax;         // max. roll time (ms)
-    int motorRollTimeMin;         // min. roll time (ms)
-    int motorReverseTime;         // max. reverse time (ms)
-    long motorForwTimeMax;        // max. forward time (ms) / timeout
-    float motorBiDirSpeedRatio1;  // bidir mow pattern speed ratio 1
-    float motorBiDirSpeedRatio2;  // bidir mow pattern speed ratio 2
-    bool motorSwapDir[2];         // inverse motor direction
-    int motorSpeedRpmSet[2];      // set motor speed
-    float motorPWMCurr[2];        // current motor speed
-    int motorSenseADC[2];
-    float motorSenseCurrent[2];
-    float motorSense[2];          // motor power (range 0..MAX_MOTOR_POWER)
-    int motorPowerIgnoreTime;
-    int motorZeroSettleTime;      // how long (ms) to wait for motor to settle at zero speed
-    int motorSenseCounter[2];     // motor current counter
-    unsigned long nextTimeMotorSense;
-    unsigned long lastSetMotorSpeedTime;
-    unsigned long motorZeroTimeout[2];
-    boolean rotateLeft;
-    unsigned long nextTimeRotationChange;
-    unsigned long nextTimeMotorControl;
-    unsigned long nextTimeMotorImuControl;
+    Wheels wheels;
+
     unsigned long nextTimeMotorPerimeterControl;
 
     // -------- mower motor state -----------------------
@@ -286,13 +254,12 @@ class Robot
 
     // ------- perimeter state --------------------------
     Perimeter perimeter;
-    char perimeterUse;      // use perimeter?
+    boolean perimeterUse;      // use perimeter?
     int perimeterOutRollTimeMax;
     int perimeterOutRollTimeMin;
     int perimeterOutRevTime;
     int perimeterTrackRollTime; // perimeter tracking roll time (ms)
     int perimeterTrackRevTime; // perimeter tracking reverse time (ms)
-    PID perimeterPID;             // perimeter PID controller
     int perimeterMag;             // perimeter magnitude
     boolean perimeterInside;      // is inside perimeter?
     unsigned long perimeterTriggerTime; // time to trigger perimeter transition (timeout)
@@ -302,7 +269,7 @@ class Robot
     unsigned long nextTimePerimeter;
     int trackingPerimeterTransitionTimeOut;
     int trackingErrorTimeOut;
-    char trackingBlockInnerWheelWhilePerimeterStruggling;
+    boolean trackingBlockInnerWheelWhilePerimeterStruggling;
 
     //  --------- lawn state ----------------------------
     LawnSensor lawnSensor;
@@ -322,12 +289,12 @@ class Robot
     Button button;
 
     // ----- user-defined switch ---------------------------
-    char userSwitch1;       // user-defined switch 1 (default value)
-    char userSwitch2;       // user-defined switch 2 (default value)
-    char userSwitch3;       // user-defined switch 3 (default value)
+    boolean userSwitch1;       // user-defined switch 1 (default value)
+    boolean userSwitch2;       // user-defined switch 2 (default value)
+    boolean userSwitch3;       // user-defined switch 3 (default value)
 
     // --------- charging -------------------------------
-    char batMonitor;              // monitor battery and charge voltage?
+    boolean batMonitor;              // monitor battery and charge voltage?
     float batGoHomeIfBelow;     // drive home voltage (Volt)
     float batSwitchOffIfBelow;  // switch off if below voltage (Volt)
     int batSwitchOffIfIdle;      // switch off battery if idle for minutes
@@ -342,7 +309,7 @@ class Robot
     float chgSenseZero;       // charge current sense zero point
     float chgFactor;     // charge current conversion factor
     float chgSense; // mV/A empfindlichkeit des Ladestromsensors in mV/A (Für ACS712 5A = 185)
-    char chgChange;       // messwertumkehr von - nach +         1oder 0
+    byte chgChange;       // messwertumkehr von - nach +         1oder 0
     float batVoltage;  // battery voltage (Volt)
     byte chgSelection;       // Senor Auswahl
     float batRefFactor;
@@ -364,16 +331,13 @@ class Robot
     float lastTimeBatCapacity;
 
     // --------- error counters --------------------------
-    byte errorCounterMax[ERR_ENUM_COUNT];
-    byte errorCounter[ERR_ENUM_COUNT];
+    byte errorCounterMax[ERR_ENUM_COUNT] {};
+    byte errorCounter[ERR_ENUM_COUNT] {};
 
     // --------- other ----------------------------------
-    int loopsPerSec;  // main loops per second
-    float loopsTa;   // main loop-time factor (milliseconds)
-    int loopsPerSecCounter;
-    //byte buttonCounter;
-    byte ledState;
-    byte consoleMode;
+    int loopsPerSec {};  // main loops per second
+    int loopsPerSecCounter {};
+    byte consoleMode { CONSOLE_SENSOR_COUNTERS };
     unsigned long nextTimeInfo;
     byte rollDir;
     unsigned long nextTimeErrorCounterReset;
@@ -381,7 +345,7 @@ class Robot
 
     // ------------robot stats---------------------------
     boolean statsOverride;
-    boolean statsMowTimeTotalStart;
+    boolean statsMowTimeTotalStart { false };
     unsigned int statsMowTimeMinutesTripCounter;
     unsigned long statsMowTimeMinutesTotal;
     float statsMowTimeHoursTotal;
@@ -405,9 +369,6 @@ class Robot
                                    boolean remoteSteerState,
                                    boolean remoteMowState,
                                    boolean remoteSwitchState);
-
-    // call this from hall sensor interrupt
-    virtual void setMotorMowRPMState(boolean motorMowRpmState);
 
     // state machine
     virtual void setNextState(byte stateNew, byte dir);
@@ -438,16 +399,15 @@ class Robot
     virtual void beep(int numberOfBeeps, boolean shortbeep);
     virtual void printInfo(Stream &s);
     virtual void setUserSwitches();
-    virtual void addErrorCounter(byte errType);
+    virtual void addErrorCounter(enum errorE errType);
     virtual void resetErrorCounters();
-    virtual void resetMotorFault()
-    {
-    }
 
   protected:
     // convert ppm time to RC slider value
     virtual int rcValue(int ppmTime);
     virtual void loadSaveErrorCounters(boolean readflag);
+    virtual void loadErrorCounters();
+    virtual void saveErrorCounters();
     virtual void loadSaveUserSettings(boolean readflag);
     virtual void loadSaveRobotStats(boolean readflag);
     virtual void loadUserSettings();
@@ -464,7 +424,7 @@ class Robot
     virtual void checkButton();
     virtual void checkBattery();
     virtual void checkTimer();
-    virtual void checkCurrent();
+    virtual void checkPower();
     virtual void checkBumpers();
     virtual void checkDrop();
     virtual void checkBumpersPerimeter();
@@ -509,6 +469,9 @@ class Robot
 
   private:
     void setMotorPWM(int pwm, unsigned long TaC, uint8_t motor, boolean useAccel);
+    void loadRobotStats();
+    void saveRobotStats();
+
 };
 
 #endif

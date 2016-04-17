@@ -417,7 +417,6 @@ void IMU::readL3G4200D(boolean useTa)
   uint8_t countOfData = (fifoSrcReg & 0x1F) + 1;
   //  if (bitRead(fifoSrcReg, 6)==1) Console.println(F("IMU error: FIFO overrun"));
 
-  // TODO: Can this be written as sizeof(gyroFifo)?
   memset(gyroFifo, 0, sizeof(gyroFifo));
   I2CreadFrom(L3G4200D, 0xA8, sizeof(gyroFifo[0]) * countOfData,
               (uint8_t*)gyroFifo); // the first bit of the register address specifies we want automatic address increment
