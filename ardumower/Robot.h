@@ -192,7 +192,7 @@ class Robot
 
     // -------- mow pattern -----------------------------
     byte mowPatternCurr { MOW_RANDOM };
-    char *mowPatternName();
+    char* mowPatternName();
 
     // -------- gps state -------------------------------
     Gps gps;

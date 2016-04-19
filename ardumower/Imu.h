@@ -78,7 +78,8 @@ class Imu
     enum imuE
     {
       DIR,
-      ROLL
+      ROLL,
+      END
     };
 
     Imu();
@@ -92,7 +93,7 @@ class Imu
     unsigned long nextTime {};
     unsigned long nextTimeControl {};
     bool correctDir { false };  // correct direction by compass?
-    Pid pid[2];                 // direction and roll PID controllers
+    Pid pid[END];               // direction and roll PID controllers
 
 
     int callCounter;

@@ -8,38 +8,33 @@
 #ifndef RAINSENSOR_H
 #define RAINSENSOR_H
 
-#include <Arduino.h>
-
 class RainSensor
 {
   public:
-    boolean raining { false };
-    boolean use { false };
-    unsigned int counter {};
-    unsigned long nextTime {};
+    boolean used { false };
 
-    void setup(const uint8_t pin)
+    void setup(const uint8_t pin);
+    void check();
+    bool isTimeToRun();
+
+    boolean isRaining() const
     {
-      this->pin = pin;
-      pinMode(pin, INPUT);
+      return raining;
     }
 
-    void read()
+    unsigned int getCounter() const
     {
-      raining = (digitalRead(pin) == LOW);
-    }
-
-    void check()
-    {
-      read();
-      if (raining)
-      {
-        counter++;
-      }
+      return counter;
     }
 
   private:
     uint8_t pin;
+    boolean raining { false };
+    unsigned int counter {};
+    unsigned int timeBetweenRuns { 5000 };
+    unsigned long nextTime {};
+
+    void read();
 };
 
 #endif /* RAINSENSOR_H */

@@ -237,7 +237,7 @@ void Robot::loadSaveUserSettings(boolean readflag)
   eereadwrite(readflag, addr, wheels.biDirSpeedRatio2);
   eereadwrite(readflag, addr, wheels.wheel[Wheel::LEFT].motor.swapDir);
   eereadwrite(readflag, addr, wheels.wheel[Wheel::RIGHT].motor.swapDir);
-  eereadwrite(readflag, addr, bumpers.use);
+  eereadwrite(readflag, addr, bumpers.used);
   eereadwrite(readflag, addr, sonars.use);
   for (uint8_t i = 0; i < Sonars::END; i++)
   {
@@ -259,7 +259,7 @@ void Robot::loadSaveUserSettings(boolean readflag)
   eereadwrite(readflag, addr, perimeter.swapCoilPolarity);
   eereadwrite(readflag, addr, perimeter.timeOutSecIfNotInside);
   eereadwrite(readflag, addr, trackingBlockInnerWheelWhilePerimeterStruggling);
-  eereadwrite(readflag, addr, lawnSensor.use);
+  eereadwrite(readflag, addr, lawnSensor.used);
   eereadwrite(readflag, addr, imu.use);
   eereadwrite(readflag, addr, imu.correctDir);
   eereadwrite(readflag, addr, imu.pid[Imu::DIR].Kp);
@@ -290,17 +290,17 @@ void Robot::loadSaveUserSettings(boolean readflag)
   eereadwrite(readflag, addr, odometer.encoder[Odometer::LEFT].swapDir);
   eereadwrite(readflag, addr, odometer.encoder[Odometer::RIGHT].swapDir);
   eereadwrite(readflag, addr, odometer.encoder[Odometer::LEFT].twoWay);
-  eereadwrite(readflag, addr, button.use);
+  eereadwrite(readflag, addr, button.used);
   eereadwrite(readflag, addr, userSwitch1);
   eereadwrite(readflag, addr, userSwitch2);
   eereadwrite(readflag, addr, userSwitch3);
   eereadwrite(readflag, addr, timerUse);
   eereadwrite(readflag, addr, timer);
-  eereadwrite(readflag, addr, rainSensor.use);
+  eereadwrite(readflag, addr, rainSensor.used);
   eereadwrite(readflag, addr, gpsUse);
   eereadwrite(readflag, addr, stuckedIfGpsSpeedBelow);
   eereadwrite(readflag, addr, gpsSpeedIgnoreTime);
-  eereadwrite(readflag, addr, dropSensors.use);
+  eereadwrite(readflag, addr, dropSensors.used);
   eereadwrite(readflag, addr, statsOverride);
   Console.print(F("loadSaveUserSettings addrstop="));
   Console.println(addr);
@@ -404,19 +404,19 @@ void Robot::printSettingSerial()
   // ------ bumper ------------------------------------
   Console.println(F("== Bumpers =="));
   Console.print(F("use : "));
-  Console.println(bumpers.use);
+  Console.println(bumpers.used);
 
   // ------ drop ------------------------------------
   Console.println(F("== Drop sensors =="));
   Console.print(F("use : "));
-  Console.println(dropSensors.use);
+  Console.println(dropSensors.used);
   Console.print(F("contactType : "));
-  Console.println(dropSensors.dropSensor[DropSensors::LEFT].contactType);  // Assume left and right has same contact type
+  Console.println(dropSensors.dropSensor[DropSensors::LEFT].getContactType());  // Assume left and right has same contact type
 
   // ------ rain ------------------------------------
   Console.println(F("== Rain sensor =="));
   Console.print(F("use : "));
-  Console.println(rainSensor.use);
+  Console.println(rainSensor.used);
 
   // ------ sonar ------------------------------------
   Console.println(F("== Sonars =="));
@@ -463,7 +463,7 @@ void Robot::printSettingSerial()
   // ------ lawn sensor --------------------------------
   Console.println(F("== Lawn sensor =="));
   Console.print(F("use : "));
-  Console.println(lawnSensor.use);
+  Console.println(lawnSensor.used);
 
   // ------  IMU (compass/accel/gyro) ----------------------
   Console.println(F("== IMU =="));
@@ -566,7 +566,7 @@ void Robot::printSettingSerial()
   // ----- other -----------------------------------------
   Console.println(F("== Button =="));
   Console.print(F("use : "));
-  Console.println(button.use);
+  Console.println(button.used);
 
   // ----- user-defined switch ---------------------------
   Console.println(F("== User switches =="));
@@ -758,7 +758,7 @@ void Robot::setMotorPWM(int pwm, unsigned long samplingTime,
   if (odometer.use)
   {
     wheels.wheel[motor].motor.pwmCur = pwm;
-    if (abs(odometer.encoder[motor].wheelRpmCurr) < 1)
+    if (abs(odometer.encoder[motor].getWheelRpmCurr()) < 1)
     {
       wheels.wheel[motor].motor.zeroTimeout = max(0, (wheels.wheel[motor].motor.zeroTimeout - samplingTime));
     }
@@ -842,7 +842,7 @@ void Robot::motorControlImuRoll()
   wheels.wheel[Wheel::LEFT].motor.pid.y_min = -wheels.wheel[Wheel::LEFT].motor.pwmMax;        // Regel-MIN
   wheels.wheel[Wheel::LEFT].motor.pid.y_max = wheels.wheel[Wheel::LEFT].motor.pwmMax;   // Regel-MAX
   wheels.wheel[Wheel::LEFT].motor.pid.max_output = wheels.wheel[Wheel::LEFT].motor.pwmMax;    // Begrenzung
-  float leftWheelPidY = wheels.wheel[Wheel::LEFT].motor.pid.compute(odometer.encoder[Odometer::LEFT].wheelRpmCurr);
+  float leftWheelPidY = wheels.wheel[Wheel::LEFT].motor.pid.compute(odometer.encoder[Odometer::LEFT].getWheelRpmCurr());
   int leftSpeed = max(-wheels.wheel[Wheel::LEFT].motor.pwmMax,
                       min(wheels.wheel[Wheel::LEFT].motor.pwmMax,
                           wheels.wheel[Wheel::LEFT].motor.pwmCur + leftWheelPidY));
@@ -852,7 +852,7 @@ void Robot::motorControlImuRoll()
   wheels.wheel[Wheel::RIGHT].motor.pid.y_min = -wheels.wheel[Wheel::RIGHT].motor.pwmMax;       // Regel-MIN
   wheels.wheel[Wheel::RIGHT].motor.pid.y_max = wheels.wheel[Wheel::RIGHT].motor.pwmMax;  // Regel-MAX
   wheels.wheel[Wheel::RIGHT].motor.pid.max_output = wheels.wheel[Wheel::RIGHT].motor.pwmMax;   // Begrenzung
-  float rightWheelPidY = wheels.wheel[Wheel::RIGHT].motor.pid.compute(odometer.encoder[Odometer::RIGHT].wheelRpmCurr);
+  float rightWheelPidY = wheels.wheel[Wheel::RIGHT].motor.pid.compute(odometer.encoder[Odometer::RIGHT].getWheelRpmCurr());
   int rightSpeed = max(-wheels.wheel[Wheel::RIGHT].motor.pwmMax,
       min(wheels.wheel[Wheel::RIGHT].motor.pwmMax, wheels.wheel[Wheel::RIGHT].motor.pwmCur + rightWheelPidY));
 
@@ -978,7 +978,7 @@ void Robot::motorControlImuDir()
 
   // Korrektur erfolgt über Abbremsen des linken Antriebsrades, falls Kursabweichung nach rechts
   // Regelbereich entspricht maximaler PWM am Antriebsrad (motorSpeedMaxPwm), um auch an Steigungen höchstes Drehmoment für die Solldrehzahl zu gewährleisten
-  wheels.wheel[Wheel::LEFT].motor.pid.x = odometer.encoder[LEFT].wheelRpmCurr;                     // IST
+  wheels.wheel[Wheel::LEFT].motor.pid.x = odometer.encoder[LEFT].getWheelRpmCurr();                     // IST
   wheels.wheel[Wheel::LEFT].motor.pid.w = wheels.wheel[Wheel::LEFT].motor.rpmSet - correctLeft;     // SOLL
   wheels.wheel[Wheel::LEFT].motor.pid.y_min = -wheels.wheel[Wheel::LEFT].motor.pwmMax;            // Regel-MIN
   wheels.wheel[Wheel::LEFT].motor.pid.y_max = wheels.wheel[Wheel::LEFT].motor.pwmMax;       // Regel-MAX
@@ -997,7 +997,7 @@ void Robot::motorControlImuDir()
 
   // Korrektur erfolgt über Abbremsen des rechten Antriebsrades, falls Kursabweichung nach links
   // Regelbereich entspricht maximaler PWM am Antriebsrad (motorSpeedMaxPwm), um auch an Steigungen höchstes Drehmoment für die Solldrehzahl zu gewährleisten
-  wheels.wheel[Wheel::RIGHT].motor.pid.x = odometer.encoder[RIGHT].wheelRpmCurr;                   // IST
+  wheels.wheel[Wheel::RIGHT].motor.pid.x = odometer.encoder[RIGHT].getWheelRpmCurr();                   // IST
   wheels.wheel[Wheel::RIGHT].motor.pid.w = wheels.wheel[Wheel::RIGHT].motor.rpmSet - correctRight;  // SOLL
   wheels.wheel[Wheel::RIGHT].motor.pid.y_min = -wheels.wheel[Wheel::LEFT].motor.pwmMax;           // Regel-MIN
   wheels.wheel[Wheel::RIGHT].motor.pid.y_max = wheels.wheel[Wheel::LEFT].motor.pwmMax;      // Regel-MAX
@@ -1040,7 +1040,7 @@ void Robot::checkOdometerFaults()
     // just check if odometer sensors may not be working at all
     for (uint8_t i = LEFT; i <= RIGHT; i++)
     {
-      if (wheels.wheel[i].motor.pwmCur > 100 && abs(odometer.encoder[i].wheelRpmCurr) < 1)
+      if (wheels.wheel[i].motor.pwmCur > 100 && abs(odometer.encoder[i].getWheelRpmCurr()) < 1)
       {
         err[i] = true;
       }
@@ -1052,8 +1052,8 @@ void Robot::checkOdometerFaults()
     // just check if odometer sensors may be turning in the wrong direction
     for (uint8_t i = LEFT; i <= RIGHT; i++)
     {
-      if ((wheels.wheel[i].motor.pwmCur > 100 && odometer.encoder[i].wheelRpmCurr < -3) ||
-          (wheels.wheel[i].motor.pwmCur < -100 && odometer.encoder[i].wheelRpmCurr > 3))
+      if ((wheels.wheel[i].motor.pwmCur > 100 && odometer.encoder[i].getWheelRpmCurr() < -3) ||
+          (wheels.wheel[i].motor.pwmCur < -100 && odometer.encoder[i].getWheelRpmCurr() > 3))
       {
         err[i] = true;
       }
@@ -1065,7 +1065,7 @@ void Robot::checkOdometerFaults()
     Console.print("Left odometer error: PWM=");
     Console.print(wheels.wheel[Wheel::LEFT].motor.pwmCur);
     Console.print("\tRPM=");
-    Console.println(odometer.encoder[Odometer::LEFT].wheelRpmCurr);
+    Console.println(odometer.encoder[Odometer::LEFT].getWheelRpmCurr());
     addErrorCounter(ERR_ODOMETER_LEFT);
     setNextState(STATE_ERROR, 0);
   }
@@ -1075,7 +1075,7 @@ void Robot::checkOdometerFaults()
     Console.print("Right odometer error: PWM=");
     Console.print(wheels.wheel[Wheel::RIGHT].motor.pwmCur);
     Console.print("\tRPM=");
-    Console.println(odometer.encoder[Odometer::RIGHT].wheelRpmCurr);
+    Console.println(odometer.encoder[Odometer::RIGHT].getWheelRpmCurr());
     addErrorCounter(ERR_ODOMETER_RIGHT);
     setNextState(STATE_ERROR, 0);
   }
@@ -1099,7 +1099,7 @@ void Robot::motorControl()
     {
       // Regelbereich entspricht maximaler PWM am Antriebsrad (motorSpeedMaxPwm),
       // um auch an Steigungen höchstes Drehmoment für die Solldrehzahl zu gewährleisten
-      wheels.wheel[i].motor.pid.x = odometer.encoder[i].wheelRpmCurr;               // IST
+      wheels.wheel[i].motor.pid.x = odometer.encoder[i].getWheelRpmCurr();               // IST
       if (curMillis < stateStartTime + wheels.wheel[i].motor.zeroSettleTime)
       {
         wheels.wheel[i].motor.pid.w = 0; // get zero speed first after state change
@@ -1184,12 +1184,12 @@ void Robot::motorMowControl()
   }
   cutter.motor.nextTimeControl = curMillis + 100;
 
-  if (cutter.enableOverride)
+  if (cutter.isEnableOverriden())
   {
-    cutter.enable = false;
+    cutter.disable();
   }
 
-  if (!cutter.enable)
+  if (cutter.isDisabled())
   {
     cutter.motor.pid.w;
     setMotorMowPWM(0, false);
@@ -1288,7 +1288,7 @@ void Robot::setup()
   }
   setUserSwitches();
 
-  if (!button.use)
+  if (!button.used)
   {
     // robot has no ON/OFF button => start immediately
     setNextState(STATE_FORWARD, 0);
@@ -1360,8 +1360,8 @@ void Robot::printInfo(Stream &s)
       if (odometer.use)
       {
         Streamprint(s, "odo %4d %4d ",
-                    odometer.encoder[Odometer::LEFT].counter,
-                    odometer.encoder[Odometer::RIGHT].counter);
+                    odometer.encoder[Odometer::LEFT].getCounter(),
+                    odometer.encoder[Odometer::RIGHT].getCounter());
       }
       Streamprint(s, "spd %4d %4d %4d ",
                   wheels.wheel[Wheel::LEFT].motor.rpmSet,
@@ -1394,7 +1394,7 @@ void Robot::printInfo(Stream &s)
           Streamprint(s, "per %3d ", (int)perimeterInside);
         }
 
-        if (lawnSensor.use)
+        if (lawnSensor.used)
         {
           Streamprint(s, "lawn %3d %3d ",
                       (int)lawnSensor.getValue(LawnSensor::FRONT),
@@ -1409,11 +1409,11 @@ void Robot::printInfo(Stream &s)
                     wheels.wheel[Wheel::RIGHT].motor.overloadCounter,
                     cutter.motor.overloadCounter);
         Streamprint(s, "bum %4d %4d ",
-                    bumpers.bumper[Bumpers::LEFT].counter,
-                    bumpers.bumper[Bumpers::RIGHT].counter);
+                    bumpers.bumper[Bumpers::LEFT].getCounter(),
+                    bumpers.bumper[Bumpers::RIGHT].getCounter());
         Streamprint(s, "dro %4d %4d ",
-                    dropSensors.dropSensor[DropSensors::LEFT].counter,
-                    dropSensors.dropSensor[DropSensors::RIGHT].counter);
+                    dropSensors.dropSensor[DropSensors::LEFT].getCounter(),
+                    dropSensors.dropSensor[DropSensors::RIGHT].getCounter());
         Streamprint(s, "son %3d ", sonars.distanceCounter);
         Streamprint(s, "yaw %3d ", (int)(imu.ypr.yaw / PI * 180.0));
         Streamprint(s, "pit %3d ", (int)(imu.ypr.pitch / PI * 180.0));
@@ -1425,7 +1425,7 @@ void Robot::printInfo(Stream &s)
           Streamprint(s, "per %3d ", perimeterCounter);
         }
 
-        if (lawnSensor.use)
+        if (lawnSensor.used)
         {
           Streamprint(s, "lawn %3d ", lawnSensor.getCounter());
         }
@@ -1495,8 +1495,8 @@ void Robot::testOdometer()
   for (;;)
   {
     resetIdleTime();
-    int odoCountLeft = odometer.encoder[Odometer::LEFT].counter;
-    int odoCountRight = odometer.encoder[Odometer::RIGHT].counter;
+    int odoCountLeft = odometer.encoder[Odometer::LEFT].getCounter();
+    int odoCountRight = odometer.encoder[Odometer::RIGHT].getCounter();
     if (odoCountLeft != lastLeft || odoCountRight != lastRight)
     {
       Console.print(F("Press 'f' forward, 'r' reverse, 'z' reset  "));
@@ -1529,8 +1529,8 @@ void Robot::testOdometer()
       }
       if (ch == 'z')
       {
-        odometer.encoder[Odometer::LEFT].counter = 0;
-        odometer.encoder[Odometer::RIGHT].counter = 0;
+        odometer.encoder[Odometer::LEFT].clearCounter();
+        odometer.encoder[Odometer::RIGHT].clearCounter();
       }
     }
   };
@@ -1712,13 +1712,13 @@ void Robot::readSerial()
       case 'm':
         if (stateCurr == STATE_OFF || stateCurr == STATE_MANUAL)
         {
-          cutter.enableOverride = false;
+          cutter.setEnableOverriden(false);
         }
         else
         {
-          cutter.enableOverride = !cutter.enableOverride;
+          cutter.toggleEnableOverriden();
         }
-        cutter.enable = !cutter.enable; // press 'm' to toggle mower motor
+        cutter.toggleEnabled(); // press 'm' to toggle mower motor
         break;
       case 'c':
         setNextState(STATE_STATION, 0); // press 'c' to simulate in station
@@ -1747,7 +1747,7 @@ void Robot::readSerial()
         break;
       case '1':
         // press '1' for Automode
-        cutter.enable = true;
+        cutter.enable();
         //motorMowModulate = false;
         setNextState(STATE_FORWARD, 0);
         break;
@@ -1757,18 +1757,14 @@ void Robot::readSerial()
 
 void Robot::checkButton()
 {
-  unsigned long curMillis = millis();
-  if (!button.use || curMillis < button.nextTimeCheck)
+  boolean buttonPressed = false;
+  if (button.isTimeToCheck())
   {
-    return;
+    buttonPressed = button.isPressed();
   }
 
-  button.nextTimeCheck = curMillis + 50;
-  boolean buttonPressed = button.isPressed();
-  if ((!buttonPressed && button.getCounter() > 0) ||
-      (buttonPressed && curMillis >= button.nextTime))
+  if ((!buttonPressed && button.getCounter() > 0) || (buttonPressed && button.isTimeToRun()))
   {
-    button.nextTime = curMillis + 1000;
     if (buttonPressed)
     {
       Console.println(F("buttonPressed"));
@@ -1790,21 +1786,15 @@ void Robot::checkButton()
         switch (button.getCounter())
         {
           case 1:
-            /*if ((perimeterUse) && (!perimeter.isInside())){
-             Console.println("start inside perimeter!");
-             addErrorCounter(ERR_PERIMETER_TIMEOUT);
-             setNextState(STATE_ERROR, 0);
-             } else {*/
-            // start normal with mowing
-            cutter.enable = true;
-            //motorMowModulate = true;
+            // start normal with random mowing
+            cutter.enable();
             mowPatternCurr = MOW_RANDOM;
             setNextState(STATE_FORWARD, 0);
-            //}
             break;
 
           case 2:
-            cutter.enable = true;
+            // start normal with bidir mowing
+            cutter.enable();
             mowPatternCurr = MOW_BIDIR;
             setNextState(STATE_FORWARD, 0);
             break;
@@ -1816,7 +1806,6 @@ void Robot::checkButton()
 
           case 4:
             // start normal without perimeter
-            //motorMowEnable = false;
             perimeterUse = false;
             setNextState(STATE_FORWARD, 0);
             break;
@@ -1832,16 +1821,15 @@ void Robot::checkButton()
             break;
 
           case 7:
-            // start normal with mowing in lanes
-            cutter.enable = true;
-            //motorMowModulate = true;
+            // start normal with lanes mowing
+            cutter.enable();
             mowPatternCurr = MOW_LANES;
             setNextState(STATE_FORWARD, 0);
             break;
         }
       }
 
-      button.resetCounter();
+      button.clearCounter();
     }
   }
 }
@@ -1955,15 +1943,13 @@ void Robot::readSensors()
     }
   }
 
-  if (lawnSensor.use && curMillis >= lawnSensor.nextTimeRead)
+  if (lawnSensor.isTimeToRead())
   {
-    lawnSensor.nextTimeRead = curMillis + 100;
     lawnSensor.read();
   }
 
-  if (lawnSensor.use && curMillis >= lawnSensor.nextTimeCheck)
+  if (lawnSensor.isTimeToCheck())
   {
-    lawnSensor.nextTimeCheck = curMillis + 2000;
     lawnSensor.check();
   }
 
@@ -1974,15 +1960,13 @@ void Robot::readSensors()
     sonars.ping();
   }
 
-  if (bumpers.use && curMillis >= bumpers.nextTime)
+  if (bumpers.isTimeToRun())
   {
-    bumpers.nextTime = curMillis + 100;
     bumpers.check();
   }
 
-  if (dropSensors.use && curMillis >= dropSensors.nextTime)
+  if (dropSensors.isTimeToRun())
   {
-    dropSensors.nextTime = curMillis + 100;
     dropSensors.check();
   }
 
@@ -2116,10 +2100,9 @@ void Robot::readSensors()
     //chgCurrent = current;
   }
 
-  if (rainSensor.use && curMillis >= rainSensor.nextTime)
+  if (rainSensor.isTimeToRun())
   {
     // read rain sensor
-    rainSensor.nextTime = curMillis + 5000;
     rainSensor.check();
   }
 }
@@ -2128,7 +2111,7 @@ void Robot::setDefaults()
 {
   wheels.wheel[Wheel::LEFT].motor.rpmSet = 0;
   wheels.wheel[Wheel::RIGHT].motor.rpmSet = 0;
-  cutter.enable = false;
+  cutter.disable();
 }
 
 // set state machine new state
@@ -2167,7 +2150,7 @@ void Robot::setNextState(byte stateNew, byte dir)
     {
       stateNew = STATE_STATION_CHECK;
       setActuator(ACT_CHGRELAY, 0);
-      cutter.enable = false;
+      cutter.disable();
     }
   }
   // evaluate new state
@@ -2189,7 +2172,7 @@ void Robot::setNextState(byte stateNew, byte dir)
   {
     wheels.wheel[Wheel::LEFT].motor.rpmSet = wheels.wheel[Wheel::LEFT].motor.rpmMax;
     wheels.wheel[Wheel::RIGHT].motor.rpmSet = wheels.wheel[Wheel::RIGHT].motor.rpmMax;
-    cutter.enable = true;
+    cutter.enable();
     stateEndTime = curMillis + stationForwTime + wheels.wheel[Wheel::LEFT].motor.zeroSettleTime;
   }
   else if (stateNew == STATE_STATION_CHECK)
@@ -2286,7 +2269,7 @@ void Robot::setNextState(byte stateNew, byte dir)
   }
   if (stateNew == STATE_REMOTE)
   {
-    cutter.enable = true;
+    cutter.enable();
     //motorMowModulate = false;
   }
   if (stateNew == STATE_STATION)
@@ -2311,7 +2294,7 @@ void Robot::setNextState(byte stateNew, byte dir)
   }
   if (stateNew == STATE_ERROR)
   {
-    cutter.enable = false;
+    cutter.disable();
     wheels.wheel[Wheel::LEFT].motor.rpmSet = 0;
     wheels.wheel[Wheel::RIGHT].motor.rpmSet = 0;
     setActuator(ACT_CHGRELAY, 0);
@@ -2555,7 +2538,7 @@ void Robot::checkTimer()
             if (stateCurr == STATE_STATION || stateCurr == STATE_OFF)
             {
               Console.println(F("timer start triggered"));
-              cutter.enable = true;
+              cutter.enable();
               setNextState(STATE_FORWARD, 0);
             }
           }
@@ -2620,13 +2603,13 @@ void Robot::checkPower()
     if (curMillis >= cutter.motor.lastTimeStucked + 30000)
     { // wait 30 seconds before switching on again
       errorCounter[ERR_MOW_SENSE] = 0;
-      cutter.enable = true;
+      cutter.enable();
     }
   }
 
   if (cutter.motor.overloadCounter >= 30)
   { //ignore motorMowPower for 3 seconds
-    cutter.enable = false;
+    cutter.disable();
     Console.println("Error: Motor mow current");
     addErrorCounter(ERR_MOW_SENSE);
     cutter.motor.lastTimeStucked = curMillis;
@@ -2864,7 +2847,7 @@ void Robot::checkPerimeterFind()
 // check lawn
 void Robot::checkLawn()
 {
-  if (!lawnSensor.use)
+  if (!lawnSensor.used)
   {
     return;
   }
@@ -2888,12 +2871,12 @@ void Robot::checkLawn()
 
 void Robot::checkRain()
 {
-  if (!rainSensor.use)
+  if (!rainSensor.used)
   {
     return;
   }
 
-  if (rainSensor.raining)
+  if (rainSensor.isRaining())
   {
     Console.println(F("RAIN"));
     if (perimeterUse)
@@ -3060,8 +3043,8 @@ void Robot::checkIfStucked()
     if (stateCurr != STATE_MANUAL &&
         stateCurr != STATE_REMOTE &&
         gpsSpeed <= stuckedIfGpsSpeedBelow &&
-        odometer.encoder[LEFT].wheelRpmCurr != 0 &&
-        odometer.encoder[RIGHT].wheelRpmCurr != 0 &&
+        odometer.encoder[LEFT].getWheelRpmCurr() != 0 &&
+        odometer.encoder[RIGHT].getWheelRpmCurr() != 0 &&
         millis() > stateStartTime + gpsSpeedIgnoreTime)
     {
       robotIsStuckedCounter++;
@@ -3081,7 +3064,7 @@ void Robot::checkIfStucked()
           && (stateCurr != STATE_REMOTE)
           && (stateCurr != STATE_ERROR))
       {
-        cutter.enable = true;
+        cutter.enable();
         errorCounterMax[ERR_STUCK] = 0;
       }
       return;
@@ -3089,7 +3072,7 @@ void Robot::checkIfStucked()
 
     if (robotIsStuckedCounter >= 5)
     {
-      cutter.enable = false;
+      cutter.disable();
       if (errorCounterMax[ERR_STUCK] >= 3)
       {   // robot is definately stucked and unable to move
         Console.println(F("Error: Mower is stucked"));
@@ -3101,14 +3084,14 @@ void Robot::checkIfStucked()
       {   // mower tries 3 times to get unstucked
         if (stateCurr == STATE_FORWARD)
         {
-          cutter.enable = false;
+          cutter.disable();
           addErrorCounter(ERR_STUCK);
           setMotorPWMs(0, 0, false);
           reverseOrBidir(RIGHT);
         }
         else if (stateCurr == STATE_ROLL)
         {
-          cutter.enable = false;
+          cutter.disable();
           addErrorCounter(ERR_STUCK);
           setMotorPWMs(0, 0, false);
           setNextState(STATE_FORWARD, 0);

@@ -12,21 +12,12 @@
 
 class Bumper
 {
-
-  private:
-    uint8_t pin {};
-
   public:
-    uint16_t counter {};
-    boolean hit { false };
+    void setup(const uint8_t pin);
+    void simHit(void);
+    void check(void);
 
-    void setup(const uint8_t pin)
-    {
-      this->pin = pin;
-      pinMode(pin, INPUT_PULLUP);
-    }
-
-    bool isHit(void)
+    bool isHit(void) const
     {
       return hit;
     }
@@ -36,25 +27,20 @@ class Bumper
       hit = false;
     }
 
-    void simHit(void)
+    uint16_t getCounter() const
     {
-      hit = true;
-      counter++;
+      return counter;
     }
 
-    void check(void)
-    {
-      if (digitalRead(pin) == LOW)
-      {
-        hit = true;
-        counter++;
-      }
-    }
-
-    void resetCounter(void)
+    void clearCounter(void)
     {
       counter = 0;
     }
+
+  private:
+    uint8_t pin {};
+    uint16_t counter {};
+    boolean hit { false };
 };
 
 class Bumpers
@@ -67,21 +53,16 @@ class Bumpers
       END
     };
 
-    bool use;
-    unsigned long nextTime;
+    bool used { false };
     Bumper bumper[END];
 
-    void check()
-    {
-      bumper[LEFT].check();
-      bumper[RIGHT].check();
-    }
+    void check();
+    void clearHit();
+    bool isTimeToRun();
 
-    void clearHit()
-    {
-      bumper[LEFT].clearHit();
-      bumper[RIGHT].clearHit();
-    }
+private:
+    unsigned long nextTime {};
+    unsigned int timeBetweenRuns { 100 };
 };
 
 #endif /* BUMPER_H */

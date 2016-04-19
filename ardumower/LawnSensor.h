@@ -11,13 +11,14 @@
 class LawnSensor
 {
   public:
-    bool use { false };
+    bool used { false };
     unsigned long nextTimeRead {};
     unsigned long nextTimeCheck {};
     enum lawnSensorE
     {
       FRONT,
-      BACK
+      BACK,
+      END
     };
 
     void setup(const uint8_t pinSendFront, const uint8_t pinReceiveFront,
@@ -38,11 +39,7 @@ class LawnSensor
        detected = false;
      }
 
-    void simDetected(void)
-    {
-      detected = true;
-      counter++;
-    }
+    void simDetected(void);
 
     uint16_t getCounter(void)
     {
@@ -51,6 +48,8 @@ class LawnSensor
 
     void read();
     void check();
+    bool isTimeToRead();
+    bool isTimeToCheck();
 
   private:
     uint8_t pinSend[2]{};
@@ -59,6 +58,8 @@ class LawnSensor
     boolean detected{false};
     float value[2]{};     // lawn sensor capacity (time)
     float valueOld[2]{};  // lawn sensor capacity (time)
+    unsigned int timeBetweenReads { 100 };
+    unsigned int timeBetweenChecks { 2000 };
 
     uint16_t measureLawnCapacity(const uint8_t pinSend, const uint8_t pinReceive);
 

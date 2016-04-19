@@ -75,31 +75,31 @@ class Gps
                       unsigned long *age = 0);
 
     // signed altitude in centimeters (from GPGGA sentence)
-    inline long altitude()
+    long altitude() const
     {
       return _altitude;
     }
 
     // course in last full GPRMC sentence in 100th of a degree
-    inline unsigned long course()
+    unsigned long course() const
     {
       return _course;
     }
 
     // speed in last full GPRMC sentence in 100ths of a knot
-    inline unsigned long speed()
+    unsigned long speed() const
     {
       return _speed;
     }
 
     // satellites used in last full GPGGA sentence
-    inline unsigned short satellites()
+    unsigned short satellites() const
     {
       return _numsats;
     }
 
     // horizontal dilution of precision in 100ths
-    inline unsigned long hdop()
+    unsigned long hdop() const
     {
       return _hdop;
     }

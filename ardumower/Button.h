@@ -12,27 +12,17 @@
 
 class Button
 {
-  private:
-    uint8_t pin{};
-    uint8_t counter{};
-
   public:
-    bool use { false };
+    bool used { false };
     unsigned long nextTime {};
     unsigned long nextTimeCheck {};
 
-    void setup(const uint8_t pin)
-    {
-      this->pin = pin;
-      pinMode(pin, INPUT_PULLUP);
-    }
+    void setup(const uint8_t pin);
+    bool isPressed(void);
+    bool isTimeToCheck();
+    bool isTimeToRun();
 
-    bool isPressed(void)
-    {
-      return (digitalRead(this->pin) == LOW);
-    }
-
-    uint8_t getCounter(void)
+    uint8_t getCounter(void) const
     {
       return counter;
     }
@@ -42,10 +32,16 @@ class Button
       counter++;
     }
 
-    void resetCounter(void)
+    void clearCounter(void)
     {
       counter = 0;
     }
+
+  private:
+    uint8_t pin {};
+    uint8_t counter {};
+    unsigned int timeBetweenChecks { 50 };
+    unsigned int timeBetweenRuns { 1000 };
 };
 
 #endif /* BUTTON_H */

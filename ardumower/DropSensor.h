@@ -12,57 +12,48 @@
 
 class DropSensor
 {
-  private:
-    uint8_t pin {};
-    boolean detected { false };
-
   public:
-    uint8_t contactType { NO }; // contact 1=NC 0=NO against GND
-    uint16_t counter {};
-
     enum dropSensorContactE
     {
       NO = 0,
       NC = 1
     };
 
-    void setup(const uint8_t pin, const boolean contactType)
-    {
-      this->pin = pin;
-      this->contactType = contactType;
+    void setup(const uint8_t pin, const boolean contactType);
+    void simDetected();
+    void check();
 
-      pinMode(pin, INPUT_PULLUP);
-    }
 
-    bool isDetected(void)
+    bool isDetected()
     {
       return detected;
     }
 
-    void simDetected(void)
-    {
-      detected = true;
-      counter++;
-    }
-
-    void clearDetected(void)
+    void clearDetected()
     {
       detected = false;
     }
 
-    void check(void)
+    uint16_t getCounter() const
     {
-      if (digitalRead(pin) == contactType)
-      {
-        detected = true;
-        counter++;
-      }
+      return counter;
     }
 
-    void resetCounter(void)
+    void clearCounter()
     {
       counter = 0;
     }
+
+    uint8_t getContactType() const
+    {
+      return contactType;
+    }
+
+  private:
+    uint8_t pin {};
+    boolean detected { false };
+    uint8_t contactType { NO }; // contact 1=NC 0=NO against GND
+    uint16_t counter {};
 };
 
 class DropSensors
@@ -75,21 +66,16 @@ class DropSensors
       END
     };
 
-    bool use;
-    unsigned long nextTime;
+    bool used;
     DropSensor dropSensor[END];
 
-    void check(void)
-    {
-      dropSensor[LEFT].check();
-      dropSensor[RIGHT].check();
-    }
+    void check();
+    void clearDetected();
+    bool isTimeToRun();
 
-    void clearDetected(void)
-    {
-      dropSensor[LEFT].clearDetected();
-      dropSensor[RIGHT].clearDetected();
-    }
+  private:
+    unsigned long nextTime;
+    unsigned int timeBetweenRuns { 100 };
 };
 
 #endif /* DROP_SENSOR_H */

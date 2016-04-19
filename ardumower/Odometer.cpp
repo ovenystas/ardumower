@@ -49,8 +49,8 @@ void Odometer::calc(const Imu &imu)
   static int lastOdoLeft = 0;
   static int lastOdoRight = 0;
 
-  int odoLeft = encoder[Odometer::LEFT].counter;
-  int odoRight = encoder[Odometer::RIGHT].counter;
+  int odoLeft = encoder[Odometer::LEFT].getCounter();
+  int odoRight = encoder[Odometer::RIGHT].getCounter();
 
   int ticksLeft = odoLeft - lastOdoLeft;
   int ticksRight = odoRight - lastOdoRight;
@@ -65,13 +65,13 @@ void Odometer::calc(const Imu &imu)
   float thetaOld = theta;
   theta += wheel_theta;
 
-  encoder[Odometer::LEFT].wheelRpmCurr =
+  encoder[Odometer::LEFT].setWheelRpmCurr(
       double((((float)ticksLeft / (float)ticksPerRevolution) /
-              (float)(millis() - lastWheelRpmTime)) * 60000.0);
+              (float)(millis() - lastWheelRpmTime)) * 60000.0));
 
-  encoder[Odometer::RIGHT].wheelRpmCurr =
+  encoder[Odometer::RIGHT].setWheelRpmCurr(
       double((((float)ticksRight / (float)ticksPerRevolution) /
-              (float)(millis() - lastWheelRpmTime)) * 60000.0);
+              (float)(millis() - lastWheelRpmTime)) * 60000.0));
 
   lastWheelRpmTime = millis();
 

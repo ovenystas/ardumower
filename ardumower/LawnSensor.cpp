@@ -71,3 +71,31 @@ void LawnSensor::check()
   valueOld[FRONT] = value[FRONT];
   valueOld[BACK] = value[BACK];
 }
+
+void LawnSensor::simDetected(void)
+{
+  detected = true;
+  counter++;
+}
+
+bool LawnSensor::isTimeToRead()
+{
+  unsigned long curMillis = millis();
+  if (used && curMillis >= nextTimeRead)
+  {
+    nextTimeRead = curMillis + timeBetweenReads;
+    return true;
+  }
+  return false;
+}
+
+bool LawnSensor::isTimeToCheck()
+{
+  unsigned long curMillis = millis();
+  if (used && curMillis >= nextTimeCheck)
+  {
+    nextTimeCheck = curMillis + timeBetweenChecks;
+    return true;
+  }
+  return false;
+}
