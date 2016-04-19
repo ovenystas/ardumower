@@ -31,7 +31,7 @@
 #define HMC5883L (0x1E)          // HMC5883L compass sensor (GY-80 PCB)
 #define L3G4200D (0xD2 >> 1)     // L3G4200D gyro sensor (GY-80 PCB)
 
-#define PIN_LED 13
+//#define PIN_LED 13
 
 #define ADDR 600
 #define MAGIC 6
@@ -497,7 +497,7 @@ float IMU::sermin(float oldvalue, float newvalue)
   if (newvalue < oldvalue)
   {
     Console.print(".");
-    digitalWrite(PIN_LED, true);
+    //digitalWrite(PIN_LED, true);
   }
   return min(oldvalue, newvalue);
 }
@@ -507,7 +507,7 @@ float IMU::sermax(float oldvalue, float newvalue)
   if (newvalue > oldvalue)
   {
     Console.print(".");
-    digitalWrite(PIN_LED, true);
+    //digitalWrite(PIN_LED, true);
   }
   return max(oldvalue, newvalue);
 }

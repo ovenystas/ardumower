@@ -48,18 +48,18 @@ class Motor
     int zeroSettleTime {};
     unsigned long zeroTimeout {};
 
-    void setup(const float acceleration, const int maxPwm, const float maxPower,
-               const bool modulate, const int maxRpm, const int setRpm,
+    void setup(const float acceleration, const int pwmMax, const float powerMax,
+               const bool regulate, const int rpmMax, const int rpmSet,
                const float senseScale, const uint8_t pinDir,
                const uint8_t pinPwm, const uint8_t pinSense,
                const uint8_t pinRpm, const uint8_t pinBrake)
     {
       this->acceleration = acceleration;
-      this->pwmMax = maxPwm;
-      this->powerMax = maxPower;
-      this->regulate = modulate;
-      this->rpmMax = maxRpm;
-      this->rpmSet = setRpm;
+      this->pwmMax = pwmMax;
+      this->powerMax = powerMax;
+      this->regulate = regulate;
+      this->rpmMax = rpmMax;
+      this->rpmSet = rpmSet;
       this->senseScale = senseScale;
       this->pinDir = pinDir;
       this->pinPwm = pinPwm;
@@ -67,10 +67,13 @@ class Motor
       this->pinRpm = pinRpm;
       this->pinBrake = pinBrake;
       pinMode(pinDir, OUTPUT);
+      digitalWrite(pinDir, LOW);
       pinMode(pinPwm, OUTPUT);
+      digitalWrite(pinDir, LOW);
       pinMode(pinSense, INPUT);
       pinMode(pinRpm, INPUT);
       pinMode(pinBrake, OUTPUT);
+      digitalWrite(pinDir, LOW);
     }
 
     bool readRpmPin()

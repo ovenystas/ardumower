@@ -27,8 +27,6 @@
 #include "adcman.h"
 #include "drivers.h"
 
-//#define PIN_LED 13
-
 // developer test to be activated in mower.cpp:
 #ifdef USE_DEVELOPER_TEST
 // more motor driver friendly signal (receiver)

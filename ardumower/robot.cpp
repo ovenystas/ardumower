@@ -1543,55 +1543,73 @@ void Robot::testMotors()
 {
   wheels.wheel[Wheel::LEFT].motor.pwmCur = 0;
   wheels.wheel[Wheel::RIGHT].motor.pwmCur = 0;
-  setMotorPWMs(wheels.wheel[Wheel::LEFT].motor.pwmCur, wheels.wheel[Wheel::RIGHT].motor.pwmCur, false);
+  setMotorPWMs(wheels.wheel[Wheel::LEFT].motor.pwmCur,
+               wheels.wheel[Wheel::RIGHT].motor.pwmCur,
+               false);
 
-  Console.println(F("testing left motor (forward) half speed..."));
+  Console.println(F("testing left motor (forward) full speed..."));
   delay(1000);
-  wheels.wheel[Wheel::LEFT].motor.pwmCur = wheels.wheel[Wheel::LEFT].motor.pwmMax >> 1;
+  wheels.wheel[Wheel::LEFT].motor.pwmCur = wheels.wheel[Wheel::LEFT].motor.pwmMax;
   wheels.wheel[Wheel::RIGHT].motor.pwmCur = 0;
-  setMotorPWMs(wheels.wheel[Wheel::LEFT].motor.pwmCur, wheels.wheel[Wheel::RIGHT].motor.pwmCur, false);
+  setMotorPWMs(wheels.wheel[Wheel::LEFT].motor.pwmCur,
+               wheels.wheel[Wheel::RIGHT].motor.pwmCur,
+               false);
   delayInfo(5000);
   wheels.wheel[Wheel::LEFT].motor.pwmCur = 0;
   wheels.wheel[Wheel::RIGHT].motor.pwmCur = 0;
-  setMotorPWMs(wheels.wheel[Wheel::LEFT].motor.pwmCur, wheels.wheel[Wheel::RIGHT].motor.pwmCur, false);
+  setMotorPWMs(wheels.wheel[Wheel::LEFT].motor.pwmCur,
+               wheels.wheel[Wheel::RIGHT].motor.pwmCur,
+               false);
 
   Console.println(F("testing left motor (reverse) full speed..."));
   delay(1000);
   wheels.wheel[Wheel::LEFT].motor.pwmCur = -wheels.wheel[Wheel::LEFT].motor.pwmMax;
   wheels.wheel[Wheel::RIGHT].motor.pwmCur = 0;
-  setMotorPWMs(wheels.wheel[Wheel::LEFT].motor.pwmCur, wheels.wheel[Wheel::RIGHT].motor.pwmCur, false);
+  setMotorPWMs(wheels.wheel[Wheel::LEFT].motor.pwmCur,
+               wheels.wheel[Wheel::RIGHT].motor.pwmCur,
+               false);
   delayInfo(5000);
   wheels.wheel[Wheel::LEFT].motor.pwmCur = 0;
   wheels.wheel[Wheel::RIGHT].motor.pwmCur = 0;
-  setMotorPWMs(wheels.wheel[Wheel::LEFT].motor.pwmCur, wheels.wheel[Wheel::RIGHT].motor.pwmCur, false);
+  setMotorPWMs(wheels.wheel[Wheel::LEFT].motor.pwmCur,
+               wheels.wheel[Wheel::RIGHT].motor.pwmCur,
+               false);
 
-  Console.println(F("testing right motor (forward) half speed..."));
+  Console.println(F("testing right motor (forward) full speed..."));
   delay(1000);
   wheels.wheel[Wheel::LEFT].motor.pwmCur = 0;
-  wheels.wheel[Wheel::RIGHT].motor.pwmCur = wheels.wheel[Wheel::LEFT].motor.pwmMax >> 1;
-  setMotorPWMs(wheels.wheel[Wheel::LEFT].motor.pwmCur, wheels.wheel[Wheel::RIGHT].motor.pwmCur, false);
+  wheels.wheel[Wheel::RIGHT].motor.pwmCur = wheels.wheel[Wheel::LEFT].motor.pwmMax;
+  setMotorPWMs(wheels.wheel[Wheel::LEFT].motor.pwmCur,
+               wheels.wheel[Wheel::RIGHT].motor.pwmCur,
+               false);
   delayInfo(5000);
   wheels.wheel[Wheel::LEFT].motor.pwmCur = 0;
   wheels.wheel[Wheel::RIGHT].motor.pwmCur = 0;
-  setMotorPWMs(wheels.wheel[Wheel::LEFT].motor.pwmCur, wheels.wheel[Wheel::RIGHT].motor.pwmCur, false);
+  setMotorPWMs(wheels.wheel[Wheel::LEFT].motor.pwmCur,
+               wheels.wheel[Wheel::RIGHT].motor.pwmCur,
+               false);
 
   Console.println(F("testing right motor (reverse) full speed..."));
   delay(1000);
   wheels.wheel[Wheel::LEFT].motor.pwmCur = 0;
   wheels.wheel[Wheel::RIGHT].motor.pwmCur = -wheels.wheel[Wheel::LEFT].motor.pwmMax;
-  setMotorPWMs(wheels.wheel[Wheel::LEFT].motor.pwmCur, wheels.wheel[Wheel::RIGHT].motor.pwmCur, false);
+  setMotorPWMs(wheels.wheel[Wheel::LEFT].motor.pwmCur,
+               wheels.wheel[Wheel::RIGHT].motor.pwmCur,
+               false);
   delayInfo(5000);
   wheels.wheel[Wheel::LEFT].motor.pwmCur = 0;
   wheels.wheel[Wheel::RIGHT].motor.pwmCur = 0;
-  setMotorPWMs(wheels.wheel[Wheel::LEFT].motor.pwmCur, wheels.wheel[Wheel::RIGHT].motor.pwmCur, false);
+  setMotorPWMs(wheels.wheel[Wheel::LEFT].motor.pwmCur,
+               wheels.wheel[Wheel::RIGHT].motor.pwmCur,
+               false);
 }
 
 void Robot::menu()
 {
   char ch;
+  printMenu();
   for (;;)
   {
-    printMenu();
     resetIdleTime();
     imu.update();
     if (Console.available() > 0)
@@ -1645,7 +1663,10 @@ void Robot::menu()
           setNextState(STATE_OFF, 0);
           Console.println(F("ALL ERRORS ARE DELETED"));
           break;
+        default:
+          continue;
       }
+      printMenu();
     }
     delay(10);
   }
