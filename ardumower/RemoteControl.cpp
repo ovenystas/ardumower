@@ -30,6 +30,8 @@
 #include "RemoteControl.h"
 #include "Robot.h"
 
+#define TOGGLE(x) (x) = !(x)
+
 RemoteControl::RemoteControl()
 {
   pfodCmdComplete = false;
@@ -38,11 +40,12 @@ RemoteControl::RemoteControl()
   testmode = 0;
   nextPlotTime = 0;
   perimeterCaptureIdx = 0;
+  robot_p = nullptr;
 }
 
-void RemoteControl::setRobot(Robot *aRobot)
+void RemoteControl::setRobot(Robot* robot_p)
 {
-  this->robot = aRobot;
+  this->robot_p = robot_p;
 }
 
 void RemoteControl::initSerial(int baudrate)
@@ -52,20 +55,15 @@ void RemoteControl::initSerial(int baudrate)
 
 float RemoteControl::stringToFloat(String &s)
 {
-  float v;
   char tmp[20];
   s.toCharArray(tmp, sizeof(tmp));
-  v = atof(tmp);
-  //v = strtod(tmp, NULL);
-  /*Console.print(s);
-   Console.print("=");
-   Console.println(v, 6);   */
+  float v = atof(tmp);
   return v;
 }
 
-void RemoteControl::sendYesNo(int value)
+void RemoteControl::sendYesNo(bool value)
 {
-  if (value == 1)
+  if (value)
   {
     Bluetooth.print("YES");
   }
@@ -75,9 +73,9 @@ void RemoteControl::sendYesNo(int value)
   }
 }
 
-void RemoteControl::sendOnOff(int value)
+void RemoteControl::sendOnOff(bool value)
 {
-  if (value == 1)
+  if (value)
   {
     Bluetooth.print("ON");
   }
@@ -133,11 +131,11 @@ void RemoteControl::sendSlider(String cmd, String title, float value,
   Bluetooth.print("~");
   Bluetooth.print(title);
   Bluetooth.print(" `");
-  Bluetooth.print(((int) (value / scale)));
+  Bluetooth.print(((int)(value / scale)));
   Bluetooth.print("`");
-  Bluetooth.print(((int) (maxvalue / scale)));
+  Bluetooth.print(((int)(maxvalue / scale)));
   Bluetooth.print("`");
-  Bluetooth.print(((int) (minvalue / scale)));
+  Bluetooth.print(((int)(minvalue / scale)));
   Bluetooth.print("~ ~");
   if (scale == 10)
   {
@@ -259,7 +257,7 @@ void RemoteControl::sendMainMenu(boolean update)
   {
     Bluetooth.print(F("{.Ardumower"));
     Bluetooth.print(" (");
-    Bluetooth.print(robot->name);
+    Bluetooth.print(robot_p->name);
     Bluetooth.print(")");
   }
   Bluetooth.print(F("|r~Commands|n~Manual|s~Settings|in~Info|c~Test compass|"
@@ -340,45 +338,45 @@ void RemoteControl::sendErrorMenu(boolean update)
   }
   Bluetooth.print(F("|z00~Reset counters"));
   Bluetooth.print(F("|zz~ADC calibration "));
-  Bluetooth.print(robot->errorCounterMax[ERR_ADC_CALIB]);
+  Bluetooth.print(robot_p->errorCounterMax[ERR_ADC_CALIB]);
   Bluetooth.print(F("|zz~Charger "));
-  Bluetooth.print(robot->errorCounterMax[ERR_CHARGER]);
+  Bluetooth.print(robot_p->errorCounterMax[ERR_CHARGER]);
   Bluetooth.print(F("|zz~Battery "));
-  Bluetooth.print(robot->errorCounterMax[ERR_BATTERY]);
+  Bluetooth.print(robot_p->errorCounterMax[ERR_BATTERY]);
   Bluetooth.print(F("|zz~Motor left "));
-  Bluetooth.print(robot->errorCounterMax[ERR_MOTOR_LEFT]);
+  Bluetooth.print(robot_p->errorCounterMax[ERR_MOTOR_LEFT]);
   Bluetooth.print(F("|zz~Motor right "));
-  Bluetooth.print(robot->errorCounterMax[ERR_MOTOR_RIGHT]);
+  Bluetooth.print(robot_p->errorCounterMax[ERR_MOTOR_RIGHT]);
   Bluetooth.print(F("|zz~Motor mow "));
-  Bluetooth.print(robot->errorCounterMax[ERR_MOTOR_MOW]);
+  Bluetooth.print(robot_p->errorCounterMax[ERR_MOTOR_MOW]);
   Bluetooth.print(F("|zz~Mow sense "));
-  Bluetooth.print(robot->errorCounterMax[ERR_MOW_SENSE]);
+  Bluetooth.print(robot_p->errorCounterMax[ERR_MOW_SENSE]);
   Bluetooth.print(F("|zz~Odometer left "));
-  Bluetooth.print(robot->errorCounterMax[ERR_ODOMETER_LEFT]);
+  Bluetooth.print(robot_p->errorCounterMax[ERR_ODOMETER_LEFT]);
   Bluetooth.print(F("|zz~Odometer right "));
-  Bluetooth.print(robot->errorCounterMax[ERR_ODOMETER_RIGHT]);
+  Bluetooth.print(robot_p->errorCounterMax[ERR_ODOMETER_RIGHT]);
   Bluetooth.print(F("|zz~Perimeter timeout "));
-  Bluetooth.print(robot->errorCounterMax[ERR_PERIMETER_TIMEOUT]);
+  Bluetooth.print(robot_p->errorCounterMax[ERR_PERIMETER_TIMEOUT]);
   Bluetooth.print(F("|zz~Perimeter tracking "));
-  Bluetooth.print(robot->errorCounterMax[ERR_TRACKING]);
+  Bluetooth.print(robot_p->errorCounterMax[ERR_TRACKING]);
   Bluetooth.print(F("|zz~IMU comm "));
-  Bluetooth.print(robot->errorCounterMax[ERR_IMU_COMM]);
+  Bluetooth.print(robot_p->errorCounterMax[ERR_IMU_COMM]);
   Bluetooth.print(F("|zz~IMU calibration "));
-  Bluetooth.print(robot->errorCounterMax[ERR_IMU_CALIB]);
+  Bluetooth.print(robot_p->errorCounterMax[ERR_IMU_CALIB]);
   Bluetooth.print(F("|zz~IMU tilt "));
-  Bluetooth.print(robot->errorCounterMax[ERR_IMU_TILT]);
+  Bluetooth.print(robot_p->errorCounterMax[ERR_IMU_TILT]);
   Bluetooth.print(F("|zz~RTC comm "));
-  Bluetooth.print(robot->errorCounterMax[ERR_RTC_COMM]);
+  Bluetooth.print(robot_p->errorCounterMax[ERR_RTC_COMM]);
   Bluetooth.print(F("|zz~RTC data "));
-  Bluetooth.print(robot->errorCounterMax[ERR_RTC_DATA]);
+  Bluetooth.print(robot_p->errorCounterMax[ERR_RTC_DATA]);
   Bluetooth.print(F("|zz~GPS comm "));
-  Bluetooth.print(robot->errorCounterMax[ERR_GPS_COMM]);
+  Bluetooth.print(robot_p->errorCounterMax[ERR_GPS_COMM]);
   Bluetooth.print(F("|zz~GPS data "));
-  Bluetooth.print(robot->errorCounterMax[ERR_GPS_DATA]);
+  Bluetooth.print(robot_p->errorCounterMax[ERR_GPS_DATA]);
   Bluetooth.print(F("|zz~Robot stucked "));
-  Bluetooth.print(robot->errorCounterMax[ERR_STUCK]);
+  Bluetooth.print(robot_p->errorCounterMax[ERR_STUCK]);
   Bluetooth.print(F("|zz~EEPROM data "));
-  Bluetooth.print(robot->errorCounterMax[ERR_EEPROM_DATA]);
+  Bluetooth.print(robot_p->errorCounterMax[ERR_EEPROM_DATA]);
   Bluetooth.println("}");
 }
 
@@ -386,8 +384,8 @@ void RemoteControl::processErrorMenu(String pfodCmd)
 {
   if (pfodCmd == "z00")
   {
-    robot->resetErrorCounters();
-    robot->setNextState(STATE_OFF, 0);
+    robot_p->resetErrorCounters();
+    robot_p->setNextState(STATE_OFF, 0);
   }
   sendErrorMenu(true);
 }
@@ -403,65 +401,69 @@ void RemoteControl::sendMotorMenu(boolean update)
     Bluetooth.print(F("{.Motor`1000"));
   }
   Bluetooth.println(F("|a00~Overload Counter l, r "));
-  Bluetooth.print(robot->wheels.wheel[Wheel::LEFT].motor.overloadCounter);
+  Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.getOverloadCounter());
   Bluetooth.print(", ");
-  Bluetooth.print(robot->wheels.wheel[Wheel::RIGHT].motor.overloadCounter);
+  Bluetooth.print(robot_p->wheels.wheel[Wheel::RIGHT].motor.getOverloadCounter());
   Bluetooth.println(F("|a01~Power in Watt l, r "));
-  Bluetooth.print(robot->wheels.wheel[Wheel::LEFT].motor.powerMeas);
+  Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.getPowerMeas());
   Bluetooth.print(", ");
-  Bluetooth.print(robot->wheels.wheel[Wheel::RIGHT].motor.powerMeas);
+  Bluetooth.print(robot_p->wheels.wheel[Wheel::RIGHT].motor.getPowerMeas());
   Bluetooth.println(F("|a05~motor current in mA l, r "));
-  Bluetooth.print(robot->wheels.wheel[Wheel::LEFT].motor.currentMeas);
+  Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.getCurrentMeas());
   Bluetooth.print(", ");
-  Bluetooth.print(robot->wheels.wheel[Wheel::RIGHT].motor.currentMeas);
+  Bluetooth.print(robot_p->wheels.wheel[Wheel::RIGHT].motor.getCurrentMeas());
   //Console.print("motorpowermax=");
   //Console.println(robot->motorPowerMax);
-  sendSlider("a02", F("Power max"), robot->wheels.wheel[Wheel::LEFT].motor.powerMax, "", 0.1, 100);
-  sendSlider("a03", F("calibrate left motor "), robot->wheels.wheel[Wheel::LEFT].motor.currentMeas,
+  sendSlider("a02", F("Power max"), robot_p->wheels.wheel[Wheel::LEFT].motor.powerMax, "", 0.1, 100);
+  sendSlider("a03", F("calibrate left motor "), robot_p->wheels.wheel[Wheel::LEFT].motor.getCurrentMeas(),
              "", 1, 1000, 0);
-  sendSlider("a04", F("calibrate right motor"), robot->wheels.wheel[Wheel::RIGHT].motor.currentMeas,
+  sendSlider("a04", F("calibrate right motor"), robot_p->wheels.wheel[Wheel::RIGHT].motor.getCurrentMeas(),
              "", 1, 1000, 0);
   Bluetooth.print(F("|a05~Speed l, r"));
-  Bluetooth.print(robot->wheels.wheel[Wheel::LEFT].motor.pwmCur);
+  Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.pwmCur);
   Bluetooth.print(", ");
-  Bluetooth.print(robot->wheels.wheel[Wheel::RIGHT].motor.pwmCur);
-  sendSlider("a06", F("Speed max in rpm"), robot->wheels.wheel[Wheel::LEFT].motor.rpmMax, "", 1, 100);
-  sendSlider("a15", F("Speed max in pwm"), robot->wheels.wheel[Wheel::LEFT].motor.pwmMax, "", 1, 255);
-  sendSlider("a11", F("Accel"), robot->wheels.wheel[Wheel::LEFT].motor.acceleration, "", 1, 2000, 500);
-  sendSlider("a18", F("Power ignore time"), robot->wheels.wheel[Wheel::LEFT].motor.powerIgnoreTime, "", 1,
+  Bluetooth.print(robot_p->wheels.wheel[Wheel::RIGHT].motor.pwmCur);
+  sendSlider("a06", F("Speed max in rpm"), robot_p->wheels.wheel[Wheel::LEFT].motor.rpmMax, "", 1, 100);
+  sendSlider("a15", F("Speed max in pwm"), robot_p->wheels.wheel[Wheel::LEFT].motor.pwmMax, "", 1, 255);
+  sendSlider("a11", F("Accel"), robot_p->wheels.wheel[Wheel::LEFT].motor.acceleration, "", 1, 2000, 500);
+  sendSlider("a18", F("Power ignore time"), robot_p->wheels.wheel[Wheel::LEFT].motor.powerIgnoreTime, "", 1,
              8000);
-  sendSlider("a07", F("Roll time max"), robot->wheels.rollTimeMax, "", 1, 8000);
-  sendSlider("a19", F("Roll time min"), robot->wheels.rollTimeMin, "", 1,
-             (robot->wheels.rollTimeMax - 500));
-  sendSlider("a08", F("Reverse time"), robot->wheels.reverseTime, "", 1, 8000);
-  sendSlider("a09", F("Forw time max"), robot->wheels.forwardTimeMax, "", 10, 80000);
-  sendSlider("a12", F("Bidir speed ratio 1"), robot->wheels.biDirSpeedRatio1, "",
+  sendSlider("a07", F("Roll time max"), robot_p->wheels.rollTimeMax, "", 1, 8000);
+  sendSlider("a19", F("Roll time min"), robot_p->wheels.rollTimeMin, "", 1,
+             (robot_p->wheels.rollTimeMax - 500));
+  sendSlider("a08", F("Reverse time"), robot_p->wheels.reverseTime, "", 1, 8000);
+  sendSlider("a09", F("Forw time max"), robot_p->wheels.forwardTimeMax, "", 10, 80000);
+  sendSlider("a12", F("Bidir speed ratio 1"), robot_p->wheels.biDirSpeedRatio1, "",
              0.01, 1.0);
-  sendSlider("a13", F("Bidir speed ratio 2"), robot->wheels.biDirSpeedRatio2, "",
+  sendSlider("a13", F("Bidir speed ratio 2"), robot_p->wheels.biDirSpeedRatio2, "",
              0.01, 1.0);
-  sendPIDSlider("a14", "RPM", robot->wheels.wheel[Wheel::LEFT].motor.pid, 0.01, 3.0);
+  sendPIDSlider("a14", "RPM", robot_p->wheels.wheel[Wheel::LEFT].motor.pid, 0.01, 3.0);
   Bluetooth.println(F("|a10~Testing is"));
+
   switch (testmode)
   {
     case 0:
       Bluetooth.print(F("OFF"));
       break;
+
     case 1:
       Bluetooth.print(F("Left motor forw"));
       break;
+
     case 2:
       Bluetooth.print(F("Right motor forw"));
       break;
   }
+
   Bluetooth.print(F("|a14~for config file:"));
   Bluetooth.print(F("motorSenseScale l, r"));
-  Bluetooth.print(robot->wheels.wheel[Wheel::LEFT].motor.senseScale);
+  Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.senseScale);
   Bluetooth.print(", ");
-  Bluetooth.print(robot->wheels.wheel[Wheel::RIGHT].motor.senseScale);
+  Bluetooth.print(robot_p->wheels.wheel[Wheel::RIGHT].motor.senseScale);
   Bluetooth.print(F("|a16~Swap left direction "));
-  sendYesNo(robot->wheels.wheel[Wheel::LEFT].motor.swapDir);
+  sendYesNo(robot_p->wheels.wheel[Wheel::LEFT].motor.swapDir);
   Bluetooth.print(F("|a17~Swap right direction "));
-  sendYesNo(robot->wheels.wheel[Wheel::RIGHT].motor.swapDir);
+  sendYesNo(robot_p->wheels.wheel[Wheel::RIGHT].motor.swapDir);
   Bluetooth.println("}");
 }
 
@@ -469,74 +471,76 @@ void RemoteControl::processMotorMenu(String pfodCmd)
 {
   if (pfodCmd.startsWith("a02"))
   {
-    processSlider(pfodCmd, robot->wheels.wheel[Wheel::LEFT].motor.powerMax, 0.1);
-    //Console.print("motorpowermax=");
-    //Console.println(robot->motorPowerMax);
+    processSlider(pfodCmd, robot_p->wheels.wheel[Wheel::LEFT].motor.powerMax, 0.1);
   }
 
   else if (pfodCmd.startsWith("a03"))
   {
-    processSlider(pfodCmd, robot->wheels.wheel[Wheel::LEFT].motor.currentMeas, 1);
-    robot->wheels.wheel[Wheel::LEFT].motor.senseScale = robot->wheels.wheel[Wheel::LEFT].motor.senseScale /
-        max(0, (float)robot->wheels.wheel[Wheel::LEFT].motor.senseAdc);
+    float currentMeas = robot_p->wheels.wheel[Wheel::LEFT].motor.getCurrentMeas();
+    processSlider(pfodCmd, currentMeas, 1);
+    robot_p->wheels.wheel[Wheel::LEFT].motor.senseScale =
+        robot_p->wheels.wheel[Wheel::LEFT].motor.senseScale /
+        max(0, (float)robot_p->wheels.wheel[Wheel::LEFT].motor.getSenseAdc());
   }
   else if (pfodCmd.startsWith("a04"))
   {
-    processSlider(pfodCmd, robot->wheels.wheel[Wheel::RIGHT].motor.currentMeas, 1);
-    robot->wheels.wheel[Wheel::RIGHT].motor.senseScale = robot->wheels.wheel[Wheel::RIGHT].motor.senseScale /
-        max(0, (float )robot->wheels.wheel[Wheel::RIGHT].motor.senseAdc);
+    float currentMeas = robot_p->wheels.wheel[Wheel::RIGHT].motor.getCurrentMeas();
+    processSlider(pfodCmd, currentMeas, 1);
+    robot_p->wheels.wheel[Wheel::RIGHT].motor.senseScale =
+        robot_p->wheels.wheel[Wheel::RIGHT].motor.senseScale /
+        max(0, (float)robot_p->wheels.wheel[Wheel::RIGHT].motor.getSenseAdc());
   }
   else if (pfodCmd.startsWith("a06"))
   {
-    processSlider(pfodCmd, robot->wheels.wheel[Wheel::LEFT].motor.rpmMax, 1);
+    processSlider(pfodCmd, robot_p->wheels.wheel[Wheel::LEFT].motor.rpmMax, 1);
   }
   else if (pfodCmd.startsWith("a15"))
   {
-    processSlider(pfodCmd, robot->wheels.wheel[Wheel::LEFT].motor.pwmMax, 1);
+    processSlider(pfodCmd, robot_p->wheels.wheel[Wheel::LEFT].motor.pwmMax, 1);
   }
   else if (pfodCmd.startsWith("a07"))
   {
-    processSlider(pfodCmd, robot->wheels.rollTimeMax, 1);
+    processSlider(pfodCmd, robot_p->wheels.rollTimeMax, 1);
   }
   else if (pfodCmd.startsWith("a19"))
   {
-    processSlider(pfodCmd, robot->wheels.rollTimeMin, 1);
+    processSlider(pfodCmd, robot_p->wheels.rollTimeMin, 1);
   }
   else if (pfodCmd.startsWith("a08"))
   {
-    processSlider(pfodCmd, robot->wheels.reverseTime, 1);
+    processSlider(pfodCmd, robot_p->wheels.reverseTime, 1);
   }
   else if (pfodCmd.startsWith("a09"))
   {
-    processSlider(pfodCmd, robot->wheels.forwardTimeMax, 10);
+    processSlider(pfodCmd, robot_p->wheels.forwardTimeMax, 10);
   }
   else if (pfodCmd.startsWith("a11"))
   {
-    processSlider(pfodCmd, robot->wheels.wheel[Wheel::LEFT].motor.acceleration, 1);
+    processSlider(pfodCmd, robot_p->wheels.wheel[Wheel::LEFT].motor.acceleration, 1);
   }
   else if (pfodCmd.startsWith("a12"))
   {
-    processSlider(pfodCmd, robot->wheels.biDirSpeedRatio1, 0.01);
+    processSlider(pfodCmd, robot_p->wheels.biDirSpeedRatio1, 0.01);
   }
   else if (pfodCmd.startsWith("a13"))
   {
-    processSlider(pfodCmd, robot->wheels.biDirSpeedRatio2, 0.01);
+    processSlider(pfodCmd, robot_p->wheels.biDirSpeedRatio2, 0.01);
   }
   else if (pfodCmd.startsWith("a14"))
   {
-    processPIDSlider(pfodCmd, "a14", robot->wheels.wheel[Wheel::LEFT].motor.pid, 0.01, 3.0);
+    processPIDSlider(pfodCmd, "a14", robot_p->wheels.wheel[Wheel::LEFT].motor.pid, 0.01, 3.0);
   }
   else if (pfodCmd.startsWith("a16"))
   {
-    robot->wheels.wheel[Wheel::LEFT].motor.swapDir = !robot->wheels.wheel[Wheel::LEFT].motor.swapDir;
+    TOGGLE(robot_p->wheels.wheel[Wheel::LEFT].motor.swapDir);
   }
   else if (pfodCmd.startsWith("a17"))
   {
-    robot->wheels.wheel[Wheel::RIGHT].motor.swapDir = !robot->wheels.wheel[Wheel::RIGHT].motor.swapDir;
+    TOGGLE(robot_p->wheels.wheel[Wheel::RIGHT].motor.swapDir);
   }
   else if (pfodCmd.startsWith("a18"))
   {
-    processSlider(pfodCmd, robot->wheels.wheel[Wheel::LEFT].motor.powerIgnoreTime, 1);
+    processSlider(pfodCmd, robot_p->wheels.wheel[Wheel::LEFT].motor.powerIgnoreTime, 1);
   }
   else if (pfodCmd == "a10")
   {
@@ -544,17 +548,21 @@ void RemoteControl::processMotorMenu(String pfodCmd)
     switch (testmode)
     {
       case 0:
-        robot->setNextState(STATE_OFF, 0);
+        robot_p->setNextState(STATE_OFF, 0);
         break;
+
       case 1:
-        robot->setNextState(STATE_MANUAL, 0);
-        robot->wheels.wheel[Wheel::RIGHT].motor.rpmSet = 0;
-        robot->wheels.wheel[Wheel::LEFT].motor.rpmSet = robot->wheels.wheel[Wheel::LEFT].motor.rpmMax;
+        robot_p->setNextState(STATE_MANUAL, 0);
+        robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmSet = 0;
+        robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet =
+            robot_p->wheels.wheel[Wheel::LEFT].motor.rpmMax;
         break;
+
       case 2:
-        robot->setNextState(STATE_MANUAL, 0);
-        robot->wheels.wheel[Wheel::LEFT].motor.rpmSet = 0;
-        robot->wheels.wheel[Wheel::RIGHT].motor.rpmSet = robot->wheels.wheel[Wheel::LEFT].motor.rpmMax;
+        robot_p->setNextState(STATE_MANUAL, 0);
+        robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet = 0;
+        robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmSet =
+            robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmMax;
         break;
     }
   }
@@ -572,39 +580,42 @@ void RemoteControl::sendMowMenu(boolean update)
     Bluetooth.print(F("{.Mow`1000"));
   }
   Bluetooth.print(F("|o00~Overload Counter "));
-  Bluetooth.print(robot->cutter.motor.overloadCounter);
+  Bluetooth.print(robot_p->cutter.motor.getOverloadCounter());
   Bluetooth.print(F("|o01~Power in Watt "));
-  Bluetooth.print(robot->cutter.motor.powerMeas);
+  Bluetooth.print(robot_p->cutter.motor.getPowerMeas());
   Bluetooth.print(F("|o11~current in mA "));
-  Bluetooth.print(robot->cutter.motor.currentMeas);
-  sendSlider("o02", F("Power max"), robot->cutter.motor.powerMax, "", 0.1, 100);
-  sendSlider("o03", F("calibrate mow motor "), robot->cutter.motor.currentMeas, "",
+  Bluetooth.print(robot_p->cutter.motor.getCurrentMeas());
+  sendSlider("o02", F("Power max"), robot_p->cutter.motor.powerMax, "", 0.1, 100);
+  sendSlider("o03", F("calibrate mow motor "), robot_p->cutter.motor.getCurrentMeas(), "",
              1, 3000, 0);
   Bluetooth.print(F("|o04~Speed "));
-  Bluetooth.print(robot->cutter.motor.pwmCur);
-  sendSlider("o05", F("Speed max"), robot->cutter.motor.pwmMax, "", 1, 255);
-  if (robot->developerActive)
+  Bluetooth.print(robot_p->cutter.motor.pwmCur);
+  sendSlider("o05", F("Speed max"), robot_p->cutter.motor.pwmMax, "", 1, 255);
+  if (robot_p->developerActive)
   {
     Bluetooth.print(F("|o06~Modulate "));
-    sendYesNo(robot->cutter.motor.regulate);
+    sendYesNo(robot_p->cutter.motor.regulate);
   }
   Bluetooth.print(F("|o07~RPM "));
-  Bluetooth.print(robot->cutter.motor.rpmMeas);
-  sendSlider("o08", F("RPM set"), robot->cutter.motor.rpmSet, "", 1, 4500);
-  sendPIDSlider("o09", "RPM", robot->cutter.motor.pid, 0.01, 1.0);
+  Bluetooth.print(robot_p->cutter.motor.getRpmMeas());
+  sendSlider("o08", F("RPM set"), robot_p->cutter.motor.rpmSet, "", 1, 4500);
+  sendPIDSlider("o09", "RPM", robot_p->cutter.motor.pid, 0.01, 1.0);
   Bluetooth.println(F("|o10~Testing is"));
+
   switch (testmode)
   {
     case 0:
       Bluetooth.print(F("OFF"));
       break;
+
     case 1:
       Bluetooth.print(F("Motor ON"));
       break;
   }
+
   Bluetooth.println(F("|o04~for config file:"));
   Bluetooth.println(F("cutter.motor.senseScale:"));
-  Bluetooth.print(robot->cutter.motor.senseScale);
+  Bluetooth.print(robot_p->cutter.motor.senseScale);
   Bluetooth.println("}");
 }
 
@@ -612,29 +623,30 @@ void RemoteControl::processMowMenu(String pfodCmd)
 {
   if (pfodCmd.startsWith("o02"))
   {
-    processSlider(pfodCmd, robot->cutter.motor.powerMax, 0.1);
+    processSlider(pfodCmd, robot_p->cutter.motor.powerMax, 0.1);
   }
   else if (pfodCmd.startsWith("o03"))
   {
-    processSlider(pfodCmd, robot->cutter.motor.currentMeas, 1);
-    robot->cutter.motor.senseScale = robot->cutter.motor.currentMeas /
-        max(0, (float )robot->cutter.motor.senseAdc);
+    float currentMeas = robot_p->cutter.motor.getCurrentMeas();
+    processSlider(pfodCmd, currentMeas, 1);
+    robot_p->cutter.motor.senseScale = currentMeas /
+        max(0, (float )robot_p->cutter.motor.getSenseAdc());
   }
   else if (pfodCmd.startsWith("o05"))
   {
-    processSlider(pfodCmd, robot->cutter.motor.pwmMax, 1);
+    processSlider(pfodCmd, robot_p->cutter.motor.pwmMax, 1);
   }
   else if (pfodCmd == "o06")
   {
-    robot->cutter.motor.regulate = !robot->cutter.motor.regulate;
+    TOGGLE(robot_p->cutter.motor.regulate);
   }
   else if (pfodCmd.startsWith("o08"))
   {
-    processSlider(pfodCmd, robot->cutter.motor.rpmSet, 1);
+    processSlider(pfodCmd, robot_p->cutter.motor.rpmSet, 1);
   }
   else if (pfodCmd.startsWith("o09"))
   {
-    processPIDSlider(pfodCmd, "o09", robot->cutter.motor.pid, 0.01, 1.0);
+    processPIDSlider(pfodCmd, "o09", robot_p->cutter.motor.pid, 0.01, 1.0);
   }
   else if (pfodCmd == "o10")
   {
@@ -642,14 +654,14 @@ void RemoteControl::processMowMenu(String pfodCmd)
     switch (testmode)
     {
       case 0:
-        robot->setNextState(STATE_OFF, 0);
-        robot->cutter.motor.rpmMeas = 0;
-        robot->cutter.disable();
+        robot_p->setNextState(STATE_OFF, 0);
+        robot_p->cutter.motor.setRpmMeas(0);
+        robot_p->cutter.disable();
         break;
 
       case 1:
-        robot->setNextState(STATE_MANUAL, 0);
-        robot->cutter.enable();
+        robot_p->setNextState(STATE_MANUAL, 0);
+        robot_p->cutter.enable();
         break;
     }
   }
@@ -667,15 +679,15 @@ void RemoteControl::sendBumperMenu(boolean update)
     Bluetooth.print(F("{.Bumper`1000"));
   }
   Bluetooth.print(F("|b00~Use "));
-  sendYesNo(robot->bumpers.used);
+  sendYesNo(robot_p->bumpers.used);
   Bluetooth.println(F("|b01~Counter l, r "));
-  Bluetooth.print(robot->bumpers.bumper[Bumpers::LEFT].getCounter());
+  Bluetooth.print(robot_p->bumpers.bumper[Bumpers::LEFT].getCounter());
   Bluetooth.print(", ");
-  Bluetooth.print(robot->bumpers.bumper[Bumpers::RIGHT].getCounter());
+  Bluetooth.print(robot_p->bumpers.bumper[Bumpers::RIGHT].getCounter());
   Bluetooth.println(F("|b02~Value l, r "));
-  Bluetooth.print(robot->bumpers.bumper[Bumpers::LEFT].isHit());
+  Bluetooth.print(robot_p->bumpers.bumper[Bumpers::LEFT].isHit());
   Bluetooth.print(", ");
-  Bluetooth.print(robot->bumpers.bumper[Bumpers::RIGHT].isHit());
+  Bluetooth.print(robot_p->bumpers.bumper[Bumpers::RIGHT].isHit());
   Bluetooth.println("}");
 }
 
@@ -690,15 +702,15 @@ void RemoteControl::sendDropMenu(boolean update)
     Bluetooth.print(F("{.Drop`1000"));
   }
   Bluetooth.print(F("|u00~Use "));
-  sendYesNo(robot->dropSensors.used);
+  sendYesNo(robot_p->dropSensors.used);
   Bluetooth.println(F("|u01~Counter l, r "));
-  Bluetooth.print(robot->dropSensors.dropSensor[DropSensors::LEFT].getCounter());
+  Bluetooth.print(robot_p->dropSensors.dropSensor[DropSensors::LEFT].getCounter());
   Bluetooth.print(", ");
-  Bluetooth.print(robot->dropSensors.dropSensor[DropSensors::RIGHT].getCounter());
+  Bluetooth.print(robot_p->dropSensors.dropSensor[DropSensors::RIGHT].getCounter());
   Bluetooth.println(F("|u02~Value l, r "));
-  Bluetooth.print(robot->dropSensors.dropSensor[DropSensors::LEFT].isDetected());
+  Bluetooth.print(robot_p->dropSensors.dropSensor[DropSensors::LEFT].isDetected());
   Bluetooth.print(", ");
-  Bluetooth.print(robot->dropSensors.dropSensor[DropSensors::RIGHT].isDetected());
+  Bluetooth.print(robot_p->dropSensors.dropSensor[DropSensors::RIGHT].isDetected());
   Bluetooth.println("}");
 }
 
@@ -706,7 +718,7 @@ void RemoteControl::processBumperMenu(String pfodCmd)
 {
   if (pfodCmd == "b00")
   {
-    robot->bumpers.used = !robot->bumpers.used;
+    TOGGLE(robot_p->bumpers.used);
   }
   sendBumperMenu(true);
 }
@@ -715,7 +727,7 @@ void RemoteControl::processDropMenu(String pfodCmd)
 {
   if (pfodCmd == "u00")
   {
-    robot->dropSensors.used = !robot->dropSensors.used;
+    TOGGLE(robot_p->dropSensors.used);
   }
   sendDropMenu(true);
 }
@@ -731,25 +743,25 @@ void RemoteControl::sendSonarMenu(boolean update)
     Bluetooth.print(F("{.Sonar`1000"));
   }
   Bluetooth.print(F("|d00~Use "));
-  sendYesNo(robot->sonars.use);
+  sendYesNo(robot_p->sonars.use);
   Bluetooth.print(F("|d04~Use left "));
-  sendYesNo(robot->sonars.sonar[Sonars::LEFT].use);
+  sendYesNo(robot_p->sonars.sonar[Sonars::LEFT].use);
   Bluetooth.print(F("|d05~Use center "));
-  sendYesNo(robot->sonars.sonar[Sonars::CENTER].use);
+  sendYesNo(robot_p->sonars.sonar[Sonars::CENTER].use);
   Bluetooth.print(F("|d06~Use right "));
-  sendYesNo(robot->sonars.sonar[Sonars::RIGHT].use);
+  sendYesNo(robot_p->sonars.sonar[Sonars::RIGHT].use);
   Bluetooth.print(F("|d01~Counter "));
-  Bluetooth.print(robot->sonars.distanceCounter);
+  Bluetooth.print(robot_p->sonars.getDistanceCounter());
   Bluetooth.println(F("|d02~Value l, c, r"));
   for (uint8_t i = 0; i < Sonars::END; i++)
   {
-    Bluetooth.print(robot->sonars.sonar[i].distance);
+    Bluetooth.print(robot_p->sonars.sonar[i].getDistance());
     if (i < Sonars::END - 1)
     {
       Bluetooth.print(", ");
     }
   }
-  sendSlider("d03", F("Trigger below"), robot->sonars.triggerBelow, "", 1, 3000);
+  sendSlider("d03", F("Trigger below"), robot_p->sonars.triggerBelow, "", 1, 3000);
   Bluetooth.println("}");
 }
 
@@ -757,26 +769,23 @@ void RemoteControl::processSonarMenu(String pfodCmd)
 {
   if (pfodCmd == "d00")
   {
-    robot->sonars.use = !robot->sonars.use;
+    TOGGLE(robot_p->sonars.use);
   }
   else if (pfodCmd.startsWith("d03"))
   {
-    processSlider(pfodCmd, robot->sonars.triggerBelow, 1);
+    processSlider(pfodCmd, robot_p->sonars.triggerBelow, 1);
   }
   else if (pfodCmd == "d04")
   {
-    robot->sonars.sonar[Sonars::LEFT].use =
-        !robot->sonars.sonar[Sonars::LEFT].use;
+    TOGGLE(robot_p->sonars.sonar[Sonars::LEFT].use);
   }
   else if (pfodCmd == "d05")
   {
-    robot->sonars.sonar[Sonars::CENTER].use =
-        !robot->sonars.sonar[Sonars::CENTER].use;
+    TOGGLE(robot_p->sonars.sonar[Sonars::CENTER].use);
   }
   else if (pfodCmd == "d06")
   {
-    robot->sonars.sonar[Sonars::RIGHT].use =
-        !robot->sonars.sonar[Sonars::RIGHT].use;
+    TOGGLE(robot_p->sonars.sonar[Sonars::RIGHT].use);
   }
   sendSonarMenu(true);
 }
@@ -792,10 +801,10 @@ void RemoteControl::sendPerimeterMenu(boolean update)
     Bluetooth.print(F("{.Perimeter`1000"));
   }
   Bluetooth.print(F("|e00~Use "));
-  sendYesNo(robot->perimeterUse);
+  sendYesNo(robot_p->perimeterUse);
   Bluetooth.println(F("|e02~Value"));
-  Bluetooth.print(robot->perimeterMag);
-  if (robot->perimeterMag < 0)
+  Bluetooth.print(robot_p->getPerimeterMag());
+  if (robot_p->getPerimeterMag() < 0)
   {
     Bluetooth.print(" (inside)");
   }
@@ -804,32 +813,32 @@ void RemoteControl::sendPerimeterMenu(boolean update)
     Bluetooth.print(" (outside)");
   }
   sendSlider("e08", F("Timed-out if below smag"),
-             robot->perimeter.timedOutIfBelowSmag, "", 1, 2000);
+             robot_p->perimeter.timedOutIfBelowSmag, "", 1, 2000);
   sendSlider("e14", F("Timeout (s) if not inside"),
-             robot->perimeter.timeOutSecIfNotInside, "", 1, 20, 1);
-  sendSlider("e04", F("Trigger timeout"), robot->perimeterTriggerTimeout, "", 1,
+             robot_p->perimeter.timeOutSecIfNotInside, "", 1, 20, 1);
+  sendSlider("e04", F("Trigger timeout"), robot_p->perimeterTriggerTimeout, "", 1,
              2000);
   sendSlider("e05", F("Perimeter out roll time max"),
-             robot->perimeterOutRollTimeMax, "", 1, 8000);
+             robot_p->perimeterOutRollTimeMax, "", 1, 8000);
   sendSlider("e06", F("Perimeter out roll time min"),
-             robot->perimeterOutRollTimeMin, "", 1, 8000);
-  sendSlider("e15", F("Perimeter out reverse time"), robot->perimeterOutRevTime,
+             robot_p->perimeterOutRollTimeMin, "", 1, 8000);
+  sendSlider("e15", F("Perimeter out reverse time"), robot_p->perimeterOutRevTime,
              "", 1, 8000);
   sendSlider("e16", F("Perimeter tracking roll time"),
-             robot->perimeterTrackRollTime, "", 1, 8000);
+             robot_p->perimeterTrackRollTime, "", 1, 8000);
   sendSlider("e17", F("Perimeter tracking reverse time"),
-             robot->perimeterTrackRevTime, "", 1, 8000);
+             robot_p->perimeterTrackRevTime, "", 1, 8000);
   sendSlider("e11", F("Transition timeout"),
-             robot->trackingPerimeterTransitionTimeOut, "", 1, 5000);
-  sendSlider("e12", F("Track error timeout"), robot->trackingErrorTimeOut, "",
+             robot_p->trackingPerimeterTransitionTimeOut, "", 1, 5000);
+  sendSlider("e12", F("Track error timeout"), robot_p->trackingErrorTimeOut, "",
              1, 10000);
-  sendPIDSlider("e07", F("Track"), robot->perimeter.pid, 0.1, 100);
+  sendPIDSlider("e07", F("Track"), robot_p->perimeter.pid, 0.1, 100);
   Bluetooth.print(F("|e09~Use differential signal "));
-  sendYesNo(robot->perimeter.useDifferentialPerimeterSignal);
+  sendYesNo(robot_p->perimeter.useDifferentialPerimeterSignal);
   Bluetooth.print(F("|e10~Swap coil polarity "));
-  sendYesNo(robot->perimeter.swapCoilPolarity);
+  sendYesNo(robot_p->perimeter.swapCoilPolarity);
   Bluetooth.print(F("|e13~Block inner wheel  "));
-  sendYesNo(robot->trackingBlockInnerWheelWhilePerimeterStruggling);
+  sendYesNo(robot_p->trackingBlockInnerWheelWhilePerimeterStruggling);
   Bluetooth.println("}");
 }
 
@@ -837,64 +846,63 @@ void RemoteControl::processPerimeterMenu(String pfodCmd)
 {
   if (pfodCmd == "e00")
   {
-    robot->perimeterUse = !robot->perimeterUse;
+    TOGGLE(robot_p->perimeterUse);
   }
   else if (pfodCmd.startsWith("e04"))
   {
-    processSlider(pfodCmd, robot->perimeterTriggerTimeout, 1);
+    processSlider(pfodCmd, robot_p->perimeterTriggerTimeout, 1);
   }
   else if (pfodCmd.startsWith("e05"))
   {
-    processSlider(pfodCmd, robot->perimeterOutRollTimeMax, 1);
+    processSlider(pfodCmd, robot_p->perimeterOutRollTimeMax, 1);
   }
   else if (pfodCmd.startsWith("e06"))
   {
-    processSlider(pfodCmd, robot->perimeterOutRollTimeMin, 1);
+    processSlider(pfodCmd, robot_p->perimeterOutRollTimeMin, 1);
   }
   else if (pfodCmd.startsWith("e15"))
   {
-    processSlider(pfodCmd, robot->perimeterOutRevTime, 1);
+    processSlider(pfodCmd, robot_p->perimeterOutRevTime, 1);
   }
   else if (pfodCmd.startsWith("e16"))
   {
-    processSlider(pfodCmd, robot->perimeterTrackRollTime, 1);
+    processSlider(pfodCmd, robot_p->perimeterTrackRollTime, 1);
   }
   else if (pfodCmd.startsWith("e17"))
   {
-    processSlider(pfodCmd, robot->perimeterTrackRevTime, 1);
+    processSlider(pfodCmd, robot_p->perimeterTrackRevTime, 1);
   }
   else if (pfodCmd.startsWith("e07"))
   {
-    processPIDSlider(pfodCmd, "e07", robot->perimeter.pid, 0.1, 100);
+    processPIDSlider(pfodCmd, "e07", robot_p->perimeter.pid, 0.1, 100);
   }
   else if (pfodCmd.startsWith("e08"))
   {
-    processSlider(pfodCmd, robot->perimeter.timedOutIfBelowSmag, 1);
+    processSlider(pfodCmd, robot_p->perimeter.timedOutIfBelowSmag, 1);
   }
   else if (pfodCmd.startsWith("e09"))
   {
-    robot->perimeter.useDifferentialPerimeterSignal = !robot->perimeter
-        .useDifferentialPerimeterSignal;
+    TOGGLE(robot_p->perimeter.useDifferentialPerimeterSignal);
   }
   else if (pfodCmd.startsWith("e10"))
   {
-    robot->perimeter.swapCoilPolarity = !robot->perimeter.swapCoilPolarity;
+    TOGGLE(robot_p->perimeter.swapCoilPolarity);
   }
   else if (pfodCmd.startsWith("e11"))
   {
-    processSlider(pfodCmd, robot->trackingPerimeterTransitionTimeOut, 1);
+    processSlider(pfodCmd, robot_p->trackingPerimeterTransitionTimeOut, 1);
   }
   else if (pfodCmd.startsWith("e12"))
   {
-    processSlider(pfodCmd, robot->trackingErrorTimeOut, 1);
+    processSlider(pfodCmd, robot_p->trackingErrorTimeOut, 1);
   }
   else if (pfodCmd.startsWith("e13"))
-  {  robot->trackingBlockInnerWheelWhilePerimeterStruggling = !robot
-        ->trackingBlockInnerWheelWhilePerimeterStruggling;
+  {
+    TOGGLE(robot_p->trackingBlockInnerWheelWhilePerimeterStruggling);
   }
   else if (pfodCmd.startsWith("e14"))
   {
-    processSlider(pfodCmd, robot->perimeter.timeOutSecIfNotInside, 1);
+    processSlider(pfodCmd, robot_p->perimeter.timeOutSecIfNotInside, 1);
   }
   sendPerimeterMenu(true);
 }
@@ -910,20 +918,22 @@ void RemoteControl::sendLawnSensorMenu(boolean update)
     Bluetooth.print(F("{.Lawn sensor`1000"));
   }
   Bluetooth.print(F("|f00~Use "));
-  sendYesNo(robot->lawnSensor.used);
+  sendYesNo(robot_p->lawnSensor.used);
   Bluetooth.print(F("|f01~Counter "));
-  Bluetooth.print(robot->lawnSensor.getCounter());
+  Bluetooth.print(robot_p->lawnSensor.getCounter());
   Bluetooth.println(F("|f02~Value f, b"));
-  Bluetooth.print(robot->lawnSensor.getValue(LawnSensor::FRONT));
+  Bluetooth.print(robot_p->lawnSensor.getValue(LawnSensor::FRONT));
   Bluetooth.print(", ");
-  Bluetooth.print(robot->lawnSensor.getValue(LawnSensor::BACK));
+  Bluetooth.print(robot_p->lawnSensor.getValue(LawnSensor::BACK));
   Bluetooth.println("}");
 }
 
 void RemoteControl::processLawnSensorMenu(String pfodCmd)
 {
   if (pfodCmd == "f00")
-    robot->lawnSensor.used = !robot->lawnSensor.used;
+  {
+    TOGGLE(robot_p->lawnSensor.used);
+  }
   sendLawnSensorMenu(true);
 }
 
@@ -938,11 +948,11 @@ void RemoteControl::sendRainMenu(boolean update)
     Bluetooth.print(F("{.Rain`1000"));
   }
   Bluetooth.print(F("|m00~Use "));
-  sendYesNo(robot->rainSensor.used);
+  sendYesNo(robot_p->rainSensor.used);
   Bluetooth.print(F("|m01~Counter "));
-  Bluetooth.print(robot->rainSensor.getCounter());
+  Bluetooth.print(robot_p->rainSensor.getCounter());
   Bluetooth.println(F("|m02~Value"));
-  Bluetooth.print(robot->rainSensor.isRaining());
+  Bluetooth.print(robot_p->rainSensor.isRaining());
   Bluetooth.println("}");
 }
 
@@ -950,7 +960,7 @@ void RemoteControl::processRainMenu(String pfodCmd)
 {
   if (pfodCmd == "m00")
   {
-    robot->rainSensor.used = !robot->rainSensor.used;
+    TOGGLE(robot_p->rainSensor.used);
   }
   sendRainMenu(true);
 }
@@ -966,11 +976,11 @@ void RemoteControl::sendGPSMenu(boolean update)
     Bluetooth.print(F("{.GPS`1000"));
   }
   Bluetooth.print(F("|q00~Use "));
-  sendYesNo(robot->gpsUse);
+  sendYesNo(robot_p->gpsUse);
   sendSlider("q01", F("Stucked if GPS speed is below"),
-             robot->stuckedIfGpsSpeedBelow, "", 0.1, 3);
-  sendSlider("q02", F("GPS speed ignore time"), robot->gpsSpeedIgnoreTime, "",
-             1, 10000, robot->wheels.reverseTime);
+             robot_p->stuckedIfGpsSpeedBelow, "", 0.1, 3);
+  sendSlider("q02", F("GPS speed ignore time"), robot_p->gpsSpeedIgnoreTime, "",
+             1, 10000, robot_p->wheels.reverseTime);
   Bluetooth.println("}");
 }
 
@@ -978,15 +988,15 @@ void RemoteControl::processGPSMenu(String pfodCmd)
 {
   if (pfodCmd == "q00")
   {
-    robot->gpsUse = !robot->gpsUse;
+    TOGGLE(robot_p->gpsUse);
   }
   else if (pfodCmd.startsWith("q01"))
   {
-    processSlider(pfodCmd, robot->stuckedIfGpsSpeedBelow, 0.1);
+    processSlider(pfodCmd, robot_p->stuckedIfGpsSpeedBelow, 0.1);
   }
   else if (pfodCmd.startsWith("q02"))
   {
-    processSlider(pfodCmd, robot->gpsSpeedIgnoreTime, 1);
+    processSlider(pfodCmd, robot_p->gpsSpeedIgnoreTime, 1);
   }
   sendGPSMenu(true);
 }
@@ -1002,23 +1012,23 @@ void RemoteControl::sendImuMenu(boolean update)
     Bluetooth.print(F("{.IMU`1000"));
   }
   Bluetooth.print(F("|g00~Use "));
-  sendYesNo(robot->imu.use);
+  sendYesNo(robot_p->imu.use);
   Bluetooth.print(F("|g01~Yaw "));
-  Bluetooth.print(robot->imu.ypr.yaw / PI * 180);
+  Bluetooth.print(robot_p->imu.ypr.yaw / PI * 180);
   Bluetooth.print(F(" deg"));
   Bluetooth.print(F("|g09~DriveHeading "));
-  Bluetooth.print(robot->imuDriveHeading / PI * 180);
+  Bluetooth.print(robot_p->imuDriveHeading / PI * 180);
   Bluetooth.print(F(" deg"));
   Bluetooth.print(F("|g02~Pitch "));
-  Bluetooth.print(robot->imu.ypr.pitch / PI * 180);
+  Bluetooth.print(robot_p->imu.ypr.pitch / PI * 180);
   Bluetooth.print(F(" deg"));
   Bluetooth.print(F("|g03~Roll "));
-  Bluetooth.print(robot->imu.ypr.roll / PI * 180);
+  Bluetooth.print(robot_p->imu.ypr.roll / PI * 180);
   Bluetooth.print(F(" deg"));
   Bluetooth.print(F("|g04~Correct dir "));
-  sendYesNo(robot->imu.correctDir);
-  sendPIDSlider("g05", F("Dir"), robot->imu.pid[Imu::DIR], 0.1, 20);
-  sendPIDSlider("g06", F("Roll"), robot->imu.pid[Imu::ROLL], 0.1, 30);
+  sendYesNo(robot_p->imu.correctDir);
+  sendPIDSlider("g05", F("Dir"), robot_p->imu.pid[Imu::DIR], 0.1, 20);
+  sendPIDSlider("g06", F("Roll"), robot_p->imu.pid[Imu::ROLL], 0.1, 30);
   Bluetooth.print(F("|g07~Acc cal next side"));
   Bluetooth.print(F("|g08~Com cal start/stop"));
   Bluetooth.println("}");
@@ -1028,27 +1038,23 @@ void RemoteControl::processImuMenu(String pfodCmd)
 {
   if (pfodCmd == "g00")
   {
-    robot->imu.use = !robot->imu.use;
-  }
-  else if (pfodCmd == "g04")
-  {
-    robot->imu.correctDir = !robot->imu.correctDir;
+    TOGGLE(robot_p->imu.correctDir);
   }
   else if (pfodCmd.startsWith("g05"))
   {
-    processPIDSlider(pfodCmd, "g05", robot->imu.pid[Imu::DIR], 0.1, 20);
+    processPIDSlider(pfodCmd, "g05", robot_p->imu.pid[Imu::DIR], 0.1, 20);
   }
   else if (pfodCmd.startsWith("g06"))
   {
-    processPIDSlider(pfodCmd, "g06", robot->imu.pid[Imu::ROLL], 0.1, 30);
+    processPIDSlider(pfodCmd, "g06", robot_p->imu.pid[Imu::ROLL], 0.1, 30);
   }
   else if (pfodCmd == "g07")
   {
-    robot->imu.calibAccNextAxis();
+    robot_p->imu.calibAccNextAxis();
   }
   else if (pfodCmd == "g08")
   {
-    robot->imu.calibComStartStop();
+    robot_p->imu.calibComStartStop();
   }
   sendImuMenu(true);
 }
@@ -1060,95 +1066,125 @@ void RemoteControl::sendRemoteMenu(boolean update)
   else
     Bluetooth.print(F("{.Remote R/C`1000"));
   Bluetooth.print(F("|h00~Use "));
-  sendYesNo(robot->remoteUse);
+  sendYesNo(robot_p->remoteUse);
   Bluetooth.println("}");
 }
 
 void RemoteControl::processRemoteMenu(String pfodCmd)
 {
   if (pfodCmd == "h00")
-    robot->remoteUse = !robot->remoteUse;
+  {
+    TOGGLE(robot_p->remoteUse);
+  }
   sendRemoteMenu(true);
 }
 
 void RemoteControl::sendBatteryMenu(boolean update)
 {
   if (update)
+  {
     Bluetooth.print("{:");
+  }
   else
+  {
     Bluetooth.print(F("{.Battery`1000"));
+  }
   Bluetooth.print(F("|j00~Battery "));
-  Bluetooth.print(robot->batVoltage);
+  Bluetooth.print(robot_p->getBatVoltage());
   Bluetooth.print(" V");
   Bluetooth.print(F("|j01~Monitor "));
-  sendYesNo(robot->batMonitor);
-  if (robot->developerActive)
-    sendSlider("j05", F("Calibrate batFactor "), robot->batFactor, "", 0.01,
-               1.0);
+  sendYesNo(robot_p->batMonitor);
+  if (robot_p->developerActive)
+  {
+    sendSlider("j05", F("Calibrate batFactor "), robot_p->batFactor, "",
+               0.01, 1.0);
+  }
   //Console.print("batFactor=");
   //Console.println(robot->batFactor);
-  sendSlider("j02", F("Go home if below Volt"), robot->batGoHomeIfBelow, "",
-             0.1, robot->batFull, (robot->batFull * 0.72)); // for Sony Konion cells 4.2V * 0,72= 3.024V which is pretty safe to use
-  sendSlider("j12", F("Switch off if idle minutes"), robot->batSwitchOffIfIdle,
+  sendSlider("j02", F("Go home if below Volt"), robot_p->batGoHomeIfBelow, "",
+             0.1, robot_p->batFull, (robot_p->batFull * 0.72)); // for Sony Konion cells 4.2V * 0,72= 3.024V which is pretty safe to use
+  sendSlider("j12", F("Switch off if idle minutes"), robot_p->batSwitchOffIfIdle,
              "", 1, 300, 1);
-  sendSlider("j03", F("Switch off if below Volt"), robot->batSwitchOffIfBelow,
-             "", 0.1, robot->batFull, (robot->batFull * 0.72));
+  sendSlider("j03", F("Switch off if below Volt"), robot_p->batSwitchOffIfBelow,
+             "", 0.1, robot_p->batFull, (robot_p->batFull * 0.72));
   Bluetooth.print(F("|j04~Charge "));
-  Bluetooth.print(robot->chgVoltage);
+  Bluetooth.print(robot_p->getChgVoltage());
   Bluetooth.print("V ");
-  Bluetooth.print(robot->chgCurrent);
+  Bluetooth.print(robot_p->getChgCurrent());
   Bluetooth.print("A");
-  sendSlider("j09", F("Calibrate batChgFactor"), robot->batChgFactor, "", 0.01,
+  sendSlider("j09", F("Calibrate batChgFactor"), robot_p->batChgFactor, "", 0.01,
              1.0);
-  sendSlider("j06", F("Charge sense zero"), robot->chgSenseZero, "", 1, 600,
+  sendSlider("j06", F("Charge sense zero"), robot_p->chgSenseZero, "", 1, 600,
              400);
-  sendSlider("j08", F("Charge factor"), robot->chgFactor, "", 0.01, 80);
+  sendSlider("j08", F("Charge factor"), robot_p->chgFactor, "", 0.01, 80);
   sendSlider("j10", F("charging starts if Voltage is below"),
-             robot->startChargingIfBelow, "", 0.1, robot->batFull);
+             robot_p->startChargingIfBelow, "", 0.1, robot_p->batFull);
   sendSlider("j11", F("Battery is fully charged if current is below"),
-             robot->batFullCurrent, "", 0.1, robot->batChargingCurrentMax);
+             robot_p->batFullCurrent, "", 0.1, robot_p->batChargingCurrentMax);
   Bluetooth.println("}");
 }
 
 void RemoteControl::processBatteryMenu(String pfodCmd)
 {
   if (pfodCmd == "j01")
-    robot->batMonitor = !robot->batMonitor;
+  {
+    TOGGLE(robot_p->batMonitor);
+  }
   else if (pfodCmd.startsWith("j02"))
   {
-    processSlider(pfodCmd, robot->batGoHomeIfBelow, 0.1);
+    processSlider(pfodCmd, robot_p->batGoHomeIfBelow, 0.1);
     //Console.print("gohomeifbelow=");
     //Console.println(robot->batGoHomeIfBelow);
   }
   else if (pfodCmd.startsWith("j03"))
-    processSlider(pfodCmd, robot->batSwitchOffIfBelow, 0.1);
+  {
+    processSlider(pfodCmd, robot_p->batSwitchOffIfBelow, 0.1);
+  }
   else if (pfodCmd.startsWith("j05"))
-    processSlider(pfodCmd, robot->batFactor, 0.01);
+  {
+    processSlider(pfodCmd, robot_p->batFactor, 0.01);
+  }
   else if (pfodCmd.startsWith("j06"))
-    processSlider(pfodCmd, robot->chgSenseZero, 1);
+  {
+    processSlider(pfodCmd, robot_p->chgSenseZero, 1);
+  }
   else if (pfodCmd.startsWith("j08"))
-    processSlider(pfodCmd, robot->chgFactor, 0.01);
+  {
+    processSlider(pfodCmd, robot_p->chgFactor, 0.01);
+  }
   else if (pfodCmd.startsWith("j09"))
-    processSlider(pfodCmd, robot->batChgFactor, 0.01);
+  {
+    processSlider(pfodCmd, robot_p->batChgFactor, 0.01);
+  }
   else if (pfodCmd.startsWith("j10"))
-    processSlider(pfodCmd, robot->startChargingIfBelow, 0.1);
+  {
+    processSlider(pfodCmd, robot_p->startChargingIfBelow, 0.1);
+  }
   else if (pfodCmd.startsWith("j11"))
-    processSlider(pfodCmd, robot->batFullCurrent, 0.1);
+  {
+    processSlider(pfodCmd, robot_p->batFullCurrent, 0.1);
+  }
   else if (pfodCmd.startsWith("j12"))
-    processSlider(pfodCmd, robot->batSwitchOffIfIdle, 1);
+  {
+    processSlider(pfodCmd, robot_p->batSwitchOffIfIdle, 1);
+  }
   sendBatteryMenu(true);
 }
 
 void RemoteControl::sendStationMenu(boolean update)
 {
   if (update)
+  {
     Bluetooth.print("{:");
+  }
   else
+  {
     Bluetooth.print(F("{.Station`1000"));
-  sendSlider("k00", F("Reverse time"), robot->stationRevTime, "", 1, 8000);
-  sendSlider("k01", F("Roll time"), robot->stationRollTime, "", 1, 8000);
-  sendSlider("k02", F("Forw time"), robot->stationForwTime, "", 1, 8000);
-  sendSlider("k03", F("Station reverse check time"), robot->stationCheckTime,
+  }
+  sendSlider("k00", F("Reverse time"), robot_p->stationRevTime, "", 1, 8000);
+  sendSlider("k01", F("Roll time"), robot_p->stationRollTime, "", 1, 8000);
+  sendSlider("k02", F("Forw time"), robot_p->stationForwTime, "", 1, 8000);
+  sendSlider("k03", F("Station reverse check time"), robot_p->stationCheckTime,
              "", 1, 8000);
   Bluetooth.println("}");
 }
@@ -1156,13 +1192,21 @@ void RemoteControl::sendStationMenu(boolean update)
 void RemoteControl::processStationMenu(String pfodCmd)
 {
   if (pfodCmd.startsWith("k00"))
-    processSlider(pfodCmd, robot->stationRevTime, 1);
+  {
+    processSlider(pfodCmd, robot_p->stationRevTime, 1);
+  }
   else if (pfodCmd.startsWith("k01"))
-    processSlider(pfodCmd, robot->stationRollTime, 1);
+  {
+    processSlider(pfodCmd, robot_p->stationRollTime, 1);
+  }
   else if (pfodCmd.startsWith("k02"))
-    processSlider(pfodCmd, robot->stationForwTime, 1);
+  {
+    processSlider(pfodCmd, robot_p->stationForwTime, 1);
+  }
   else if (pfodCmd.startsWith("k03"))
-    processSlider(pfodCmd, robot->stationCheckTime, 1);
+  {
+    processSlider(pfodCmd, robot_p->stationCheckTime, 1);
+  }
   sendStationMenu(true);
 }
 
@@ -1177,26 +1221,26 @@ void RemoteControl::sendOdometerMenu(boolean update)
     Bluetooth.print(F("{.Odometer2D`1000"));
   }
   Bluetooth.print(F("|l00~Use "));
-  sendYesNo(robot->odometer.use);
+  sendYesNo(robot_p->odometer.use);
   Bluetooth.print(F("|l01~Value l, r "));
-  Bluetooth.print(robot->odometer.encoder[Odometer::LEFT].getCounter());
+  Bluetooth.print(robot_p->odometer.encoder[Odometer::LEFT].getCounter());
   Bluetooth.print(", ");
-  Bluetooth.println(robot->odometer.encoder[Odometer::RIGHT].getCounter());
+  Bluetooth.println(robot_p->odometer.encoder[Odometer::RIGHT].getCounter());
   Bluetooth.println(F("|l03~RPM Motor l, r "));
-  Bluetooth.print(robot->odometer.encoder[Odometer::LEFT].getWheelRpmCurr());
+  Bluetooth.print(robot_p->odometer.encoder[Odometer::LEFT].getWheelRpmCurr());
   Bluetooth.print(", ");
-  Bluetooth.println(robot->odometer.encoder[Odometer::RIGHT].getWheelRpmCurr());
+  Bluetooth.println(robot_p->odometer.encoder[Odometer::RIGHT].getWheelRpmCurr());
   sendSlider("l04", F("Ticks per one full revolution"),
-             robot->odometer.ticksPerRevolution, "", 1, 2000);
-  sendSlider("l01", F("Ticks per cm"), robot->odometer.ticksPerCm, "", 0.1, 30);
-  sendSlider("l02", F("Wheel base cm"), robot->odometer.wheelBaseCm, "", 0.1,
+             robot_p->odometer.ticksPerRevolution, "", 1, 2000);
+  sendSlider("l01", F("Ticks per cm"), robot_p->odometer.ticksPerCm, "", 0.1, 30);
+  sendSlider("l02", F("Wheel base cm"), robot_p->odometer.wheelBaseCm, "", 0.1,
              50);
   Bluetooth.print(F("|l08~Use two-way encoder "));
-  sendYesNo(robot->odometer.encoder[Odometer::LEFT].twoWay);  // TODO: Only checking sensing left here
+  sendYesNo(robot_p->odometer.encoder[Odometer::LEFT].twoWay);  // TODO: Only checking sensing left here
   Bluetooth.print(F("|l05~Swap left direction "));
-  sendYesNo(robot->odometer.encoder[Odometer::LEFT].swapDir);
+  sendYesNo(robot_p->odometer.encoder[Odometer::LEFT].swapDir);
   Bluetooth.print(F("|l06~Swap right direction "));
-  sendYesNo(robot->odometer.encoder[Odometer::RIGHT].swapDir);
+  sendYesNo(robot_p->odometer.encoder[Odometer::RIGHT].swapDir);
   Bluetooth.println("}");
 }
 
@@ -1204,35 +1248,33 @@ void RemoteControl::processOdometerMenu(String pfodCmd)
 {
   if (pfodCmd == "l00")
   {
-    robot->odometer.use = !robot->odometer.use;
+    TOGGLE(robot_p->odometer.use);
   }
   else if (pfodCmd.startsWith("l01"))
   {
-    processSlider(pfodCmd, robot->odometer.ticksPerCm, 0.1);
+    processSlider(pfodCmd, robot_p->odometer.ticksPerCm, 0.1);
   }
   else if (pfodCmd.startsWith("l02"))
   {
-    processSlider(pfodCmd, robot->odometer.wheelBaseCm, 0.1);
+    processSlider(pfodCmd, robot_p->odometer.wheelBaseCm, 0.1);
   }
   else if (pfodCmd.startsWith("l04"))
   {
-    processSlider(pfodCmd, robot->odometer.ticksPerRevolution, 1);
+    processSlider(pfodCmd, robot_p->odometer.ticksPerRevolution, 1);
   }
   else if (pfodCmd.startsWith("l05"))
   {
-    robot->odometer.encoder[Odometer::LEFT].swapDir =
-        !robot->odometer.encoder[Odometer::LEFT].swapDir;
+    TOGGLE(robot_p->odometer.encoder[Odometer::LEFT].swapDir);
   }
   else if (pfodCmd.startsWith("l06"))
   {
-    robot->odometer.encoder[Odometer::RIGHT].swapDir =
-        !robot->odometer.encoder[Odometer::RIGHT].swapDir;
+    TOGGLE(robot_p->odometer.encoder[Odometer::RIGHT].swapDir);
   }
   else if (pfodCmd.startsWith("l08"))
   {
-    bool twoWay = robot->odometer.encoder[Odometer::LEFT].twoWay;
-    robot->odometer.encoder[Odometer::LEFT].twoWay = !twoWay;
-    robot->odometer.encoder[Odometer::RIGHT].twoWay = !twoWay;
+    bool twoWay = robot_p->odometer.encoder[Odometer::LEFT].twoWay;
+    robot_p->odometer.encoder[Odometer::LEFT].twoWay = !twoWay;
+    robot_p->odometer.encoder[Odometer::RIGHT].twoWay = !twoWay;
   }
   sendOdometerMenu(true);
 }
@@ -1248,16 +1290,16 @@ void RemoteControl::sendDateTimeMenu(boolean update)
     Bluetooth.print(F("{.Date/time"));
   }
   Bluetooth.print("|t00~");
-  Bluetooth.print(date2str(robot->datetime.date));
+  Bluetooth.print(date2str(robot_p->datetime.date));
   Bluetooth.print(", ");
-  Bluetooth.print(time2str(robot->datetime.time));
-  sendSlider("t01", dayOfWeek[robot->datetime.date.dayOfWeek],
-             robot->datetime.date.dayOfWeek, "", 1, 6, 0);
-  sendSlider("t02", "Day ", robot->datetime.date.day, "", 1, 31, 1);
-  sendSlider("t03", "Month ", robot->datetime.date.month, "", 1, 12, 1);
-  sendSlider("t04", "Year ", robot->datetime.date.year, "", 1, 2020, 2013);
-  sendSlider("t05", "Hour ", robot->datetime.time.hour, "", 1, 23, 0);
-  sendSlider("t06", "Minute ", robot->datetime.time.minute, "", 1, 59, 0);
+  Bluetooth.print(time2str(robot_p->datetime.time));
+  sendSlider("t01", dayOfWeek[robot_p->datetime.date.dayOfWeek],
+             robot_p->datetime.date.dayOfWeek, "", 1, 6, 0);
+  sendSlider("t02", "Day ", robot_p->datetime.date.day, "", 1, 31, 1);
+  sendSlider("t03", "Month ", robot_p->datetime.date.month, "", 1, 12, 1);
+  sendSlider("t04", "Year ", robot_p->datetime.date.year, "", 1, 2020, 2013);
+  sendSlider("t05", "Hour ", robot_p->datetime.time.hour, "", 1, 23, 0);
+  sendSlider("t06", "Minute ", robot_p->datetime.time.minute, "", 1, 59, 0);
   Bluetooth.println("}");
 }
 
@@ -1265,32 +1307,32 @@ void RemoteControl::processDateTimeMenu(String pfodCmd)
 {
   if (pfodCmd.startsWith("t01"))
   {
-    processSlider(pfodCmd, robot->datetime.date.dayOfWeek, 1);
+    processSlider(pfodCmd, robot_p->datetime.date.dayOfWeek, 1);
   }
   else if (pfodCmd.startsWith("t02"))
   {
-    processSlider(pfodCmd, robot->datetime.date.day, 1);
+    processSlider(pfodCmd, robot_p->datetime.date.day, 1);
   }
   else if (pfodCmd.startsWith("t03"))
   {
-    processSlider(pfodCmd, robot->datetime.date.month, 1);
+    processSlider(pfodCmd, robot_p->datetime.date.month, 1);
   }
   else if (pfodCmd.startsWith("t04"))
   {
-    processSlider(pfodCmd, robot->datetime.date.year, 1);
+    processSlider(pfodCmd, robot_p->datetime.date.year, 1);
   }
   else if (pfodCmd.startsWith("t05"))
   {
-    processSlider(pfodCmd, robot->datetime.time.hour, 1);
+    processSlider(pfodCmd, robot_p->datetime.time.hour, 1);
   }
   else if (pfodCmd.startsWith("t06"))
   {
-    processSlider(pfodCmd, robot->datetime.time.minute, 1);
+    processSlider(pfodCmd, robot_p->datetime.time.minute, 1);
   }
   sendDateTimeMenu(true);
   Console.print(F("setting RTC datetime: "));
-  Console.println(date2str(robot->datetime.date));
-  robot->setActuator(ACT_RTC, 0);
+  Console.println(date2str(robot_p->datetime.date));
+  robot_p->setActuator(ACT_RTC, 0);
 }
 
 void RemoteControl::sendTimerDetailMenu(int timerIdx, boolean update)
@@ -1306,25 +1348,25 @@ void RemoteControl::sendTimerDetailMenu(int timerIdx, boolean update)
   Bluetooth.print("|p0");
   Bluetooth.print(timerIdx);
   Bluetooth.print("~Use ");
-  sendYesNo(robot->timer[timerIdx].active);
-  int startm = time2minutes(robot->timer[timerIdx].startTime);
-  int stopm = time2minutes(robot->timer[timerIdx].stopTime);
+  sendYesNo(robot_p->timer[timerIdx].active);
+  int startm = time2minutes(robot_p->timer[timerIdx].startTime);
+  int stopm = time2minutes(robot_p->timer[timerIdx].stopTime);
   String sidx = String(timerIdx);
   sendSlider("p1" + sidx, F("Start hour "),
-             robot->timer[timerIdx].startTime.hour, "", 1, 23, 0);
+             robot_p->timer[timerIdx].startTime.hour, "", 1, 23, 0);
   sendSlider("p2" + sidx, F("Start minute "),
-             robot->timer[timerIdx].startTime.minute, "", 1, 59, 0);
-  sendSlider("p3" + sidx, F("Stop hour "), robot->timer[timerIdx].stopTime.hour,
+             robot_p->timer[timerIdx].startTime.minute, "", 1, 59, 0);
+  sendSlider("p3" + sidx, F("Stop hour "), robot_p->timer[timerIdx].stopTime.hour,
              "", 1, 23, 0);
   sendSlider("p4" + sidx, F("Stop minute "),
-             robot->timer[timerIdx].stopTime.minute, "", 1, 59, 0);
+             robot_p->timer[timerIdx].stopTime.minute, "", 1, 59, 0);
   for (int i = 0; i < 7; i++)
   {
     Bluetooth.print("|p5");
     Bluetooth.print(timerIdx);
     Bluetooth.print(i);
     Bluetooth.print("~");
-    if ((robot->timer[timerIdx].daysOfWeek >> i) & 1)
+    if ((robot_p->timer[timerIdx].daysOfWeek >> i) & 1)
     {
       Bluetooth.print("(X)  ");
     }
@@ -1350,63 +1392,63 @@ void RemoteControl::processTimerDetailMenu(String pfodCmd)
   int timerIdx = pfodCmd[2] - '0';
   if (pfodCmd.startsWith("p0"))
   {
-    robot->timer[timerIdx].active = !robot->timer[timerIdx].active;
+    TOGGLE(robot_p->timer[timerIdx].active);
   }
   else if (pfodCmd.startsWith("p1"))
   {
-    processSlider(pfodCmd, robot->timer[timerIdx].startTime.hour, 1);
+    processSlider(pfodCmd, robot_p->timer[timerIdx].startTime.hour, 1);
     checkStop = true;
   }
   else if (pfodCmd.startsWith("p2"))
   {
-    processSlider(pfodCmd, robot->timer[timerIdx].startTime.minute, 1);
+    processSlider(pfodCmd, robot_p->timer[timerIdx].startTime.minute, 1);
     checkStop = true;
   }
   else if (pfodCmd.startsWith("p3"))
   {
-    processSlider(pfodCmd, robot->timer[timerIdx].stopTime.hour, 1);
+    processSlider(pfodCmd, robot_p->timer[timerIdx].stopTime.hour, 1);
     checkStart = true;
   }
   else if (pfodCmd.startsWith("p4"))
   {
-    processSlider(pfodCmd, robot->timer[timerIdx].stopTime.minute, 1);
+    processSlider(pfodCmd, robot_p->timer[timerIdx].stopTime.minute, 1);
     checkStart = true;
   }
   else if (pfodCmd.startsWith("p9"))
   {
-    robot->timer[timerIdx].startTime = robot->datetime.time;
+    robot_p->timer[timerIdx].startTime = robot_p->datetime.time;
     checkStop = true;
-    robot->timer[timerIdx].daysOfWeek = (1 << robot->datetime.date.dayOfWeek);
+    robot_p->timer[timerIdx].daysOfWeek = (1 << robot_p->datetime.date.dayOfWeek);
   }
   else if (pfodCmd.startsWith("p5"))
   {
     int day = pfodCmd[3] - '0';
-    robot->timer[timerIdx].daysOfWeek = robot->timer[timerIdx].daysOfWeek
+    robot_p->timer[timerIdx].daysOfWeek = robot_p->timer[timerIdx].daysOfWeek
         ^ (1 << day);
   }
   if (checkStop)
   {
     // adjust start time
-    startmin = min(1434, time2minutes(robot->timer[timerIdx].startTime));
+    startmin = min(1434, time2minutes(robot_p->timer[timerIdx].startTime));
     minutes2time(startmin, time);
-    robot->timer[timerIdx].startTime = time;
+    robot_p->timer[timerIdx].startTime = time;
     // check stop time
-    stopmin = time2minutes(robot->timer[timerIdx].stopTime);
+    stopmin = time2minutes(robot_p->timer[timerIdx].stopTime);
     stopmin = max(stopmin, startmin + 5);
     minutes2time(stopmin, time);
-    robot->timer[timerIdx].stopTime = time;
+    robot_p->timer[timerIdx].stopTime = time;
   }
   else if (checkStart)
   {
     // adjust stop time
-    stopmin = max(5, time2minutes(robot->timer[timerIdx].stopTime));
+    stopmin = max(5, time2minutes(robot_p->timer[timerIdx].stopTime));
     minutes2time(stopmin, time);
-    robot->timer[timerIdx].stopTime = time;
+    robot_p->timer[timerIdx].stopTime = time;
     // check start time
-    startmin = time2minutes(robot->timer[timerIdx].startTime);
+    startmin = time2minutes(robot_p->timer[timerIdx].startTime);
     startmin = min(startmin, stopmin - 5);
     minutes2time(startmin, time);
-    robot->timer[timerIdx].startTime = time;
+    robot_p->timer[timerIdx].startTime = time;
   }
   sendTimerDetailMenu(timerIdx, true);
 }
@@ -1422,13 +1464,13 @@ void RemoteControl::sendTimerMenu(boolean update)
     Bluetooth.print(F("{.Timer"));
   }
   Bluetooth.print(F("|i99~Use "));
-  sendYesNo(robot->timerUse);
+  sendYesNo(robot_p->timerUse);
   for (int i = 0; i < MAX_TIMERS; i++)
   {
     Bluetooth.print("|i0");
     Bluetooth.print(i);
     Bluetooth.print("~");
-    sendTimer(robot->timer[i]);
+    sendTimer(robot_p->timer[i]);
   }
   Bluetooth.println("}");
 }
@@ -1444,7 +1486,7 @@ void RemoteControl::processTimerMenu(String pfodCmd)
   {
     if (pfodCmd.startsWith("i99"))
     {
-      robot->timerUse = !robot->timerUse;
+      TOGGLE(robot_p->timerUse);
     }
     sendTimerMenu(true);
   }
@@ -1468,7 +1510,7 @@ void RemoteControl::processFactorySettingsMenu(String pfodCmd)
 {
   if (pfodCmd == "x0")
   {
-    robot->deleteUserSettings();
+    robot_p->deleteUserSettings();
   }
   sendFactorySettingsMenu(true);
 }
@@ -1486,21 +1528,21 @@ void RemoteControl::sendInfoMenu(boolean update)
   Bluetooth.print(F("|v00~Ardumower "));
   Bluetooth.print(VER);
   Bluetooth.print(F("|v01~Developer "));
-  sendYesNo(robot->developerActive);
+  sendYesNo(robot_p->developerActive);
   Bluetooth.print(F("|v04~Stats override "));
-  sendYesNo(robot->statsOverride);
+  sendYesNo(robot_p->statsOverride);
   Bluetooth.print(F("|v02~Mowing time trip (min) "));
-  Bluetooth.print(robot->statsMowTimeMinutesTrip);
+  Bluetooth.print(robot_p->statsMowTimeMinutesTrip);
   Bluetooth.print(F("|v03~Mowing time total (hrs) "));
-  Bluetooth.print(robot->statsMowTimeHoursTotal);
+  Bluetooth.print(robot_p->getStatsMowTimeHoursTotal());
   Bluetooth.print(F("|v05~Battery charging cycles "));
-  Bluetooth.print(robot->statsBatteryChargingCounterTotal);
+  Bluetooth.print(robot_p->statsBatteryChargingCounterTotal);
   Bluetooth.print(F("|v06~Battery recharged capacity trip (mAh)"));
-  Bluetooth.print(robot->statsBatteryChargingCapacityTrip);
+  Bluetooth.print(robot_p->statsBatteryChargingCapacityTrip);
   Bluetooth.print(F("|v07~Battery recharged capacity total (Ah)"));
-  Bluetooth.print(robot->statsBatteryChargingCapacityTotal / 1000);
+  Bluetooth.print(robot_p->statsBatteryChargingCapacityTotal / 1000);
   Bluetooth.print(F("|v08~Battery recharged capacity average (mAh)"));
-  Bluetooth.print(robot->statsBatteryChargingCapacityAverage);
+  Bluetooth.print(robot_p->statsBatteryChargingCapacityAverage);
   //Bluetooth.print("|d01~Perimeter v");
   //Bluetooth.print(verToString(readPerimeterVer()));
   //Bluetooth.print("|d02~IMU v");
@@ -1514,13 +1556,13 @@ void RemoteControl::processInfoMenu(String pfodCmd)
 {
   if (pfodCmd == "v01")
   {
-    robot->developerActive = !robot->developerActive;
+    TOGGLE(robot_p->developerActive);
   }
   if (pfodCmd == "v04")
   {
-    robot->statsOverride = !robot->statsOverride;
+    TOGGLE(robot_p->statsOverride);
   }
-  robot->saveUserSettings();
+  robot_p->saveUserSettings();
 
   sendInfoMenu(true);
 }
@@ -1537,19 +1579,19 @@ void RemoteControl::sendCommandMenu(boolean update)
   }
   Bluetooth.print(F("|ro~OFF|ra~Auto mode|rc~RC mode|"));
   Bluetooth.print(F("rm~Mowing is "));
-  sendOnOff(robot->cutter.isEnabled());
+  sendOnOff(robot_p->cutter.isEnabled());
   Bluetooth.print(F("|rp~Pattern is "));
-  Bluetooth.print(robot->mowPatternName());
+  Bluetooth.print(robot_p->mowPatternName());
   Bluetooth.print(F("|rh~Home|rk~Track|rs~State is "));
-  Bluetooth.print(robot->stateName());
+  Bluetooth.print(robot_p->stateName());
   Bluetooth.print(F("|rr~Auto rotate is "));
-  Bluetooth.print(robot->wheels.wheel[Wheel::LEFT].motor.pwmCur);
+  Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.pwmCur);
   Bluetooth.print(F("|r1~User switch 1 is "));
-  sendOnOff(robot->userSwitch1);
+  sendOnOff(robot_p->userSwitch1);
   Bluetooth.print(F("|r2~User switch 2 is "));
-  sendOnOff(robot->userSwitch2);
+  sendOnOff(robot_p->userSwitch2);
   Bluetooth.print(F("|r3~User switch 3 is "));
-  sendOnOff(robot->userSwitch3);
+  sendOnOff(robot_p->userSwitch3);
   Bluetooth.print("}");
   Bluetooth.println();
 }
@@ -1559,55 +1601,55 @@ void RemoteControl::processCommandMenu(String pfodCmd)
   if (pfodCmd == "ro")
   {
     // cmd: off
-    robot->setNextState(STATE_OFF, 0);
+    robot_p->setNextState(STATE_OFF, 0);
     sendCommandMenu(true);
   }
   else if (pfodCmd == "rh")
   {
     // cmd: home
-    robot->setNextState(STATE_PERI_FIND, 0);
+    robot_p->setNextState(STATE_PERI_FIND, 0);
     sendCommandMenu(true);
   }
   else if (pfodCmd == "rr")
   {
-    robot->setNextState(STATE_MANUAL, 0);
-    robot->wheels.wheel[Wheel::LEFT].motor.rpmSet += 10;
-    robot->wheels.wheel[Wheel::RIGHT].motor.rpmSet = -robot->wheels.wheel[Wheel::LEFT].motor.rpmSet;
+    robot_p->setNextState(STATE_MANUAL, 0);
+    robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet += 10;
+    robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmSet = -robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet;
     sendCommandMenu(true);
   }
   else if (pfodCmd == "rk")
   {
     // cmd: track perimeter
-    robot->setNextState(STATE_PERI_TRACK, 0);
+    robot_p->setNextState(STATE_PERI_TRACK, 0);
     sendCommandMenu(true);
   }
   else if (pfodCmd == "ra")
   {
     // cmd: start auto mowing
-    robot->cutter.enable();
-    robot->setNextState(STATE_FORWARD, 0);
+    robot_p->cutter.enable();
+    robot_p->setNextState(STATE_FORWARD, 0);
     sendCommandMenu(true);
   }
   else if (pfodCmd == "rc")
   {
     // cmd: start remote control (RC)
-    robot->cutter.enable();
-    robot->cutter.motor.regulate = false;
-    robot->setNextState(STATE_REMOTE, 0);
+    robot_p->cutter.enable();
+    robot_p->cutter.motor.regulate = false;
+    robot_p->setNextState(STATE_REMOTE, 0);
     sendCommandMenu(true);
   }
   else if (pfodCmd == "rm")
   {
     // cmd: mower motor on/off
-    if (robot->stateCurr == STATE_OFF || robot->stateCurr == STATE_MANUAL)
+    if (robot_p->getStateCurr() == STATE_OFF || robot_p->getStateCurr() == STATE_MANUAL)
     {
-      robot->cutter.setEnableOverriden(false);
+      robot_p->cutter.setEnableOverriden(false);
     }
     else
     {
-      robot->cutter.toggleEnableOverriden();
+      robot_p->cutter.toggleEnableOverriden();
     }
-    robot->cutter.toggleEnabled();
+    robot_p->cutter.toggleEnabled();
     sendCommandMenu(true);
   }
   else if (pfodCmd == "rs")
@@ -1618,26 +1660,26 @@ void RemoteControl::processCommandMenu(String pfodCmd)
   else if (pfodCmd == "rp")
   {
     // cmd: pattern
-    robot->mowPatternCurr = (robot->mowPatternCurr + 1) % 3;
-    robot->setNextState(STATE_OFF, 0);
+    robot_p->mowPatternCurr = (robot_p->mowPatternCurr + 1) % 3;
+    robot_p->setNextState(STATE_OFF, 0);
     sendCommandMenu(true);
   }
   else if (pfodCmd == "r1")
   {
-    robot->userSwitch1 = !robot->userSwitch1;
-    robot->setUserSwitches();
+    TOGGLE(robot_p->userSwitch1);
+    robot_p->setUserSwitches();
     sendCommandMenu(true);
   }
   else if (pfodCmd == "r2")
   {
-    robot->userSwitch2 = !robot->userSwitch2;
-    robot->setUserSwitches();
+    TOGGLE(robot_p->userSwitch2);
+    robot_p->setUserSwitches();
     sendCommandMenu(true);
   }
   else if (pfodCmd == "r3")
   {
-    robot->userSwitch3 = !robot->userSwitch3;
-    robot->setUserSwitches();
+    TOGGLE(robot_p->userSwitch3);
+    robot_p->setUserSwitches();
     sendCommandMenu(true);
   }
 }
@@ -1653,12 +1695,10 @@ void RemoteControl::sendManualMenu(boolean update)
     Bluetooth.println(F("{^Manual navigation`1000"));
   }
   Bluetooth.print(F("|nl~Left|nr~Right|nf~Forward"));
-  if (((robot->wheels.wheel[Wheel::LEFT].motor.rpmSet < 5) && (robot->wheels.wheel[Wheel::LEFT].motor.rpmSet > -5)) && ((robot
-      ->wheels.wheel[Wheel::RIGHT].motor.rpmSet
-                                                                                     < 5)
-                                                                                    && (robot
-                                                                                        ->wheels.wheel[Wheel::RIGHT].motor.rpmSet
-                                                                                        > -5)))
+  if ((robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet < 5 &&
+       robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet > -5) &&
+      (robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmSet < 5 &&
+       robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmSet > -5))
   {
     Bluetooth.print(F("|nb~Reverse"));
   }
@@ -1667,7 +1707,7 @@ void RemoteControl::sendManualMenu(boolean update)
     Bluetooth.print(F("|ns~Stop"));
   }
   Bluetooth.print(F("|nm~Mow is "));
-  sendOnOff(robot->cutter.isEnabled());
+  sendOnOff(robot_p->cutter.isEnabled());
   Bluetooth.println("}");
 }
 
@@ -1682,7 +1722,7 @@ void RemoteControl::sendCompassMenu(boolean update)
     Bluetooth.println(F("{^Compass`1000"));
   }
   Bluetooth.print(F("|cw~West|ce~East|cn~North "));
-  Bluetooth.print(robot->imu.ypr.yaw / PI * 180);
+  Bluetooth.print(robot_p->imu.ypr.yaw / PI * 180);
   Bluetooth.println(F("|cs~South|cm~Mow}"));
 }
 
@@ -1690,31 +1730,31 @@ void RemoteControl::processCompassMenu(String pfodCmd)
 {
   if (pfodCmd == "cm")
   {
-    robot->cutter.toggleEnabled();
+    robot_p->cutter.toggleEnabled();
     sendCompassMenu(true);
   }
   else if (pfodCmd == "cn")
   {
-    robot->imuRollHeading = 0;
-    robot->setNextState(STATE_ROLL_WAIT, 0);
+    robot_p->imuRollHeading = 0;
+    robot_p->setNextState(STATE_ROLL_WAIT, 0);
     sendCompassMenu(true);
   }
   else if (pfodCmd == "cs")
   {
-    robot->imuRollHeading = PI;
-    robot->setNextState(STATE_ROLL_WAIT, 0);
+    robot_p->imuRollHeading = PI;
+    robot_p->setNextState(STATE_ROLL_WAIT, 0);
     sendCompassMenu(true);
   }
   else if (pfodCmd == "cw")
   {
-    robot->imuRollHeading = -PI / 2;
-    robot->setNextState(STATE_ROLL_WAIT, 0);
+    robot_p->imuRollHeading = -PI / 2;
+    robot_p->setNextState(STATE_ROLL_WAIT, 0);
     sendCompassMenu(true);
   }
   else if (pfodCmd == "ce")
   {
-    robot->imuRollHeading = PI / 2;
-    robot->setNextState(STATE_ROLL_WAIT, 0);
+    robot_p->imuRollHeading = PI / 2;
+    robot_p->setNextState(STATE_ROLL_WAIT, 0);
     sendCompassMenu(true);
   }
 }
@@ -1724,72 +1764,83 @@ void RemoteControl::processManualMenu(String pfodCmd)
   if (pfodCmd == "nl")
   {
     // manual: left
-    robot->setNextState(STATE_MANUAL, 0);
+    robot_p->setNextState(STATE_MANUAL, 0);
     float sign = 1.0;
-    if (robot->wheels.wheel[Wheel::LEFT].motor.rpmSet < 0)
+    if (robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet < 0)
     {
       sign = -1.0;
     }
-    if (sign * robot->wheels.wheel[Wheel::LEFT].motor.rpmSet >= sign
-        * robot->wheels.wheel[Wheel::RIGHT].motor.rpmSet)
+    if (sign * robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet >=
+        sign * robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmSet)
     {
-      robot->wheels.wheel[Wheel::LEFT].motor.rpmSet = sign * robot->wheels.wheel[Wheel::LEFT].motor.rpmMax / 2;
+      robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet =
+          sign * robot_p->wheels.wheel[Wheel::LEFT].motor.rpmMax / 2;
     }
     else
     {
-      robot->wheels.wheel[Wheel::LEFT].motor.rpmSet /= 2;
+      robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet /= 2;
     }
-    robot->wheels.wheel[Wheel::RIGHT].motor.rpmSet = sign * robot->wheels.wheel[Wheel::LEFT].motor.rpmMax;
+    robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmSet =
+        sign * robot_p->wheels.wheel[Wheel::LEFT].motor.rpmMax;
+
     sendManualMenu(true);
   }
   else if (pfodCmd == "nr")
   {
     // manual: right
-    robot->setNextState(STATE_MANUAL, 0);
+    robot_p->setNextState(STATE_MANUAL, 0);
     float sign = 1.0;
-    if (robot->wheels.wheel[Wheel::RIGHT].motor.rpmSet < 0)
+    if (robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmSet < 0)
     {
       sign = -1.0;
     }
-    if (sign * robot->wheels.wheel[Wheel::RIGHT].motor.rpmSet >= sign
-        * robot->wheels.wheel[Wheel::LEFT].motor.rpmSet)
+    if (sign * robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmSet >=
+        sign * robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet)
     {
-      robot->wheels.wheel[Wheel::RIGHT].motor.rpmSet = sign * robot->wheels.wheel[Wheel::LEFT].motor.rpmMax / 2;
+      robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmSet =
+          sign * robot_p->wheels.wheel[Wheel::LEFT].motor.rpmMax / 2;
     }
     else
     {
-      robot->wheels.wheel[Wheel::RIGHT].motor.rpmSet /= 2;
+      robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmSet /= 2;
     }
-    robot->wheels.wheel[Wheel::LEFT].motor.rpmSet = sign * robot->wheels.wheel[Wheel::LEFT].motor.rpmMax;
+    robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet =
+        sign * robot_p->wheels.wheel[Wheel::LEFT].motor.rpmMax;
+
     sendManualMenu(true);
   }
   else if (pfodCmd == "nf")
   {
     // manual: forward
-    robot->setNextState(STATE_MANUAL, 0);
-    robot->wheels.wheel[Wheel::LEFT].motor.rpmSet = robot->wheels.wheel[Wheel::LEFT].motor.rpmMax;
-    robot->wheels.wheel[Wheel::RIGHT].motor.rpmSet = robot->wheels.wheel[Wheel::LEFT].motor.rpmMax;
+    robot_p->setNextState(STATE_MANUAL, 0);
+    robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet =
+        robot_p->wheels.wheel[Wheel::LEFT].motor.rpmMax;
+    robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmSet =
+        robot_p->wheels.wheel[Wheel::LEFT].motor.rpmMax;
     sendManualMenu(true);
   }
   else if (pfodCmd == "nb")
   {
     // manual: reverse
-    robot->setNextState(STATE_MANUAL, 0);
-    robot->wheels.wheel[Wheel::LEFT].motor.rpmSet = -robot->wheels.wheel[Wheel::LEFT].motor.rpmMax;
-    robot->wheels.wheel[Wheel::RIGHT].motor.rpmSet = -robot->wheels.wheel[Wheel::LEFT].motor.rpmMax;
+    robot_p->setNextState(STATE_MANUAL, 0);
+    robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet =
+        -robot_p->wheels.wheel[Wheel::LEFT].motor.rpmMax;
+    robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmSet =
+        -robot_p->wheels.wheel[Wheel::LEFT].motor.rpmMax;
     sendManualMenu(true);
   }
   else if (pfodCmd == "nm")
   {
     // manual: mower ON/OFF
-    robot->cutter.toggleEnabled();
+    robot_p->cutter.toggleEnabled();
     sendManualMenu(true);
   }
   else if (pfodCmd == "ns")
   {
     // manual: stop
     //setNextState(STATE_OFF, 0);
-    robot->wheels.wheel[Wheel::LEFT].motor.rpmSet = robot->wheels.wheel[Wheel::RIGHT].motor.rpmSet = 0;
+    robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet =
+        robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmSet = 0;
     sendManualMenu(true);
   }
 }
@@ -1862,7 +1913,7 @@ void RemoteControl::processSettingsMenu(String pfodCmd)
   }
   else if (pfodCmd == "sz")
   {
-    robot->saveUserSettings();
+    robot_p->saveUserSettings();
     sendSettingsMenu(true);
   }
   else
@@ -1874,67 +1925,69 @@ void RemoteControl::processSettingsMenu(String pfodCmd)
 // process pfodState
 void RemoteControl::run()
 {
+  unsigned long curMillis = millis();
+
   if (pfodState == PFOD_LOG_SENSORS)
   {
     //robot->printInfo(Bluetooth);
     //Bluetooth.println("test");
     Bluetooth.print((float(millis()) / 1000.0f));
     Bluetooth.print(",");
-    Bluetooth.print(robot->wheels.wheel[Wheel::LEFT].motor.powerMeas);
+    Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.getPowerMeas());
     Bluetooth.print(",");
-    Bluetooth.print(robot->wheels.wheel[Wheel::RIGHT].motor.powerMeas);
+    Bluetooth.print(robot_p->wheels.wheel[Wheel::RIGHT].motor.getPowerMeas());
     Bluetooth.print(",");
-    Bluetooth.print(robot->cutter.motor.powerMeas);
+    Bluetooth.print(robot_p->cutter.motor.getPowerMeas());
     Bluetooth.print(",");
     for (uint8_t i = 0; i < Sonars::END; i++)
     {
-      Bluetooth.print(robot->sonars.sonar[i].distance);
+      Bluetooth.print(robot_p->sonars.sonar[i].getDistance());
       Bluetooth.print(",");
     }
-    Bluetooth.print(robot->perimeter.isInside(0));
+    Bluetooth.print(robot_p->perimeter.isInside(0));
     Bluetooth.print(",");
-    Bluetooth.print(robot->perimeterMag);
+    Bluetooth.print(robot_p->getPerimeterMag());
     Bluetooth.print(",");
-    Bluetooth.print(robot->odometer.encoder[Odometer::LEFT].getCounter());
+    Bluetooth.print(robot_p->odometer.encoder[Odometer::LEFT].getCounter());
     Bluetooth.print(",");
-    Bluetooth.print(robot->odometer.encoder[Odometer::RIGHT].getCounter());
+    Bluetooth.print(robot_p->odometer.encoder[Odometer::RIGHT].getCounter());
     Bluetooth.print(",");
-    Bluetooth.print(robot->imu.ypr.yaw / PI * 180);
+    Bluetooth.print(robot_p->imu.ypr.yaw / PI * 180);
     Bluetooth.print(",");
-    Bluetooth.print(robot->imu.ypr.pitch / PI * 180);
+    Bluetooth.print(robot_p->imu.ypr.pitch / PI * 180);
     Bluetooth.print(",");
-    Bluetooth.print(robot->imu.ypr.roll / PI * 180);
+    Bluetooth.print(robot_p->imu.ypr.roll / PI * 180);
     Bluetooth.print(",");
-    Bluetooth.print(robot->imu.gyro.x / PI * 180);
+    Bluetooth.print(robot_p->imu.gyro.x / PI * 180);
     Bluetooth.print(",");
-    Bluetooth.print(robot->imu.gyro.y / PI * 180);
+    Bluetooth.print(robot_p->imu.gyro.y / PI * 180);
     Bluetooth.print(",");
-    Bluetooth.print(robot->imu.gyro.z / PI * 180);
+    Bluetooth.print(robot_p->imu.gyro.z / PI * 180);
     Bluetooth.print(",");
-    Bluetooth.print(robot->imu.acc.x);
+    Bluetooth.print(robot_p->imu.acc.x);
     Bluetooth.print(",");
-    Bluetooth.print(robot->imu.acc.y);
+    Bluetooth.print(robot_p->imu.acc.y);
     Bluetooth.print(",");
-    Bluetooth.print(robot->imu.acc.z);
+    Bluetooth.print(robot_p->imu.acc.z);
     Bluetooth.print(",");
-    Bluetooth.print(robot->imu.com.x);
+    Bluetooth.print(robot_p->imu.com.x);
     Bluetooth.print(",");
-    Bluetooth.print(robot->imu.com.y);
+    Bluetooth.print(robot_p->imu.com.y);
     Bluetooth.print(",");
-    Bluetooth.print(robot->imu.com.z);
+    Bluetooth.print(robot_p->imu.com.z);
     Bluetooth.print(",");
     float lat, lon;
     unsigned long age;
-    robot->gps.f_get_position(&lat, &lon, &age);
-    Bluetooth.print(robot->gps.hdop());
+    robot_p->gps.f_get_position(&lat, &lon, &age);
+    Bluetooth.print(robot_p->gps.hdop());
     Bluetooth.print(",");
-    Bluetooth.print(robot->gps.satellites());
+    Bluetooth.print(robot_p->gps.satellites());
     Bluetooth.print(",");
-    Bluetooth.print(robot->gps.f_speed_kmph());
+    Bluetooth.print(robot_p->gps.f_speed_kmph());
     Bluetooth.print(",");
-    Bluetooth.print(robot->gps.f_course());
+    Bluetooth.print(robot_p->gps.f_course());
     Bluetooth.print(",");
-    Bluetooth.print(robot->gps.f_altitude());
+    Bluetooth.print(robot_p->gps.f_altitude());
     Bluetooth.print(",");
     Bluetooth.print(lat);
     Bluetooth.print(",");
@@ -1943,128 +1996,128 @@ void RemoteControl::run()
   }
   else if (pfodState == PFOD_PLOT_BAT)
   {
-    if (millis() >= nextPlotTime)
+    if (curMillis >= nextPlotTime)
     {
-      nextPlotTime = millis() + 60000;
-      Bluetooth.print(((unsigned long) millis() / 60000));
+      nextPlotTime = curMillis + 60000;
+      Bluetooth.print(curMillis / 60000);
       Bluetooth.print(",");
-      Bluetooth.print(robot->batVoltage);
+      Bluetooth.print(robot_p->getBatVoltage());
       Bluetooth.print(",");
-      Bluetooth.print(robot->chgVoltage);
+      Bluetooth.print(robot_p->getChgVoltage());
       Bluetooth.print(",");
-      Bluetooth.print(robot->chgCurrent);
+      Bluetooth.print(robot_p->getChgCurrent());
       Bluetooth.print(",");
-      Bluetooth.println(robot->batCapacity);
+      Bluetooth.println(robot_p->getBatCapacity());
     }
   }
   else if (pfodState == PFOD_PLOT_ODO2D)
   {
-    if (millis() >= nextPlotTime)
+    if (curMillis >= nextPlotTime)
     {
-      nextPlotTime = millis() + 500;
-      Bluetooth.print(robot->odometer.x);
+      nextPlotTime = curMillis + 500;
+      Bluetooth.print(robot_p->odometer.getX());
       Bluetooth.print(",");
-      Bluetooth.println(robot->odometer.y);
+      Bluetooth.println(robot_p->odometer.getY());
     }
   }
   else if (pfodState == PFOD_PLOT_IMU)
   {
-    if (millis() >= nextPlotTime)
+    if (curMillis >= nextPlotTime)
     {
-      nextPlotTime = millis() + 200;
-      Bluetooth.print((float(millis()) / 1000.0f));
+      nextPlotTime = curMillis + 200;
+      Bluetooth.print((float(curMillis) / 1000.0f));
       Bluetooth.print(",");
-      Bluetooth.print(robot->imu.ypr.yaw / PI * 180);
+      Bluetooth.print(robot_p->imu.ypr.yaw / PI * 180);
       Bluetooth.print(",");
-      Bluetooth.print(robot->imu.ypr.pitch / PI * 180);
+      Bluetooth.print(robot_p->imu.ypr.pitch / PI * 180);
       Bluetooth.print(",");
-      Bluetooth.print(robot->imu.ypr.roll / PI * 180);
+      Bluetooth.print(robot_p->imu.ypr.roll / PI * 180);
       Bluetooth.print(",");
-      Bluetooth.print(robot->imu.gyro.x / PI * 180);
+      Bluetooth.print(robot_p->imu.gyro.x / PI * 180);
       Bluetooth.print(",");
-      Bluetooth.print(robot->imu.gyro.y / PI * 180);
+      Bluetooth.print(robot_p->imu.gyro.y / PI * 180);
       Bluetooth.print(",");
-      Bluetooth.print(robot->imu.gyro.z / PI * 180);
+      Bluetooth.print(robot_p->imu.gyro.z / PI * 180);
       Bluetooth.print(",");
-      Bluetooth.print(robot->imu.acc.x);
+      Bluetooth.print(robot_p->imu.acc.x);
       Bluetooth.print(",");
-      Bluetooth.print(robot->imu.acc.y);
+      Bluetooth.print(robot_p->imu.acc.y);
       Bluetooth.print(",");
-      Bluetooth.print(robot->imu.acc.z);
+      Bluetooth.print(robot_p->imu.acc.z);
       Bluetooth.print(",");
-      Bluetooth.print(robot->imu.com.x);
+      Bluetooth.print(robot_p->imu.com.x);
       Bluetooth.print(",");
-      Bluetooth.print(robot->imu.com.y);
+      Bluetooth.print(robot_p->imu.com.y);
       Bluetooth.print(",");
-      Bluetooth.println(robot->imu.com.z);
+      Bluetooth.println(robot_p->imu.com.z);
     }
   }
   else if (pfodState == PFOD_PLOT_SENSOR_COUNTERS)
   {
-    if (millis() >= nextPlotTime)
+    if (curMillis >= nextPlotTime)
     {
-      nextPlotTime = millis() + 200;
-      Bluetooth.print((float(millis()) / 1000.0f));
+      nextPlotTime = curMillis + 200;
+      Bluetooth.print((float(curMillis) / 1000.0f));
       Bluetooth.print(",");
-      Bluetooth.print(robot->stateCurr);
+      Bluetooth.print(robot_p->getStateCurr());
       Bluetooth.print(",");
-      Bluetooth.print(robot->wheels.wheel[Wheel::LEFT].motor.overloadCounter);
+      Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.getOverloadCounter());
       Bluetooth.print(",");
-      Bluetooth.print(robot->wheels.wheel[Wheel::RIGHT].motor.overloadCounter);
+      Bluetooth.print(robot_p->wheels.wheel[Wheel::RIGHT].motor.getOverloadCounter());
       Bluetooth.print(",");
-      Bluetooth.print(robot->cutter.motor.overloadCounter);
+      Bluetooth.print(robot_p->cutter.motor.getOverloadCounter());
       Bluetooth.print(",");
-      Bluetooth.print(robot->bumpers.bumper[Bumpers::LEFT].getCounter());
+      Bluetooth.print(robot_p->bumpers.bumper[Bumpers::LEFT].getCounter());
       Bluetooth.print(",");
-      Bluetooth.print(robot->bumpers.bumper[Bumpers::RIGHT].getCounter());
+      Bluetooth.print(robot_p->bumpers.bumper[Bumpers::RIGHT].getCounter());
       Bluetooth.print(",");
-      Bluetooth.print(robot->sonars.distanceCounter);
+      Bluetooth.print(robot_p->sonars.getDistanceCounter());
       Bluetooth.print(",");
-      Bluetooth.print(robot->perimeterCounter);
+      Bluetooth.print(robot_p->getPerimeterCounter());
       Bluetooth.print(",");
-      Bluetooth.print(robot->lawnSensor.getCounter());
+      Bluetooth.print(robot_p->lawnSensor.getCounter());
       Bluetooth.print(",");
-      Bluetooth.print(robot->rainSensor.getCounter());
+      Bluetooth.print(robot_p->rainSensor.getCounter());
       Bluetooth.print(",");
-      Bluetooth.print(robot->dropSensors.dropSensor[DropSensors::LEFT].getCounter());
+      Bluetooth.print(robot_p->dropSensors.dropSensor[DropSensors::LEFT].getCounter());
       Bluetooth.print(",");
-      Bluetooth.println(robot->dropSensors.dropSensor[DropSensors::RIGHT].getCounter());
+      Bluetooth.println(robot_p->dropSensors.dropSensor[DropSensors::RIGHT].getCounter());
     }
   }
   else if (pfodState == PFOD_PLOT_SENSORS)
   {
-    if (millis() >= nextPlotTime)
+    if (curMillis >= nextPlotTime)
     {
-      nextPlotTime = millis() + 200;
-      Bluetooth.print((float(millis()) / 1000.0f));
+      nextPlotTime = curMillis + 200;
+      Bluetooth.print((float(curMillis) / 1000.0f));
       Bluetooth.print(",");
-      Bluetooth.print(robot->stateCurr);
+      Bluetooth.print(robot_p->getStateCurr());
       Bluetooth.print(",");
-      Bluetooth.print(robot->wheels.wheel[Wheel::LEFT].motor.powerMeas);
+      Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.getPowerMeas());
       Bluetooth.print(",");
-      Bluetooth.print(robot->wheels.wheel[Wheel::RIGHT].motor.powerMeas);
+      Bluetooth.print(robot_p->wheels.wheel[Wheel::RIGHT].motor.getPowerMeas());
       Bluetooth.print(",");
-      Bluetooth.print(robot->cutter.motor.powerMeas);
+      Bluetooth.print(robot_p->cutter.motor.getPowerMeas());
       Bluetooth.print(",");
       for (uint8_t i = 0; i < Sonars::END; i++)
       {
-        Bluetooth.print(robot->sonars.sonar[i].distance);
+        Bluetooth.print(robot_p->sonars.sonar[i].getDistance());
         Bluetooth.print(",");
       }
-      Bluetooth.print(robot->perimeter.isInside(0));
+      Bluetooth.print(robot_p->perimeter.isInside(0));
       Bluetooth.print(",");
-      Bluetooth.print(robot->lawnSensor.isDetected());
+      Bluetooth.print(robot_p->lawnSensor.isDetected());
       Bluetooth.print(",");
-      Bluetooth.print(robot->rainSensor.isRaining());
+      Bluetooth.print(robot_p->rainSensor.isRaining());
       Bluetooth.print(",");
-      Bluetooth.print(robot->dropSensors.dropSensor[DropSensors::LEFT].isDetected());
+      Bluetooth.print(robot_p->dropSensors.dropSensor[DropSensors::LEFT].isDetected());
       Bluetooth.print(",");
-      Bluetooth.println(robot->dropSensors.dropSensor[DropSensors::RIGHT].isDetected());
+      Bluetooth.println(robot_p->dropSensors.dropSensor[DropSensors::RIGHT].isDetected());
     }
   }
   else if (pfodState == PFOD_PLOT_PERIMETER)
   {
-    if (millis() >= nextPlotTime)
+    if (curMillis >= nextPlotTime)
     {
       if (perimeterCaptureIdx == 32 * 3)
       {
@@ -2077,43 +2130,43 @@ void RemoteControl::run()
       }
       if (perimeterCaptureIdx < 32 * 3)
       {
-        nextPlotTime = millis() + 200;
+        nextPlotTime = curMillis + 200;
         Bluetooth.print(perimeterCapture[perimeterCaptureIdx / 3]);
         Bluetooth.print(",");
-        Bluetooth.print(robot->perimeterMag);
+        Bluetooth.print(robot_p->getPerimeterMag());
         Bluetooth.print(",");
-        Bluetooth.print(robot->perimeter.getSmoothMagnitude(0));
+        Bluetooth.print(robot_p->perimeter.getSmoothMagnitude(0));
         Bluetooth.print(",");
-        Bluetooth.print(robot->perimeter.isInside(0));
+        Bluetooth.print(robot_p->perimeter.isInside(0));
         Bluetooth.print(",");
-        Bluetooth.print(robot->perimeterCounter);
+        Bluetooth.print(robot_p->getPerimeterCounter());
         Bluetooth.print(",");
-        Bluetooth.print(!robot->perimeter.signalTimedOut(0));
+        Bluetooth.print(!robot_p->perimeter.signalTimedOut(0));
         Bluetooth.print(",");
-        Bluetooth.println(robot->perimeter.getFilterQuality(0));
+        Bluetooth.println(robot_p->perimeter.getFilterQuality(0));
         perimeterCaptureIdx++;
       }
     }
   }
   else if (pfodState == PFOD_PLOT_GPS)
   {
-    if (millis() >= nextPlotTime)
+    if (curMillis >= nextPlotTime)
     {
-      nextPlotTime = millis() + 200;
+      nextPlotTime = curMillis + 200;
       float lat, lon;
       unsigned long age;
-      robot->gps.f_get_position(&lat, &lon, &age);
-      Bluetooth.print((float(millis()) / 1000.0f));
+      robot_p->gps.f_get_position(&lat, &lon, &age);
+      Bluetooth.print((float(curMillis) / 1000.0f));
       Bluetooth.print(",");
-      Bluetooth.print(robot->gps.hdop());
+      Bluetooth.print(robot_p->gps.hdop());
       Bluetooth.print(",");
-      Bluetooth.print(robot->gps.satellites());
+      Bluetooth.print(robot_p->gps.satellites());
       Bluetooth.print(",");
-      Bluetooth.print(robot->gps.f_speed_kmph());
+      Bluetooth.print(robot_p->gps.f_speed_kmph());
       Bluetooth.print(",");
-      Bluetooth.print(robot->gps.f_course());
+      Bluetooth.print(robot_p->gps.f_course());
       Bluetooth.print(",");
-      Bluetooth.print(robot->gps.f_altitude());
+      Bluetooth.print(robot_p->gps.f_altitude());
       Bluetooth.print(",");
       Bluetooth.print(lat);
       Bluetooth.print(",");
@@ -2122,38 +2175,38 @@ void RemoteControl::run()
   }
   else if (pfodState == PFOD_PLOT_GPS2D)
   {
-    if (millis() >= nextPlotTime)
+    if (curMillis >= nextPlotTime)
     {
-      nextPlotTime = millis() + 500;
-      Bluetooth.print(robot->gpsX);
+      nextPlotTime = curMillis + 500;
+      Bluetooth.print(robot_p->getGpsX());
       Bluetooth.print(",");
-      Bluetooth.println(robot->gpsY);
+      Bluetooth.println(robot_p->getGpsY());
     }
   }
   else if (pfodState == PFOD_PLOT_MOTOR)
   {
-    if (millis() >= nextPlotTime)
+    if (curMillis >= nextPlotTime)
     {
-      nextPlotTime = millis() + 50;
-      Bluetooth.print((float(millis()) / 1000.0f));
+      nextPlotTime = curMillis + 50;
+      Bluetooth.print((float(curMillis) / 1000.0f));
       Bluetooth.print(",");
-      Bluetooth.print(robot->odometer.encoder[Odometer::LEFT].getWheelRpmCurr());
+      Bluetooth.print(robot_p->odometer.encoder[Odometer::LEFT].getWheelRpmCurr());
       Bluetooth.print(",");
-      Bluetooth.print(robot->odometer.encoder[Odometer::RIGHT].getWheelRpmCurr());
+      Bluetooth.print(robot_p->odometer.encoder[Odometer::RIGHT].getWheelRpmCurr());
       Bluetooth.print(",");
       //      Bluetooth.print(robot->motorLeftSpeedRpmSet);
-      Bluetooth.print(robot->wheels.wheel[Wheel::LEFT].motor.pid.w);
+      Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.pid.getSetpoint());
       Bluetooth.print(",");
       //      Bluetooth.print(robot->motorRightSpeedRpmSet);
-      Bluetooth.print(robot->wheels.wheel[Wheel::RIGHT].motor.pid.w);
+      Bluetooth.print(robot_p->wheels.wheel[Wheel::RIGHT].motor.pid.getSetpoint());
       Bluetooth.print(",");
-      Bluetooth.print(robot->wheels.wheel[Wheel::LEFT].motor.pwmCur);
+      Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.pwmCur);
       Bluetooth.print(",");
-      Bluetooth.print(robot->wheels.wheel[Wheel::RIGHT].motor.pwmCur);
+      Bluetooth.print(robot_p->wheels.wheel[Wheel::RIGHT].motor.pwmCur);
       Bluetooth.print(",");
-      Bluetooth.print(robot->wheels.wheel[Wheel::LEFT].motor.pid.getEold());
+      Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.pid.getEold());
       Bluetooth.print(",");
-      Bluetooth.println(robot->wheels.wheel[Wheel::RIGHT].motor.pid.getEold());
+      Bluetooth.println(robot_p->wheels.wheel[Wheel::RIGHT].motor.pid.getEold());
     }
   }
 }
@@ -2278,7 +2331,7 @@ bool RemoteControl::readSerial()
       {
         // ADC calibration
         ADCMan.calibrate();
-        robot->beep(2, false);
+        robot_p->beep(2, false);
       }
       else if (pfodCmd == "y11")
       {
@@ -2436,4 +2489,3 @@ bool RemoteControl::readSerial()
   }
   return res;
 }
-

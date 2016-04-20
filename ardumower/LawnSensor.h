@@ -12,8 +12,6 @@ class LawnSensor
 {
   public:
     bool used { false };
-    unsigned long nextTimeRead {};
-    unsigned long nextTimeCheck {};
     enum lawnSensorE
     {
       FRONT,
@@ -58,6 +56,8 @@ class LawnSensor
     boolean detected{false};
     float value[2]{};     // lawn sensor capacity (time)
     float valueOld[2]{};  // lawn sensor capacity (time)
+    unsigned long nextTimeRead {};
+    unsigned long nextTimeCheck {};
     unsigned int timeBetweenReads { 100 };
     unsigned int timeBetweenChecks { 2000 };
 

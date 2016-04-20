@@ -29,18 +29,23 @@ class Sonar
 {
   public:
     bool use { false };
-    unsigned int distance {};   // As time in us
 
     void setup(const uint8_t triggerPin, const uint8_t echoPin);
     void setup(const uint8_t triggerPin, const uint8_t echoPin,
                const uint16_t maxEchoTime, const uint16_t minEchoTime);
     void ping(void);
 
+    unsigned int getDistance() const
+    {
+      return distance;
+    }
+
   private:
     uint8_t triggerPin {};
     uint8_t echoPin {};
     uint16_t maxEchoTime {};
     uint16_t minEchoTime {};
+    unsigned int distance {};   // As time in us
 };
 
 class Sonars
@@ -55,13 +60,14 @@ class Sonars
     };
 
     bool use { false };
-    unsigned long nextTime {};
+
     unsigned int triggerBelow { 1050 };  // trigger distance
-    unsigned int distanceCounter {};
     unsigned int tempDistanceCounter {};
     unsigned long obstacleTimeout {};
-    unsigned long nextTimeCheck {};
-   Sonar sonar[END];
+    Sonar sonar[END];
+
+    bool isTimeToRun();
+    bool isTimeToCheck();
 
     void ping()
     {
@@ -71,5 +77,21 @@ class Sonars
       }
     }
 
+    unsigned int getDistanceCounter() const
+    {
+      return distanceCounter;
+    }
+
+    void incDistanceCounter()
+    {
+      ++distanceCounter;
+    }
+
+  private:
+    unsigned int distanceCounter {};
+    unsigned long nextTime {};
+    unsigned int timeBetweenRun { 250 };
+    unsigned long nextTimeCheck {};
+    unsigned int timeBetweenCheck { 200 };
 };
 #endif /* SONAR_H_ */

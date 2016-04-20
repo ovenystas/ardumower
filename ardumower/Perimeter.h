@@ -58,6 +58,8 @@ class Perimeter
     int16_t getSignalAvg(byte idx);
     float getFilterQuality(byte idx);
     void speedTest();
+    bool isTimeToControl();
+
 
     Pid pid;             // perimeter PID controller
     int16_t timedOutIfBelowSmag;
@@ -66,8 +68,6 @@ class Perimeter
     bool useDifferentialPerimeterSignal;
     // swap coil polarity?
     bool swapCoilPolarity;
-    char subSample;
-    unsigned long nextTimeControl{};
 
   private:
     unsigned long lastInsideTime[2];
@@ -80,6 +80,10 @@ class Perimeter
     int16_t signalMax[2];
     int16_t signalAvg[2];
     int signalCounter[2];
+    char subSample;
+    unsigned long nextTimeControl {};
+    unsigned int timeBetweenControl { 100 };
+
     void matchedFilter(byte idx);
     int16_t corrFilter(int8_t *H, int8_t subsample, int16_t M, int8_t *ip,
                        int16_t nPts, float &quality);

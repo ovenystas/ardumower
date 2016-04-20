@@ -19,7 +19,7 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
  Private-use only! (you need to ask for a commercial-use)
-*/
+ */
 
 #ifndef PID_H
 #define PID_H
@@ -32,29 +32,40 @@ class Pid
 {
   public:
     Pid(void) {};
-    Pid(float Kp, float Ki, float Kd) : Kp(Kp), Ki(Ki), Kd(Kd) {};
+    Pid(float Kp, float Ki, float Kd) :
+        Kp(Kp), Ki(Ki), Kd(Kd) {};
     void setup(const float Kp, const float Ki, const float Kd);
     void setup(const float Kp, const float Ki, const float Kd,
-               const float y_min, const float y_max,
-               const float max_output);
-    float compute(void);
+               const float y_min, const float y_max, const float max_output);
     float compute(float x);
-    float getEold() { return eold; };
 
-    float w{};          // set value
-    float x{};          // current value
-    float esum{};       // error sum
-    float y{};          // control output
-    float y_min{};      // minimum control output
-    float y_max{};      // maximum control output
-    float max_output{}; // maximum output
-    float Kp{};         // proportional control
-    float Ki{};         // integral control
-    float Kd{};         // differential control
-    unsigned long lastControlTime{};
+    float getEold() const
+    {
+      return eold;
+    }
+
+    float getSetpoint() const
+    {
+      return w;
+    }
+
+    void setSetpoint(float w)
+    {
+      this->w = w;
+    }
+
+    float y_min {};      // minimum control output
+    float y_max {};      // maximum control output
+    float max_output {}; // maximum output
+    float Kp {};         // proportional control
+    float Ki {};         // integral control
+    float Kd {};         // differential control
 
   private:
-    float eold{};       // last error
+    float eold {};       // last error
+    float w {};          // set value
+    float esum {};       // error sum
+    unsigned long lastControlTime {};
 };
 
 #endif

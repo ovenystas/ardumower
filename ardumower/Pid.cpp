@@ -47,11 +47,6 @@ void Pid::setup(const float Kp, const float Ki, const float Kd,
   this->max_output = max_output;
 }
 
-float Pid::compute()
-{
-  compute(this->x);
-}
-
 float Pid::compute(float x)
 {
   unsigned long now = micros();
@@ -81,7 +76,7 @@ float Pid::compute(float x)
     iTerm = max_output;
     esum = max_output / Ta / Ki;
   }
-  y = Kp * e + iTerm + Kd / Ta * (e - eold);
+  float y = Kp * e + iTerm + Kd / Ta * (e - eold);
   eold = e;
 
   // restrict output to min/max

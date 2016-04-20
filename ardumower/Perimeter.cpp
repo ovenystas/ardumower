@@ -69,6 +69,7 @@ Perimeter::Perimeter()
   signalCounter[1] = 0;
   lastInsideTime[0] = 0;
   lastInsideTime[1] = 0;
+  subSample = 0;
 }
 
 void Perimeter::setup(byte idx0Pin, byte idx1Pin)
@@ -317,4 +318,15 @@ int16_t Perimeter::corrFilter(int8_t *H, int8_t subsample, int16_t M,
     quality = ((float) -sumMin) / ((float) sumMax);
     return sumMin;
   }
+}
+
+bool Perimeter::isTimeToControl()
+{
+  unsigned long curMillis = millis();
+  if (curMillis >= nextTimeControl)
+  {
+    nextTimeControl = curMillis + timeBetweenControl;
+    return true;
+  }
+  return false;
 }

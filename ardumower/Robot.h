@@ -47,9 +47,6 @@
 #include "Sonar.h"
 #include "Wheel.h"
 
-//#include "QueueList.h"
-//#include <limits.h>
-
 /*
  Generic robot class - subclass to implement concrete hardware!
  */
@@ -175,20 +172,12 @@ class Robot
     bool developerActive;
 
     // --------- state machine --------------------------
-    byte stateCurr { STATE_OFF };
-    byte stateLast { STATE_OFF };
-    byte stateNext { STATE_OFF };
-    unsigned long stateTime {};
     char* stateName();
-    unsigned long stateStartTime;
-    unsigned long stateEndTime;
-    int idleTimeSec {};
 
     // --------- timer ----------------------------------
     ttimer_t timer[MAX_TIMERS];
     datetime_t datetime;
     boolean timerUse;       // use timer?
-    unsigned long nextTimeTimer;
 
     // -------- mow pattern -----------------------------
     byte mowPatternCurr { MOW_RANDOM };
@@ -197,40 +186,18 @@ class Robot
     // -------- gps state -------------------------------
     Gps gps;
     boolean gpsUse;       // use GPS?
-    float gpsLat;
-    float gpsLon;
-    float gpsX;   // X position (m)
-    float gpsY;   // Y position (m)
-    unsigned long nextTimeGPS;
-    unsigned long nextTimeCheckIfStucked;
     float stuckedIfGpsSpeedBelow;
     int gpsSpeedIgnoreTime; // how long gpsSpeed is ignored when robot switches into a new STATE (in ms)
-    int robotIsStuckedCounter;
 
     // -------- odometer state --------------------------
     Odometer odometer;
 
     // -------- RC remote control state -----------------
     boolean remoteUse;       // use model remote control (R/C)?
-    int remoteSteer;  // range -100..100
-    int remoteSpeed;  // range -100..100
-    int remoteMow;    // range 0..100
-    int remoteSwitch; // range 0..100
-    unsigned long remoteSteerLastTime;
-    unsigned long remoteSpeedLastTime;
-    unsigned long remoteMowLastTime;
-    unsigned long remoteSwitchLastTime;
-    boolean remoteSteerLastState;
-    boolean remoteSpeedLastState;
-    boolean remoteMowLastState;
-    boolean remoteSwitchLastState;
-    unsigned long nextTimeRTC;
 
     // --------- wheel motor state ----------------------------
     // wheel motor speed ( <0 backward, >0 forward); range -motorSpeedMaxRpm..motorSpeedMaxRpm
     Wheels wheels;
-
-    unsigned long nextTimeMotorPerimeterControl;
 
     // -------- mower motor state -----------------------
     Cutter cutter;
@@ -244,12 +211,8 @@ class Robot
 
     // ------- IMU state --------------------------------
     Imu imu;
-    float imuDriveHeading;       // drive heading (IMU)
+    float imuDriveHeading;     // drive heading (IMU)
     float imuRollHeading;      // roll heading  (IMU)
-    byte imuRollDir;
-    //point_float_t accMin;
-    //point_float_t accMax;
-    unsigned long nextTimeCheckTilt; // check if
 
     // ------- perimeter state --------------------------
     Perimeter perimeter;
@@ -259,15 +222,9 @@ class Robot
     int perimeterOutRevTime;
     int perimeterTrackRollTime; // perimeter tracking roll time (ms)
     int perimeterTrackRevTime; // perimeter tracking reverse time (ms)
-    int perimeterMag;             // perimeter magnitude
-    boolean perimeterInside;      // is inside perimeter?
-    unsigned long perimeterTriggerTime; // time to trigger perimeter transition (timeout)
     int perimeterTriggerTimeout;   // perimeter trigger timeout (ms)
-    unsigned long perimeterLastTransitionTime;
-    int perimeterCounter;         // counts perimeter transitions
-    unsigned long nextTimePerimeter;
-    int trackingPerimeterTransitionTimeOut;
     int trackingErrorTimeOut;
+    int trackingPerimeterTransitionTimeOut;
     boolean trackingBlockInnerWheelWhilePerimeterStruggling;
 
     //  --------- lawn state ----------------------------
@@ -282,7 +239,6 @@ class Robot
 
     // --------- pfodApp ----------------------------------
     RemoteControl rc; // pfodApp
-    unsigned long nextTimePfodLoop;
 
     // ----- other -----------------------------------------
     Button button;
@@ -304,52 +260,28 @@ class Robot
     float batFullCurrent; // current flowing when battery is fully charged
     float startChargingIfBelow; // start charging if battery Voltage is below
     unsigned long chargingTimeout; // safety timer for charging
-    int batADC;
     float chgSenseZero;       // charge current sense zero point
     float chgFactor;     // charge current conversion factor
     float chgSense; // mV/A empfindlichkeit des Ladestromsensors in mV/A (Für ACS712 5A = 185)
     byte chgChange;       // messwertumkehr von - nach +         1oder 0
-    float batVoltage;  // battery voltage (Volt)
     byte chgSelection;       // Senor Auswahl
-    float batRefFactor;
-    float batCapacity; // battery capacity (mAh)
-    float chgVoltage;  // charge voltage (Volt)
-    float chgCurrent;  // charge current  (Ampere)
     int chgNull;        // Nulldurchgang Ladestromsensor
     int stationRevTime;    // charge station reverse time (ms)
     int stationRollTime;    // charge station roll time (ms)
     int stationForwTime;    // charge station forward time (ms)
     int stationCheckTime;    // charge station reverse check time (ms)
-    unsigned long nextTimeBattery;
-    unsigned long nextTimeCheckBattery;
-    int statsBatteryChargingCounter;
     int statsBatteryChargingCounterTotal;
     float statsBatteryChargingCapacityTrip;
     float statsBatteryChargingCapacityTotal;
     float statsBatteryChargingCapacityAverage;
-    float lastTimeBatCapacity;
+    int statsMowTimeMinutesTrip;
 
     // --------- error counters --------------------------
     byte errorCounterMax[ERR_ENUM_COUNT] {};
-    byte errorCounter[ERR_ENUM_COUNT] {};
-
-    // --------- other ----------------------------------
-    int loopsPerSec {};  // main loops per second
-    int loopsPerSecCounter {};
-    byte consoleMode { CONSOLE_SENSOR_COUNTERS };
-    unsigned long nextTimeInfo;
-    byte rollDir;
-    unsigned long nextTimeErrorCounterReset;
-    unsigned long nextTimeErrorBeep;
 
     // ------------robot stats---------------------------
     boolean statsOverride;
-    boolean statsMowTimeTotalStart { false };
-    unsigned int statsMowTimeMinutesTripCounter;
     unsigned long statsMowTimeMinutesTotal;
-    float statsMowTimeHoursTotal;
-    int statsMowTimeMinutesTrip;
-    unsigned long nextTimeRobotStats;
 
     // --------------------------------------------------
     Robot();
@@ -400,6 +332,56 @@ class Robot
     virtual void setUserSwitches();
     virtual void addErrorCounter(enum errorE errType);
     virtual void resetErrorCounters();
+
+    byte getStateCurr() const
+    {
+      return stateCurr;
+    }
+
+    float getGpsX() const
+    {
+      return gpsX;
+    }
+
+    float getGpsY() const
+    {
+      return gpsY;
+    }
+
+    int getPerimeterCounter() const
+    {
+      return perimeterCounter;
+    }
+
+    int getPerimeterMag() const
+    {
+      return perimeterMag;
+    }
+
+    float getBatVoltage() const
+    {
+      return batVoltage;
+    }
+
+    float getBatCapacity() const
+    {
+      return batCapacity;
+    }
+
+    float getChgCurrent() const
+    {
+      return chgCurrent;
+    }
+
+    float getChgVoltage() const
+    {
+      return chgVoltage;
+    }
+
+    float getStatsMowTimeHoursTotal() const
+    {
+      return statsMowTimeHoursTotal;
+    }
 
   protected:
     // convert ppm time to RC slider value
@@ -467,10 +449,90 @@ class Robot
     ;
 
   private:
+    // --------- state machine --------------------------
+    byte stateCurr { STATE_OFF };
+    byte stateLast { STATE_OFF };
+    byte stateNext { STATE_OFF };
+    unsigned long stateTime {};
+    unsigned long stateStartTime;
+    unsigned long stateEndTime;
+    int idleTimeSec {};
+
+    // --------- timer ----------------------------------
+    unsigned long nextTimeTimer;
+
+    // -------- gps state -------------------------------
+    float gpsLat;
+    float gpsLon;
+    float gpsX;   // X position (m)
+    float gpsY;   // Y position (m)
+    unsigned long nextTimeGPS;
+    unsigned long nextTimeCheckIfStucked;
+    int robotIsStuckedCounter;
+
+    // -------- RC remote control state -----------------
+    int remoteSteer;  // range -100..100
+    int remoteSpeed;  // range -100..100
+    int remoteMow;    // range 0..100
+    int remoteSwitch; // range 0..100
+    unsigned long remoteSteerLastTime;
+    unsigned long remoteSpeedLastTime;
+    unsigned long remoteMowLastTime;
+    unsigned long remoteSwitchLastTime;
+    boolean remoteSteerLastState;
+    boolean remoteSpeedLastState;
+    boolean remoteMowLastState;
+    boolean remoteSwitchLastState;
+    unsigned long nextTimeRTC;
+
+    // ------- IMU state --------------------------------
+    byte imuRollDir;
+    unsigned long nextTimeCheckTilt; // check if
+
+    // ------- perimeter state --------------------------
+    int perimeterMag;             // perimeter magnitude
+    boolean perimeterInside;      // is inside perimeter?
+    unsigned long perimeterTriggerTime; // time to trigger perimeter transition (timeout)
+    unsigned long perimeterLastTransitionTime;
+    int perimeterCounter;         // counts perimeter transitions
+    unsigned long nextTimePerimeter;
+
+    // --------- pfodApp ----------------------------------
+    unsigned long nextTimePfodLoop;
+
+    // --------- charging -------------------------------
+    int batADC;
+    float batVoltage;  // battery voltage (Volt)
+    float batCapacity; // battery capacity (mAh)
+    float chgVoltage;  // charge voltage (Volt)
+    float chgCurrent;  // charge current  (Ampere)
+    unsigned long nextTimeBattery;
+    unsigned long nextTimeCheckBattery;
+    int statsBatteryChargingCounter;
+    float lastTimeBatCapacity;
+
+    // --------- error counters --------------------------
+    byte errorCounter[ERR_ENUM_COUNT] {};
+
+    // --------- other ----------------------------------
+    int loopsPerSec {};  // main loops per second
+    int loopsPerSecCounter {};
+    byte consoleMode { CONSOLE_SENSOR_COUNTERS };
+    unsigned long nextTimeInfo;
+    byte rollDir;
+    unsigned long nextTimeErrorCounterReset;
+    unsigned long nextTimeErrorBeep;
+
+    // ------------robot stats---------------------------
+    boolean statsMowTimeTotalStart { false };
+    unsigned int statsMowTimeMinutesTripCounter;
+    float statsMowTimeHoursTotal;
+    unsigned long nextTimeRobotStats;
+
+
     void setMotorPWM(int pwm, unsigned long TaC, uint8_t motor, boolean useAccel);
     void loadRobotStats();
     void saveRobotStats();
-
 };
 
 #endif

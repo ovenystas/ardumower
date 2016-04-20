@@ -62,13 +62,13 @@ class RemoteControl
 {
   public:
     RemoteControl();
-    void setRobot(Robot *aRobot);
+    void setRobot(Robot* robot_p);
     void initSerial(int baudrate);
     bool readSerial();
     void run();
 
   private:
-    Robot *robot;
+    Robot* robot_p;
     boolean pfodCmdComplete;
     String pfodCmd;
     byte pfodState;
@@ -79,8 +79,8 @@ class RemoteControl
     float stringToFloat(String &s);
 
     // generic
-    void sendYesNo(int value);
-    void sendOnOff(int value);
+    void sendYesNo(bool value);
+    void sendOnOff(bool value);
 
     // PID slider
     void sendPIDSlider(String cmd, String title, Pid &pid, double scale,

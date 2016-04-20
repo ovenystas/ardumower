@@ -76,3 +76,25 @@ void Sonar::ping(void)
 
   distance = uS;
 }
+
+bool Sonars::isTimeToRun()
+{
+  unsigned long curMillis = millis();
+  if (curMillis < nextTime)
+  {
+    nextTime = curMillis + timeBetweenRun;
+    return true;
+  }
+  return false;
+}
+
+bool Sonars::isTimeToCheck()
+{
+  unsigned long curMillis = millis();
+  if (curMillis < nextTimeCheck)
+  {
+    nextTimeCheck = curMillis + timeBetweenCheck;
+    return true;
+  }
+  return false;
+}

@@ -77,7 +77,6 @@ Robot::Robot()
 
   batADC = 0;
   batVoltage = 0;
-  batRefFactor = 0;
   batCapacity = 0;
   lastTimeBatCapacity = 0;
   chgVoltage = 0;
@@ -749,7 +748,7 @@ void Robot::setMotorPWM(int pwm, unsigned long samplingTime,
   if ((pwm < 0 && wheels.wheel[motor].motor.pwmCur >= 0) ||
       (pwm > 0 && wheels.wheel[motor].motor.pwmCur <= 0))
   { // changing direction should take place?
-    if (wheels.wheel[motor].motor.zeroTimeout != 0)
+    if (wheels.wheel[motor].motor.getZeroTimeout() > 0)
     {
       pwm = wheels.wheel[motor].motor.pwmCur - wheels.wheel[motor].motor.pwmCur * (float)samplingTime / 200.0; // reduce speed
     }
@@ -760,22 +759,24 @@ void Robot::setMotorPWM(int pwm, unsigned long samplingTime,
     wheels.wheel[motor].motor.pwmCur = pwm;
     if (abs(odometer.encoder[motor].getWheelRpmCurr()) < 1)
     {
-      wheels.wheel[motor].motor.zeroTimeout = max(0, (wheels.wheel[motor].motor.zeroTimeout - samplingTime));
+      wheels.wheel[motor].motor.setZeroTimeout(
+          max(0, wheels.wheel[motor].motor.getZeroTimeout() - samplingTime));
     }
     else
     {
-      wheels.wheel[motor].motor.zeroTimeout = 500;
+      wheels.wheel[motor].motor.setZeroTimeout(500);
     }
   }
   else
   {
     if (pwm == 0)
     {
-      wheels.wheel[motor].motor.zeroTimeout = max(0, (wheels.wheel[motor].motor.zeroTimeout - samplingTime));
+      wheels.wheel[motor].motor.setZeroTimeout(
+          max(0, wheels.wheel[motor].motor.getZeroTimeout() - samplingTime));
     }
     else
     {
-      wheels.wheel[motor].motor.zeroTimeout = 700;
+      wheels.wheel[motor].motor.setZeroTimeout(700);
     }
   }
 
@@ -831,14 +832,14 @@ void Robot::motorControlImuRoll()
 
   // Regelbereich entspricht 80% der maximalen Drehzahl am Antriebsrad (motorSpeedMaxRpm)
   float imuPidX = distancePI(imu.ypr.yaw, imuRollHeading) / PI * 180.0;
-  imu.pid[Imu::ROLL].w = 0;
+  imu.pid[Imu::ROLL].setSetpoint(0);
   imu.pid[Imu::ROLL].y_min = -wheels.wheel[Wheel::LEFT].motor.rpmMax / 1.25; // da der Roll generell langsamer erfolgen soll
   imu.pid[Imu::ROLL].y_max = wheels.wheel[Wheel::LEFT].motor.rpmMax / 1.25;   //
   imu.pid[Imu::ROLL].max_output = wheels.wheel[Wheel::LEFT].motor.rpmMax / 1.25;    //
   float imuPidY = imu.pid[Imu::ROLL].compute(imuPidX);
 
   // Regelbereich entspricht maximaler PWM am Antriebsrad (motorSpeedMaxPwm), um auch an Steigungen höchstes Drehmoment für die Solldrehzahl zu gewährleisten
-  wheels.wheel[Wheel::LEFT].motor.pid.w = -imuPidY;                // SOLL
+  wheels.wheel[Wheel::LEFT].motor.pid.setSetpoint(-imuPidY);                // SOLL
   wheels.wheel[Wheel::LEFT].motor.pid.y_min = -wheels.wheel[Wheel::LEFT].motor.pwmMax;        // Regel-MIN
   wheels.wheel[Wheel::LEFT].motor.pid.y_max = wheels.wheel[Wheel::LEFT].motor.pwmMax;   // Regel-MAX
   wheels.wheel[Wheel::LEFT].motor.pid.max_output = wheels.wheel[Wheel::LEFT].motor.pwmMax;    // Begrenzung
@@ -848,7 +849,7 @@ void Robot::motorControlImuRoll()
                           wheels.wheel[Wheel::LEFT].motor.pwmCur + leftWheelPidY));
 
   // Regelbereich entspricht maximaler PWM am Antriebsrad (motorSpeedMaxPwm), um auch an Steigungen höchstes Drehmoment für die Solldrehzahl zu gewährleisten
-  wheels.wheel[Wheel::RIGHT].motor.pid.w = imuPidY;                // SOLL
+  wheels.wheel[Wheel::RIGHT].motor.pid.setSetpoint(imuPidY);                // SOLL
   wheels.wheel[Wheel::RIGHT].motor.pid.y_min = -wheels.wheel[Wheel::RIGHT].motor.pwmMax;       // Regel-MIN
   wheels.wheel[Wheel::RIGHT].motor.pid.y_max = wheels.wheel[Wheel::RIGHT].motor.pwmMax;  // Regel-MAX
   wheels.wheel[Wheel::RIGHT].motor.pid.max_output = wheels.wheel[Wheel::RIGHT].motor.pwmMax;   // Begrenzung
@@ -867,13 +868,12 @@ void Robot::motorControlImuRoll()
 // PID controller: track perimeter
 void Robot::motorControlPerimeter()
 {
-  unsigned long curMillis = millis();
-  if (curMillis < perimeter.nextTimeControl)
+  if (!perimeter.isTimeToControl())
   {
     return;
   }
-  perimeter.nextTimeControl = curMillis + 100;
 
+  unsigned long curMillis = millis();
   if ((curMillis > stateStartTime + 5000) &&
       (curMillis > perimeterLastTransitionTime + trackingPerimeterTransitionTimeOut))
   {
@@ -928,7 +928,7 @@ void Robot::motorControlPerimeter()
   {
     x = 0;
   }
-  perimeter.pid.w = 0;
+  perimeter.pid.setSetpoint(0);
   perimeter.pid.y_min = -wheels.wheel[Wheel::LEFT].motor.pwmMax;
   perimeter.pid.y_max = wheels.wheel[Wheel::LEFT].motor.pwmMax;
   perimeter.pid.max_output = wheels.wheel[Wheel::LEFT].motor.pwmMax;
@@ -960,32 +960,32 @@ void Robot::motorControlImuDir()
   int correctRight = 0;
 
   // Regelbereich entspricht maximaler Drehzahl am Antriebsrad (motorSpeedMaxRpm)
-  imu.pid[Imu::DIR].x = distancePI(imu.ypr.yaw, imuDriveHeading) / PI * 180.0;
-  imu.pid[Imu::DIR].w = 0;
+  imu.pid[Imu::DIR].setSetpoint(0);
   imu.pid[Imu::DIR].y_min = -wheels.wheel[Wheel::LEFT].motor.rpmMax;
   imu.pid[Imu::DIR].y_max = wheels.wheel[Wheel::LEFT].motor.rpmMax;
   imu.pid[Imu::DIR].max_output = wheels.wheel[Wheel::LEFT].motor.rpmMax;
-  imu.pid[Imu::DIR].compute();
+  float x = distancePI(imu.ypr.yaw, imuDriveHeading) / PI * 180.0;
+  float y = imu.pid[Imu::DIR].compute(x);
 
-  if (imu.pid[Imu::DIR].y < 0)
+  if (y < 0)
   {
-    correctRight = abs(imu.pid[Imu::DIR].y);
+    correctRight = abs(y);
   }
-  if (imu.pid[Imu::DIR].y > 0)
+  if (y > 0)
   {
-    correctLeft = abs(imu.pid[Imu::DIR].y);
+    correctLeft = abs(y);
   }
 
   // Korrektur erfolgt über Abbremsen des linken Antriebsrades, falls Kursabweichung nach rechts
   // Regelbereich entspricht maximaler PWM am Antriebsrad (motorSpeedMaxPwm), um auch an Steigungen höchstes Drehmoment für die Solldrehzahl zu gewährleisten
-  wheels.wheel[Wheel::LEFT].motor.pid.x = odometer.encoder[LEFT].getWheelRpmCurr();                     // IST
-  wheels.wheel[Wheel::LEFT].motor.pid.w = wheels.wheel[Wheel::LEFT].motor.rpmSet - correctLeft;     // SOLL
+  wheels.wheel[Wheel::LEFT].motor.pid.setSetpoint(wheels.wheel[Wheel::LEFT].motor.rpmSet - correctLeft);     // SOLL
   wheels.wheel[Wheel::LEFT].motor.pid.y_min = -wheels.wheel[Wheel::LEFT].motor.pwmMax;            // Regel-MIN
   wheels.wheel[Wheel::LEFT].motor.pid.y_max = wheels.wheel[Wheel::LEFT].motor.pwmMax;       // Regel-MAX
   wheels.wheel[Wheel::LEFT].motor.pid.max_output = wheels.wheel[Wheel::LEFT].motor.pwmMax;        // Begrenzung
-  wheels.wheel[Wheel::LEFT].motor.pid.compute();
+  float leftX = odometer.encoder[Odometer::LEFT].getWheelRpmCurr();
+  float leftY = wheels.wheel[Wheel::LEFT].motor.pid.compute(leftX);
   int leftSpeed = max(-wheels.wheel[Wheel::LEFT].motor.pwmMax,
-                      min(wheels.wheel[Wheel::LEFT].motor.pwmMax, wheels.wheel[Wheel::LEFT].motor.pwmCur + wheels.wheel[Wheel::LEFT].motor.pid.y));
+                      min(wheels.wheel[Wheel::LEFT].motor.pwmMax, wheels.wheel[Wheel::LEFT].motor.pwmCur + leftY));
   if ((wheels.wheel[Wheel::LEFT].motor.rpmSet >= 0) && (leftSpeed < 0))
   {
     leftSpeed = 0;
@@ -997,15 +997,15 @@ void Robot::motorControlImuDir()
 
   // Korrektur erfolgt über Abbremsen des rechten Antriebsrades, falls Kursabweichung nach links
   // Regelbereich entspricht maximaler PWM am Antriebsrad (motorSpeedMaxPwm), um auch an Steigungen höchstes Drehmoment für die Solldrehzahl zu gewährleisten
-  wheels.wheel[Wheel::RIGHT].motor.pid.x = odometer.encoder[RIGHT].getWheelRpmCurr();                   // IST
-  wheels.wheel[Wheel::RIGHT].motor.pid.w = wheels.wheel[Wheel::RIGHT].motor.rpmSet - correctRight;  // SOLL
+  wheels.wheel[Wheel::RIGHT].motor.pid.setSetpoint(wheels.wheel[Wheel::RIGHT].motor.rpmSet - correctRight);  // SOLL
   wheels.wheel[Wheel::RIGHT].motor.pid.y_min = -wheels.wheel[Wheel::LEFT].motor.pwmMax;           // Regel-MIN
   wheels.wheel[Wheel::RIGHT].motor.pid.y_max = wheels.wheel[Wheel::LEFT].motor.pwmMax;      // Regel-MAX
   wheels.wheel[Wheel::RIGHT].motor.pid.max_output = wheels.wheel[Wheel::LEFT].motor.pwmMax;       // Begrenzung
-  wheels.wheel[Wheel::RIGHT].motor.pid.compute();
+  float rightX = odometer.encoder[Odometer::RIGHT].getWheelRpmCurr();
+  float rightY = wheels.wheel[Wheel::RIGHT].motor.pid.compute(rightX);
   int rightSpeed = max(
       -wheels.wheel[Wheel::LEFT].motor.pwmMax,
-      min(wheels.wheel[Wheel::LEFT].motor.pwmMax, wheels.wheel[Wheel::RIGHT].motor.pwmCur + wheels.wheel[Wheel::RIGHT].motor.pid.y));
+      min(wheels.wheel[Wheel::LEFT].motor.pwmMax, wheels.wheel[Wheel::RIGHT].motor.pwmCur + rightY));
   if ((wheels.wheel[Wheel::RIGHT].motor.rpmSet >= 0) && (rightSpeed < 0))
   {
     rightSpeed = 0;
@@ -1083,13 +1083,11 @@ void Robot::checkOdometerFaults()
 
 void Robot::motorControl()
 {
-  unsigned long curMillis = millis();
-  if (curMillis < wheels.wheel[Wheel::LEFT].motor.nextTimeControl)
+  if (!wheels.wheel[Wheel::LEFT].motor.isTimeToControl())
   {
     return;
   }
 
-  wheels.wheel[Wheel::LEFT].motor.nextTimeControl = curMillis + 100;
   static unsigned long nextMotorControlOutputTime = 0;
 
   int speed[2];
@@ -1099,50 +1097,24 @@ void Robot::motorControl()
     {
       // Regelbereich entspricht maximaler PWM am Antriebsrad (motorSpeedMaxPwm),
       // um auch an Steigungen höchstes Drehmoment für die Solldrehzahl zu gewährleisten
-      wheels.wheel[i].motor.pid.x = odometer.encoder[i].getWheelRpmCurr();               // IST
-      if (curMillis < stateStartTime + wheels.wheel[i].motor.zeroSettleTime)
+      if (millis() < stateStartTime + wheels.wheel[i].motor.zeroSettleTime)
       {
-        wheels.wheel[i].motor.pid.w = 0; // get zero speed first after state change
+        wheels.wheel[i].motor.pid.setSetpoint(0); // get zero speed first after state change
       }
       wheels.wheel[i].motor.pid.y_min = -wheels.wheel[i].motor.pwmMax;       // Regel-MIN
       wheels.wheel[i].motor.pid.y_max = wheels.wheel[i].motor.pwmMax;        // Regel-MAX
       wheels.wheel[i].motor.pid.max_output = wheels.wheel[i].motor.pwmMax;   // Begrenzung
-      wheels.wheel[i].motor.pid.compute();
+      float x = odometer.encoder[i].getWheelRpmCurr();
+      float y = wheels.wheel[i].motor.pid.compute(x);
       speed[i] = max(-wheels.wheel[i].motor.pwmMax,
                      min(wheels.wheel[i].motor.pwmMax,
-                         wheels.wheel[i].motor.pwmCur + wheels.wheel[i].motor.pid.y));
-      // Sven reported the next two lines do make the PID controlling worse
-      //if((motorSpeedRpmSet[i] >= 0 ) && (speed[i] < 0 )) speed[i] = 0;
-      //if((motorSpeedRpmSet[i] <= 0 ) && (speed[i] > 0 )) speed[i] = 0;
+                         wheels.wheel[i].motor.pwmCur + y));
 
-      if (abs(wheels.wheel[i].motor.pid.x) < 2 && abs(wheels.wheel[i].motor.pid.w) < 0.1)
+      if (abs(x) < 2 && abs(wheels.wheel[i].motor.pid.getSetpoint()) < 0.1)
       {
         speed[i] = 0; // ensures PWM is really zero
       }
     }
-
-    /*if (curMillis >= nextMotorControlOutputTime)
-     {
-       nextMotorControlOutputTime = curMillis + 3000;
-       Console.print("motorPID[");
-       if (i = LEFT)
-       {
-         Console.print("LEFT");
-       }
-       else
-       {
-         Console.print("RIGHT");
-       }
-       Console.print("]PID x=");
-       Console.print(wheels.wheel[i].motor.pid.x);
-       Console.print("\tPID w=");
-       Console.print(wheels.wheel[i].motor.pid.w);
-       Console.print("\tPID y=");
-       Console.print(wheels.wheel[i].motor.pid.y);
-       Console.print("\tPWM=");
-       Console.println(speed[i]);
-     } */
-
     setMotorPWMs(speed[LEFT], speed[RIGHT], false);
   }
   else
@@ -1157,7 +1129,7 @@ void Robot::motorControl()
                              -wheels.wheel[i].motor.pwmMax,
                              wheels.wheel[i].motor.pwmMax)));
     }
-    if (curMillis < stateStartTime + wheels.wheel[Wheel::LEFT].motor.zeroSettleTime)
+    if (millis() < stateStartTime + wheels.wheel[Wheel::LEFT].motor.zeroSettleTime)
     {
       // slow down at state start
       speed[LEFT] = 0;
@@ -1177,12 +1149,10 @@ void Robot::motorControl()
 // output: motorMowPWMCurr
 void Robot::motorMowControl()
 {
-  unsigned long curMillis = millis();
-  if (curMillis < cutter.motor.nextTimeControl)
+  if (!cutter.motor.isTimeToControl())
   {
     return;
   }
-  cutter.motor.nextTimeControl = curMillis + 100;
 
   if (cutter.isEnableOverriden())
   {
@@ -1191,7 +1161,7 @@ void Robot::motorMowControl()
 
   if (cutter.isDisabled())
   {
-    cutter.motor.pid.w;
+    cutter.motor.pid.setSetpoint(0);
     setMotorMowPWM(0, false);
   }
   else
@@ -1199,8 +1169,8 @@ void Robot::motorMowControl()
     // Need speed sensor to be able to regulate speed
     if (cutter.motor.regulate)
     {
-      cutter.motor.pid.w = cutter.motor.rpmSet;
-      float newPwm = cutter.motor.pid.compute(cutter.motor.rpmMeas);
+      cutter.motor.pid.setSetpoint(cutter.motor.rpmSet);
+      float newPwm = cutter.motor.pid.compute(cutter.motor.getRpmMeas());
 
       setMotorMowPWM(newPwm, false);
     }
@@ -1209,7 +1179,7 @@ void Robot::motorMowControl()
       if (errorCounter[ERR_MOW_SENSE] == 0 && errorCounter[ERR_STUCK] == 0)
       {
         // no speed sensor available
-        setMotorMowPWM(cutter.motor.pwmSet, true);
+        setMotorMowPWM(cutter.motor.getPwmSet(), true);
       }
     }
   }
@@ -1327,9 +1297,9 @@ void Robot::printRemote()
 void Robot::printOdometer()
 {
   Console.print(F("ODO,"));
-  Console.print(odometer.x);
+  Console.print(odometer.getX());
   Console.print(", ");
-  Console.println(odometer.y);
+  Console.println(odometer.getY());
 }
 
 void Robot::printInfo(Stream &s)
@@ -1366,15 +1336,15 @@ void Robot::printInfo(Stream &s)
       Streamprint(s, "spd %4d %4d %4d ",
                   wheels.wheel[Wheel::LEFT].motor.rpmSet,
                   wheels.wheel[Wheel::RIGHT].motor.rpmSet,
-                  cutter.motor.rpmMeas);
+                  cutter.motor.getRpmMeas());
 
       if (consoleMode == CONSOLE_SENSOR_VALUES)
       {
         // sensor values
         Streamprint(s, "sen %4d %4d %4d ",
-                    (int)wheels.wheel[Wheel::LEFT].motor.powerMeas,
-                    (int)wheels.wheel[Wheel::RIGHT].motor.powerMeas,
-                    (int)cutter.motor.powerMeas);
+                    (int)wheels.wheel[Wheel::LEFT].motor.getPowerMeas(),
+                    (int)wheels.wheel[Wheel::RIGHT].motor.getPowerMeas(),
+                    (int)cutter.motor.getPowerMeas());
         Streamprint(s, "bum %4d %4d ",
                     bumpers.bumper[Bumpers::LEFT].isHit(),
                     bumpers.bumper[Bumpers::RIGHT].isHit());
@@ -1382,9 +1352,9 @@ void Robot::printInfo(Stream &s)
                     dropSensors.dropSensor[DropSensors::LEFT].isDetected(),
                     dropSensors.dropSensor[DropSensors::RIGHT].isDetected());
         Streamprint(s, "son %4u %4u %4u ",
-                    sonars.sonar[Sonars::LEFT].distance,
-                    sonars.sonar[Sonars::CENTER].distance,
-                    sonars.sonar[Sonars::RIGHT].distance);
+                    sonars.sonar[Sonars::LEFT].getDistance(),
+                    sonars.sonar[Sonars::CENTER].getDistance(),
+                    sonars.sonar[Sonars::RIGHT].getDistance());
         Streamprint(s, "yaw %3d ", (int)(imu.ypr.yaw / PI * 180.0));
         Streamprint(s, "pit %3d ", (int)(imu.ypr.pitch / PI * 180.0));
         Streamprint(s, "rol %3d ", (int)(imu.ypr.roll / PI * 180.0));
@@ -1405,16 +1375,16 @@ void Robot::printInfo(Stream &s)
       {
         // sensor counters
         Streamprint(s, "sen %4d %4d %4d ",
-                    wheels.wheel[Wheel::LEFT].motor.overloadCounter,
-                    wheels.wheel[Wheel::RIGHT].motor.overloadCounter,
-                    cutter.motor.overloadCounter);
+                    wheels.wheel[Wheel::LEFT].motor.getOverloadCounter(),
+                    wheels.wheel[Wheel::RIGHT].motor.getOverloadCounter(),
+                    cutter.motor.getOverloadCounter());
         Streamprint(s, "bum %4d %4d ",
                     bumpers.bumper[Bumpers::LEFT].getCounter(),
                     bumpers.bumper[Bumpers::RIGHT].getCounter());
         Streamprint(s, "dro %4d %4d ",
                     dropSensors.dropSensor[DropSensors::LEFT].getCounter(),
                     dropSensors.dropSensor[DropSensors::RIGHT].getCounter());
-        Streamprint(s, "son %3d ", sonars.distanceCounter);
+        Streamprint(s, "son %3d ", sonars.getDistanceCounter());
         Streamprint(s, "yaw %3d ", (int)(imu.ypr.yaw / PI * 180.0));
         Streamprint(s, "pit %3d ", (int)(imu.ypr.pitch / PI * 180.0));
         Streamprint(s, "rol %3d ", (int)(imu.ypr.roll / PI * 180.0));
@@ -1839,10 +1809,8 @@ void Robot::readSensors()
 //NOTE: this function should only read in sensors into variables - it should NOT change any state!
 
   unsigned long curMillis = millis();
-  if (curMillis >= cutter.motor.nextTimeReadSensor)
+  if (cutter.motor.isTimeToReadSensor())
   {
-    cutter.motor.nextTimeReadSensor = curMillis + 50;
-
     wheels.wheel[Wheel::LEFT].motor.readSensePin();
     wheels.wheel[Wheel::RIGHT].motor.readSensePin();
     cutter.motor.readSensePin();
@@ -1870,18 +1838,18 @@ void Robot::readSensors()
     wheels.wheel[Wheel::LEFT].motor.calcPower(batV);
     cutter.motor.calcPower(batV);
 
-    if ((curMillis - cutter.motor.lastRpmTime) >= 500)
+    unsigned long timeSinceLast;
+    if (cutter.motor.isTimeForRpmMeas(&timeSinceLast))
     {
-      cutter.motor.rpmMeas = readSensor(SEN_MOTOR_MOW_RPM);
-      if ((cutter.motor.rpmMeas == 0) && (cutter.motor.rpmCounter != 0))
+      cutter.motor.setRpmMeas(readSensor(SEN_MOTOR_MOW_RPM));
+      if ((cutter.motor.getRpmMeas() == 0) && (cutter.motor.getRpmCounter() != 0))
       {
         // rpm may be updated via interrupt
-        cutter.motor.rpmMeas = (int)(((double)cutter.motor.rpmCounter
-            / ((double)(curMillis - cutter.motor.lastRpmTime)))
-                                 * 60000.0);
-        cutter.motor.rpmCounter = 0;
+        cutter.motor.setRpmMeas((int)(((double)cutter.motor.getRpmCounter() /
+                                       (double)timeSinceLast) *
+                                      60000.0));
+        cutter.motor.clearRpmCounter();
       }
-      cutter.motor.lastRpmTime = curMillis;
       if (!ADCMan.calibrationDataAvail())
       {
         Console.println(F("Error: missing ADC calibration data"));
@@ -1953,10 +1921,8 @@ void Robot::readSensors()
     lawnSensor.check();
   }
 
-  if (sonars.use && curMillis >= sonars.nextTime)
+  if (sonars.isTimeToRun())
   {
-    sonars.nextTime = curMillis + 250;
-
     sonars.ping();
   }
 
@@ -2316,7 +2282,7 @@ void Robot::setNextState(byte stateNew, byte dir)
   }
   if (stateNew != STATE_REMOTE)
   {
-    cutter.motor.pwmSet = cutter.motor.pwmMax;
+    cutter.motor.setPwmSet(cutter.motor.pwmMax);
   }
 
   sonars.obstacleTimeout = 0;
@@ -2585,39 +2551,38 @@ void Robot::reverseOrBidir(byte aRollDir)
 // check motor power
 void Robot::checkPower()
 {
-  unsigned long curMillis = millis();
-  if (curMillis < cutter.motor.nextTimeCheckPower)
+  if (!cutter.motor.isTimeToCheckPower())
   {
     return;
   }
-  cutter.motor.nextTimeCheckPower = curMillis + 100;
 
-  if (cutter.motor.powerMeas >= cutter.motor.powerMax)
+  unsigned long curMillis = millis();
+  if (cutter.motor.getPowerMeas() >= cutter.motor.powerMax)
   {
-    cutter.motor.overloadCounter++;
+    cutter.motor.incOverloadCounter();
   }
   else
   {
     errorCounterMax[ERR_MOW_SENSE] = 0;
-    cutter.motor.overloadCounter = 0;
-    if (curMillis >= cutter.motor.lastTimeStucked + 30000)
-    { // wait 30 seconds before switching on again
+    cutter.motor.clearOverloadCounter();
+    if (cutter.motor.isWaitAfterStuckEnd())
+    { // wait some time before switching on again
       errorCounter[ERR_MOW_SENSE] = 0;
       cutter.enable();
     }
   }
 
-  if (cutter.motor.overloadCounter >= 30)
+  if (cutter.motor.getOverloadCounter() >= 30)
   { //ignore motorMowPower for 3 seconds
     cutter.disable();
     Console.println("Error: Motor mow current");
     addErrorCounter(ERR_MOW_SENSE);
-    cutter.motor.lastTimeStucked = curMillis;
+    cutter.motor.gotStuck();
     // if (rollDir == RIGHT) reverseOrBidir(LEFT); // toggle roll dir
     //else reverseOrBidir(RIGHT);
   }
 
-  if (wheels.wheel[Wheel::LEFT].motor.powerMeas >= wheels.wheel[Wheel::LEFT].motor.powerMax)
+  if (wheels.wheel[Wheel::LEFT].motor.getPowerMeas() >= wheels.wheel[Wheel::LEFT].motor.powerMax)
   {
     // left wheel motor overpowered
     if ((stateCurr == STATE_FORWARD ||
@@ -2626,14 +2591,14 @@ void Robot::checkPower()
         curMillis > (stateStartTime + wheels.wheel[Wheel::LEFT].motor.powerIgnoreTime))
     {
       //beep(1);
-      wheels.wheel[Wheel::LEFT].motor.overloadCounter++;
+      wheels.wheel[Wheel::LEFT].motor.incOverloadCounter();
       setMotorPWMs(0, 0, false);
       reverseOrBidir(RIGHT);
     }
     else if (stateCurr == STATE_REVERSE &&
              curMillis > (stateStartTime + wheels.wheel[Wheel::LEFT].motor.powerIgnoreTime))
     {
-      wheels.wheel[Wheel::LEFT].motor.overloadCounter++;
+      wheels.wheel[Wheel::LEFT].motor.incOverloadCounter();
       setMotorPWMs(0, 0, false);
       //   reverseOrBidir(RIGHT);
       setNextState(STATE_ROLL, RIGHT);
@@ -2641,33 +2606,33 @@ void Robot::checkPower()
     else if (stateCurr == STATE_ROLL &&
              curMillis > (stateStartTime + wheels.wheel[Wheel::LEFT].motor.powerIgnoreTime))
     {
-      wheels.wheel[Wheel::LEFT].motor.overloadCounter++;
+      wheels.wheel[Wheel::LEFT].motor.incOverloadCounter();
       setMotorPWMs(0, 0, false);
       setNextState(STATE_FORWARD, 0);
     }
   }
-  else if (wheels.wheel[Wheel::RIGHT].motor.powerMeas >= wheels.wheel[Wheel::RIGHT].motor.powerMax)
+  else if (wheels.wheel[Wheel::RIGHT].motor.getPowerMeas() >= wheels.wheel[Wheel::RIGHT].motor.powerMax)
   {
     // right wheel motor overpowered
     if ((stateCurr == STATE_FORWARD || stateCurr == STATE_PERI_FIND) &&
         curMillis > (stateStartTime + wheels.wheel[Wheel::RIGHT].motor.powerIgnoreTime))
     {
       //beep(1);
-      wheels.wheel[Wheel::RIGHT].motor.overloadCounter++;
+      wheels.wheel[Wheel::RIGHT].motor.incOverloadCounter();
       setMotorPWMs(0, 0, false);
       reverseOrBidir(RIGHT);
     }
     else if (stateCurr == STATE_REVERSE &&
              curMillis > (stateStartTime + wheels.wheel[Wheel::RIGHT].motor.powerIgnoreTime))
     {
-      wheels.wheel[Wheel::RIGHT].motor.overloadCounter++;
+      wheels.wheel[Wheel::RIGHT].motor.incOverloadCounter();
       setMotorPWMs(0, 0, false);
       setNextState(STATE_ROLL, LEFT);
     }
     else if (stateCurr == STATE_ROLL &&
              curMillis > (stateStartTime + wheels.wheel[Wheel::RIGHT].motor.powerIgnoreTime))
     {
-      wheels.wheel[Wheel::RIGHT].motor.overloadCounter++;
+      wheels.wheel[Wheel::RIGHT].motor.incOverloadCounter();
       setMotorPWMs(0, 0, false);
       setNextState(STATE_FORWARD, 0);
     }
@@ -2746,9 +2711,9 @@ void Robot::checkBumpersPerimeter()
 void Robot::checkPerimeterBoundary()
 {
   unsigned long curMillis = millis();
-  if (curMillis >= wheels.nextTimeRotationChange)
+
+  if (wheels.isTimeToRotationChange())
   {
-    wheels.nextTimeRotationChange = curMillis + 60000;
     if (wheels.rotateDir == Wheel::LEFT)
     {
       wheels.rotateDir == Wheel::RIGHT;
@@ -2899,11 +2864,10 @@ void Robot::checkSonar()
   }
 
   unsigned long curMillis = millis();
-  if (curMillis < sonars.nextTimeCheck)
+  if (!sonars.isTimeToCheck())
   {
     return;
   }
-  sonars.nextTimeCheck = curMillis + 200;
 
   if (mowPatternCurr == MOW_BIDIR && curMillis < (stateStartTime + 4000))
   {
@@ -2920,8 +2884,8 @@ void Robot::checkSonar()
       bool isClose = false;
       for (uint8_t i = 0; i < Sonars::END; i++)
       {
-        if (sonars.sonar[i].distance > 0 &&
-            sonars.sonar[i].distance < (sonars.triggerBelow << 1))
+        if (sonars.sonar[i].getDistance() > 0 &&
+            sonars.sonar[i].getDistance() < (sonars.triggerBelow << 1))
         {
           isClose = true;
         }
@@ -2952,10 +2916,10 @@ void Robot::checkSonar()
     }
   }
 
-  if (sonars.sonar[Sonars::CENTER].distance > 0 &&
-      sonars.sonar[Sonars::CENTER].distance < sonars.triggerBelow)
+  if (sonars.sonar[Sonars::CENTER].getDistance() > 0 &&
+      sonars.sonar[Sonars::CENTER].getDistance() < sonars.triggerBelow)
   {
-    sonars.distanceCounter++;
+    sonars.incDistanceCounter();
     if (rollDir == RIGHT)
     {
       reverseOrBidir(LEFT); // toggle roll dir
@@ -2966,17 +2930,17 @@ void Robot::checkSonar()
     }
   }
 
-  if (sonars.sonar[Sonars::RIGHT].distance > 0 &&
-      sonars.sonar[Sonars::RIGHT].distance < sonars.triggerBelow)
+  if (sonars.sonar[Sonars::RIGHT].getDistance() > 0 &&
+      sonars.sonar[Sonars::RIGHT].getDistance() < sonars.triggerBelow)
   {
-    sonars.distanceCounter++;
+    sonars.incDistanceCounter();
     reverseOrBidir(LEFT);
   }
 
-  if (sonars.sonar[Sonars::LEFT].distance > 0 &&
-      sonars.sonar[Sonars::LEFT].distance < sonars.triggerBelow)
+  if (sonars.sonar[Sonars::LEFT].getDistance() > 0 &&
+      sonars.sonar[Sonars::LEFT].getDistance() < sonars.triggerBelow)
   {
-    sonars.distanceCounter++;
+    sonars.incDistanceCounter();
     reverseOrBidir(RIGHT);
   }
 }
@@ -3243,7 +3207,7 @@ void Robot::loop()
                                  min(wheels.wheel[Wheel::LEFT].motor.rpmMax, wheels.wheel[Wheel::LEFT].motor.rpmSet));
       wheels.wheel[Wheel::RIGHT].motor.rpmSet = max(-wheels.wheel[Wheel::LEFT].motor.rpmMax,
                                   min(wheels.wheel[Wheel::LEFT].motor.rpmMax, wheels.wheel[Wheel::RIGHT].motor.rpmSet));
-      cutter.motor.pwmSet = (double)cutter.motor.pwmMax * ((double)remoteMow / 100.0);
+      cutter.motor.setPwmSet((double)cutter.motor.pwmMax * ((double)remoteMow / 100.0));
       break;
 
     case STATE_MANUAL:
@@ -3536,7 +3500,7 @@ void Robot::loop()
 
   if (stateCurr != STATE_REMOTE)
   {
-    cutter.motor.pwmSet = cutter.motor.pwmMax;
+    cutter.motor.setPwmSet(cutter.motor.pwmMax);
   }
 
   bumpers.clearHit();

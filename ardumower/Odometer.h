@@ -31,19 +31,28 @@ class Odometer
     void setState(unsigned long timeMicros);
     void calc(const Imu &imu);
 
+    float getX() const
+    {
+      return x;
+    }
+
+    float getY() const
+    {
+      return y;
+    }
+
     bool use { false };      // Use this odometer or not
     int ticksPerRevolution;  // encoder ticks per one full resolution
     float ticksPerCm;        // encoder ticks per cm
     float wheelBaseCm;       // wheel-to-wheel distance (cm)
+    Encoder encoder[END];
 
+  private:
     unsigned long nextTime {};          // when to trigger next time
     unsigned long lastWheelRpmTime {};  // last time it was updated
     float theta {};                     // theta angle (radiant)
     float x {};                         // X map position (cm)
     float y {};                         // Y map position (cm)
-    Encoder encoder[END];
-
-  private:
 };
 
 #endif /* ODOMETER_H */
