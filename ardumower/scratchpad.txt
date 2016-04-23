@@ -17,3 +17,25 @@ MotorMow
 Ardumoto
 DeekRobotMotorShield
 Mosfet
+
+
+Keys
+----
+d Menu
+v Change consoleMode
+h Drive home
+t Track perimeter
+l Simulate left bumper
+r Simulate right bumper
+j Simulate left drop sensor
+k Simulate right drop sensor
+s Simulate lawn sensor
+m Toggle cutter motor
+c Simulate in station
+a Simulate in station charging
++ Rotate 90 degrees clockwise (IMU)
+- Rotate 90 degrees anti-clockwise (IMU)
+i Toggle imu.use
+3 Activate model RC
+0 Turn OFF
+1 Automode

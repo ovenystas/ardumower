@@ -43,20 +43,21 @@
 // ------ pins---------------------------------------
 //#define PIN_MOTOR_ENABLE  37          // EN motors enable
 
-#define PIN_MOTOR_LEFT_PWM 3          // M1_IN1 left motor PWM pin
-#define PIN_MOTOR_LEFT_DIR 12         // M1_IN2 left motor Dir pin
-#define PIN_MOTOR_LEFT_SENSE A1       // M1_FB  left motor current sense
-#define PIN_MOTOR_LEFT_BRAKE 9        // M1_SF  left motor brake
-
-#define PIN_MOTOR_RIGHT_PWM  11       // M2_IN1 right motor PWM pin
-#define PIN_MOTOR_RIGHT_DIR 13        // M2_IN2 right motor Dir pin
-#define PIN_MOTOR_RIGHT_SENSE A0      // M2_FB  right motor current sense
-#define PIN_MOTOR_RIGHT_BRAKE 8       // M2_SF  right motor brake
-
-#define PIN_MOTOR_MOW_PWM 2           // M1_IN1 mower motor PWM pin (if using MOSFET, use this pin)
-#define PIN_MOTOR_MOW_DIR 29          // M1_IN2 mower motor Dir pin (if using MOSFET, keep unconnected)
-#define PIN_MOTOR_MOW_SENSE A3        // M1_FB  mower motor current sense
-#define PIN_MOTOR_MOW_BRAKE 26        // M1_SF  mower motor brake   (if using MOSFET/L298N, keep unconnected)
+//Defined by MotorShield
+//#define PIN_MOTOR_LEFT_PWM 3          // M1_IN1 left motor PWM pin
+//#define PIN_MOTOR_LEFT_DIR 12         // M1_IN2 left motor Dir pin
+//#define PIN_MOTOR_LEFT_SENSE A1       // M1_FB  left motor current sense
+//#define PIN_MOTOR_LEFT_BRAKE 9        // M1_SF  left motor brake
+//
+//#define PIN_MOTOR_RIGHT_PWM  11       // M2_IN1 right motor PWM pin
+//#define PIN_MOTOR_RIGHT_DIR 13        // M2_IN2 right motor Dir pin
+//#define PIN_MOTOR_RIGHT_SENSE A0      // M2_FB  right motor current sense
+//#define PIN_MOTOR_RIGHT_BRAKE 8       // M2_SF  right motor brake
+//
+//#define PIN_MOTOR_MOW_PWM 2           // M1_IN1 mower motor PWM pin (if using MOSFET, use this pin)
+//#define PIN_MOTOR_MOW_DIR 29          // M1_IN2 mower motor Dir pin (if using MOSFET, keep unconnected)
+//#define PIN_MOTOR_MOW_SENSE A3        // M1_FB  mower motor current sense
+//#define PIN_MOTOR_MOW_BRAKE 26        // M1_SF  mower motor brake   (if using MOSFET/L298N, keep unconnected)
 #define PIN_MOTOR_MOW_RPM A11
 
 #define PIN_BUMBER_LEFT 39            // bumper pins
@@ -140,9 +141,7 @@ Mower::Mower()
   perimeterOutRevTime = 2200;     // reverse time after perimeter out (ms)
   perimeterTrackRollTime = 1500;  // roll time during perimeter tracking
   perimeterTrackRevTime = 2200;   // reverse time during perimeter tracking
-  perimeter.pid.Kp = 51.0;        // perimeter PID controller
-  perimeter.pid.Ki = 12.5;
-  perimeter.pid.Kd = 0.8;
+  perimeter.pid.setup(51.0, 12.5, 0.8);  // perimeter PID controller
   trackingPerimeterTransitionTimeOut = 2000;
   trackingErrorTimeOut = 10000;
   trackingBlockInnerWheelWhilePerimeterStruggling = 1;
@@ -268,19 +267,16 @@ void Mower::setup()
   wheels.biDirSpeedRatio2 = 0.92; // bidir mow pattern speed ratio 2
 
   // left wheel motor
-  wheels.wheel[Wheel::LEFT].motor.setup(
-      1000.0,  // Acceleration
-      255,     // Max PWM
-      75.0,    // Max Power
-      false,   // Modulation
-      25,      // Max RPM
-      0.0,     // Set RPM
-      15.3,    // Sense scale
-      PIN_MOTOR_LEFT_DIR,
-      PIN_MOTOR_LEFT_PWM,
-      PIN_MOTOR_LEFT_SENSE,
-      0,
-      PIN_MOTOR_LEFT_BRAKE);
+  wheels.wheel[Wheel::LEFT].motor.config(
+      1000.0,   // Acceleration
+      255,      // Max PWM
+      75,       // Max Power
+      false,    // Modulation
+      100,      // Max RPM
+      0.0);     // Set RPM
+  wheels.wheel[Wheel::LEFT].motor.setScale(3.25839);
+  wheels.wheel[Wheel::LEFT].motor.setChannel(0);
+  wheels.wheel[Wheel::LEFT].motor.setup();
   // Normal control
   wheels.wheel[Wheel::LEFT].motor.pid.setup(1.5, 0.29, 0.25);  // Kp, Ki, Kd
   // Fast control
@@ -290,19 +286,16 @@ void Mower::setup()
   wheels.wheel[Wheel::LEFT].motor.swapDir = 0;  // inverse left motor direction?
 
   // right wheel motor
-  wheels.wheel[Wheel::RIGHT].motor.setup(
-      1000.0,  // Acceleration
-      255,     // Max PWM
-      75.0,    // Max Power
-      false,   // Modulation
-      25,      // Max RPM
-      0.0,     // Set RPM
-      15.3,    // Sense scale
-      PIN_MOTOR_RIGHT_DIR,
-      PIN_MOTOR_RIGHT_PWM,
-      PIN_MOTOR_RIGHT_SENSE,
-      0,
-      PIN_MOTOR_RIGHT_BRAKE);
+  wheels.wheel[Wheel::RIGHT].motor.config(
+      1000.0,   // Acceleration
+      255,      // Max PWM
+      75,       // Max Power
+      false,    // Modulation
+      100,      // Max RPM
+      0.0);     // Set RPM
+  wheels.wheel[Wheel::RIGHT].motor.setScale(3.25839);
+  wheels.wheel[Wheel::RIGHT].motor.setChannel(1);
+  wheels.wheel[Wheel::RIGHT].motor.setup();
   // Normal control
   wheels.wheel[Wheel::RIGHT].motor.pid.setup(1.5, 0.29, 0.25);  // Kp, Ki, Kd
   // Fast control
@@ -312,19 +305,14 @@ void Mower::setup()
   wheels.wheel[Wheel::RIGHT].motor.swapDir = 0; // inverse right motor direction?
 
   // mower motor
-  cutter.motor.setup(
+  cutter.motor.config(
       2000.0,     // Acceleration
       255,        // Max PWM
-      75.0,       // Max Power
+      75,         // Max Power
       false,      // Modulation
       0,          // Max RPM
-      3300,       // Set RPM
-      15.3,       // Sense scale
-      PIN_MOTOR_MOW_DIR,
-      PIN_MOTOR_MOW_PWM,
-      PIN_MOTOR_MOW_SENSE,
-      PIN_MOTOR_MOW_RPM,
-      PIN_MOTOR_MOW_BRAKE);
+      3300);      // Set RPM
+  cutter.motor.setScale(3.25839);
   cutter.motor.pid.setup(0.005, 0.01, 0.01, -127, 127, 127);  // Kp, Ki, Kd
 
   // lawn sensor
@@ -349,7 +337,9 @@ void Mower::setup()
   sonars.sonar[Sonars::LEFT].setup(PIN_SONAR_LEFT_TRIGGER, PIN_SONAR_LEFT_ECHO);
   sonars.sonar[Sonars::RIGHT].setup(PIN_SONAR_RIGHT_TRIGGER, PIN_SONAR_RIGHT_ECHO);
   sonars.sonar[Sonars::CENTER].setup(PIN_SONAR_CENTER_TRIGGER, PIN_SONAR_CENTER_ECHO);
-
+  sonars.sonar[Sonars::LEFT].use = false;
+  sonars.sonar[Sonars::RIGHT].use = false;
+  sonars.sonar[Sonars::CENTER].use = true;
   // rain
   rainSensor.setup(PIN_RAIN);
 
@@ -408,9 +398,6 @@ void Mower::setup()
   // ADC
   ADCMan.init();
   ADCMan.setCapture(PIN_CHARGE_CURRENT, 1, true); //Aktivierung des LaddeStrom Pins beim ADC-Managers
-  ADCMan.setCapture(PIN_MOTOR_MOW_SENSE, 1, true);
-  ADCMan.setCapture(PIN_MOTOR_LEFT_SENSE, 1, true);
-  ADCMan.setCapture(PIN_MOTOR_RIGHT_SENSE, 1, true);
   ADCMan.setCapture(PIN_BATTERY_VOLTAGE, 1, false);
   ADCMan.setCapture(PIN_CHARGE_VOLTAGE, 1, false);
   ADCMan.setCapture(PIN_VOLTAGE_MEASUREMENT, 1, false);
@@ -468,8 +455,8 @@ int Mower::readSensor(char type)
       if (!readDS1307(datetime))
       {
         Console.println("RTC data error!");
-        addErrorCounter(ERR_RTC_DATA);
-        setNextState(STATE_ERROR, 0);
+        //addErrorCounter(ERR_RTC_DATA);
+        //setNextState(STATE_ERROR, 0);
       }
       break;
   }

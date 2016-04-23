@@ -9,6 +9,7 @@
 #define WHEEL_H
 
 #include "Motor.h"
+#include "MotorShield.h"
 
 class Wheel
 {
@@ -20,7 +21,7 @@ class Wheel
       END
     };
 
-    Motor motor;
+    MotorShield motor;
 };
 
 class Wheels
@@ -41,6 +42,5 @@ class Wheels
     unsigned long nextTimeRotationChange {};
     unsigned int timeBetweenRotationChange { 60000 };
 };
-
 
 #endif /* WHEEL_H */

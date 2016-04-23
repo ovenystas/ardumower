@@ -52,7 +52,7 @@
  */
 
 // code version
-#define VER "1.0a4-Azurit"
+#define VER "0.1"
 
 // sensors
 enum
@@ -468,7 +468,7 @@ class Robot
     float gpsY;   // Y position (m)
     unsigned long nextTimeGPS;
     unsigned long nextTimeCheckIfStucked;
-    int robotIsStuckedCounter;
+    int robotIsStuckCounter;
 
     // -------- RC remote control state -----------------
     int remoteSteer;  // range -100..100

@@ -27,16 +27,29 @@
 #define _GPGGA_TERM   "GPGGA"
 
 Gps::Gps() :
-    _time(GPS_INVALID_TIME), _date(GPS_INVALID_DATE), _latitude(
-        GPS_INVALID_ANGLE), _longitude(GPS_INVALID_ANGLE), _altitude(
-        GPS_INVALID_ALTITUDE), _speed(GPS_INVALID_SPEED), _course(
-        GPS_INVALID_ANGLE), _hdop(GPS_INVALID_HDOP), _numsats(
-        GPS_INVALID_SATELLITES), _last_time_fix(GPS_INVALID_FIX_TIME), _last_position_fix(
-        GPS_INVALID_FIX_TIME), _parity(0), _is_checksum_term(false), _sentence_type(
-        _GPS_SENTENCE_OTHER), _term_number(0), _term_offset(0), _gps_data_good(
-        false)
+    _time(GPS_INVALID_TIME),
+    _new_time(GPS_INVALID_TIME),
+    _date(GPS_INVALID_DATE),
+    _latitude(GPS_INVALID_ANGLE),
+    _longitude(GPS_INVALID_ANGLE),
+    _altitude(GPS_INVALID_ALTITUDE),
+    _speed(GPS_INVALID_SPEED),
+    _course(GPS_INVALID_ANGLE),
+    _hdop(GPS_INVALID_HDOP),
+    _numsats(GPS_INVALID_SATELLITES),
+    _last_time_fix(GPS_INVALID_FIX_TIME),
+    _last_position_fix(GPS_INVALID_FIX_TIME),
+    _parity(0),
+    _is_checksum_term(false),
+    _sentence_type(_GPS_SENTENCE_OTHER),
+    _term_number(0),
+    _term_offset(0),
+    _gps_data_good(false)
 #ifndef _GPS_NO_STATS
-        , _encoded_characters(0), _good_sentences(0), _failed_checksum(0)
+    ,
+    _encoded_characters(0),
+    _good_sentences(0),
+    _failed_checksum(0)
 #endif
 {
   _term[0] = '\0';
@@ -110,8 +123,7 @@ bool Gps::encode(char c)
 }
 
 #ifndef _GPS_NO_STATS
-void Gps::stats(unsigned long *chars,
-                unsigned short *sentences,
+void Gps::stats(unsigned long *chars, unsigned short *sentences,
                 unsigned short *failed_cs)
 {
   if (chars)
@@ -318,7 +330,7 @@ bool Gps::term_complete()
         _gps_data_good = _term[0] > '0';
         break;
       case COMBINE(_GPS_SENTENCE_GPGGA, 7): // NN-Satellites used (GPGGA): 00-12
-        _new_numsats = (unsigned char) atoi(_term);
+        _new_numsats = (unsigned char)atoi(_term);
         break;
       case COMBINE(_GPS_SENTENCE_GPGGA, 8): // D.D - HDOP (GPGGA) - horizontal deviation
         _new_hdop = parse_decimal();
@@ -422,14 +434,14 @@ void Gps::get_position(long *latitude, long *longitude, unsigned long *fix_age)
   }
   if (fix_age)
   {
-    *fix_age = _last_position_fix == GPS_INVALID_FIX_TIME ? GPS_INVALID_AGE :
+    *fix_age =
+        _last_position_fix == GPS_INVALID_FIX_TIME ? GPS_INVALID_AGE :
             millis() - _last_position_fix;
   }
 }
 
 // date as ddmmyy, time as hhmmsscc, and age in milliseconds
-void Gps::get_datetime(unsigned long *date,
-                       unsigned long *time,
+void Gps::get_datetime(unsigned long *date, unsigned long *time,
                        unsigned long *age)
 {
   if (date)
@@ -442,13 +454,13 @@ void Gps::get_datetime(unsigned long *date,
   }
   if (age)
   {
-    *age = _last_time_fix == GPS_INVALID_FIX_TIME ? GPS_INVALID_AGE :
+    *age =
+        _last_time_fix == GPS_INVALID_FIX_TIME ? GPS_INVALID_AGE :
             millis() - _last_time_fix;
   }
 }
 
-void Gps::f_get_position(float *latitude,
-                         float *longitude,
+void Gps::f_get_position(float *latitude, float *longitude,
                          unsigned long *fix_age)
 {
   long lat, lon;
@@ -530,21 +542,21 @@ float Gps::f_speed_mph()
 {
   float sk = f_speed_knots();
   return sk == GPS_INVALID_F_SPEED ? GPS_INVALID_F_SPEED :
-          _GPS_MPH_PER_KNOT * f_speed_knots();
+  _GPS_MPH_PER_KNOT * f_speed_knots();
 }
 
 float Gps::f_speed_mps()
 {
   float sk = f_speed_knots();
   return sk == GPS_INVALID_F_SPEED ? GPS_INVALID_F_SPEED :
-          _GPS_MPS_PER_KNOT * f_speed_knots();
+  _GPS_MPS_PER_KNOT * f_speed_knots();
 }
 
 float Gps::f_speed_kmph()
 {
   float sk = f_speed_knots();
   return sk == GPS_INVALID_F_SPEED ? GPS_INVALID_F_SPEED :
-          _GPS_KMPH_PER_KNOT * f_speed_knots();
+  _GPS_KMPH_PER_KNOT * f_speed_knots();
 }
 
 const float Gps::GPS_INVALID_F_ANGLE = 1000.0;

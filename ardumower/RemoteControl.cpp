@@ -409,15 +409,13 @@ void RemoteControl::sendMotorMenu(boolean update)
   Bluetooth.print(", ");
   Bluetooth.print(robot_p->wheels.wheel[Wheel::RIGHT].motor.getPowerMeas());
   Bluetooth.println(F("|a05~motor current in mA l, r "));
-  Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.getCurrentMeas());
+  Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.getCurrent());
   Bluetooth.print(", ");
-  Bluetooth.print(robot_p->wheels.wheel[Wheel::RIGHT].motor.getCurrentMeas());
-  //Console.print("motorpowermax=");
-  //Console.println(robot->motorPowerMax);
-  sendSlider("a02", F("Power max"), robot_p->wheels.wheel[Wheel::LEFT].motor.powerMax, "", 0.1, 100);
-  sendSlider("a03", F("calibrate left motor "), robot_p->wheels.wheel[Wheel::LEFT].motor.getCurrentMeas(),
+  Bluetooth.print(robot_p->wheels.wheel[Wheel::RIGHT].motor.getCurrent());
+  sendSlider("a02", F("Power max"), robot_p->wheels.wheel[Wheel::LEFT].motor.powerMax, "W", 1, 100);
+  sendSlider("a03", F("calibrate left motor "), robot_p->wheels.wheel[Wheel::LEFT].motor.getCurrent(),
              "", 1, 1000, 0);
-  sendSlider("a04", F("calibrate right motor"), robot_p->wheels.wheel[Wheel::RIGHT].motor.getCurrentMeas(),
+  sendSlider("a04", F("calibrate right motor"), robot_p->wheels.wheel[Wheel::RIGHT].motor.getCurrent(),
              "", 1, 1000, 0);
   Bluetooth.print(F("|a05~Speed l, r"));
   Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.pwmCur);
@@ -457,9 +455,9 @@ void RemoteControl::sendMotorMenu(boolean update)
 
   Bluetooth.print(F("|a14~for config file:"));
   Bluetooth.print(F("motorSenseScale l, r"));
-  Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.senseScale);
+  Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.getScale());
   Bluetooth.print(", ");
-  Bluetooth.print(robot_p->wheels.wheel[Wheel::RIGHT].motor.senseScale);
+  Bluetooth.print(robot_p->wheels.wheel[Wheel::RIGHT].motor.getScale());
   Bluetooth.print(F("|a16~Swap left direction "));
   sendYesNo(robot_p->wheels.wheel[Wheel::LEFT].motor.swapDir);
   Bluetooth.print(F("|a17~Swap right direction "));
@@ -471,24 +469,24 @@ void RemoteControl::processMotorMenu(String pfodCmd)
 {
   if (pfodCmd.startsWith("a02"))
   {
-    processSlider(pfodCmd, robot_p->wheels.wheel[Wheel::LEFT].motor.powerMax, 0.1);
+    processSlider(pfodCmd, robot_p->wheels.wheel[Wheel::LEFT].motor.powerMax, 1);
   }
 
   else if (pfodCmd.startsWith("a03"))
   {
-    float currentMeas = robot_p->wheels.wheel[Wheel::LEFT].motor.getCurrentMeas();
+    float currentMeas = robot_p->wheels.wheel[Wheel::LEFT].motor.getCurrent();
     processSlider(pfodCmd, currentMeas, 1);
-    robot_p->wheels.wheel[Wheel::LEFT].motor.senseScale =
-        robot_p->wheels.wheel[Wheel::LEFT].motor.senseScale /
-        max(0, (float)robot_p->wheels.wheel[Wheel::LEFT].motor.getSenseAdc());
+    robot_p->wheels.wheel[Wheel::LEFT].motor.setScale(
+        robot_p->wheels.wheel[Wheel::LEFT].motor.getScale() /
+        max(0, (float)robot_p->wheels.wheel[Wheel::LEFT].motor.getSenseAdc()));
   }
   else if (pfodCmd.startsWith("a04"))
   {
-    float currentMeas = robot_p->wheels.wheel[Wheel::RIGHT].motor.getCurrentMeas();
+    float currentMeas = robot_p->wheels.wheel[Wheel::RIGHT].motor.getCurrent();
     processSlider(pfodCmd, currentMeas, 1);
-    robot_p->wheels.wheel[Wheel::RIGHT].motor.senseScale =
-        robot_p->wheels.wheel[Wheel::RIGHT].motor.senseScale /
-        max(0, (float)robot_p->wheels.wheel[Wheel::RIGHT].motor.getSenseAdc());
+    robot_p->wheels.wheel[Wheel::RIGHT].motor.setScale(
+        robot_p->wheels.wheel[Wheel::RIGHT].motor.getScale() /
+        max(0, (float)robot_p->wheels.wheel[Wheel::RIGHT].motor.getSenseAdc()));
   }
   else if (pfodCmd.startsWith("a06"))
   {
@@ -584,9 +582,9 @@ void RemoteControl::sendMowMenu(boolean update)
   Bluetooth.print(F("|o01~Power in Watt "));
   Bluetooth.print(robot_p->cutter.motor.getPowerMeas());
   Bluetooth.print(F("|o11~current in mA "));
-  Bluetooth.print(robot_p->cutter.motor.getCurrentMeas());
-  sendSlider("o02", F("Power max"), robot_p->cutter.motor.powerMax, "", 0.1, 100);
-  sendSlider("o03", F("calibrate mow motor "), robot_p->cutter.motor.getCurrentMeas(), "",
+  Bluetooth.print(robot_p->cutter.motor.getCurrent());
+  sendSlider("o02", F("Power max"), robot_p->cutter.motor.powerMax, "W", 1, 100);
+  sendSlider("o03", F("calibrate mow motor "), robot_p->cutter.motor.getCurrent(), "",
              1, 3000, 0);
   Bluetooth.print(F("|o04~Speed "));
   Bluetooth.print(robot_p->cutter.motor.pwmCur);
@@ -614,8 +612,8 @@ void RemoteControl::sendMowMenu(boolean update)
   }
 
   Bluetooth.println(F("|o04~for config file:"));
-  Bluetooth.println(F("cutter.motor.senseScale:"));
-  Bluetooth.print(robot_p->cutter.motor.senseScale);
+  Bluetooth.println(F("cutter.motor.getScale():"));
+  Bluetooth.print(robot_p->cutter.motor.getScale());
   Bluetooth.println("}");
 }
 
@@ -623,14 +621,14 @@ void RemoteControl::processMowMenu(String pfodCmd)
 {
   if (pfodCmd.startsWith("o02"))
   {
-    processSlider(pfodCmd, robot_p->cutter.motor.powerMax, 0.1);
+    processSlider(pfodCmd, robot_p->cutter.motor.powerMax, 1);
   }
   else if (pfodCmd.startsWith("o03"))
   {
-    float currentMeas = robot_p->cutter.motor.getCurrentMeas();
+    float currentMeas = robot_p->cutter.motor.getCurrent();
     processSlider(pfodCmd, currentMeas, 1);
-    robot_p->cutter.motor.senseScale = currentMeas /
-        max(0, (float )robot_p->cutter.motor.getSenseAdc());
+    robot_p->cutter.motor.setScale(currentMeas /
+        max(0, (float )robot_p->cutter.motor.getSenseAdc()));
   }
   else if (pfodCmd.startsWith("o05"))
   {

@@ -23,24 +23,17 @@ class Motor
     int rpmSet {};
     int pwmMax {};
     float pwmCur {};  // TODO: Move to private
-    float senseScale;
-    float powerMax {};
+    int powerMax {};
     bool swapDir { false };
     int powerIgnoreTime {};
     int zeroSettleTime {};  // TODO: Make it configurable
 
-    void setup(const float acceleration, const int pwmMax, const float powerMax,
-               const bool regulate, const int rpmMax, const int rpmSet,
-               const float senseScale, const uint8_t pinDir,
-               const uint8_t pinPwm, const uint8_t pinSense,
-               const uint8_t pinRpm, const uint8_t pinBrake);
+    void config(const float acceleration, const int pwmMax, const int powerMax,
+                const bool regulate, const int rpmMax, const int rpmSet);
     bool readRpmPin();
     int readSensePin();
-    float calcCurrent(double alpha);
-    float calcPower(float batV);
     void setRpmState();  // call this from hall sensor interrupt
     unsigned long getSamplingTime();
-    void setSpeed();
     bool isTimeForRpmMeas(unsigned long* timeSinceLast_p);
     bool isTimeToControl();
     bool isTimeToCheckPower();
@@ -68,17 +61,7 @@ class Motor
       this->pwmSet = pwmSet;
     }
 
-    int getSenseAdc() const
-    {
-      return senseAdc;
-    }
-
-    float getCurrentMeas() const
-    {
-      return currentMeas;
-    }
-
-    float getPowerMeas() const
+    int getPowerMeas() const
     {
       return powerMeas;
     }
@@ -118,6 +101,9 @@ class Motor
       this->zeroTimeout = zeroTimeout;
     }
 
+  protected:
+    int16_t powerMeas {};
+
   private:
     uint8_t pinDir;
     uint8_t pinPwm;
@@ -126,9 +112,6 @@ class Motor
     uint8_t pinBrake;
     int rpmMeas {};
     int pwmSet {};
-    int senseAdc {};
-    float currentMeas {};
-    float powerMeas {};
     int overloadCounter {};
     unsigned long lastRpmTime {};
     unsigned long nextTimeRpmMeas {};

@@ -9,13 +9,10 @@
 #include <Arduino.h>
 #include "AdcManager.h"
 #include "drivers.h"
-#include "filter.h"
+#include "Filter.h"
 
-void Motor::setup(const float acceleration, const int pwmMax, const float powerMax,
-                  const bool regulate, const int rpmMax, const int rpmSet,
-                  const float senseScale, const uint8_t pinDir,
-                  const uint8_t pinPwm, const uint8_t pinSense,
-                  const uint8_t pinRpm, const uint8_t pinBrake)
+void Motor::config(const float acceleration, const int pwmMax, const int powerMax,
+                   const bool regulate, const int rpmMax, const int rpmSet)
 {
   this->acceleration = acceleration;
   this->pwmMax = pwmMax;
@@ -23,46 +20,11 @@ void Motor::setup(const float acceleration, const int pwmMax, const float powerM
   this->regulate = regulate;
   this->rpmMax = rpmMax;
   this->rpmSet = rpmSet;
-  this->senseScale = senseScale;
-  this->pinDir = pinDir;
-  this->pinPwm = pinPwm;
-  this->pinSense = pinSense;
-  this->pinRpm = pinRpm;
-  this->pinBrake = pinBrake;
-  pinMode(pinDir, OUTPUT);
-  digitalWrite(pinDir, LOW);
-  pinMode(pinPwm, OUTPUT);
-  digitalWrite(pinDir, LOW);
-  pinMode(pinSense, INPUT);
-  pinMode(pinRpm, INPUT);
-  pinMode(pinBrake, OUTPUT);
-  digitalWrite(pinDir, LOW);
 }
 
 bool Motor::readRpmPin()
 {
   return digitalRead(pinRpm);
-}
-
-int Motor::readSensePin()
-{
-  senseAdc = ADCMan.read(pinSense);
-  return senseAdc;
-}
-
-float Motor::calcCurrent(double alpha)
-{
-  // Exponential Moving Average (EMA) filter (ardumower version)
-  currentMeas = currentMeas * (1.0 - alpha) + (double)senseAdc * senseScale * alpha;
-  // Exponential Moving Average (EMA) filter (Ove's version)
-  //senseCurrent = dsp_ema_i16((double)senseAdc * senseScale, senseCurrent, DSP_EMA_I16_ALPHA(0.05));
-  return currentMeas;
-}
-
-float Motor::calcPower(float batV)
-{
-  powerMeas = currentMeas * batV / 1000;
-  return powerMeas;
 }
 
 void Motor::setRpmState()
@@ -89,20 +51,6 @@ unsigned long Motor::getSamplingTime()
     samplingTime = 1;
   }
   return samplingTime;
-}
-
-void Motor::setSpeed()
-{
-  int speed;
-  if (swapDir)
-  {
-    speed = -pwmCur;
-  }
-  else
-  {
-    speed = pwmCur;
-  }
-  setArdumoto(pinDir, pinPwm, speed);
 }
 
 bool Motor::isTimeForRpmMeas(unsigned long* timeSinceLast_p)
