@@ -6,25 +6,12 @@
  */
 
 #include <Arduino.h>
-
 #include "Sonar.h"
 
-// ultrasonic sensor max echo time
-// (WARNING: do not set too high, it consumes CPU time!)
-#define DEFAULT_MAX_ECHO_TIME 3000  // 3000 us / 58.8 = 51 cm
-#define DEFAULT_MIN_ECHO_TIME 150   // 150 us / 58,8 = 2.5 cm
+#define MAX_SENSOR_DELAY 18000
 #define NO_ECHO 0
 
-/**
- * Setup sonar using default values for max and min echo times.
- *
- * @param triggerPin
- * @param echoPin
- */
-void Sonar::setup(const uint8_t triggerPin, const uint8_t echoPin)
-{
-  setup(triggerPin, echoPin, DEFAULT_MAX_ECHO_TIME, DEFAULT_MIN_ECHO_TIME);
-}
+#define Console Serial
 
 /**
  * Setup sonar.
@@ -42,15 +29,21 @@ void Sonar::setup(const uint8_t triggerPin, const uint8_t echoPin,
   this->maxEchoTime = maxEchoTime;
   this->minEchoTime = minEchoTime;
 
-  pinMode(this->triggerPin, OUTPUT);
-  pinMode(this->echoPin, INPUT);
+  pinMode(triggerPin, OUTPUT);
+  digitalWrite(triggerPin, LOW);
+  pinMode(echoPin, INPUT);
+
+  triggerBitMask = digitalPinToBitMask(triggerPin); // Get the port register bit mask for the trigger pin.
+  echoBitMask = digitalPinToBitMask(echoPin);       // Get the port register bit mask for the echo pin.
+  triggerOutputRegister_p = portOutputRegister(digitalPinToPort(triggerPin)); // Get the output port register for the trigger pin.
+  echoInputRegister_p = portInputRegister(digitalPinToPort(echoPin));         // Get the input port register for the echo pin.
 }
 
 /**
  * Send an ultrasound ping and measure time until echo arrives
  *
- * @return Time until echo arrives in us.
- *         To get distance in cm divide value with 58.8.
+ * Sets distance_us to time until echo arrives in us.
+ * To get distance in cm divide value with 58.8.
  */
 void Sonar::ping(void)
 {
@@ -59,28 +52,54 @@ void Sonar::ping(void)
     return;
   }
 
-  // TODO: Change from digitalWrite to raw port write to make it more accurate.
-  digitalWrite(triggerPin, LOW);
-  delayMicroseconds(4);
-  digitalWrite(triggerPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(triggerPin, LOW);
+  distance_us = pingInternal();
+}
 
-  // Duration is in us
-  uint32_t uS = pulseIn(echoPin, HIGH, maxEchoTime + 1000);
+inline bool Sonar::pingTrigger(void)
+{
+  delayMicroseconds(4);                        // Wait for pin to go low, testing shows it needs 4uS to work every time.
+  *triggerOutputRegister_p |= triggerBitMask;  // Set trigger pin high, this tells the sensor to send out a ping.
+  delayMicroseconds(10);                       // Wait long enough for the sensor to realize the trigger pin is high. Sensor specs say to wait 10uS.
+  *triggerOutputRegister_p &= ~triggerBitMask; // Set trigger pin back to low.
 
-  if (uS > maxEchoTime || uS < minEchoTime)
+  maxTime =  micros() + MAX_SENSOR_DELAY;                                // Set a timeout for the ping to trigger.
+  while ((*echoInputRegister_p & echoBitMask) && micros() <= maxTime)
   {
-    uS = NO_ECHO;
+    // Wait for echo pin to clear.
+  }
+  while (!(*echoInputRegister_p & echoBitMask))                          // Wait for ping to start.
+  {
+    if (micros() > maxTime)
+    {
+      return false;                                // Something went wrong, abort.
+    }
   }
 
-  distance = uS;
+  maxTime = micros() + maxEchoTime;    // Ping started, set the timeout.
+  return true;                         // Ping started successfully.
+}
+
+inline uint32_t Sonar::pingInternal(void)
+{
+  if (!pingTrigger())  // Trigger a ping, if it returns false, return NO_ECHO to the calling function.
+  {
+    return NO_ECHO;
+  }
+
+  while (*echoInputRegister_p & echoBitMask)  // Wait for the ping echo.
+  {
+    if (micros() > maxTime)
+    {
+      return NO_ECHO;  // Stop the loop and return NO_ECHO (false) if we're beyond the set maximum distance.
+    }
+  }
+  return (micros() - (maxTime - maxEchoTime) - 5); // Calculate ping time, 5uS of overhead.
 }
 
 bool Sonars::isTimeToRun()
 {
   unsigned long curMillis = millis();
-  if (curMillis < nextTime)
+  if (curMillis >= nextTime)
   {
     nextTime = curMillis + timeBetweenRun;
     return true;
@@ -91,7 +110,7 @@ bool Sonars::isTimeToRun()
 bool Sonars::isTimeToCheck()
 {
   unsigned long curMillis = millis();
-  if (curMillis < nextTimeCheck)
+  if (curMillis >= nextTimeCheck)
   {
     nextTimeCheck = curMillis + timeBetweenCheck;
     return true;

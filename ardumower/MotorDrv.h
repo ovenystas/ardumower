@@ -20,8 +20,8 @@ class MotorDrv: public Motor
     virtual void setSpeed(const int speed) = 0;
     virtual void setSpeed(const int speed, bool brake) = 0;
     virtual void readCurrent(void) = 0;
-    int16_t getSenseAdc(void);  // Get average ADC value 0..1023
-    int16_t getCurrent(void);   // Get average motor current in mA
+    int16_t getAverageSenseAdc(void);  // Get average ADC value 0..1023
+    int16_t getAverageCurrent(void);   // Get average motor current in mA
     void calcPower(float batV);
     void setFilterAlpha(double alpha);
 

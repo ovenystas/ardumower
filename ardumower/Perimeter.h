@@ -45,18 +45,18 @@ class Perimeter
   public:
     Perimeter();
     // set ADC pins
-    void setup(byte idx0Pin, byte idx1Pin);
+    void setup(const byte idx0Pin, const byte idx1Pin);
     // get perimeter magnitude
-    int getMagnitude(byte idx);
-    int getSmoothMagnitude(byte idx);
+    int getMagnitude(const byte idx);
+    int getSmoothMagnitude(const byte idx);
     // inside perimeter (true) or outside (false)?
-    boolean isInside(byte idx);
+    boolean isInside(const byte idx);
     // perimeter signal timed out? (e.g. due to broken wire)
-    boolean signalTimedOut(byte idx);
-    int16_t getSignalMin(byte idx);
-    int16_t getSignalMax(byte idx);
-    int16_t getSignalAvg(byte idx);
-    float getFilterQuality(byte idx);
+    boolean signalTimedOut(const byte idx);
+    int16_t getSignalMin(const byte idx);
+    int16_t getSignalMax(const byte idx);
+    int16_t getSignalAvg(const byte idx);
+    float getFilterQuality(const byte idx);
     void speedTest();
     bool isTimeToControl();
 
@@ -84,10 +84,11 @@ class Perimeter
     unsigned long nextTimeControl {};
     unsigned int timeBetweenControl { 100 };
 
-    void matchedFilter(byte idx);
-    int16_t corrFilter(int8_t *H, int8_t subsample, int16_t M, int8_t *ip,
-                       int16_t nPts, float &quality);
-    void printADCMinMax(int8_t *samples);
+    void matchedFilter(const byte idx);
+    int16_t corrFilter(const int8_t* H_p, const int8_t subsample,
+                       const int16_t M, const int8_t* ip_p,
+                       const int16_t nPts, float &quality);
+    void printADCMinMax(const int8_t* samples_p);
 };
 
 #endif

@@ -58,8 +58,8 @@ class LawnSensor
     float valueOld[2]{};  // lawn sensor capacity (time)
     unsigned long nextTimeRead {};
     unsigned long nextTimeCheck {};
-    unsigned int timeBetweenReads { 100 };
-    unsigned int timeBetweenChecks { 2000 };
+    unsigned int timeBetweenRead { 100 };
+    unsigned int timeBetweenCheck { 2000 };
 
     uint16_t measureLawnCapacity(const uint8_t pinSend, const uint8_t pinReceive);
 

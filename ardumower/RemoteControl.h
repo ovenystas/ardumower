@@ -63,7 +63,7 @@ class RemoteControl
   public:
     RemoteControl();
     void setRobot(Robot* robot_p);
-    void initSerial(int baudrate);
+    void initSerial(const int baudrate);
     bool readSerial();
     void run();
 
@@ -76,90 +76,93 @@ class RemoteControl
     unsigned long nextPlotTime;
     int8_t perimeterCapture[32];
     int perimeterCaptureIdx;
-    float stringToFloat(String &s);
+    float stringToFloat(const String &s);
 
     // generic
-    void sendYesNo(bool value);
-    void sendOnOff(bool value);
+    void sendYesNo(const bool value);
+    void sendOnOff(const bool value);
 
     // PID slider
-    void sendPIDSlider(String cmd, String title, Pid &pid, double scale,
-                       float maxvalue);
-    void processPIDSlider(String result, String cmd, Pid &pid, double scale,
-                          float maxvalue);
+    void sendPIDSlider(const String cmd, const String title, const Pid &pid,
+                       const double scale, const float maxvalue);
+    void processPIDSlider(const String result, const String cmd,
+                          Pid &pid, const double scale,
+                          const float maxvalue);
 
     // generic slider
-    void sendSlider(String cmd, String title, float value, String unit,
-                    double scale, float maxvalue, float minvalue = 0);
-    void processSlider(String result, float &value, double scale);
-    void processSlider(String result, long &value, double scale);
-    void processSlider(String result, int &value, double scale);
-    void processSlider(String result, unsigned int &value, double scale);
-    void processSlider(String result, byte &value, double scale);
-    void processSlider(String result, short &value, double scale);
+    void sendSlider(const String cmd, const String title,
+                    const float value, const String unit,
+                    const double scale, const float maxvalue,
+                    const float minvalue = 0);
+    void processSlider(const String result, float &value, const double scale);
+    void processSlider(const String result, long &value, const double scale);
+    void processSlider(const String result, int &value, const double scale);
+    void processSlider(const String result, unsigned int &value, const double scale);
+    void processSlider(const String result, byte &value, const double scale);
+    void processSlider(const String result, short &value, const double scale);
 
     // send timer menu details
-    void sendTimer(ttimer_t timer);
+    void sendTimer(const ttimer_t timer);
 
     // main menu
-    void sendMainMenu(boolean update);
-    void sendErrorMenu(boolean update);
-    void sendInfoMenu(boolean update);
-    void sendCommandMenu(boolean update);
-    void processCommandMenu(String pfodCmd);
-    void sendManualMenu(boolean update);
-    void sendCompassMenu(boolean update);
-    void processCompassMenu(String pfodCmd);
-    void processManualMenu(String pfodCmd);
-    void processSettingsMenu(String pfodCmd);
+    void sendMainMenu(const boolean update);
+    void sendErrorMenu(const boolean update);
+    void sendInfoMenu(const boolean update);
+    void sendCommandMenu(const boolean update);
+    void processCommandMenu(const String pfodCmd);
+    void sendManualMenu(const boolean update);
+    void sendCompassMenu(const boolean update);
+    void processCompassMenu(const String pfodCmd);
+    void processManualMenu(const String pfodCmd);
+    void processSettingsMenu(const String pfodCmd);
 
     // plotting
-    void sendPlotMenu(boolean update);
+    void sendPlotMenu(const boolean update);
 
     // settings
-    void sendSettingsMenu(boolean update);
-    void sendMotorMenu(boolean update);
-    void sendMowMenu(boolean update);
-    void sendBumperMenu(boolean update);
-    void sendDropMenu(boolean update);
-    void sendSonarMenu(boolean update);
-    void sendPerimeterMenu(boolean update);
-    void sendLawnSensorMenu(boolean update);
-    void sendImuMenu(boolean update);
-    void sendRemoteMenu(boolean update);
-    void sendBatteryMenu(boolean update);
-    void sendStationMenu(boolean update);
-    void sendOdometerMenu(boolean update);
-    void sendRainMenu(boolean update);
-    void sendGPSMenu(boolean update);
-    void sendDateTimeMenu(boolean update);
-    void sendFactorySettingsMenu(boolean update);
-    void sendADCMenu(boolean update);
+    void sendSettingsMenu(const boolean update);
+    void sendMotorMenu(const boolean update);
+    void sendMowMenu(const boolean update);
+    void sendBumperMenu(const boolean update);
+    void sendDropMenu(const boolean update);
+    void sendSonarMenu(const boolean update);
+    void sendPerimeterMenu(const boolean update);
+    void sendLawnSensorMenu(const boolean update);
+    void sendImuMenu(const boolean update);
+    void sendRemoteMenu(const boolean update);
+    void sendBatteryMenu(const boolean update);
+    void sendStationMenu(const boolean update);
+    void sendOdometerMenu(const boolean update);
+    void sendRainMenu(const boolean update);
+    void sendGPSMenu(const boolean update);
+    void sendDateTimeMenu(const boolean update);
+    void sendFactorySettingsMenu(const boolean update);
+    void sendADCMenu(const boolean update);
 
-    void processMotorMenu(String pfodCmd);
-    void processErrorMenu(String pfodCmd);
-    void processMowMenu(String pfodCmd);
-    void processBumperMenu(String pfodCmd);
-    void processSonarMenu(String pfodCmd);
-    void processPerimeterMenu(String pfodCmd);
-    void processLawnSensorMenu(String pfodCmd);
-    void processRainMenu(String pfodCmd);
-    void processDropMenu(String pfodCmd);
-    void processGPSMenu(String pfodCmd);
-    void processImuMenu(String pfodCmd);
-    void processRemoteMenu(String pfodCmd);
-    void processBatteryMenu(String pfodCmd);
-    void processStationMenu(String pfodCmd);
-    void processOdometerMenu(String pfodCmd);
-    void processDateTimeMenu(String pfodCmd);
-    void processFactorySettingsMenu(String pfodCmd);
-    void processInfoMenu(String pfodCmd);
+    void processMotorMenu(const String pfodCmd);
+    void processErrorMenu(const String pfodCmd);
+    void processMowMenu(const String pfodCmd);
+    void processBumperMenu(const String pfodCmd);
+    void processSonarMenu(const String pfodCmd);
+    void processPerimeterMenu(const String pfodCmd);
+    void processLawnSensorMenu(const String pfodCmd);
+    void processRainMenu(const String pfodCmd);
+    void processDropMenu(const String pfodCmd);
+    void processGPSMenu(const String pfodCmd);
+    void processImuMenu(const String pfodCmd);
+    void processRemoteMenu(const String pfodCmd);
+    void processBatteryMenu(const String pfodCmd);
+    void processStationMenu(const String pfodCmd);
+    void processOdometerMenu(const String pfodCmd);
+    void processDateTimeMenu(const String pfodCmd);
+    void processFactorySettingsMenu(const String pfodCmd);
+    void processInfoMenu(const String pfodCmd);
 
     // timer
-    void sendTimerDetailMenu(int timerIdx, boolean update);
-    void processTimerDetailMenu(String pfodCmd);
-    void sendTimerMenu(boolean update);
-    void processTimerMenu(String pfodCmd);
+    void sendTimerDetailMenu(const int timerIdx, const boolean update);
+    void processTimerDetailMenu(const String pfodCmd);
+    void sendTimerMenu(const boolean update);
+    void processTimerMenu(const String pfodCmd);
 };
 
 #endif

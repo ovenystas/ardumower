@@ -9,6 +9,8 @@
 #include "MotorShield.h"
 #include "AdcManager.h"
 
+//#define Console Serial
+
 void MotorShield::setup(void)
 {
   pinMode(pinDir[channel], OUTPUT);
@@ -23,7 +25,7 @@ void MotorShield::setup(void)
 
 void MotorShield::setSpeed(void)
 {
-  setSpeed((int)pwmCur);
+  setSpeed((int)(pwmCur + 0.5));
 }
 
 void MotorShield::setSpeed(const int speed)
@@ -31,6 +33,16 @@ void MotorShield::setSpeed(const int speed)
   int tmpSpeed = swapDir ? -speed : speed;
   digitalWrite(pinDir[channel], tmpSpeed < 0);
   analogWrite(pinPwm[channel], abs(tmpSpeed));
+//  Console.print("MotorShield::setSpeed ch=");
+//  Console.print(channel);
+//  Console.print(" pinDir=");
+//  Console.print(pinDir[channel]);
+//  Console.print(" pinPwm=");
+//  Console.print(pinPwm[channel]);
+//  Console.print(" dir=");
+//  Console.print(tmpSpeed < 0);
+//  Console.print(" speed=");
+//  Console.println(tmpSpeed);
 }
 
 void MotorShield::setSpeed(const int speed, const bool brake)

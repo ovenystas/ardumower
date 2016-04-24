@@ -72,7 +72,7 @@ Perimeter::Perimeter()
   subSample = 0;
 }
 
-void Perimeter::setup(byte idx0Pin, byte idx1Pin)
+void Perimeter::setup(const byte idx0Pin, const byte idx1Pin)
 {
   pinMode(idx0Pin, INPUT);
   pinMode(idx1Pin, INPUT);
@@ -125,7 +125,7 @@ void Perimeter::speedTest()
   Console.println(loops);
 }
 
-int Perimeter::getMagnitude(byte idx)
+int Perimeter::getMagnitude(const byte idx)
 {
   if (ADCMan.isCaptureComplete(idxPin[idx]))
   {
@@ -134,19 +134,19 @@ int Perimeter::getMagnitude(byte idx)
   return mag[idx];
 }
 
-int Perimeter::getSmoothMagnitude(byte idx)
+int Perimeter::getSmoothMagnitude(const byte idx)
 {
   return smoothMag[idx];
 }
 
-void Perimeter::printADCMinMax(int8_t *samples)
+void Perimeter::printADCMinMax(const int8_t* samples_p)
 {
   int8_t vmax = SCHAR_MIN;
   int8_t vmin = SCHAR_MAX;
   for (byte i = 0; i < ADCMan.getCaptureSize(idxPin[0]); i++)
   {
-    vmax = max(vmax, samples[i]);
-    vmin = min(vmin, samples[i]);
+    vmax = max(vmax, samples_p[i]);
+    vmin = min(vmin, samples_p[i]);
   }
   Console.print(F("perimter min,max="));
   Console.print((int) vmin);
@@ -155,10 +155,10 @@ void Perimeter::printADCMinMax(int8_t *samples)
 }
 
 // perimeter V2 uses a digital matched filter
-void Perimeter::matchedFilter(byte idx)
+void Perimeter::matchedFilter(const byte idx)
 {
   int16_t sampleCount = ADCMan.getCaptureSize(idxPin[0]);
-  int8_t *samples = ADCMan.getCapture(idxPin[idx]);
+  int8_t* samples_p = ADCMan.getCapture(idxPin[idx]);
   if (callCounter == 100)
   {
     // statistics only
@@ -168,29 +168,29 @@ void Perimeter::matchedFilter(byte idx)
     signalAvg[idx] = 0;
     for (int i = 0; i < sampleCount; i++)
     {
-      int8_t v = samples[i];
+      int8_t v = samples_p[i];
       signalAvg[idx] += v;
       signalMin[idx] = min(signalMin[idx], v);
       signalMax[idx] = max(signalMax[idx], v);
     }
-    signalAvg[idx] = ((double) signalAvg[idx]) / ((double) (sampleCount));
+    signalAvg[idx] = (double)signalAvg[idx] / (double)sampleCount;
   }
   // magnitude for tracking (fast but inaccurate)
   int16_t sigcode_size = sizeof sigcode_norm;
-  int8_t *sigcode = sigcode_norm;
+  int8_t* sigcode_p = sigcode_norm;
   if (useDifferentialPerimeterSignal)
   {
-    sigcode = sigcode_diff;
+    sigcode_p = sigcode_diff;
   }
-  mag[idx] = corrFilter(sigcode, subSample, sigcode_size, samples,
+  mag[idx] = corrFilter(sigcode_p, subSample, sigcode_size, samples_p,
                         sampleCount - sigcode_size * subSample,
                         filterQuality[idx]);
   if (swapCoilPolarity)
   {
-    mag[idx] *= -1;
+    mag[idx] = -mag[idx];
   }
   // smoothed magnitude used for signal-off detection
-  smoothMag[idx] = 0.99 * smoothMag[idx] + 0.01 * ((float) abs(mag[idx]));
+  smoothMag[idx] = 0.99 * smoothMag[idx] + 0.01 * ((float)abs(mag[idx]));
 
   // perimeter inside/outside detection
   if (mag[idx] > 0)
@@ -213,41 +213,43 @@ void Perimeter::matchedFilter(byte idx)
   }
 }
 
-int16_t Perimeter::getSignalMin(byte idx)
+int16_t Perimeter::getSignalMin(const byte idx)
 {
   return signalMin[idx];
 }
 
-int16_t Perimeter::getSignalMax(byte idx)
+int16_t Perimeter::getSignalMax(const byte idx)
 {
   return signalMax[idx];
 }
 
-int16_t Perimeter::getSignalAvg(byte idx)
+int16_t Perimeter::getSignalAvg(const byte idx)
 {
   return signalAvg[idx];
 }
 
-float Perimeter::getFilterQuality(byte idx)
+float Perimeter::getFilterQuality(const byte idx)
 {
   return filterQuality[idx];
 }
 
-boolean Perimeter::isInside(byte idx)
+boolean Perimeter::isInside(const byte idx)
 {
   return (signalCounter[idx] < 0);
 }
 
-boolean Perimeter::signalTimedOut(byte idx)
+boolean Perimeter::signalTimedOut(const byte idx)
 {
   if (getSmoothMagnitude(idx) < timedOutIfBelowSmag)
   {
     return true;
   }
+
   if (millis() - lastInsideTime[idx] > timeOutSecIfNotInside * 1000)
   {
     return true;
   }
+
   return false;
 }
 
@@ -258,8 +260,9 @@ boolean Perimeter::signalTimedOut(byte idx)
 // ip[] holds input data (length > nPts + M )
 // nPts is the length of the required output data
 
-int16_t Perimeter::corrFilter(int8_t *H, int8_t subsample, int16_t M,
-                              int8_t *ip, int16_t nPts, float &quality)
+int16_t Perimeter::corrFilter(const int8_t* H_p, const int8_t subsample,
+                              const int16_t M, const int8_t* ip_p,
+                              const int16_t nPts, float &quality)
 {
   int16_t sumMax = 0; // max correlation sum
   int16_t sumMin = 0; // min correlation sum
@@ -269,7 +272,7 @@ int16_t Perimeter::corrFilter(int8_t *H, int8_t subsample, int16_t M,
   int16_t Hsum = 0;
   for (int16_t i = 0; i < M; i++)
   {
-    Hsum += abs(H[i]);
+    Hsum += abs(H_p[i]);
   }
   Hsum *= subsample;
 
@@ -278,20 +281,20 @@ int16_t Perimeter::corrFilter(int8_t *H, int8_t subsample, int16_t M,
   for (int16_t j = 0; j < nPts; j++)
   {
     int16_t sum = 0;
-    int8_t *Hi = H;
+    const int8_t* Hi_p = H_p;
     int8_t ss = 0;
-    int8_t *ipi = ip;
+    const int8_t* ipi_p = ip_p;
     // for each filter coeffs
     for (int16_t i = 0; i < Ms; i++)
     {
-      sum += ((int16_t) (*Hi)) * ((int16_t) (*ipi));
+      sum += ((int16_t)(*Hi_p)) * ((int16_t)(*ipi_p));
       ss++;
       if (ss == subsample)
       {
         ss = 0;
-        Hi++; // next filter coeffs
+        Hi_p++; // next filter coeffs
       }
-      ipi++;
+      ipi_p++;
     }
     if (sum > sumMax)
     {
@@ -301,21 +304,21 @@ int16_t Perimeter::corrFilter(int8_t *H, int8_t subsample, int16_t M,
     {
       sumMin = sum;
     }
-    ip++;
+    ip_p++;
   }
   // normalize to 4095
-  sumMin = ((float) sumMin) / ((float) (Hsum * 127)) * 4095.0;
-  sumMax = ((float) sumMax) / ((float) (Hsum * 127)) * 4095.0;
+  sumMin = ((float)sumMin) / ((float)(Hsum * 127)) * 4095.0;
+  sumMax = ((float)sumMax) / ((float)(Hsum * 127)) * 4095.0;
 
   // compute ratio min/max
   if (sumMax > -sumMin)
   {
-    quality = ((float) sumMax) / ((float) -sumMin);
+    quality = ((float)sumMax) / ((float)-sumMin);
     return sumMax;
   }
   else
   {
-    quality = ((float) -sumMin) / ((float) sumMax);
+    quality = ((float)-sumMin) / ((float)sumMax);
     return sumMin;
   }
 }

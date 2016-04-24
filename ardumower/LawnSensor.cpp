@@ -83,7 +83,7 @@ bool LawnSensor::isTimeToRead()
   unsigned long curMillis = millis();
   if (used && curMillis >= nextTimeRead)
   {
-    nextTimeRead = curMillis + timeBetweenReads;
+    nextTimeRead = curMillis + timeBetweenRead;
     return true;
   }
   return false;
@@ -94,7 +94,7 @@ bool LawnSensor::isTimeToCheck()
   unsigned long curMillis = millis();
   if (used && curMillis >= nextTimeCheck)
   {
-    nextTimeCheck = curMillis + timeBetweenChecks;
+    nextTimeCheck = curMillis + timeBetweenCheck;
     return true;
   }
   return false;

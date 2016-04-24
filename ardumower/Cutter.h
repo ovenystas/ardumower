@@ -9,12 +9,12 @@
 #define CUTTER_H
 
 #include "Motor.h"
-#include "MotorShield.h"
+#include "MotorMosFet.h"
 
 class Cutter
 {
   public:
-    MotorShield motor;
+    MotorMosFet motor;
 
     bool isEnabled() const
     {

@@ -186,7 +186,7 @@ class Robot
     // -------- gps state -------------------------------
     Gps gps;
     boolean gpsUse;       // use GPS?
-    float stuckedIfGpsSpeedBelow;
+    float stuckIfGpsSpeedBelow;
     int gpsSpeedIgnoreTime; // how long gpsSpeed is ignored when robot switches into a new STATE (in ms)
 
     // -------- odometer state --------------------------
@@ -295,18 +295,19 @@ class Robot
     virtual void resetIdleTime();
 
     // call this from R/C control interrupt
-    virtual void setRemotePPMState(unsigned long timeMicros,
-                                   boolean remoteSpeedState,
-                                   boolean remoteSteerState,
-                                   boolean remoteMowState,
-                                   boolean remoteSwitchState);
+    virtual void setRemotePPMState(const unsigned long timeMicros,
+                                   const boolean remoteSpeedState,
+                                   const boolean remoteSteerState,
+                                   const boolean remoteMowState,
+                                   const boolean remoteSwitchState);
 
     // state machine
     virtual void setNextState(byte stateNew, byte dir);
 
     // motor
-    virtual void setMotorPWMs(int pwmLeft, int pwmRight, boolean useAccel);
-    virtual void setMotorMowPWM(int pwm, boolean useAccel);
+    virtual void setMotorPWMs(const int pwmLeft, const int pwmRight,
+                              const boolean useAccel);
+    virtual void setMotorMowPWM(const int pwm, const boolean useAccel);
 
     // GPS
     virtual void processGPSData();
@@ -327,10 +328,10 @@ class Robot
     virtual void deleteRobotStats();
 
     // other
-    virtual void beep(int numberOfBeeps, boolean shortbeep);
+    virtual void beep(const int numberOfBeeps, const boolean shortbeep);
     virtual void printInfo(Stream &s);
     virtual void setUserSwitches();
-    virtual void addErrorCounter(enum errorE errType);
+    virtual void addErrorCounter(const enum errorE errType);
     virtual void resetErrorCounters();
 
     byte getStateCurr() const
@@ -385,11 +386,11 @@ class Robot
 
   protected:
     // convert ppm time to RC slider value
-    virtual int rcValue(int ppmTime);
-    virtual void loadSaveErrorCounters(boolean readflag);
+    virtual int rcValue(const int ppmTime);
+    virtual void loadSaveErrorCounters(const boolean readflag);
     virtual void loadErrorCounters();
     virtual void saveErrorCounters();
-    virtual void loadSaveUserSettings(boolean readflag);
+    virtual void loadSaveUserSettings(const boolean readflag);
     virtual void loadSaveRobotStats(boolean readflag);
     virtual void loadUserSettings();
     virtual void checkErrorCounter();
@@ -417,7 +418,7 @@ class Robot
     virtual void checkRain();
     virtual void checkTimeout();
     virtual void checkOdometerFaults();
-    virtual void checkIfStucked();
+    virtual void checkIfStuck();
     virtual void checkRobotStats();
 
     // motor controllers
@@ -431,13 +432,13 @@ class Robot
     virtual void setDefaultTime();
 
     // set reverse
-    virtual void reverseOrBidir(byte aRollDir);
+    virtual void reverseOrBidir(const byte aRollDir);
 
     // other
     virtual void printRemote();
     virtual void printOdometer();
     virtual void printMenu();
-    virtual void delayInfo(int ms);
+    virtual void delayInfo(const int ms);
     virtual void testOdometer();
     virtual void testMotors();
     virtual void setDefaults();
@@ -467,7 +468,7 @@ class Robot
     float gpsX;   // X position (m)
     float gpsY;   // Y position (m)
     unsigned long nextTimeGPS;
-    unsigned long nextTimeCheckIfStucked;
+    unsigned long nextTimeCheckIfStuck;
     int robotIsStuckCounter;
 
     // -------- RC remote control state -----------------
@@ -530,7 +531,8 @@ class Robot
     unsigned long nextTimeRobotStats;
 
 
-    void setMotorPWM(int pwm, unsigned long TaC, uint8_t motor, boolean useAccel);
+    void setMotorPWM(int pwm, const unsigned long samplingTime,
+                     const uint8_t motor, const boolean useAccel);
     void loadRobotStats();
     void saveRobotStats();
 };

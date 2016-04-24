@@ -115,7 +115,7 @@
 // ------- baudrates---------------------------------
 #define BAUDRATE 115200               // serial output baud rate
 #define PFOD_BAUDRATE 19200           // pfod app serial output baud rate
-#define PFOD_PIN 1234                 // Bluetooth pin
+#define PFOD_PIN 1234                 // Bluetooth pin code
 
 //#define USE_DEVELOPER_TEST     1      // uncomment for new perimeter signal test (developers)
 
@@ -183,7 +183,7 @@ Mower::Mower()
 
   // ----- GPS -------------------------------------------
   gpsUse = false;                   // use GPS?
-  stuckedIfGpsSpeedBelow = 0.2; // if Gps speed is below given value the mower is stuck
+  stuckIfGpsSpeedBelow = 0.2; // if Gps speed is below given value the mower is stuck
   gpsSpeedIgnoreTime = 5000;    // how long gpsSpeed is ignored when robot switches into a new STATE (in ms)
 
   // ----- user-defined switch ---------------------------
@@ -334,12 +334,14 @@ void Mower::setup()
   dropSensors.dropSensor[DropSensors::RIGHT].setup(PIN_DROP_LEFT, DropSensor::NO);
 
   // sonar
+  sonars.use = true;
   sonars.sonar[Sonars::LEFT].setup(PIN_SONAR_LEFT_TRIGGER, PIN_SONAR_LEFT_ECHO);
   sonars.sonar[Sonars::RIGHT].setup(PIN_SONAR_RIGHT_TRIGGER, PIN_SONAR_RIGHT_ECHO);
   sonars.sonar[Sonars::CENTER].setup(PIN_SONAR_CENTER_TRIGGER, PIN_SONAR_CENTER_ECHO);
   sonars.sonar[Sonars::LEFT].use = false;
   sonars.sonar[Sonars::RIGHT].use = false;
   sonars.sonar[Sonars::CENTER].use = true;
+
   // rain
   rainSensor.setup(PIN_RAIN);
 
@@ -375,6 +377,7 @@ void Mower::setup()
   // http://sobisource.com/arduino-mega-pwm-pin-and-frequency-timer-control/
   // http://www.atmel.com/images/doc2549.pdf
   TCCR3B = (TCCR3B & 0xF8) | 0x02;  // set PWM frequency 3.9 Khz (pin2,3,5)
+  TCCR1B = (TCCR1B & 0xF8) | 0x02;  // set PWM frequency 3.9 Khz (pin11,12)
 
   // enable interrupts
   // R/C
