@@ -39,3 +39,19 @@ i Toggle imu.use
 3 Activate model RC
 0 Turn OFF
 1 Automode
+
+
+IMU
+---
+Don't have
+GY-80 Multi Sensor Board - 3 Axis Gyro -3 Axis Accelerometer - 3 Axis Magnetometer - Barometer - Thermometer
+
+Have
+GY-273 HMC5883L 3-AXIS DIGITAL COMPASS MODULE
+GY-521 MPU6050 Triple 3-Axis Accelerometer Gyroscope I2C
+
+Will use
+MinIMU-9 Gyro, Accelerometer, and Compass (L3G4200D and LSM303DLM Carrier)
+https://www.pololu.com/product/1265
+Arduino code for L3G4200D - https://github.com/pololu/l3g-arduino
+Arduino code for LSM303DLM - https://github.com/pololu/lsm303-arduino

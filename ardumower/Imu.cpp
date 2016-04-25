@@ -822,10 +822,12 @@ void Imu::update(void)
     // ------ yaw --------------
     // tilt-compensated yaw
     comTilt.x = com.x * cos(ypr.pitch) + com.z * sin(ypr.pitch);
-    comTilt.y = com.x * sin(ypr.roll) * sin(ypr.pitch) + com.y * cos(ypr.roll)
-        - com.z * sin(ypr.roll) * cos(ypr.pitch);
-    comTilt.z = -com.x * cos(ypr.roll) * sin(ypr.pitch) + com.y * sin(ypr.roll)
-                + com.z * cos(ypr.roll) * cos(ypr.pitch);
+    comTilt.y = com.x * sin(ypr.roll) * sin(ypr.pitch) +
+        com.y * cos(ypr.roll) -
+        com.z * sin(ypr.roll) * cos(ypr.pitch);
+    comTilt.z = -com.x * cos(ypr.roll) * sin(ypr.pitch) +
+        com.y * sin(ypr.roll) +
+        com.z * cos(ypr.roll) * cos(ypr.pitch);
     comYaw = scalePI(atan2(comTilt.y, comTilt.x));
     comYaw = scalePIangles(comYaw, ypr.yaw);
     //comYaw = atan2(com.y, com.x);  // assume pitch, roll are 0
