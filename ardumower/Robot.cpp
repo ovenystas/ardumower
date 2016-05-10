@@ -38,7 +38,7 @@ char* stateNames[] = { "OFF ", "RC  ", "FORW", "ROLL", "REV ", "CIRC", "ERR ",
 
 char *mowPatternNames[] = { "RANDOM", "LANE", "BIDIR" };
 
-char* consoleModeNames[] = { "sen_counters", "sen_values", "perimeter" };
+char* consoleModeNames[] = { "sen_counters", "sen_values", "perimeter", "imu" };
 
 Robot::Robot()
 {
@@ -834,15 +834,13 @@ void Robot::setMotorMowPWM(const int pwm, const boolean useAccel)
 // PID controller: roll robot to heading (requires IMU)
 void Robot::motorControlImuRoll()
 {
-  unsigned long curMillis = millis();
-  if (curMillis < imu.nextTimeControl)
+  if (!imu.isTimeToControl())
   {
     return;
   }
-  imu.nextTimeControl = curMillis + 100;
 
   // Regelbereich entspricht 80% der maximalen Drehzahl am Antriebsrad (motorSpeedMaxRpm)
-  float imuPidX = distancePI(imu.ypr.yaw, imuRollHeading) / PI * 180.0;
+  float imuPidX = distancePI(imu.getYaw(), imuRollHeading) / PI * 180.0;
   imu.pid[Imu::ROLL].setSetpoint(0);
   imu.pid[Imu::ROLL].y_min = -wheels.wheel[Wheel::LEFT].motor.rpmMax / 1.25; // da der Roll generell langsamer erfolgen soll
   imu.pid[Imu::ROLL].y_max = wheels.wheel[Wheel::LEFT].motor.rpmMax / 1.25;   //
@@ -962,11 +960,10 @@ void Robot::motorControlPerimeter()
 void Robot::motorControlImuDir()
 {
   unsigned long curMillis = millis();
-  if (curMillis < imu.nextTimeControl)
+  if (!imu.isTimeToControl())
   {
     return;
   }
-  imu.nextTimeControl = curMillis + 100;
 
   int correctLeft = 0;
   int correctRight = 0;
@@ -976,7 +973,7 @@ void Robot::motorControlImuDir()
   imu.pid[Imu::DIR].y_min = -wheels.wheel[Wheel::LEFT].motor.rpmMax;
   imu.pid[Imu::DIR].y_max = wheels.wheel[Wheel::LEFT].motor.rpmMax;
   imu.pid[Imu::DIR].max_output = wheels.wheel[Wheel::LEFT].motor.rpmMax;
-  float x = distancePI(imu.ypr.yaw, imuDriveHeading) / PI * 180.0;
+  float x = distancePI(imu.getYaw(), imuDriveHeading) / PI * 180.0;
   float y = imu.pid[Imu::DIR].compute(x);
 
   if (y < 0)
@@ -1153,7 +1150,7 @@ void Robot::motorControl()
 
       if (mowPatternCurr != MOW_LANES)
       {
-        imuDriveHeading = imu.ypr.yaw; // set drive heading
+        imuDriveHeading = imu.getYaw(); // set drive heading
       }
     }
     setMotorPWMs(speed[LEFT], speed[RIGHT], true);
@@ -1344,7 +1341,10 @@ void Robot::printInfo(Stream &s)
                 perimeterCounter,
                 !perimeter.signalTimedOut(0));
   }
-
+  else if (consoleMode == CONSOLE_IMU)
+  {
+    imu.printInfo(s);
+  }
   else
   {
     if (odometer.use)
@@ -1375,9 +1375,9 @@ void Robot::printInfo(Stream &s)
                   sonars.sonar[Sonars::LEFT].getDistance_us(),
                   sonars.sonar[Sonars::CENTER].getDistance_us(),
                   sonars.sonar[Sonars::RIGHT].getDistance_us());
-      Streamprint(s, "yaw %3d ", (int)(imu.ypr.yaw / PI * 180.0));
-      Streamprint(s, "pit %3d ", (int)(imu.ypr.pitch / PI * 180.0));
-      Streamprint(s, "rol %3d ", (int)(imu.ypr.roll / PI * 180.0));
+      Streamprint(s, "yaw %3d ", (int)(imu.getYawDeg()));
+      Streamprint(s, "pit %3d ", (int)(imu.getPitchDeg()));
+      Streamprint(s, "rol %3d ", (int)(imu.getRollDeg()));
 
       if (perimeterUse)
       {
@@ -1405,9 +1405,9 @@ void Robot::printInfo(Stream &s)
                   dropSensors.dropSensor[DropSensors::LEFT].getCounter(),
                   dropSensors.dropSensor[DropSensors::RIGHT].getCounter());
       Streamprint(s, "son %3d ", sonars.getDistanceCounter());
-      Streamprint(s, "yaw %3d ", (int)(imu.ypr.yaw / PI * 180.0));
-      Streamprint(s, "pit %3d ", (int)(imu.ypr.pitch / PI * 180.0));
-      Streamprint(s, "rol %3d ", (int)(imu.ypr.roll / PI * 180.0));
+      Streamprint(s, "yaw %3d ", (int)(imu.getYawDeg()));
+      Streamprint(s, "pit %3d ", (int)(imu.getPitchDeg()));
+      Streamprint(s, "rol %3d ", (int)(imu.getRollDeg()));
       //Streamprint(s, "per %3d ", perimeterLeft);
 
       if (perimeterUse)
@@ -1433,7 +1433,7 @@ void Robot::printInfo(Stream &s)
                 (int)chgVoltage,
                 (int)((chgVoltage * 10) - ((int)chgVoltage * 10)),
                 (int)chgCurrent,
-                (int)((abs(chgCurrent) *10) - ((int)abs(chgCurrent)*10)));
+                (int)((abs(chgCurrent) * 10) - ((int)abs(chgCurrent) * 10)));
     Streamprint(s, "imu %3d ", imu.getCallCounter());
     Streamprint(s, "adc %3d\r\n", ADCMan.getCapturedChannels());
     //Streamprint(s, "%s\r\n", name.c_str());
@@ -1634,13 +1634,13 @@ void Robot::menu()
           configureBluetooth(false);
           break;
         case '5':
-          imu.calibAccNextAxis();
+          imu.calibrateAccelerometerNextAxis();
           break;
         case '6':
-          imu.calibComStartStop();
+          imu.calibrateMagnetometerStartStop();
           break;
         case '7':
-          imu.deleteCalib();
+          imu.deleteCalibrationData();
           break;
         case '8':
           ADCMan.calibrate();
@@ -1687,7 +1687,7 @@ void Robot::readSerial()
         menu(); // menu
         break;
       case 'v':
-        consoleMode = (consoleMode + 1) % 4;
+        consoleMode = (consoleMode + 1) % 5;
         Console.println(consoleModeNames[consoleMode]);
         break;
       case 'h':
@@ -1975,17 +1975,16 @@ void Robot::readSensors()
     Console.println(date2str(datetime.date));
   }
 
-  if (imu.use && curMillis >= imu.nextTime)
+  if (imu.isTimeToRun())
   {
     // IMU
     readSensor(SEN_IMU);
-    imu.nextTime = curMillis + 200;   // 5 hz
     if (imu.getErrorCounter() > 0)
     {
       addErrorCounter(ERR_IMU_COMM);
       Console.println(F("IMU comm error"));
     }
-    if (!imu.calibrationAvail)
+    if (!imu.isCalibrationAvailable())
     {
       Console.println(F("Error: missing IMU calibration data"));
       addErrorCounter(ERR_IMU_CALIB);
@@ -3002,8 +3001,8 @@ void Robot::checkTilt()
   }
   nextTimeCheckTilt = curMillis + 200; // 5Hz same as imu.nextTime
 
-  int pitchAngle = (imu.ypr.pitch / PI * 180.0);
-  int rollAngle = (imu.ypr.roll / PI * 180.0);
+  int pitchAngle = (imu.getPitchDeg());
+  int rollAngle = (imu.getRollDeg());
   if (stateCurr != STATE_OFF &&
       stateCurr != STATE_ERROR &&
       stateCurr != STATE_STATION)
@@ -3228,7 +3227,7 @@ void Robot::loop()
           setNextState(STATE_STATION, 0);
         }
       }
-      imuDriveHeading = imu.ypr.yaw;
+      imuDriveHeading = imu.getYaw();
       break;
 
     case STATE_REMOTE:
@@ -3307,7 +3306,7 @@ void Robot::loop()
       // making a roll (left/right)
       if (mowPatternCurr == MOW_LANES)
       {
-        if (abs(distancePI(imu.ypr.yaw, imuRollHeading)) < PI / 36)
+        if (abs(distancePI(imu.getYaw(), imuRollHeading)) < PI / 36)
         {
           setNextState(STATE_FORWARD, 0);
         }
@@ -3545,7 +3544,6 @@ void Robot::loop()
     motorControlPerimeter();
   }
   else if (stateCurr == STATE_FORWARD &&
-           imu.use &&
            (imu.correctDir || mowPatternCurr == MOW_LANES))
   {
     motorControlImuDir();

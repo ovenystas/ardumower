@@ -78,8 +78,8 @@ class Sonars
     enum sonarE
     {
       LEFT,
-      RIGHT,
       CENTER,
+      RIGHT,
       END
     };
 

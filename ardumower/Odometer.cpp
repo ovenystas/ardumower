@@ -77,8 +77,9 @@ void Odometer::calc(const Imu &imu)
 
   if (imu.use)
   {
-    x += avg_cm * sin(imu.ypr.yaw);
-    y += avg_cm * cos(imu.ypr.yaw);
+    float yaw = imu.getYaw();
+    x += avg_cm * sin(yaw);
+    y += avg_cm * cos(yaw);
   }
   else
   {

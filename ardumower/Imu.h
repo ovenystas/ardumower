@@ -3,7 +3,7 @@
  Copyright (c) 2013-2014 by Alexander Grau
  Copyright (c) 2013-2014 by Sven Gennat
 
- Private-use only! (you need to ask for a commercial-use)
+ Private-use only! (you need to ask for a magmercial-use)
 
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
- Private-use only! (you need to ask for a commercial-use)
+ Private-use only! (you need to ask for a magmercial-use)
 
  */
 
@@ -34,8 +34,9 @@
 #define IMU_H
 
 #include <Arduino.h>
-
 #include "Pid.h"
+#include "L3G.h"
+#include "LSM303.h"
 
 // IMU state
 enum
@@ -46,12 +47,12 @@ enum
 
 typedef struct point_int_t
 {
-  int16_t x;
-  int16_t y;
-  int16_t z;
+  int x;
+  int y;
+  int z;
 } point_int_t;
 
-typedef struct point_long_t
+typedef struct point_longt_t
 {
   long x;
   long y;
@@ -75,106 +76,174 @@ typedef struct ypr_t
 class Imu
 {
   public:
-    enum imuE
+    enum imuPidE
     {
       DIR,
       ROLL,
       END
     };
 
-    Imu();
     boolean init(int aPinBuzzer);
     void update(void);
+    bool isTimeToRun(void);
+    bool isTimeToControl(void);
     int getCallCounter(void);
     int getErrorCounter(void);
-    void deleteCalib(void);
+    void deleteCalibrationData(void);
+    boolean isCalibrationAvailable(void) const
+    {
+      return calibrationAvailable;
+    }
+    void printInfo(Stream &s);
 
-    boolean use { false };
-    unsigned long nextTime {};
-    unsigned long nextTimeControl {};
-    bool correctDir { false };  // correct direction by compass?
+    boolean use { true };
+    bool correctDir { false };  // correct direction by magnetometer?
     Pid pid[END];               // direction and roll PID controllers
+    float getYaw() const
+    {
+      return ypr.yaw;
+    }
+    float getYawDeg()
+    {
+      return convertRadToDeg(ypr.yaw);
+    }
 
+    float getPitch() const
+    {
+      return ypr.pitch;
+    }
+    float getPitchDeg()
+    {
+      return convertRadToDeg(ypr.pitch);
+    }
 
-    int callCounter;
-    int errorCounter;
-    boolean hardwareInitialized;
-    byte state;
-    unsigned long lastAHRSTime;
-    unsigned long now;
-    ypr_t ypr;  // gyro yaw,pitch,roll
+    float getRoll() const
+    {
+      return ypr.roll;
+    }
+    float getRollDeg()
+    {
+      return convertRadToDeg(ypr.roll);
+    }
 
     // --------- gyro state -----------------------------
-    point_float_t gyro;   // gyro sensor data (degree)
-    point_float_t gyroOfs; // gyro calibration data
-    float gyroNoise;      // gyro noise
-    int gyroCounter;
-    boolean useGyroCalibration; // gyro calibration flag
-    unsigned long lastGyroTime;
-
-    // --------- acceleration state ---------------------
-    point_float_t acc;  // acceleration sensor data
-    point_float_t accGrav;  // acceleration sensor data (gravity corrected)
-    point_float_t accMin;
-    point_float_t accMax;
-    int accelCounter;
-    boolean useAccCalibration;
-    float accPitch;
-    float accRoll;
-    point_float_t accOfs;
-    point_float_t accScale;
-    int calibAccAxisCounter;
+    L3G gyro;
 
     // calibrate acceleration sensor
-    boolean calibAccNextAxis();
-    boolean calibrationAvail;
+    boolean calibrateAccelerometerNextAxis();
 
-    // --------- compass state --------------------------
-    point_float_t com; // compass sensor data (raw)
-    point_float_t comLast;
-    point_float_t comMin; // compass sensor data (raw)
-    point_float_t comMax; // compass sensor data (raw)
-    point_float_t comTilt; // compass sensor data (tilt corrected)
-    point_float_t comOfs;
-    point_float_t comScale;
-    float comYaw;         // compass heading (radiant, raw)
-    boolean useComCalibration;
+    // --------- accelerometer/magnetometer state -------
+    point_float_t accel {};
+    point_float_t mag {};
+    boolean getUseAccelCalibration(void) const
+    {
+      return useAccelCalibration;
+    }
+    void toggleUseAccelCalibration(void)
+    {
+      useAccelCalibration = !useAccelCalibration;
+    }
 
-    // calibrate compass sensor
-    void calibComStartStop(void);
-    void calibComUpdate(void);
-    boolean newMinMaxFound(void);
+    // calibrate magnetometer sensor
+    void calibrateMagnetometerStartStop(void);
+
+
     // --------------------------------------------------
+
+  private:
+    void read();
+    void loadSaveCalibrationData(const boolean readflag);
+    void calibrateGyro(void);
+    void loadCalibrationData(void);
+
+    // print IMU values
+    void printPoint(const point_int_t point);
+    void printPointln(const point_int_t point);
+    void printPoint(const point_float_t point);
+    void printPointln(const point_float_t point);
+    void printCalibrationData(void);
+    void saveCalibrationData(void)
+    {
+      loadSaveCalibrationData(false);
+    }
+
+    // hardware
+    void initAccelerometer(void);
+    boolean initGyroscope(void);
+    void initMagnetometer(void);
+
+    void readGyroscope(void);
+    void readAccelerometer(void);
+    void readMagnetometer(void);
+
+    void calibrateMagnetometerUpdate(void);
+    void playCompletedSound();
 
     // helpers
     float scalePI(const float v);
     float scale180(const float v);
+    float scalePIangles(const float setAngle, const float currAngle);
     float distancePI(const float x, const float w);
     float distance180(const float x, const float w);
     float fusionPI(const float w, const float a, const float b);
+    float convertRadToDeg(const float rad);
 
-  private:
-    void read();
-    void loadSaveCalib(const boolean readflag);
-    void calibGyro(void);
-    void loadCalib(void);
+    // Filter
+    float Complementary(const float newAngle, const float newRate,
+                        const int looptime, float angle);
+    float Complementary2(const float newAngle, const float newRate,
+                         const int looptime, float angle);
+    float Kalman(const float newAngle, const float newRate,
+                 const int looptime, float x_angle);
 
-    // print IMU values
-    void printPt(point_float_t p);
-    void printCalib(void);
-    void saveCalib(void);
-    float sermin(float oldvalue, float newvalue);
-    float sermax(float oldvalue, float newvalue);
+    unsigned long nextTime {};
+    unsigned long nextTimeControl {};
+    unsigned int timeBetweenRuns { 200 }; // 5 Hz
+    unsigned int timeBetweenControl { 100 }; // 10 Hz
 
-    // hardware
-    void initADXL345B(void);
-    boolean initL3G4200D(void);
-    void initHMC5883L(void);
-    void readL3G4200D(boolean useTa);
-    void readADXL345B(void);
-    void readHMC5883L(void);
-    boolean foundNewMinMax;
-    int pinBuzzer;
+    boolean foundNewMinMax { false };
+    int pinBuzzer {};
+    int callCounter {};
+    int errorCounter {};
+    boolean hardwareInitialized { false };
+    boolean calibrationAvailable { false };
+    byte state { IMU_RUN };
+    unsigned long lastAHRSTime {};
+
+    // --------- acceleration state ---------------------
+    LSM303 accMag;
+    point_float_t accelMin {};
+    point_float_t accelMax {};
+    point_float_t accelOffset { 0, 0, 0 };
+    point_float_t accelScale { 1, 1, 1 };
+    int calibAccelAxisCounter {};
+    boolean useAccelCalibration { true };
+
+    // --------- gyro state -----------------------------
+    point_int_t gyroOffset { 0, 0, 0 }; // gyro calibration data
+    int gyroNoise {};          // gyro noise
+    boolean useGyroCalibration { true }; // gyro calibration flag
+    ypr_t ypr {};  // gyro yaw,pitch,roll
+
+    // --------- magnetometer state --------------------------
+    point_int_t magLast {};
+    point_int_t magMin {}; // magnetometer sensor data (raw)
+    point_int_t magMax {}; // magnetometer sensor data (raw)
+    point_int_t magnetometerOffset { 0, 0, 0 };
+    point_int_t magnetometerScale { 1, 1, 1 };
+    boolean useMagnetometerCalibration { true };
+
+    float accelPitch {};
+    float accelRoll {};
+    float scaledPitch {};
+    float scaledRoll {};
+    float filtPitch {};
+    float filtRoll {};
+    float yaw {};
+    float scaledYaw {};
+    float scaled2Yaw {};
+    float filtYaw {};
+    point_float_t magTilt {};
 };
 
 #endif

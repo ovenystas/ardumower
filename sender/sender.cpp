@@ -31,7 +31,7 @@
 // #define USE_DEVELOPER_TEST    1      // uncomment for new perimeter signal test (developers)
 
 // code version
-#define VER "600"
+#define VER "0.1"
 
 // --------------------------------------
 

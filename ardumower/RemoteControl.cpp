@@ -1041,17 +1041,19 @@ void RemoteControl::sendImuMenu(const boolean update)
   }
   Bluetooth.print(F("|g00~Use "));
   sendYesNo(robot_p->imu.use);
+  Bluetooth.print(F("|g10~Use accel calib"));
+  sendYesNo(robot_p->imu.getUseAccelCalibration());
   Bluetooth.print(F("|g01~Yaw "));
-  Bluetooth.print(robot_p->imu.ypr.yaw / PI * 180);
+  Bluetooth.print(robot_p->imu.getYawDeg());
   Bluetooth.print(F(" deg"));
   Bluetooth.print(F("|g09~DriveHeading "));
   Bluetooth.print(robot_p->imuDriveHeading / PI * 180);
   Bluetooth.print(F(" deg"));
   Bluetooth.print(F("|g02~Pitch "));
-  Bluetooth.print(robot_p->imu.ypr.pitch / PI * 180);
+  Bluetooth.print(robot_p->imu.getPitchDeg());
   Bluetooth.print(F(" deg"));
   Bluetooth.print(F("|g03~Roll "));
-  Bluetooth.print(robot_p->imu.ypr.roll / PI * 180);
+  Bluetooth.print(robot_p->imu.getRollDeg());
   Bluetooth.print(F(" deg"));
   Bluetooth.print(F("|g04~Correct dir "));
   sendYesNo(robot_p->imu.correctDir);
@@ -1066,6 +1068,14 @@ void RemoteControl::processImuMenu(const String pfodCmd)
 {
   if (pfodCmd == "g00")
   {
+    TOGGLE(robot_p->imu.use);
+  }
+  else if (pfodCmd == "g10")
+  {
+    robot_p->imu.toggleUseAccelCalibration();
+  }
+  else if (pfodCmd == "g04")
+  {
     TOGGLE(robot_p->imu.correctDir);
   }
   else if (pfodCmd.startsWith("g05"))
@@ -1078,11 +1088,11 @@ void RemoteControl::processImuMenu(const String pfodCmd)
   }
   else if (pfodCmd == "g07")
   {
-    robot_p->imu.calibAccNextAxis();
+    robot_p->imu.calibrateAccelerometerNextAxis();
   }
   else if (pfodCmd == "g08")
   {
-    robot_p->imu.calibComStartStop();
+    robot_p->imu.calibrateMagnetometerStartStop();
   }
   sendImuMenu(true);
 }
@@ -1761,7 +1771,7 @@ void RemoteControl::sendCompassMenu(const boolean update)
     Bluetooth.println(F("{^Compass`1000"));
   }
   Bluetooth.print(F("|cw~West|ce~East|cn~North "));
-  Bluetooth.print(robot_p->imu.ypr.yaw / PI * 180);
+  Bluetooth.print(robot_p->imu.getYawDeg());
   Bluetooth.println(F("|cs~South|cm~Mow}"));
 }
 
@@ -1992,29 +2002,29 @@ void RemoteControl::run()
     Bluetooth.print(",");
     Bluetooth.print(robot_p->odometer.encoder[Odometer::RIGHT].getCounter());
     Bluetooth.print(",");
-    Bluetooth.print(robot_p->imu.ypr.yaw / PI * 180);
+    Bluetooth.print(robot_p->imu.getYawDeg());
     Bluetooth.print(",");
-    Bluetooth.print(robot_p->imu.ypr.pitch / PI * 180);
+    Bluetooth.print(robot_p->imu.getPitchDeg());
     Bluetooth.print(",");
-    Bluetooth.print(robot_p->imu.ypr.roll / PI * 180);
+    Bluetooth.print(robot_p->imu.getRollDeg());
     Bluetooth.print(",");
-    Bluetooth.print(robot_p->imu.gyro.x / PI * 180);
+    Bluetooth.print(robot_p->imu.gyro.g.x / PI * 180);
     Bluetooth.print(",");
-    Bluetooth.print(robot_p->imu.gyro.y / PI * 180);
+    Bluetooth.print(robot_p->imu.gyro.g.y / PI * 180);
     Bluetooth.print(",");
-    Bluetooth.print(robot_p->imu.gyro.z / PI * 180);
+    Bluetooth.print(robot_p->imu.gyro.g.z / PI * 180);
     Bluetooth.print(",");
-    Bluetooth.print(robot_p->imu.acc.x);
+    Bluetooth.print(robot_p->imu.accel.x);
     Bluetooth.print(",");
-    Bluetooth.print(robot_p->imu.acc.y);
+    Bluetooth.print(robot_p->imu.accel.y);
     Bluetooth.print(",");
-    Bluetooth.print(robot_p->imu.acc.z);
+    Bluetooth.print(robot_p->imu.accel.z);
     Bluetooth.print(",");
-    Bluetooth.print(robot_p->imu.com.x);
+    Bluetooth.print(robot_p->imu.mag.x);
     Bluetooth.print(",");
-    Bluetooth.print(robot_p->imu.com.y);
+    Bluetooth.print(robot_p->imu.mag.y);
     Bluetooth.print(",");
-    Bluetooth.print(robot_p->imu.com.z);
+    Bluetooth.print(robot_p->imu.mag.z);
     Bluetooth.print(",");
     float lat, lon;
     unsigned long age;
@@ -2067,29 +2077,29 @@ void RemoteControl::run()
       nextPlotTime = curMillis + 200;
       Bluetooth.print(elapsedSeconds);
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->imu.ypr.yaw / PI * 180);
+      Bluetooth.print(robot_p->imu.getYawDeg());
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->imu.ypr.pitch / PI * 180);
+      Bluetooth.print(robot_p->imu.getPitchDeg());
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->imu.ypr.roll / PI * 180);
+      Bluetooth.print(robot_p->imu.getRollDeg());
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->imu.gyro.x / PI * 180);
+      Bluetooth.print(robot_p->imu.gyro.g.x / PI * 180);
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->imu.gyro.y / PI * 180);
+      Bluetooth.print(robot_p->imu.gyro.g.y / PI * 180);
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->imu.gyro.z / PI * 180);
+      Bluetooth.print(robot_p->imu.gyro.g.z / PI * 180);
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->imu.acc.x);
+      Bluetooth.print(robot_p->imu.accel.x);
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->imu.acc.y);
+      Bluetooth.print(robot_p->imu.accel.y);
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->imu.acc.z);
+      Bluetooth.print(robot_p->imu.accel.z);
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->imu.com.x);
+      Bluetooth.print(robot_p->imu.mag.x);
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->imu.com.y);
+      Bluetooth.print(robot_p->imu.mag.y);
       Bluetooth.print(",");
-      Bluetooth.println(robot_p->imu.com.z);
+      Bluetooth.println(robot_p->imu.mag.z);
     }
   }
   else if (pfodState == PFOD_PLOT_SENSOR_COUNTERS)
