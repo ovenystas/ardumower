@@ -96,7 +96,7 @@ class Imu
     }
     void printInfo(Stream &s);
 
-    boolean use { true };
+    boolean use { false };
     bool correctDir { false };  // correct direction by magnetometer?
     Pid pid[END];               // direction and roll PID controllers
     float getYaw() const

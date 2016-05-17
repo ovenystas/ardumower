@@ -58,7 +58,7 @@
 
   // motor driver fault pin
   //#define PIN_FAULT                 // M1_nSF
-//  #define USE_PERI_FAULT         0  // use pinFault for driver fault detection? (set to '0' if not connected!)
+  #define USE_PERI_FAULT         0  // use pinFault for driver fault detection? (set to '0' if not connected!)
 
   // motor driver feedback pi n (=perimeter open/close detection, used for status LED)
 //  #define USE_PERI_CURRENT       0  // use pinFeedback for perimeter current measurements? (set to '0' if not connected!)

@@ -32,35 +32,35 @@ template<typename T, int N> class RunningMedian
 
     RunningMedian()
     {
-      _size = N;
+      size = N;
       clear();
     }
 
     void clear()
     {
-      _cnt = 0;
-      _idx = 0;
+      cnt = 0;
+      idx = 0;
     }
 
     void add(T value)
     {
-      _ar[_idx++] = value;
-      if (_idx >= _size)
+      ar[idx++] = value;
+      if (idx >= size)
       {
-        _idx = 0; // wrap around
+        idx = 0; // wrap around
       }
-      if (_cnt < _size)
+      if (cnt < size)
       {
-        _cnt++;
+        cnt++;
       }
     }
 
     STATUS getMedian(T& value)
     {
-      if (_cnt > 0)
+      if (cnt > 0)
       {
         sort();
-        value = _as[_cnt / 2];
+        value = as[cnt / 2];
         return OK;
       }
       return NOK;
@@ -68,14 +68,14 @@ template<typename T, int N> class RunningMedian
 
     STATUS getAverage(float &value)
     {
-      if (_cnt > 0)
+      if (cnt > 0)
       {
         float sum = 0;
-        for (uint8_t i = 0; i < _cnt; i++)
+        for (uint8_t i = 0; i < cnt; i++)
         {
-          sum += _ar[i];
+          sum += ar[i];
         }
-        value = sum / _cnt;
+        value = sum / cnt;
         return OK;
       }
       return NOK;
@@ -83,19 +83,19 @@ template<typename T, int N> class RunningMedian
 
     STATUS getAverage(uint8_t nMedians, float &value)
     {
-      if ((_cnt > 0) && (nMedians > 0))
+      if ((cnt > 0) && (nMedians > 0))
       {
-        if (_cnt < nMedians)
+        if (cnt < nMedians)
         {
-          nMedians = _cnt;     // when filling the array for first time
+          nMedians = cnt;     // when filling the array for first time
         }
-        uint8_t start = ((_cnt - nMedians) / 2);
+        uint8_t start = ((cnt - nMedians) / 2);
         uint8_t stop = start + nMedians;
         sort();
         float sum = 0;
         for (uint8_t i = start; i < stop; i++)
         {
-          sum += _as[i];
+          sum += as[i];
         }
         value = sum / nMedians;
         return OK;
@@ -105,10 +105,10 @@ template<typename T, int N> class RunningMedian
 
     STATUS getHighest(T& value)
     {
-      if (_cnt > 0)
+      if (cnt > 0)
       {
         sort();
-        value = _as[_cnt - 1];
+        value = as[cnt - 1];
         return OK;
       }
       return NOK;
@@ -116,10 +116,10 @@ template<typename T, int N> class RunningMedian
 
     STATUS getLowest(T& value)
     {
-      if (_cnt > 0)
+      if (cnt > 0)
       {
         sort();
-        value = _as[0];
+        value = as[0];
         return OK;
       }
       return NOK;
@@ -127,49 +127,49 @@ template<typename T, int N> class RunningMedian
 
     unsigned getSize()
     {
-      return _size;
+      return size;
     }
 
     unsigned getCount()
     {
-      return _cnt;
+      return cnt;
     }
 
     STATUS getStatus()
     {
-      return (_cnt > 0 ? OK : NOK);
+      return (cnt > 0 ? OK : NOK);
     }
 
   private:
-    uint8_t _size;
-    uint8_t _cnt;
-    uint8_t _idx;
-    T _ar[N];
-    T _as[N];
+    uint8_t size;
+    uint8_t cnt;
+    uint8_t idx;
+    T ar[N];
+    T as[N];
     void sort()
     {
       // copy
-      for (uint8_t i = 0; i < _cnt; i++)
+      for (uint8_t i = 0; i < cnt; i++)
       {
-        _as[i] = _ar[i];
+        as[i] = ar[i];
       }
 
       // sort all
-      for (uint8_t i = 0; i < _cnt - 1; i++)
+      for (uint8_t i = 0; i < cnt - 1; i++)
       {
         uint8_t m = i;
-        for (uint8_t j = i + 1; j < _cnt; j++)
+        for (uint8_t j = i + 1; j < cnt; j++)
         {
-          if (_as[j] < _as[m])
+          if (as[j] < as[m])
           {
             m = j;
           }
         }
         if (m != i)
         {
-          T t = _as[m];
-          _as[m] = _as[i];
-          _as[i] = t;
+          T t = as[m];
+          as[m] = as[i];
+          as[i] = t;
         }
       }
     }

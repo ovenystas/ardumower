@@ -168,9 +168,9 @@ void RemoteControl::sendPIDSlider(const String cmd, const String title,
                                   const Pid &pid, const double scale,
                                   const float maxvalue)
 {
-  sendSlider(cmd + "p", title + "_P", pid.Kp, "", scale, maxvalue);
-  sendSlider(cmd + "i", title + "_I", pid.Ki, "", scale, maxvalue);
-  sendSlider(cmd + "d", title + "_D", pid.Kd, "", scale, maxvalue);
+  sendSlider(cmd + "p", title + " P", pid.Kp, "", scale, maxvalue);
+  sendSlider(cmd + "i", title + " I", pid.Ki, "", scale, maxvalue);
+  sendSlider(cmd + "d", title + " D", pid.Kd, "", scale, maxvalue);
 }
 
 void RemoteControl::processSlider(const String result, float &value,
@@ -493,6 +493,8 @@ void RemoteControl::processMotorMenu(const String pfodCmd)
   {
     processSlider(pfodCmd,
                   robot_p->wheels.wheel[Wheel::LEFT].motor.powerMax, 1);
+    processSlider(pfodCmd,
+                  robot_p->wheels.wheel[Wheel::RIGHT].motor.powerMax, 1);
   }
 
   else if (pfodCmd.startsWith("a03"))
@@ -516,10 +518,12 @@ void RemoteControl::processMotorMenu(const String pfodCmd)
   else if (pfodCmd.startsWith("a06"))
   {
     processSlider(pfodCmd, robot_p->wheels.wheel[Wheel::LEFT].motor.rpmMax, 1);
+    processSlider(pfodCmd, robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmMax, 1);
   }
   else if (pfodCmd.startsWith("a15"))
   {
     processSlider(pfodCmd, robot_p->wheels.wheel[Wheel::LEFT].motor.pwmMax, 1);
+    processSlider(pfodCmd, robot_p->wheels.wheel[Wheel::RIGHT].motor.pwmMax, 1);
   }
   else if (pfodCmd.startsWith("a07"))
   {
@@ -541,6 +545,8 @@ void RemoteControl::processMotorMenu(const String pfodCmd)
   {
     processSlider(pfodCmd,
                   robot_p->wheels.wheel[Wheel::LEFT].motor.acceleration, 1);
+    processSlider(pfodCmd,
+                  robot_p->wheels.wheel[Wheel::RIGHT].motor.acceleration, 1);
   }
   else if (pfodCmd.startsWith("a12"))
   {
@@ -554,6 +560,8 @@ void RemoteControl::processMotorMenu(const String pfodCmd)
   {
     processPIDSlider(pfodCmd, "a14",
                      robot_p->wheels.wheel[Wheel::LEFT].motor.pid, 0.01, 3.0);
+    processPIDSlider(pfodCmd, "a14",
+                     robot_p->wheels.wheel[Wheel::RIGHT].motor.pid, 0.01, 3.0);
   }
   else if (pfodCmd.startsWith("a16"))
   {
@@ -567,6 +575,8 @@ void RemoteControl::processMotorMenu(const String pfodCmd)
   {
     processSlider(pfodCmd,
                   robot_p->wheels.wheel[Wheel::LEFT].motor.powerIgnoreTime, 1);
+    processSlider(pfodCmd,
+                  robot_p->wheels.wheel[Wheel::RIGHT].motor.powerIgnoreTime, 1);
   }
   else if (pfodCmd == "a10")
   {

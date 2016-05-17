@@ -25,8 +25,8 @@
 #include <Arduino.h>
 #include "config.h"
 #include "TimerOne.h"
-//#include "EEPROM.h"
-//#include "RunningMedian.h"
+#include <EEPROM.h>
+#include "RunningMedian.h"
 
 // #define USE_DEVELOPER_TEST    1      // uncomment for new perimeter signal test (developers)
 
@@ -38,12 +38,12 @@
 volatile int step = 0;
 volatile boolean enableSender = true;
 
-//uint8_t dutyPWM = 0;
+uint8_t dutyPWM = 0;
 //float chargeCurrent = 0;
 //float periCurrentAvg = 0;
 //float periCurrentMax = 0;
 //int faults = 0;
-//boolean isCharging = false;
+boolean isCharging = false;
 boolean stateLED = false;
 //unsigned int chargeADCZero = 0;
 //RunningMedian<unsigned int, 16> periCurrentMeasurements;
@@ -207,7 +207,7 @@ void setup()
 
   // sample rate 9615 Hz (19230,76923076923 / 2 => 9615.38)
   int T = 1000.0 * 1000.0 / 9615.38;
-  Serial.begin(19200);
+  Serial.begin(115200);
 
   Serial.println("START");
   Serial.print("Ardumower Sender ");
@@ -245,33 +245,22 @@ void loop()
 {
   unsigned long curMillis;
 
-//  curMillis = millis();
-//  if (curMillis >= nextTimeControl)
-//  {
-//    nextTimeControl = curMillis + 100;
-//    dutyPWM = 255;
-//    if (isCharging)
-//    {
-//      // switch off perimeter
-//      enableSender = false;
-//    }
-//    else
-//    {
+  curMillis = millis();
+  if (curMillis >= nextTimeControl)
+  {
+    nextTimeControl = curMillis + 100;
+    dutyPWM = 255;
+    if (isCharging)
+    {
+      // switch off perimeter
+      enableSender = false;
+    }
+    else
+    {
       // switch on perimeter
-      //enableSender = true;
-      //analogWrite(pinPWM, 255);
-      //analogWrite(PIN_PWM, dutyPWM);
-//      if (USE_PERI_FAULT
-//          && dutyPWM == 255
-//          && digitalRead(PIN_FAULT) == LOW)
-//      {
-//        enableSender = false;
-//        dutyPWM = 0;
-//        analogWrite(PIN_PWM, dutyPWM);
-//        fault();
-//      }
-//    }
-//  }
+      enableSender = true;
+    }
+  }
 
   curMillis = millis();
   if (curMillis >= nextTimeInfo)

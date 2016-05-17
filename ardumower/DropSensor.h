@@ -24,7 +24,7 @@ class DropSensor
     void check();
 
 
-    bool isDetected()
+    bool isDetected() const
     {
       return detected;
     }
@@ -66,7 +66,7 @@ class DropSensors
       END
     };
 
-    bool used;
+    bool used { false };
     DropSensor dropSensor[END];
 
     void check();
@@ -74,7 +74,7 @@ class DropSensors
     bool isTimeToRun();
 
   private:
-    unsigned long nextTime;
+    unsigned long nextTime {};
     unsigned int timeBetweenRuns { 100 };
 };
 

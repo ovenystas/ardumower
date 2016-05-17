@@ -102,7 +102,7 @@ void TimerOne::setPeriod(long microseconds)// AR modified for atomic access
     cycles = RESOLUTION - 1, clockSelectBits = _BV(CS12) | _BV(CS10); // request was out of bounds, set as maximum
   }
 
-  oldSREG = SREG;
+  char oldSREG = SREG;
   cli();
   // Disable interrupts for 16 bit register access
   ICR1 = pwmPeriod = cycles;            // ICR1 is TOP in p & f correct pwm mode
@@ -120,7 +120,7 @@ void TimerOne::setPwmDuty(char pin, int duty)
   dutyCycle *= duty;
   dutyCycle >>= 10;
 
-  oldSREG = SREG;
+  char oldSREG = SREG;
   cli();
   if (pin == 1 || pin == 9)
   {
@@ -208,7 +208,7 @@ void TimerOne::start()// AR addition, renamed by Lex to reflect it's actual role
   TIMSK1 &= ~_BV(TOIE1);        // AR added
   GTCCR |= _BV(PSRSYNC); // AR added - reset prescaler (NB: shared with all 16 bit timers);
 
-  oldSREG = SREG;// AR - save status register
+  char oldSREG = SREG;// AR - save status register
   cli();
   // AR - Disable interrupts
   TCNT1 = 0;
@@ -238,7 +238,7 @@ unsigned long TimerOne::read()//returns the value of the timer in microseconds
   unsigned long tmp;// AR amended to hold more than 65536 (could be nearly double this)
   unsigned int tcnt1;// AR added
 
-  oldSREG = SREG;
+  char oldSREG = SREG;
   cli();
   tmp = TCNT1;
   SREG = oldSREG;

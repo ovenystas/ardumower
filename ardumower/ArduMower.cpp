@@ -39,12 +39,10 @@
  For additional circuits for button, buzzer etc. (DIY version), see www.ardumower.de
 
  */
+
 #include <Arduino.h>
-
 #include <Wire.h>
-
 #include <EEPROM.h>
-
 #include "Config.h"
 
 // requires: Arduino Mega
