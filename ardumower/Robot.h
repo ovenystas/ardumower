@@ -52,7 +52,7 @@
  */
 
 // code version
-#define VER "0.1"
+#define VERSION "0.1"
 
 // sensors
 enum

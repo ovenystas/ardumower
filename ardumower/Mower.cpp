@@ -56,7 +56,7 @@
 //
 //#define PIN_MOTOR_MOW_PWM 2           // M1_IN1 mower motor PWM pin (if using MOSFET, use this pin)
 //#define PIN_MOTOR_MOW_DIR 29          // M1_IN2 mower motor Dir pin (if using MOSFET, keep unconnected)
-//#define PIN_MOTOR_MOW_SENSE A3        // M1_FB  mower motor current sense
+//#define PIN_MOTOR_MOW_SENSE A4        // M1_FB  mower motor current sense
 //#define PIN_MOTOR_MOW_BRAKE 26        // M1_SF  mower motor brake   (if using MOSFET/L298N, keep unconnected)
 #define PIN_MOTOR_MOW_RPM A11
 
@@ -73,14 +73,15 @@
 #define PIN_SONAR_LEFT_TRIGGER 34
 #define PIN_SONAR_LEFT_ECHO 36
 
-#define PIN_PERIMETER_RIGHT A4        // perimeter
-#define PIN_PERIMETER_LEFT A5
+// TODO: Instead of left/right use front/rear
+#define PIN_PERIMETER_RIGHT A3        // perimeter
+#define PIN_PERIMETER_LEFT A2
 
 #define PIN_LED 5                     // LED
 #define PIN_BUZZER 53                 // Buzzer
 #define PIN_TILT 35                   // Tilt sensor (required for TC-G158 board)
 #define PIN_BUTTON 51                 // digital ON/OFF button
-#define PIN_BATTERY_VOLTAGE A2        // battery voltage sensor
+#define PIN_BATTERY_VOLTAGE A5        // battery voltage sensor
 #define PIN_BATTERY_SWITCH 4          // battery-OFF switch
 #define PIN_CHARGE_VOLTAGE A9         // charging voltage sensor
 #define PIN_CHARGE_CURRENT A8         // charge current sensor
@@ -134,7 +135,7 @@ Mower::Mower()
   name = "Ardumower";
 
   // ------ perimeter ---------------------------------
-  perimeterUse = false;           // use perimeter?
+  perimeterUse = true;            // use perimeter?
   perimeterTriggerTimeout = 0;    // perimeter trigger timeout when escaping from inside (ms)
   perimeterOutRollTimeMax = 2000; // roll time max after perimeter out (ms)
   perimeterOutRollTimeMin = 750;  // roll time min after perimeter out (ms)

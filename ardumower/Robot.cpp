@@ -1283,7 +1283,7 @@ void Robot::setup()
 
   Console.println(F("START"));
   Console.print(F("Ardumower "));
-  Console.println(VER);
+  Console.println(VERSION);
 #ifdef USE_DEVELOPER_TEST
   Console.println("Warning: USE_DEVELOPER_TEST activated");
 #endif
@@ -1334,7 +1334,8 @@ void Robot::printInfo(Stream &s)
     Streamprint(s, "sig min %4d max %4d avg %4d mag %5d qty %3d",
                 perimeter.getSignalMin(0),
                 perimeter.getSignalMax(0),
-                perimeter.getSignalAvg(0), perimeterMag,
+                perimeter.getSignalAvg(0),
+                perimeterMag,
                 (int)(perimeter.getFilterQuality(0) * 100.0));
     Streamprint(s, "  in %2d  cnt %4d  on %1d\r\n",
                 perimeterInside,

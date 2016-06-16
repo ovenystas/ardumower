@@ -75,7 +75,7 @@ class RemoteControl
     int testmode;
     unsigned long nextPlotTime;
     int8_t perimeterCapture[32];
-    int perimeterCaptureIdx;
+    int perimeterCaptureIdx{0};
     float stringToFloat(const String &s);
 
     // generic

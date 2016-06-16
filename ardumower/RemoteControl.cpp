@@ -285,11 +285,11 @@ void RemoteControl::sendADCMenu(const boolean update)
     Bluetooth.print(F("{.ADC calibration`1000"));
   }
   Bluetooth.print(F("|c1~Calibrate (perimeter sender, charger must be off) "));
-  for (int ch = 0; ch < 16; ch++)
+  for (uint8_t ch = 0; ch < 16; ch++)
   {
-    const int16_t adcMin = ADCMan.getADCMin(A0 + ch);
-    const int16_t adcMax = ADCMan.getADCMax(A0 + ch);
-    const int16_t adcOfs = ADCMan.getADCOfs(A0 + ch);
+    const int16_t adcMin = ADCMan.getAdcMin(A0 + ch);
+    const int16_t adcMax = ADCMan.getAdcMax(A0 + ch);
+    const int16_t adcZeroOffset = ADCMan.getAdcZeroOffset(A0 + ch);
     Bluetooth.print(F("|zz~AD"));
     Bluetooth.print(ch);
     Bluetooth.print(" min=");
@@ -299,7 +299,7 @@ void RemoteControl::sendADCMenu(const boolean update)
     Bluetooth.print(" diff=");
     Bluetooth.print(adcMax - adcMin);
     Bluetooth.print(" ofs=");
-    Bluetooth.print(adcOfs);
+    Bluetooth.print(adcZeroOffset);
   }
   Bluetooth.println("}");
 }
@@ -1583,7 +1583,7 @@ void RemoteControl::sendInfoMenu(const boolean update)
     Bluetooth.print(F("{.Info` 1000"));
   }
   Bluetooth.print(F("|v00~Ardumower "));
-  Bluetooth.print(VER);
+  Bluetooth.print(VERSION);
   Bluetooth.print(F("|v01~Developer "));
   sendYesNo(robot_p->developerActive);
   Bluetooth.print(F("|v04~Stats override "));
@@ -2181,9 +2181,9 @@ void RemoteControl::run()
     {
       if (perimeterCaptureIdx == 32 * 3)
       {
-        if (ADCMan.isCaptureComplete(A5))
+        if (ADCMan.isCaptureComplete(A2))  //FIXME: Use define PIN_PERIMETER_LEFT
         {
-          int8_t *samples = ADCMan.getCapture(A5);
+          int8_t* samples = ADCMan.getCapture(A2);  //FIXME: Use define PIN_PERIMETER_LEFT
           memcpy(perimeterCapture, samples, 32);
           perimeterCaptureIdx = 0;
         }

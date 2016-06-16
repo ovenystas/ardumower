@@ -32,7 +32,7 @@
 // developer test to be activated in mower.cpp:
 #ifdef USE_DEVELOPER_TEST
 // more motor driver friendly signal (receiver)
-int8_t sigcode_norm[] = {
+const int8_t sigcode_norm[] = {
   1, -1, 0, 0, 0, 1, -1, 0, 0, 0,
   -1, 1, 0, 0, 0, 1, -1, 0, 0, 0
 };
@@ -40,13 +40,13 @@ int8_t sigcode_norm[] = {
 // http://grauonline.de/alexwww/ardumower/filter/filter.html
 // "pseudonoise4_pw" signal
 // if using reconstructed sender signal, use this
-int8_t sigcode_norm[] = {
+const int8_t sigcode_norm[] = {
   1, 1, -1, -1, 1, -1, 1, -1, -1, 1, -1, 1,
   1, -1, -1, 1, -1, -1, 1, -1, -1, 1, 1, -1
 };
 // "pseudonoise4_pw" signal (differential)
 // if using the coil differential signal, use this
-int8_t sigcode_diff[] = {
+const int8_t sigcode_diff[] = {
   1, 0, -1, 0, 1, -1, 1, -1, 0, 1, -1, 1,
   0, -1, 0, 1, -1, 0, 1, -1, 0, 1, 0, -1
 };
@@ -96,10 +96,10 @@ void Perimeter::setup(const byte idx0Pin, const byte idx1Pin)
   // use max. 255 samples and multiple of signalsize
   int adcSampleCount = sizeof sigcode_norm * subSample;
   ADCMan.setCapture(idx0Pin,
-                    ((int)255 / adcSampleCount) * adcSampleCount,
+                    (255 / adcSampleCount) * adcSampleCount,
                     true);
   ADCMan.setCapture(idx1Pin,
-                    ((int)255 / adcSampleCount) * adcSampleCount,
+                    (255 / adcSampleCount) * adcSampleCount,
                     true);
   // ADCMan.setCapture(idx0Pin, adcSampleCount*2, true);
   // ADCMan.setCapture(idx1Pin, adcSampleCount*2, true);
@@ -114,7 +114,7 @@ void Perimeter::setup(const byte idx0Pin, const byte idx1Pin)
 
 void Perimeter::speedTest()
 {
-  int loops = 0;
+  uint16_t loops = 0;
   unsigned long endTime = millis() + 1000;
   while (millis() < endTime)
   {
@@ -166,6 +166,7 @@ void Perimeter::matchedFilter(const byte idx)
     signalMin[idx] = 9999;
     signalMax[idx] = -9999;
     signalAvg[idx] = 0;
+
     for (int i = 0; i < sampleCount; i++)
     {
       int8_t v = samples_p[i];
@@ -175,14 +176,22 @@ void Perimeter::matchedFilter(const byte idx)
     }
     signalAvg[idx] = (double)signalAvg[idx] / (double)sampleCount;
   }
+
   // magnitude for tracking (fast but inaccurate)
-  int16_t sigcode_size = sizeof sigcode_norm;
-  int8_t* sigcode_p = sigcode_norm;
+  const int8_t* sigcode_p;
   if (useDifferentialPerimeterSignal)
   {
     sigcode_p = sigcode_diff;
   }
-  mag[idx] = corrFilter(sigcode_p, subSample, sigcode_size, samples_p,
+  else
+  {
+    sigcode_p = sigcode_norm;
+  }
+  int16_t sigcode_size = sizeof(*sigcode_p);
+  mag[idx] = corrFilter(sigcode_p,
+                        subSample,
+                        sigcode_size,
+                        samples_p,
                         sampleCount - sigcode_size * subSample,
                         filterQuality[idx]);
   if (swapCoilPolarity)
@@ -190,7 +199,7 @@ void Perimeter::matchedFilter(const byte idx)
     mag[idx] = -mag[idx];
   }
   // smoothed magnitude used for signal-off detection
-  smoothMag[idx] = 0.99 * smoothMag[idx] + 0.01 * ((float)abs(mag[idx]));
+  smoothMag[idx] = 0.99 * smoothMag[idx] + 0.01 * (float)abs(mag[idx]);
 
   // perimeter inside/outside detection
   if (mag[idx] > 0)
@@ -323,7 +332,7 @@ int16_t Perimeter::corrFilter(const int8_t* H_p, const int8_t subsample,
   }
 }
 
-bool Perimeter::isTimeToControl()
+bool Perimeter::isTimeToControl(void)
 {
   unsigned long curMillis = millis();
   if (curMillis >= nextTimeControl)

@@ -26,16 +26,10 @@
 #include "config.h"
 #include "TimerOne.h"
 #include <EEPROM.h>
-#include "RunningMedian.h"
-
-// #define USE_DEVELOPER_TEST    1      // uncomment for new perimeter signal test (developers)
-
-// code version
-#define VER "0.1"
+//#include "RunningMedian.h"
 
 // --------------------------------------
 
-volatile int step = 0;
 volatile boolean enableSender = true;
 
 uint8_t dutyPWM = 0;
@@ -59,13 +53,13 @@ unsigned long nextTimeToggleLED = 0;
 
 #ifdef USE_DEVELOPER_TEST
 // a more motor driver friendly signal (sender)
-int8_t sigcode[] =
+const int8_t sigcode[] =
 {
   1, 0, 0, 0, 0, 1, 0, 0, 0, 0,
   -1, 0, 0, 0, 0, 1, 0, 0, 0, 0
 };
 #else
-int8_t sigcode[] =
+const int8_t sigcode[] =
 {
   1,  1, -1, -1,  1, -1,  1, -1, -1,  1, -1,  1,
   1, -1, -1,  1, -1, -1,  1, -1, -1,  1,  1, -1
@@ -75,6 +69,8 @@ int8_t sigcode[] =
 
 void timerCallback(void)
 {
+  static uint8_t step = 0;
+
   if (enableSender)
   {
     if (sigcode[step] == 1)
@@ -191,9 +187,14 @@ void timerCallback(void)
 
 void setup()
 {
+  digitalWrite(PIN_IN1, HIGH);
+  digitalWrite(PIN_IN1, LOW);
+  digitalWrite(PIN_ENABLE, LOW);
+
   pinMode(PIN_IN1, OUTPUT);
   pinMode(PIN_IN2, OUTPUT);
   pinMode(PIN_ENABLE, OUTPUT);
+
   //pinMode(PIN_PWM, OUTPUT);
 
   //pinMode(PIN_FEEDBACK, INPUT);
@@ -206,29 +207,28 @@ void setup()
   //analogReference(INTERNAL); // ADC 1.1v ref
 
   // sample rate 9615 Hz (19230,76923076923 / 2 => 9615.38)
-  int T = 1000.0 * 1000.0 / 9615.38;
-  Serial.begin(115200);
+  const int period = 1000.0 * 1000.0 / 9615.38;
+  Serial.begin(BAUD_RATE);
 
   Serial.println("START");
   Serial.print("Ardumower Sender ");
-  Serial.println(VER);
+  Serial.println(VERSION);
 #ifdef USE_DEVELOPER_TEST
   Serial.println("Warning: USE_DEVELOPER_TEST activated");
 #endif
-  Serial.println("press...");
-  Serial.println("  1  for current sensor calibration");
+//  Serial.println("press...");
+//  Serial.println("  1  for current sensor calibration");
   Serial.println();
 
 //  readEEPROM();
   Serial.print("T=");
-  Serial.println(T);
+  Serial.println(period);
   Serial.print("f=");
-  Serial.println(1000.0 * 1000.0 / T);
-  Timer1.initialize(T);         // initialize timer1, and set period
+  const int frequency = 1000.0 * 1000.0 / period;
+  Serial.println(frequency);
+  Timer1.initialize(period);         // initialize timer1, and set period
   //Timer1.pwm(pinPWM, 256);
   Timer1.attachInterrupt(timerCallback);
-  //digitalWrite(pinIN1, HIGH);
-  //digitalWrite(pinIN2, LOW);
   //tone(pinPWM, 7800);
 
   // http://playground.arduino.cc/Main/TimerPWMCheatsheet
