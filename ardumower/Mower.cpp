@@ -268,13 +268,12 @@ void Mower::setup()
   wheels.biDirSpeedRatio2 = 0.92; // bidir mow pattern speed ratio 2
 
   // left wheel motor
-  wheels.wheel[Wheel::LEFT].motor.config(
-      1000.0,   // Acceleration
-      255,      // Max PWM
-      75,       // Max Power
-      false,    // Modulation
-      100,      // Max RPM
-      0.0);     // Set RPM
+  wheels.wheel[Wheel::LEFT].motor.config(1000.0,   // Acceleration
+                                         255,      // Max PWM
+                                         75,       // Max Power
+                                         false,    // Modulation
+                                         100,      // Max RPM
+                                         0.0);     // Set RPM
   wheels.wheel[Wheel::LEFT].motor.setScale(3.25839);
   wheels.wheel[Wheel::LEFT].motor.setChannel(0);
   wheels.wheel[Wheel::LEFT].motor.setup();
@@ -287,13 +286,12 @@ void Mower::setup()
   wheels.wheel[Wheel::LEFT].motor.swapDir = 0;  // inverse left motor direction?
 
   // right wheel motor
-  wheels.wheel[Wheel::RIGHT].motor.config(
-      1000.0,   // Acceleration
-      255,      // Max PWM
-      75,       // Max Power
-      false,    // Modulation
-      100,      // Max RPM
-      0.0);     // Set RPM
+  wheels.wheel[Wheel::RIGHT].motor.config(1000.0,   // Acceleration
+                                          255,      // Max PWM
+                                          75,       // Max Power
+                                          false,    // Modulation
+                                          100,      // Max RPM
+                                          0.0);     // Set RPM
   wheels.wheel[Wheel::RIGHT].motor.setScale(3.25839);
   wheels.wheel[Wheel::RIGHT].motor.setChannel(1);
   wheels.wheel[Wheel::RIGHT].motor.setup();
@@ -306,13 +304,12 @@ void Mower::setup()
   wheels.wheel[Wheel::RIGHT].motor.swapDir = 0; // inverse right motor direction?
 
   // mower motor
-  cutter.motor.config(
-      2000.0,     // Acceleration
-      255,        // Max PWM
-      75,         // Max Power
-      false,      // Modulation
-      0,          // Max RPM
-      3300);      // Set RPM
+  cutter.motor.config(2000.0,     // Acceleration
+                      255,        // Max PWM
+                      75,         // Max Power
+                      false,      // Modulation
+                      0,          // Max RPM
+                      3300);      // Set RPM
   cutter.motor.setScale(3.25839);
   cutter.motor.pid.setup(0.005, 0.01, 0.01, -127, 127, 127);  // Kp, Ki, Kd
 
@@ -420,6 +417,7 @@ int Mower::readSensor(char type)
     case SEN_PERIM_LEFT:
       return perimeter.getMagnitude(0);
       break;
+
       //case SEN_PERIM_RIGHT:
       //  return Perimeter.getMagnitude(1);
       //  break;
@@ -429,12 +427,11 @@ int Mower::readSensor(char type)
       ADCMan.read(PIN_VOLTAGE_MEASUREMENT);
       return ADCMan.read(PIN_BATTERY_VOLTAGE);
       break;
+
     case SEN_CHG_VOLTAGE:
       return ADCMan.read(PIN_CHARGE_VOLTAGE);
       break;
-    //case SEN_CHG_VOLTAGE:
-    //  return((int)(((double)analogRead(pinChargeVoltage)) * batFactor));
-    //  break;
+
     case SEN_CHG_CURRENT:
       return ADCMan.read(PIN_CHARGE_CURRENT);
       break;
@@ -481,18 +478,23 @@ void Mower::setActuator(char type, int value)
         tone(PIN_BUZZER, value);
       }
       break;
+
     case ACT_LED:
       digitalWrite(PIN_LED, value);
       break;
+
     case ACT_USER_SW1:
       digitalWrite(PIN_USER_SWITCH_1, value);
       break;
+
     case ACT_USER_SW2:
       digitalWrite(PIN_USER_SWITCH_2, value);
       break;
+
     case ACT_USER_SW3:
       digitalWrite(PIN_USER_SWITCH_3, value);
       break;
+
     case ACT_RTC:
       if (!setDS1307(datetime))
       {
@@ -501,12 +503,15 @@ void Mower::setActuator(char type, int value)
         setNextState(STATE_ERROR, 0);
       }
       break;
+
     case ACT_CHGRELAY:
       digitalWrite(PIN_CHARGE_RELAY, value);
       break;
-    //case ACT_CHGRELAY:
+
+      //case ACT_CHGRELAY:
     //  digitalWrite(pinChargeRelay, !value);
     //  break;
+
     case ACT_BATTERY_SW:
       digitalWrite(PIN_BATTERY_SWITCH, value);
       break;

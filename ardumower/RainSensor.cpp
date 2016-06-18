@@ -14,12 +14,12 @@ void RainSensor::setup(const uint8_t pin)
   pinMode(pin, INPUT);
 }
 
-void RainSensor::read()
+void RainSensor::read(void)
 {
   raining = (digitalRead(pin) == LOW);
 }
 
-void RainSensor::check()
+void RainSensor::check(void)
 {
   read();
   if (raining)
@@ -28,12 +28,12 @@ void RainSensor::check()
   }
 }
 
-bool RainSensor::isTimeToRun()
+bool RainSensor::isTimeToRun(void)
 {
   unsigned long curMillis = millis();
   if (used && curMillis >= nextTime)
   {
-    nextTime = curMillis + timeBetweenRuns;
+    nextTime = curMillis + TIME_BETWEEN_RUNS;
     return true;
   }
   return false;

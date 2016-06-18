@@ -43,51 +43,79 @@
 class Perimeter
 {
   public:
-    Perimeter();
+    Perimeter() { };
     // set ADC pins
-    void setup(const byte idx0Pin, const byte idx1Pin);
+    void setup(const uint8_t idx0Pin, const uint8_t idx1Pin);
     // get perimeter magnitude
-    int getMagnitude(const byte idx);
-    int getSmoothMagnitude(const byte idx);
+    int16_t getMagnitude(const uint8_t idx);
+
+    const int16_t getSmoothMagnitude(const uint8_t idx) const
+    {
+      return (int16_t)smoothMag[idx];
+    }
+
     // inside perimeter (true) or outside (false)?
-    boolean isInside(const byte idx);
     // perimeter signal timed out? (e.g. due to broken wire)
-    boolean signalTimedOut(const byte idx);
-    int16_t getSignalMin(const byte idx);
-    int16_t getSignalMax(const byte idx);
-    int16_t getSignalAvg(const byte idx);
-    float getFilterQuality(const byte idx);
-    void speedTest();
-    bool isTimeToControl();
+    boolean signalTimedOut(const uint8_t idx);
+
+    const int16_t getSignalMin(const uint8_t idx) const
+    {
+      return signalMin[idx];
+    }
+
+    const int16_t getSignalMax(const uint8_t idx) const
+    {
+      return signalMax[idx];
+    }
+
+    const int16_t getSignalAvg(const uint8_t idx) const
+    {
+      return signalAvg[idx];
+    }
+
+    const float getFilterQuality(const uint8_t idx) const
+    {
+      return filterQuality[idx];
+    }
+
+    const bool isInside(const uint8_t idx) const
+    {
+      return (signalCounter[idx] < 0);
+    }
+
+    bool isTimeToControl(void);
 
 
     Pid pid;             // perimeter PID controller
-    int16_t timedOutIfBelowSmag;
-    int16_t timeOutSecIfNotInside;
+    int16_t timedOutIfBelowSmag {300};
+    int16_t timeOutSecIfNotInside {8};
     // use differential perimeter signal as input for the matched filter?
-    bool useDifferentialPerimeterSignal;
+    bool useDifferentialPerimeterSignal {true};
     // swap coil polarity?
-    bool swapCoilPolarity;
+    bool swapCoilPolarity {false};
 
   private:
-    unsigned long lastInsideTime[2];
-    byte idxPin[2]; // channel for idx
-    int callCounter;
-    int16_t mag[2]; // perimeter magnitude per channel
-    float smoothMag[2];
-    float filterQuality[2];
+    static const uint8_t timeBetweenControl {100};
+
+    uint32_t lastInsideTime[2] {};
+    uint8_t idxPin[2]; // channel for idx
+    int16_t mag[2] {}; // perimeter magnitude per channel
+    float smoothMag[2] {};
+    float filterQuality[2] {};
     int16_t signalMin[2];
     int16_t signalMax[2];
     int16_t signalAvg[2];
-    int signalCounter[2];
-    char subSample;
-    unsigned long nextTimeControl {};
-    unsigned int timeBetweenControl { 100 };
+    int16_t signalCounter[2] {};
+    uint8_t subSample {};
+    uint32_t nextTimeControl {};
 
-    void matchedFilter(const byte idx);
-    int16_t corrFilter(const int8_t* H_p, const int8_t subsample,
-                       const int16_t M, const int8_t* ip_p,
-                       const int16_t nPts, float &quality);
+    void matchedFilter(const uint8_t idx);
+    int16_t corrFilter(const int8_t* H_p,
+                       const int8_t subsample,
+                       const int16_t M,
+                       const int8_t* ip_p,
+                       const int16_t nPts,
+                       float &quality);
     void printADCMinMax(const int8_t* samples_p);
 };
 

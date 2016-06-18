@@ -79,7 +79,7 @@ inline bool Sonar::pingTrigger(void)
   return true;                         // Ping started successfully.
 }
 
-inline uint32_t Sonar::pingInternal(void)
+inline uint16_t Sonar::pingInternal(void)
 {
   if (!pingTrigger())  // Trigger a ping, if it returns false, return NO_ECHO to the calling function.
   {
@@ -93,7 +93,7 @@ inline uint32_t Sonar::pingInternal(void)
       return NO_ECHO;  // Stop the loop and return NO_ECHO (false) if we're beyond the set maximum distance.
     }
   }
-  return (micros() - (maxTime - maxEchoTime) - 5); // Calculate ping time, 5uS of overhead.
+  return (uint16_t)(micros() - (maxTime - maxEchoTime) - 5); // Calculate ping time, 5uS of overhead.
 }
 
 bool Sonars::isTimeToRun()
@@ -101,7 +101,7 @@ bool Sonars::isTimeToRun()
   unsigned long curMillis = millis();
   if (curMillis >= nextTime)
   {
-    nextTime = curMillis + timeBetweenRun;
+    nextTime = curMillis + TIME_BETWEEN_RUN;
     return true;
   }
   return false;
@@ -112,7 +112,7 @@ bool Sonars::isTimeToCheck()
   unsigned long curMillis = millis();
   if (curMillis >= nextTimeCheck)
   {
-    nextTimeCheck = curMillis + timeBetweenCheck;
+    nextTimeCheck = curMillis + TIME_BETWEEN_CHECK;
     return true;
   }
   return false;

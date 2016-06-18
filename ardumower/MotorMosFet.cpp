@@ -20,12 +20,12 @@ void MotorMosFet::setup(void)
 
 void MotorMosFet::setSpeed(void)
 {
-  setSpeed((int)(pwmCur + 0.5));
+  setSpeed((int16_t)(pwmCur + 0.5));
 }
 
-void MotorMosFet::setSpeed(const int speed)
+void MotorMosFet::setSpeed(const int16_t speed)
 {
-  int tmpSpeed = speed < 0 ? 0 : speed;
+  int16_t tmpSpeed = speed < 0 ? 0 : speed;
   analogWrite(pinPwm, tmpSpeed);
 //  Console.print("MotorMosFet::setSpeed pinPwm=");
 //  Console.print(pinPwm);
@@ -33,7 +33,7 @@ void MotorMosFet::setSpeed(const int speed)
 //  Console.println(tmpSpeed);
 }
 
-void MotorMosFet::setSpeed(const int speed, const bool brake)
+void MotorMosFet::setSpeed(const int16_t speed, const bool brake)
 {
   (void)brake;
   setSpeed(speed);

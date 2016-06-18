@@ -287,9 +287,9 @@ void RemoteControl::sendADCMenu(const boolean update)
   Bluetooth.print(F("|c1~Calibrate (perimeter sender, charger must be off) "));
   for (uint8_t ch = 0; ch < 16; ch++)
   {
-    const int16_t adcMin = ADCMan.getAdcMin(A0 + ch);
-    const int16_t adcMax = ADCMan.getAdcMax(A0 + ch);
-    const int16_t adcZeroOffset = ADCMan.getAdcZeroOffset(A0 + ch);
+    const int16_t adcMin = ADCMan.getAdcMinCh(ch);
+    const int16_t adcMax = ADCMan.getAdcMaxCh(ch);
+    const int16_t adcZeroOffset = ADCMan.getAdcZeroOffsetCh(ch);
     Bluetooth.print(F("|zz~AD"));
     Bluetooth.print(ch);
     Bluetooth.print(" min=");
@@ -2183,8 +2183,8 @@ void RemoteControl::run()
       {
         if (ADCMan.isCaptureComplete(A2))  //FIXME: Use define PIN_PERIMETER_LEFT
         {
-          int8_t* samples = ADCMan.getCapture(A2);  //FIXME: Use define PIN_PERIMETER_LEFT
-          memcpy(perimeterCapture, samples, 32);
+          const int8_t* samples_p = ADCMan.getCapture(A2);  //FIXME: Use define PIN_PERIMETER_LEFT
+          memcpy(perimeterCapture, samples_p, 32);
           perimeterCaptureIdx = 0;
         }
       }

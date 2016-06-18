@@ -59,7 +59,7 @@ enum
 class AdcManager
 {
   public:
-    AdcManager(void);
+    AdcManager(void) { };
 
     // call this in setup
     void init(void);
@@ -72,37 +72,59 @@ class AdcManager
     // samplecount > 1: 8 bit sampling (signed - zero = VCC/2)
     void setCapture(const uint8_t pin,
                     const uint8_t samplecount,
-                    const bool autoCalibrateOfs);
+                    const bool autoCalibrate);
 
     // get buffer with samples for pin
-    int8_t* getCapture(const uint8_t pin);
+   const int8_t* getCapture(const uint8_t pin) const
+    {
+      return capture[pin - A0];
+    }
 
     // restart sampling for pin
-    void restart(const uint8_t pin);
+    void restart(const uint8_t pin)
+    {
+      captureComplete[pin - A0] = false;
+    }
 
     // samplecount=1: get one sample for pin
     // samplecount>1: get first sample for pin
-    int read(const uint8_t pin);
+    int16_t read(const uint8_t pin);
 
     // read the median value of samples
-    int readMedian(const byte pin);
-    bool isCaptureComplete(const uint8_t pin);
+    int16_t readMedian(const byte pin);
+    bool isCaptureComplete(const uint8_t pin)
+    {
+      return isCaptureCompleteCh(pin - A0);
+    }
 
     // statistics only
-    int getCapturedChannels(void);
-    int16_t getAdcMin(const uint8_t pin);
-    int16_t getAdcMax(const uint8_t pin);
-    int16_t getAdcZeroOffset(const uint8_t pin);
+    uint8_t getCapturedChannels(void);
+    int16_t getAdcMinCh(const uint8_t ch);
+    int16_t getAdcMin(const uint8_t pin)
+    {
+      return getAdcMinCh(pin - A0);
+    }
 
-    // return number samples to capture
-    int getCaptureSize(const uint8_t pin);
+    int16_t getAdcMaxCh(const uint8_t ch);
+    int16_t getAdcMax(const uint8_t pin)
+    {
+      return getAdcMaxCh(pin - A0);
+    }
+
+    int16_t getAdcZeroOffsetCh(const uint8_t ch);
+    int16_t getAdcZeroOffset(const uint8_t pin)
+    {
+      return getAdcZeroOffsetCh(pin - A0);
+    }
 
     // calibration data available?
-    bool calibrationDataAvail(void);
+    bool calibrationDataAvail(void)
+    {
+      return calibrationAvailable;
+    }
 
     // get the manager running, starts sampling next pin
     void run(void);
-    uint8_t sampleRate;
 
     const bool isBusy(void) const
     {
@@ -113,7 +135,7 @@ class AdcManager
       busy = val;
     }
 
-    const bool isCaptureComplete(const uint8_t ch) const
+    const bool isCaptureCompleteCh(const uint8_t ch) const
     {
       return captureComplete[ch];
     }
@@ -122,9 +144,9 @@ class AdcManager
       captureComplete[ch] = value;
     }
 
-    const uint8_t getCaptureSize(const uint8_t ch) const
+    const uint8_t getCaptureSize(const uint8_t pin) const
     {
-      return captureSize[ch];
+      return captureSize[pin - A0];
     }
 
     const int16_t getZeroOffset(const uint8_t ch) const
@@ -146,61 +168,63 @@ class AdcManager
       return channel;
     }
 
-    const int16_t getAdcMax(const uint8_t ch) const
-    {
-      return ADCMax[ch];
-    }
     void setAdcMax(const uint8_t ch, const int16_t value)
     {
       ADCMax[ch] = value;
     }
 
-    const int16_t getAdcMin(const uint8_t ch) const
-    {
-      return ADCMin[ch];
-    }
     void setAdcMin(const uint8_t ch, const int16_t value)
     {
       ADCMin[ch] = value;
     }
 
-    void setCaptureValue(const uint8_t ch, const uint8_t pos, const int16_t value)
+    void setCaptureValue(const uint8_t ch,
+                         const uint8_t pos,
+                         const int16_t value)
     {
       capture[ch][pos] = value;
     }
 
-    void setSampleValue(const uint8_t ch, const uint8_t pos, const int16_t value)
+    void setSampleValue(const uint8_t ch,
+                        const uint8_t pos,
+                        const int16_t value)
     {
       sample[ch][pos] = value;
     }
 
+    const uint8_t getSampleRate() const
+    {
+      return SAMPLE_RATE;
+    }
+
   private:
-    static const uint8_t CHANNELS = 16;
-    static const uint16_t ADDR = 500;
-    static const uint8_t MAGIC = 1;
+    static const uint8_t CHANNELS {16};
+    static const uint16_t ADDR {500};
+    static const uint8_t MAGIC {1};
+    static const uint8_t SAMPLE_RATE {SRATE_38462};
 
-    uint8_t position = 0;
-    uint8_t channel = 0;
-    bool busy = false;
-    bool calibrationAvail = false;
-    int8_t* capture[CHANNELS]; // ADC capture buffer (ADC0-ADC7) - 8 bit signed (signed: zero = ADC/2)
-    uint8_t captureSize[CHANNELS]; // ADC sample buffer size (ADC0-ADC7)
-    int16_t zeroOffset[CHANNELS]; // ADC zero offset (ADC0-ADC7)
-    int16_t ADCMin[CHANNELS]; // ADC min sample value (ADC-ADC7)
-    int16_t ADCMax[CHANNELS]; // ADC max sample value (ADC-ADC7)
-    bool captureComplete[CHANNELS]; // ADC buffer filled?
-    bool autoCalibrate[CHANNELS]; // do auto-calibrate? (ADC0-ADC7)
-    int16_t* sample[CHANNELS];   // ADC one sample (ADC0-ADC7) - 10 bit unsigned
+    uint8_t position {};
+    uint8_t channel {};
+    bool busy {false};
+    bool calibrationAvailable {false};
+    int8_t* capture[CHANNELS] {}; // ADC capture buffer (ADC0-ADC7) - 8 bit signed (signed: zero = ADC/2)
+    uint8_t captureSize[CHANNELS] {}; // ADC sample buffer size (ADC0-ADC7)
+    int16_t zeroOffset[CHANNELS] {}; // ADC zero offset (ADC0-ADC7)
+    int16_t ADCMin[CHANNELS] {9999}; // ADC min sample value (ADC-ADC7)
+    int16_t ADCMax[CHANNELS] {-9999}; // ADC max sample value (ADC-ADC7)
+    bool captureComplete[CHANNELS] {false}; // ADC buffer filled?
+    bool autoCalibrate[CHANNELS] {false}; // do auto-calibrate? (ADC0-ADC7)
+    int16_t* sample[CHANNELS] {};   // ADC one sample (ADC0-ADC7) - 10 bit unsigned
+    uint8_t capturedChannels {};
 
-    int capturedChannels;
     void startADC(int sampleCount);
-    void calibrateOfs(uint8_t pin);
-    void startCapture(int sampleCount);
+    void calibrateZeroOffset(uint8_t ch);
+    void startCapture(const uint8_t sampleCount);
     void stopCapture(void);
-    bool loadCalib(void);
-    void loadSaveCalib(bool readflag);
-    void saveCalib(void);
-    void printCalib(void);
+    bool loadCalibration(void);
+    void loadSaveCalibration(bool readflag);
+    void saveCalibration(void);
+    void printCalibration(void);
 };
 
 extern AdcManager ADCMan;

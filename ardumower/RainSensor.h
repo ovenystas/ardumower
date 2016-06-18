@@ -11,30 +11,31 @@
 class RainSensor
 {
   public:
-    boolean used { false };
+    bool used {false};
 
     void setup(const uint8_t pin);
-    void check();
-    bool isTimeToRun();
+    void check(void);
+    bool isTimeToRun(void);
 
-    boolean isRaining() const
+    const bool isRaining(void) const
     {
       return raining;
     }
 
-    unsigned int getCounter() const
+    const uint16_t getCounter(void) const
     {
       return counter;
     }
 
   private:
+    static const uint16_t TIME_BETWEEN_RUNS {5000};
+
     uint8_t pin;
-    boolean raining { false };
-    unsigned int counter {};
-    unsigned int timeBetweenRuns { 5000 };
+    bool raining {false};
+    uint16_t counter {};
     unsigned long nextTime {};
 
-    void read();
+    void read(void);
 };
 
 #endif /* RAINSENSOR_H */

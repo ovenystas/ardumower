@@ -8,11 +8,6 @@
 #include "MotorDrv.h"
 #include <Arduino.h>
 
-int16_t MotorDrv::getAverageSenseAdc(void)
-{
-  return filter.getAverage();
-}
-
 int16_t MotorDrv::getAverageCurrent(void)
 {
   return (uint16_t((double)filter.getAverage() * scale + 0.5));
@@ -21,10 +16,4 @@ int16_t MotorDrv::getAverageCurrent(void)
 void MotorDrv::calcPower(float batV)
 {
   powerMeas = (int16_t)(getAverageCurrent() * batV / 1000 + 0.5);
-}
-
-
-void MotorDrv::setFilterAlpha(double alpha)
-{
-  filter.setAlpha(alpha);
 }

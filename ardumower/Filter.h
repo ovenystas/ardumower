@@ -21,14 +21,14 @@ class FilterEmaI32
       this->alpha = FILTER_EMA_I32_ALPHA(alpha);
     }
     void addValue(int32_t in);
-    int32_t getAverage() const
+    const int32_t getAverage(void) const
     {
       return average;
     }
 
   private:
     int32_t average {};
-    uint16_t alpha { FILTER_EMA_I32_ALPHA(1.0) };
+    uint16_t alpha {FILTER_EMA_I32_ALPHA(1.0)};
 };
 
 class FilterEmaI16
@@ -39,14 +39,14 @@ class FilterEmaI16
       this->alpha = FILTER_EMA_I16_ALPHA(alpha);
     }
     void addValue(int16_t in);
-    int16_t getAverage() const
+    const int16_t getAverage(void) const
     {
       return average;
     }
 
   private:
     int16_t average {};
-    uint8_t alpha { FILTER_EMA_I16_ALPHA(1.0) };
+    uint8_t alpha {FILTER_EMA_I16_ALPHA(1.0)};
 };
 
 #endif /* FILTER_H */

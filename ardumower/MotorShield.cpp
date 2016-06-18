@@ -15,10 +15,13 @@ void MotorShield::setup(void)
 {
   pinMode(pinDir[channel], OUTPUT);
   digitalWrite(pinDir[channel], LOW);
+
   pinMode(pinPwm[channel], OUTPUT);
   digitalWrite(pinDir[channel], LOW);
+
   pinMode(pinBrake[channel], OUTPUT);
   digitalWrite(pinBrake[channel], LOW);
+
   pinMode(pinSense[channel], INPUT);
   ADCMan.setCapture(pinSense[channel], 1, true);
 }
@@ -28,9 +31,9 @@ void MotorShield::setSpeed(void)
   setSpeed((int)(pwmCur + 0.5));
 }
 
-void MotorShield::setSpeed(const int speed)
+void MotorShield::setSpeed(const int16_t speed)
 {
-  int tmpSpeed = swapDir ? -speed : speed;
+  int16_t tmpSpeed = swapDir ? -speed : speed;
   digitalWrite(pinDir[channel], tmpSpeed < 0);
   analogWrite(pinPwm[channel], abs(tmpSpeed));
 //  Console.print("MotorShield::setSpeed ch=");
@@ -45,7 +48,7 @@ void MotorShield::setSpeed(const int speed)
 //  Console.println(tmpSpeed);
 }
 
-void MotorShield::setSpeed(const int speed, const bool brake)
+void MotorShield::setSpeed(const int16_t speed, const bool brake)
 {
   digitalWrite(pinBrake[channel], brake && speed == 0);
   setSpeed(speed);

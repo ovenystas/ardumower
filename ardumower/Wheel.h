@@ -36,11 +36,12 @@ class Wheels
     float biDirSpeedRatio2 {};  // bidir mow pattern speed ratio 2
     Wheel::wheelE rotateDir {Wheel::LEFT};
 
-    bool isTimeToRotationChange();
+    bool isTimeToRotationChange(void);
 
   private:
+    static const uint16_t TIME_BETWEEN_ROTATION_CHANGE {60000};
+
     unsigned long nextTimeRotationChange {};
-    unsigned int timeBetweenRotationChange { 60000 };
 };
 
 #endif /* WHEEL_H */

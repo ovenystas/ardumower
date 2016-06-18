@@ -17,7 +17,7 @@ class Bumper
     void simHit(void);
     void check(void);
 
-    bool isHit(void) const
+    const bool isHit(void) const
     {
       return hit;
     }
@@ -27,7 +27,7 @@ class Bumper
       hit = false;
     }
 
-    uint16_t getCounter() const
+    const uint16_t getCounter(void) const
     {
       return counter;
     }
@@ -40,7 +40,7 @@ class Bumper
   private:
     uint8_t pin {};
     uint16_t counter {};
-    boolean hit { false };
+    boolean hit {false};
 };
 
 class Bumpers
@@ -53,16 +53,17 @@ class Bumpers
       END
     };
 
-    bool used { false };
+    bool used {false};
     Bumper bumper[END];
 
-    void check();
-    void clearHit();
-    bool isTimeToRun();
+    void check(void);
+    void clearHit(void);
+    bool isTimeToRun(void);
 
 private:
+    static const uint8_t TIME_BETWEEN_RUNS {100};
+
     unsigned long nextTime {};
-    unsigned int timeBetweenRuns { 100 };
 };
 
 #endif /* BUMPER_H */

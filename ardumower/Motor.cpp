@@ -22,14 +22,9 @@ void Motor::config(const float acceleration, const int pwmMax, const int powerMa
   this->rpmSet = rpmSet;
 }
 
-bool Motor::readRpmPin()
+void Motor::setRpmState(void)
 {
-  return digitalRead(pinRpm);
-}
-
-void Motor::setRpmState()
-{
-  boolean newRpmState = readRpmPin();
+  bool newRpmState = readRpmPin();
   if (newRpmState != rpmLastState)
   {
     rpmLastState = newRpmState;
@@ -40,7 +35,7 @@ void Motor::setRpmState()
   }
 }
 
-unsigned long Motor::getSamplingTime()
+unsigned long Motor::getSamplingTime(void)
 {
   unsigned long curMillis = millis();
   unsigned long samplingTime = curMillis - lastSetSpeedTime;
@@ -59,14 +54,14 @@ bool Motor::isTimeForRpmMeas(unsigned long* timeSinceLast_p)
   *timeSinceLast_p = curMillis - lastRpmTime;
   if (curMillis >= nextTimeRpmMeas)
   {
-    nextTimeRpmMeas = curMillis + timeBetweenRpmMeas;
+    nextTimeRpmMeas = curMillis + TIME_BETWEEN_RPM_MEAS;
     lastRpmTime = curMillis;
     return true;
   }
   return false;
 }
 
-bool Motor::isTimeTo(unsigned long* nextTime_p, const unsigned int timeBetween)
+bool Motor::isTimeTo(uint32_t* nextTime_p, const uint16_t timeBetween)
 {
   unsigned long curMillis = millis();
   if (curMillis >= *nextTime_p)
@@ -75,29 +70,4 @@ bool Motor::isTimeTo(unsigned long* nextTime_p, const unsigned int timeBetween)
     return true;
   }
   return false;
-}
-
-bool Motor::isTimeToControl()
-{
-  return isTimeTo(&nextTimeControl, timeBetweenControl);
-}
-
-bool Motor::isTimeToCheckPower()
-{
-  return isTimeTo(&nextTimeCheckPower, timeBetweenCheckPower);
-}
-
-bool Motor::isTimeToReadSensor()
-{
-  return isTimeTo(&nextTimeReadSensor, timeBetweenReadSensor);
-}
-
-bool Motor::isWaitAfterStuckEnd()
-{
-  return (millis() >= lastTimeStucked + timeWaitAfterStuck);
-}
-
-void Motor::gotStuck()
-{
-  lastTimeStucked = millis();
 }

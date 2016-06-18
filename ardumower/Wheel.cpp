@@ -7,12 +7,12 @@
 
 #include "Wheel.h"
 
-bool Wheels::isTimeToRotationChange()
+bool Wheels::isTimeToRotationChange(void)
 {
   unsigned long curMillis = millis();
   if (curMillis >= nextTimeRotationChange)
   {
-    nextTimeRotationChange = curMillis + timeBetweenRotationChange;
+    nextTimeRotationChange = curMillis + TIME_BETWEEN_ROTATION_CHANGE;
     return true;
   }
   return false;

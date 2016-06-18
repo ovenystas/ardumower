@@ -16,12 +16,12 @@ class Cutter
   public:
     MotorMosFet motor;
 
-    bool isEnabled() const
+    const bool isEnabled() const
     {
       return enabled;
     }
 
-    bool isDisabled() const
+    const bool isDisabled() const
     {
       return !enabled;
     }
@@ -41,7 +41,7 @@ class Cutter
       enabled = !enabled;
     }
 
-    bool isEnableOverriden() const
+    const bool isEnableOverriden() const
     {
       return enableOverriden;
     }
@@ -57,8 +57,8 @@ class Cutter
     }
 
   private:
-    bool enabled { false };
-    bool enableOverriden { false };
+    bool enabled {false};
+    bool enableOverriden {false};
 };
 
 #endif /* CUTTER_H */

@@ -39,12 +39,12 @@ class Pid
                const float y_min, const float y_max, const float max_output);
     float compute(float x);
 
-    float getEold() const
+    const float getEold() const
     {
       return eold;
     }
 
-    float getSetpoint() const
+    const float getSetpoint() const
     {
       return w;
     }

@@ -28,24 +28,24 @@ void Bumper::check(void)
   }
 }
 
-void Bumpers::check()
+void Bumpers::check(void)
 {
   bumper[LEFT].check();
   bumper[RIGHT].check();
 }
 
-void Bumpers::clearHit()
+void Bumpers::clearHit(void)
 {
   bumper[LEFT].clearHit();
   bumper[RIGHT].clearHit();
 }
 
-bool Bumpers::isTimeToRun()
+bool Bumpers::isTimeToRun(void)
 {
   unsigned long curMillis = millis();
   if (used && curMillis >= nextTime)
   {
-    nextTime = curMillis + timeBetweenRuns;
+    nextTime = curMillis + TIME_BETWEEN_RUNS;
     return true;
   }
   return false;

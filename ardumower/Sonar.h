@@ -34,22 +34,25 @@
 class Sonar
 {
   public:
-    bool use { false };
+    bool use {false};
 
     void setup(const uint8_t triggerPin, const uint8_t echoPin,
                const uint16_t maxEchoTime = DEFAULT_MAX_ECHO_TIME,
                const uint16_t minEchoTime = DEFAULT_MIN_ECHO_TIME);
+
     void ping(void);
 
-    unsigned int getDistance_us() const
+    const uint16_t getDistance_us(void) const
     {
       return distance_us;
     }
-    unsigned int getDistance_cm()
+
+    const uint16_t getDistance_cm(void)
     {
       return PING_CONVERT(distance_us, US_ROUNDTRIP_CM);
     }
-    unsigned int getDistance_inch()
+
+    const uint16_t getDistance_inch(void)
     {
       return PING_CONVERT(distance_us, US_ROUNDTRIP_INCH);
     }
@@ -59,17 +62,17 @@ class Sonar
     uint8_t echoPin {};
     uint16_t maxEchoTime {};
     uint16_t minEchoTime {};
-    unsigned int distance_us {};   // As time in us
+    uint16_t distance_us {};   // As time in us
 
     uint8_t triggerBitMask;
     uint8_t echoBitMask;
     volatile uint8_t* triggerOutputRegister_p;
     volatile uint8_t* echoInputRegister_p;
     //unsigned int maxEchoTime;
-    unsigned long maxTime;
+    uint32_t maxTime;
 
     inline bool pingTrigger(void);
-    inline uint32_t pingInternal(void);
+    inline uint16_t pingInternal(void);
 };
 
 class Sonars
@@ -83,17 +86,17 @@ class Sonars
       END
     };
 
-    bool use { false };
+    bool use {false};
 
-    unsigned int triggerBelow { 1050 };  // trigger distance
-    unsigned int tempDistanceCounter {};
-    unsigned long obstacleTimeout {};
+    unsigned int triggerBelow {1050};  // trigger distance
+    uint8_t tempDistanceCounter {};
+    uint32_t obstacleTimeout {};
     Sonar sonar[END];
 
-    bool isTimeToRun();
-    bool isTimeToCheck();
+    bool isTimeToRun(void);
+    bool isTimeToCheck(void);
 
-    void ping()
+    void ping(void)
     {
       for (uint8_t i = 0; i < END; i++)
       {
@@ -101,21 +104,22 @@ class Sonars
       }
     }
 
-    unsigned int getDistanceCounter() const
+    const uint16_t getDistanceCounter(void) const
     {
       return distanceCounter;
     }
 
-    void incDistanceCounter()
+    void incDistanceCounter(void)
     {
       ++distanceCounter;
     }
 
   private:
-    unsigned int distanceCounter {};
-    unsigned long nextTime {};
-    unsigned int timeBetweenRun { 250 };
-    unsigned long nextTimeCheck {};
-    unsigned int timeBetweenCheck { 200 };
+    static const uint8_t TIME_BETWEEN_RUN {250};
+    static const uint8_t TIME_BETWEEN_CHECK {200};
+
+    uint16_t distanceCounter {};
+    uint32_t nextTime {};
+    uint32_t nextTimeCheck {};
 };
 #endif /* SONAR_H_ */
