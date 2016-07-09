@@ -125,7 +125,7 @@ enum
   STATE_PERI_REV,         // perimeter reverse
   STATE_STATION,          // in station
   STATE_STATION_CHARGING, // in station charging
-  STATE_STATION_CHECK,    //checks if station is present
+  STATE_STATION_CHECK,    // checks if station is present
   STATE_STATION_REV,      // charge reverse
   STATE_STATION_ROLL,     // charge roll
   STATE_STATION_FORW,     // charge forward
@@ -216,7 +216,7 @@ class Robot
     float imuRollHeading;      // roll heading  (IMU)
 
     // ------- perimeter state --------------------------
-    Perimeter perimeter;
+    Perimeters perimeters;
     boolean perimeterUse;      // use perimeter?
     int perimeterOutRollTimeMax;
     int perimeterOutRollTimeMin;

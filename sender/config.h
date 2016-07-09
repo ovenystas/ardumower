@@ -14,7 +14,8 @@
 
 
 #define VERSION            "0.1"   // code version
-//#define USE_DEVELOPER_TEST 1       // uncomment for new perimeter signal test (developers)
+//#define USE_DEVELOPER_TEST 1     // uncomment for new perimeter signal test (developers)
+#define USE_BARKER_CODE 1          // Uncomment to use Barker code for perimeter signal
 #define BAUD_RATE          115200
 
 

@@ -29,36 +29,48 @@
 #include "AdcManager.h"
 #include "drivers.h"
 
+//#define USE_DEVELOPER_TEST 1 // Uncomment for new perimeter signal test (developers)
+#define USE_BARKER_CODE 1    // Uncomment when using Barker code for perimeter signal
+
 // developer test to be activated in mower.cpp:
 #ifdef USE_DEVELOPER_TEST
 // more motor driver friendly signal (receiver)
-const int8_t sigcode_norm[] = {
+const int8_t sigcode_norm[] =
+{
   1, -1, 0, 0, 0, 1, -1, 0, 0, 0,
   -1, 1, 0, 0, 0, 1, -1, 0, 0, 0
 };
 #else
+#ifndef USE_BARKER_CODE
 // http://grauonline.de/alexwww/ardumower/filter/filter.html
 // "pseudonoise4_pw" signal
 // if using reconstructed sender signal, use this
-const int8_t sigcode_norm[] = {
+const int8_t sigcode_norm[] =
+{
   1, 1, -1, -1, 1, -1, 1, -1, -1, 1, -1, 1,
   1, -1, -1, 1, -1, -1, 1, -1, -1, 1, 1, -1
 };
 // "pseudonoise4_pw" signal (differential)
 // if using the coil differential signal, use this
-const int8_t sigcode_diff[] = {
+const int8_t sigcode_diff[] =
+{
   1, 0, -1, 0, 1, -1, 1, -1, 0, 1, -1, 1,
   0, -1, 0, 1, -1, 0, 1, -1, 0, 1, 0, -1
 };
+#else
+const int8_t sigcode_norm[]  = { 1,  1,  1, -1, -1, -1,  1, -1, -1,  1, -1 };
+const uint8_t hSum_norm = 44;
+//const int8_t sigcode_diff[]  = { 1,  0,  0, -1,  0,  0,  1, -1,  0,  1, -1 };
+const int8_t sigcode_diff[] = { 1,  0,  0,  0,  0,  0, -1,  0,  0,  0,  0,  0,  1,  0, -1,  0,  0,  0,  1,  0, -1,  0 };
+const uint8_t hSum_diff = 12;
+#endif
 #endif
 
-void Perimeter::setup(const uint8_t idx0Pin, const uint8_t idx1Pin)
+void Perimeter::setup(const uint8_t idxPin)
 {
-  idxPin[0] = idx0Pin;
-  idxPin[1] = idx1Pin;
+  this->idxPin = idxPin;
 
-  pinMode(idxPin[0], INPUT);
-  pinMode(idxPin[1], INPUT);
+  pinMode(idxPin, INPUT);
 
   switch (ADCMan.getSampleRate())
   {
@@ -74,125 +86,128 @@ void Perimeter::setup(const uint8_t idx0Pin, const uint8_t idx1Pin)
   }
 
   // Use max. 255 samples and multiple of signal size
-  int adcSampleCount = sizeof(sigcode_norm) * subSample;
-  ADCMan.setCapture(idx0Pin,
-                    (255 / adcSampleCount) * adcSampleCount,
-                    true);
-  ADCMan.setCapture(idx1Pin,
-                    (255 / adcSampleCount) * adcSampleCount,
-                    true);
+  int adcSampleCount { sizeof(sigcode_norm) * subSample };
+  uint8_t samplecount = (255 / adcSampleCount) * adcSampleCount;
+
+  ADCMan.setCapture(idxPin, samplecount, true);
 
   Console.print(F("matchSignal size="));
-  Console.println(sizeof sigcode_norm);
-  Console.print(F("subSample="));
-  Console.println(subSample);
-  Console.print(F("capture size="));
-  Console.println(ADCMan.getCaptureSize(idx0Pin));
+  Console.print(sizeof(sigcode_norm));
+  Console.print(F(" subSample="));
+  Console.print(subSample);
+  Console.print(F(" samplecount="));
+  Console.print(samplecount);
+  Console.print(F(" capture size="));
+  Console.println(ADCMan.getCaptureSize(idxPin));
 }
 
-int Perimeter::getMagnitude(const uint8_t idx)
+int16_t Perimeter::calcMagnitude(void)
 {
-  if (ADCMan.isCaptureComplete(idxPin[idx]))
+  if (ADCMan.isCaptureComplete(idxPin))
   {
-    matchedFilter(idx);
+    matchedFilter();
   }
-  return mag[idx];
+  return mag;
 }
 
-void Perimeter::printADCMinMax(const int8_t* samples_p)
+void Perimeter::calcStatistics(const int8_t* const samples_p)
 {
-  int8_t vmax = SCHAR_MIN;
-  int8_t vmin = SCHAR_MAX;
-  for (uint8_t i = 0; i < ADCMan.getCaptureSize(idxPin[0]); i++)
+  int8_t vMin = INT8_MAX;
+  int8_t vMax = INT8_MIN;
+  int16_t sum = 0;
+  uint8_t numSamples = ADCMan.getCaptureSize(idxPin);
+  for (uint8_t i = 0; i < numSamples; i++)
   {
-    vmax = max(vmax, samples_p[i]);
-    vmin = min(vmin, samples_p[i]);
+    const int8_t value = samples_p[i];
+    sum += value;
+    vMin = min(vMin, value);
+    vMax = max(vMax, value);
   }
-  Console.print(F("perimeter min,max="));
-  Console.print(vmin);
-  Console.print(F(","));
-  Console.println(vmax);
+  signalMin = vMin;
+  signalMax = vMax;
+  signalAvg = (int8_t)(sum / numSamples);
 }
 
 // perimeter V2 uses a digital matched filter
-void Perimeter::matchedFilter(const uint8_t idx)
+void Perimeter::matchedFilter(void)
 {
   static uint8_t callCounter = 0;
-  const uint8_t sampleCount = ADCMan.getCaptureSize(idxPin[0]);
-  const int8_t* samples_p = ADCMan.getCapture(idxPin[idx]);
+  static uint32_t callCounter2 = 0;
+  const uint8_t numSamples = ADCMan.getCaptureSize(idxPin);
+  const int8_t* const samples_p = ADCMan.getCapture(idxPin);
 
   // Calculate some statistics every 100 th's call
   if (callCounter == 100)
   {
     callCounter = 0;
-    signalMin[idx] = 9999;
-    signalMax[idx] = -9999;
-    signalAvg[idx] = 0;
-
-    for (uint8_t i = 0; i < sampleCount; i++)
-    {
-      const int8_t v = samples_p[i];
-      signalAvg[idx] += v;
-      signalMin[idx] = min(signalMin[idx], v);
-      signalMax[idx] = max(signalMax[idx], v);
-    }
-    signalAvg[idx] = (double)signalAvg[idx] / (double)sampleCount;
+    calcStatistics(samples_p);
   }
 
   // magnitude for tracking (fast but inaccurate)
-  const int8_t* sigcode_p;
+  const int8_t* sigcode_p {};
+  uint8_t sigcode_size {};
+  uint8_t hSum {};
   if (useDifferentialPerimeterSignal)
   {
     sigcode_p = sigcode_diff;
+    sigcode_size = sizeof(sigcode_diff);
+    hSum = hSum_diff;
   }
   else
   {
     sigcode_p = sigcode_norm;
+    sigcode_size = sizeof(sigcode_norm);
+    hSum = hSum_norm;
   }
-  const int16_t sigcode_size = sizeof(*sigcode_p);
-  mag[idx] = corrFilter(sigcode_p,
-                        subSample,
-                        sigcode_size,
-                        samples_p,
-                        sampleCount - sigcode_size * subSample,
-                        filterQuality[idx]);
+  bool print { false };
+  if (callCounter2 >= 200UL)
+  {
+    callCounter2 = 0;
+    print = true;
+  }
+  mag = corrFilter(sigcode_p, subSample / 2, sigcode_size, hSum, samples_p,
+                   numSamples - sigcode_size * subSample / 2, filterQuality, print);
   if (swapCoilPolarity)
   {
-    mag[idx] = -mag[idx];
+    mag = -mag;
   }
 
   // smoothed magnitude used for signal-off detection
-  smoothMag[idx] = 0.99 * smoothMag[idx] + 0.01 * (float)abs(mag[idx]);
+  smoothMag = 0.99 * smoothMag + 0.01 * (float)abs(mag);
 
   // perimeter inside/outside detection
-  if (mag[idx] > 0)
+  if (mag > 0)
   {
-    signalCounter[idx] = min(signalCounter[idx] + 1, 3);
+    signalCounter = min(signalCounter + 1, 3);
   }
   else
   {
-    signalCounter[idx] = max(signalCounter[idx] - 1, -3);
-  }
-  if (signalCounter[idx] < 0)
-  {
-    lastInsideTime[idx] = millis();
+    signalCounter = max(signalCounter - 1, -3);
   }
 
-  ADCMan.restart(idxPin[idx]);
-  if (idx == 0)
+  if (signalCounter < 0)
   {
-    callCounter++;
+    inside = true;
+    lastInsideTime = millis();
   }
+  else
+  {
+    inside = false;
+  }
+
+  ADCMan.restart(idxPin);
+  callCounter++;
+  callCounter2++;
 }
 
-boolean Perimeter::signalTimedOut(const uint8_t idx)
+boolean Perimeter::signalTimedOut(void)
 {
-  if (getSmoothMagnitude(idx) < timedOutIfBelowSmag)
+  if ((int16_t)smoothMag < timedOutIfBelowSmag)
   {
     return true;
   }
 
-  if (millis() - lastInsideTime[idx] > timeOutSecIfNotInside * 1000)
+  if (millis() - lastInsideTime > timeOutSecIfNotInside * 1000)
   {
     return true;
   }
@@ -202,43 +217,67 @@ boolean Perimeter::signalTimedOut(const uint8_t idx)
 
 // digital matched filter (cross correlation)
 // http://en.wikipedia.org/wiki/Cross-correlation
-// H[] holds the double sided filter coeffs, M = H.length (number of points in FIR)
+// H[] holds the double sided filter coeffs
 // subsample is the number of times for each filter coeff to repeat
+// M = H.length (number of points in FIR)
 // ip[] holds input data (length > nPts + M )
 // nPts is the length of the required output data
 
 int16_t Perimeter::corrFilter(const int8_t* H_p,
-                              const int8_t subsample,
-                              const int16_t M,
+                              const uint8_t subsample,
+                              const uint8_t M,
+                              const uint8_t Hsum,
                               const int8_t* ip_p,
-                              const int16_t nPts,
-                              float &quality)
+                              const uint8_t nPts,
+                              float &quality,
+                              bool print)
 {
+  if (print)
+  {
+    Console.print(F("cF: H="));
+    for (uint8_t i = 0; i < M; i++)
+    {
+      Console.print(H_p[i]);
+      Console.print(",");
+    }
+    Console.print(F(" subsample="));
+    Console.print(subsample);
+    Console.print(F(" M="));
+    Console.print(M);
+    Console.print(F(" ip="));
+    for (uint8_t i = 0; i < nPts; i++)
+    {
+      Console.print(ip_p[i]);
+      Console.print(",");
+    }
+    Console.print(F(" nPts="));
+    Console.print(nPts);
+  }
+
   int16_t sumMax = 0; // max correlation sum
   int16_t sumMin = 0; // min correlation sum
-  const int16_t Ms = M * subsample; // number of filter coeffs including subsampling
-
-  // compute sum of absolute filter coeffs
-  int16_t Hsum = 0;
-  for (int16_t i = 0; i < M; i++)
+  uint8_t Ms = M * subsample; // number of filter coeffs including subsampling
+  if (print)
   {
-    Hsum += abs(H_p[i]);
+    Console.print(F(" Ms="));
+    Console.print(Ms);
+    Console.print(F(" Hsum="));
+    Console.print(Hsum);
   }
-  Hsum *= subsample;
 
   // compute correlation
   // for each input value
-  for (int16_t j = 0; j < nPts; j++)
+  for (uint8_t j = 0; j < nPts; j++)
   {
     int16_t sum = 0;
-    const int8_t* Hi_p = H_p;
-    int8_t ss = 0;
-    const int8_t* ipi_p = ip_p;
+    int8_t* Hi_p = (int8_t*)H_p;
+    uint8_t ss = 0;
+    int8_t* ipi_p = (int8_t*)ip_p;
 
     // for each filter coeffs
-    for (int16_t i = 0; i < Ms; i++)
+    for (uint8_t i = 0; i < Ms; i++)
     {
-      sum += ((int16_t)(*Hi_p)) * ((int16_t)(*ipi_p));
+      sum += ((int16_t)*Hi_p) * ((int16_t)*ipi_p);
       ss++;
       if (ss == subsample)
       {
@@ -247,29 +286,79 @@ int16_t Perimeter::corrFilter(const int8_t* H_p,
       }
       ipi_p++;
     }
-    sumMax = max(sum, sumMax);
-    sumMin = min(sum, sumMin);
+    if (sum > sumMax)
+    {
+      sumMax = sum;
+    }
+    if (sum < sumMin)
+    {
+      sumMin = sum;
+    }
     ip_p++;
+  }
+  sumMaxTmp = sumMax;
+  sumMinTmp = sumMin;
+  if (print)
+  {
+    Console.print(F(" sumMax="));
+    Console.print(sumMax);
+    Console.print(F(" sumMin="));
+    Console.print(sumMin);
   }
 
   // normalize to 4095
-  sumMin = ((float)sumMin) / ((float)(Hsum * 127)) * 4095.0;
-  sumMax = ((float)sumMax) / ((float)(Hsum * 127)) * 4095.0;
+  sumMin = (float)sumMin / (float)((uint16_t)Hsum * 127) * 4095.0;
+  sumMax = (float)sumMax / (float)((uint16_t)Hsum * 127) * 4095.0;
+  if (print)
+  {
+    Console.print(F(" sumMaxNorm="));
+    Console.print(sumMax);
+    Console.print(F(" sumMinNorm="));
+    Console.print(sumMin);
+  }
 
   // compute ratio min/max
   if (sumMax > -sumMin)
   {
-    quality = ((float)sumMax) / ((float)-sumMin);
+    quality = (float)sumMax / (float)-sumMin;
+    if (print)
+    {
+      Console.print(F(" quality="));
+      Console.print((int16_t)(quality * 100));
+      Console.print(F(" mag="));
+      Console.println(sumMax);
+    }
     return sumMax;
   }
   else
   {
-    quality = ((float)-sumMin) / ((float)sumMax);
+    quality = (float)-sumMin / (float)sumMax;
+    if (print)
+    {
+      Console.print(F(" quality="));
+      Console.print((int16_t)(quality * 100));
+      Console.print(F(" mag="));
+      Console.println(sumMin);
+    }
     return sumMin;
   }
 }
 
-bool Perimeter::isTimeToControl(void)
+void Perimeter::printInfo(Stream &s)
+{
+  Streamprint(s, "sig min %-4d max %-4d avg %-4d",
+              signalMin, signalMax, signalAvg);
+
+  Streamprint(s, " mag %-5d smag %-4d qty %-3d",
+              mag, (int16_t )smoothMag, (int8_t)(filterQuality * 100.0));
+
+  Streamprint(s, " (sum min %-6d max %-6d)",
+              sumMinTmp, sumMaxTmp);
+}
+
+//-----------------------------------------------------------------------------
+
+bool Perimeters::isTimeToControl(void)
 {
   unsigned long curMillis = millis();
   if (curMillis >= nextTimeControl)
@@ -278,4 +367,12 @@ bool Perimeter::isTimeToControl(void)
     return true;
   }
   return false;
+}
+
+void Perimeters::printInfo(Stream &s)
+{
+//  Streamprint(s, "perL: ");
+  perimeter[Perimeter::LEFT].printInfo(s);
+//  Streamprint(s, "perR: ");
+//  perimeter[Perimeter::RIGHT].printInfo(s);
 }

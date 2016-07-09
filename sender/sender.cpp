@@ -59,11 +59,17 @@ const int8_t sigcode[] =
   -1, 0, 0, 0, 0, 1, 0, 0, 0, 0
 };
 #else
+#ifndef USE_BARKER_CODE
 const int8_t sigcode[] =
 {
   1,  1, -1, -1,  1, -1,  1, -1, -1,  1, -1,  1,
   1, -1, -1,  1, -1, -1,  1, -1, -1,  1,  1, -1
 };
+#else
+const int8_t sigcode[] = {
+  1,  1,  1, -1, -1, -1,  1, -1, -1,  1, -1
+};
+#endif
 #endif
 
 
@@ -215,6 +221,9 @@ void setup()
   Serial.println(VERSION);
 #ifdef USE_DEVELOPER_TEST
   Serial.println("Warning: USE_DEVELOPER_TEST activated");
+#endif
+#ifdef USE_BARKER_CODE
+  Serial.println("Warning: USE_BARKER_CODE activated");
 #endif
 //  Serial.println("press...");
 //  Serial.println("  1  for current sensor calibration");

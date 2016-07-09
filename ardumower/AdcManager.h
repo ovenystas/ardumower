@@ -50,10 +50,14 @@
 
 #include <Arduino.h>
 
+#define CHANNELS 16
+
 // sample rates
 enum
 {
-  SRATE_9615, SRATE_19231, SRATE_38462
+  SRATE_9615,
+  SRATE_19231,
+  SRATE_38462
 };
 
 class AdcManager
@@ -75,16 +79,7 @@ class AdcManager
                     const bool autoCalibrate);
 
     // get buffer with samples for pin
-   const int8_t* getCapture(const uint8_t pin) const
-    {
-      return capture[pin - A0];
-    }
-
-    // restart sampling for pin
-    void restart(const uint8_t pin)
-    {
-      captureComplete[pin - A0] = false;
-    }
+    int8_t* getCapture(const uint8_t pin);
 
     // samplecount=1: get one sample for pin
     // samplecount>1: get first sample for pin
@@ -100,22 +95,8 @@ class AdcManager
     // statistics only
     uint8_t getCapturedChannels(void);
     int16_t getAdcMinCh(const uint8_t ch);
-    int16_t getAdcMin(const uint8_t pin)
-    {
-      return getAdcMinCh(pin - A0);
-    }
-
     int16_t getAdcMaxCh(const uint8_t ch);
-    int16_t getAdcMax(const uint8_t pin)
-    {
-      return getAdcMaxCh(pin - A0);
-    }
-
     int16_t getAdcZeroOffsetCh(const uint8_t ch);
-    int16_t getAdcZeroOffset(const uint8_t pin)
-    {
-      return getAdcZeroOffsetCh(pin - A0);
-    }
 
     // calibration data available?
     bool calibrationDataAvail(void)
@@ -126,101 +107,29 @@ class AdcManager
     // get the manager running, starts sampling next pin
     void run(void);
 
-    const bool isBusy(void) const
-    {
-      return busy;
-    }
-    void setBusy(const bool val)
-    {
-      busy = val;
-    }
+    uint8_t getCaptureSize(const uint8_t pin);
 
-    const bool isCaptureCompleteCh(const uint8_t ch) const
-    {
-      return captureComplete[ch];
-    }
-    void setCaptureComplete(const uint8_t ch, const bool value)
-    {
-      captureComplete[ch] = value;
-    }
-
-    const uint8_t getCaptureSize(const uint8_t pin) const
-    {
-      return captureSize[pin - A0];
-    }
-
-    const int16_t getZeroOffset(const uint8_t ch) const
-    {
-      return zeroOffset[ch];
-    }
-
-    uint8_t getPosition(void) const
-    {
-      return position;
-    }
-    void incPosition(void)
-    {
-      ++position;
-    }
-
-    uint8_t getChannel(void) const
-    {
-      return channel;
-    }
-
-    void setAdcMax(const uint8_t ch, const int16_t value)
-    {
-      ADCMax[ch] = value;
-    }
-
-    void setAdcMin(const uint8_t ch, const int16_t value)
-    {
-      ADCMin[ch] = value;
-    }
-
-    void setCaptureValue(const uint8_t ch,
-                         const uint8_t pos,
-                         const int16_t value)
-    {
-      capture[ch][pos] = value;
-    }
-
-    void setSampleValue(const uint8_t ch,
-                        const uint8_t pos,
-                        const int16_t value)
-    {
-      sample[ch][pos] = value;
-    }
-
-    const uint8_t getSampleRate() const
+    const uint8_t getSampleRate(void) const
     {
       return SAMPLE_RATE;
     }
 
+    void restart(const uint8_t pin); // Restart sampling for pin
+
   private:
-    static const uint8_t CHANNELS {16};
     static const uint16_t ADDR {500};
     static const uint8_t MAGIC {1};
     static const uint8_t SAMPLE_RATE {SRATE_38462};
 
-    uint8_t position {};
-    uint8_t channel {};
-    bool busy {false};
     bool calibrationAvailable {false};
-    int8_t* capture[CHANNELS] {}; // ADC capture buffer (ADC0-ADC7) - 8 bit signed (signed: zero = ADC/2)
-    uint8_t captureSize[CHANNELS] {}; // ADC sample buffer size (ADC0-ADC7)
-    int16_t zeroOffset[CHANNELS] {}; // ADC zero offset (ADC0-ADC7)
-    int16_t ADCMin[CHANNELS] {9999}; // ADC min sample value (ADC-ADC7)
-    int16_t ADCMax[CHANNELS] {-9999}; // ADC max sample value (ADC-ADC7)
-    bool captureComplete[CHANNELS] {false}; // ADC buffer filled?
-    bool autoCalibrate[CHANNELS] {false}; // do auto-calibrate? (ADC0-ADC7)
-    int16_t* sample[CHANNELS] {};   // ADC one sample (ADC0-ADC7) - 10 bit unsigned
+    bool autoCalibrate[CHANNELS] {false};   // do auto-calibrate? (ADC0-ADC15)
     uint8_t capturedChannels {};
 
-    void startADC(int sampleCount);
+    void startADC(void);
     void calibrateZeroOffset(uint8_t ch);
-    void startCapture(const uint8_t sampleCount);
+    void startCapture(void);
     void stopCapture(void);
+    bool isCaptureCompleteCh(const uint8_t ch);
     bool loadCalibration(void);
     void loadSaveCalibration(bool readflag);
     void saveCalibration(void);

@@ -29,8 +29,8 @@
 
  How to use it (example):
  1. initialize ADC:        ADCMan.init();
- 2. set perimeter pins:    Perimeter.setup(PIN_PERIMETER_LEFT, PIN_PERIMETER_RIGHT);
- 3. read perimeter:        int value = Perimeter.getMagnitude(0);
+ 2. set perimeter pins:    perimeter.setup(PIN_PERIMETER);
+ 3. read perimeter:        int16_t value = Perimeter.calcMagnitude();
  */
 
 #ifndef PERIMETER_H
@@ -43,80 +43,94 @@
 class Perimeter
 {
   public:
-    Perimeter() { };
-    // set ADC pins
-    void setup(const uint8_t idx0Pin, const uint8_t idx1Pin);
-    // get perimeter magnitude
-    int16_t getMagnitude(const uint8_t idx);
-
-    const int16_t getSmoothMagnitude(const uint8_t idx) const
+    enum perimeterE
     {
-      return (int16_t)smoothMag[idx];
+      LEFT,
+      //RIGHT,
+      END
+    };
+
+    Perimeter()
+    {
+    }
+    ;
+    // set ADC pins
+    void setup(const uint8_t idxPin);
+    // get perimeter magnitude
+    int16_t calcMagnitude(void);
+
+    const int16_t getMagnitude(void) const
+    {
+      return mag;
+    }
+
+    const int16_t getSmoothMagnitude(void) const
+    {
+      return (int16_t)smoothMag;
     }
 
     // inside perimeter (true) or outside (false)?
     // perimeter signal timed out? (e.g. due to broken wire)
-    boolean signalTimedOut(const uint8_t idx);
+    boolean signalTimedOut(void);
 
-    const int16_t getSignalMin(const uint8_t idx) const
+    const float getFilterQuality(void) const
     {
-      return signalMin[idx];
+      return filterQuality;
     }
 
-    const int16_t getSignalMax(const uint8_t idx) const
+    const bool isInside(void) const
     {
-      return signalMax[idx];
+      return inside;
     }
 
-    const int16_t getSignalAvg(const uint8_t idx) const
-    {
-      return signalAvg[idx];
-    }
-
-    const float getFilterQuality(const uint8_t idx) const
-    {
-      return filterQuality[idx];
-    }
-
-    const bool isInside(const uint8_t idx) const
-    {
-      return (signalCounter[idx] < 0);
-    }
-
-    bool isTimeToControl(void);
-
+    void printInfo(Stream &s);
 
     Pid pid;             // perimeter PID controller
-    int16_t timedOutIfBelowSmag {300};
-    int16_t timeOutSecIfNotInside {8};
+    int16_t timedOutIfBelowSmag { 300 };
+    int16_t timeOutSecIfNotInside { 8 };
     // use differential perimeter signal as input for the matched filter?
-    bool useDifferentialPerimeterSignal {true};
+    bool useDifferentialPerimeterSignal { true };
     // swap coil polarity?
-    bool swapCoilPolarity {false};
+    bool swapCoilPolarity { false };
 
   private:
-    static const uint8_t timeBetweenControl {100};
+    uint32_t lastInsideTime {};
+    uint8_t idxPin {}; // channel for idx
+    int16_t mag {}; // perimeter magnitude per channel
+    float smoothMag {};
+    float filterQuality {};
+    int8_t signalMin { INT8_MAX };
+    int8_t signalMax { INT8_MIN };
+    int8_t signalAvg {};
+    int8_t signalCounter {};
+    uint8_t subSample {};bool inside { true };
 
-    uint32_t lastInsideTime[2] {};
-    uint8_t idxPin[2]; // channel for idx
-    int16_t mag[2] {}; // perimeter magnitude per channel
-    float smoothMag[2] {};
-    float filterQuality[2] {};
-    int16_t signalMin[2];
-    int16_t signalMax[2];
-    int16_t signalAvg[2];
-    int16_t signalCounter[2] {};
-    uint8_t subSample {};
-    uint32_t nextTimeControl {};
+    int16_t sumMaxTmp {};
+    int16_t sumMinTmp {};
 
-    void matchedFilter(const uint8_t idx);
+    void calcStatistics(const int8_t* const samples_p);
+    void matchedFilter(void);
     int16_t corrFilter(const int8_t* H_p,
-                       const int8_t subsample,
-                       const int16_t M,
+                       const uint8_t subsample,
+                       const uint8_t M,
+                       const uint8_t Hsum,
                        const int8_t* ip_p,
-                       const int16_t nPts,
-                       float &quality);
-    void printADCMinMax(const int8_t* samples_p);
+                       const uint8_t nPts,
+                       float &quality,
+                       bool print);
+};
+
+class Perimeters
+{
+  public:
+    Perimeter perimeter[Perimeter::END];
+
+    bool isTimeToControl(void);
+    void printInfo(Stream &s);
+
+  private:
+    static const uint8_t timeBetweenControl { 100 };
+    uint32_t nextTimeControl {};
 };
 
 #endif

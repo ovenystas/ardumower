@@ -245,19 +245,19 @@ void Robot::loadSaveUserSettings(const boolean readflag)
   }
   eereadwrite(readflag, addr, sonars.triggerBelow);
   eereadwrite(readflag, addr, perimeterUse);
-  eereadwrite(readflag, addr, perimeter.timedOutIfBelowSmag);
+  eereadwrite(readflag, addr, perimeters.perimeter[Perimeter::LEFT].timedOutIfBelowSmag);
   eereadwrite(readflag, addr, perimeterTriggerTimeout);
   eereadwrite(readflag, addr, perimeterOutRollTimeMax);
   eereadwrite(readflag, addr, perimeterOutRollTimeMin);
   eereadwrite(readflag, addr, perimeterOutRevTime);
   eereadwrite(readflag, addr, perimeterTrackRollTime);
   eereadwrite(readflag, addr, perimeterTrackRevTime);
-  eereadwrite(readflag, addr, perimeter.pid.Kp);
-  eereadwrite(readflag, addr, perimeter.pid.Ki);
-  eereadwrite(readflag, addr, perimeter.pid.Kd);
-  eereadwrite(readflag, addr, perimeter.useDifferentialPerimeterSignal);
-  eereadwrite(readflag, addr, perimeter.swapCoilPolarity);
-  eereadwrite(readflag, addr, perimeter.timeOutSecIfNotInside);
+  eereadwrite(readflag, addr, perimeters.perimeter[Perimeter::LEFT].pid.Kp);
+  eereadwrite(readflag, addr, perimeters.perimeter[Perimeter::LEFT].pid.Ki);
+  eereadwrite(readflag, addr, perimeters.perimeter[Perimeter::LEFT].pid.Kd);
+  eereadwrite(readflag, addr, perimeters.perimeter[Perimeter::LEFT].useDifferentialPerimeterSignal);
+  eereadwrite(readflag, addr, perimeters.perimeter[Perimeter::LEFT].swapCoilPolarity);
+  eereadwrite(readflag, addr, perimeters.perimeter[Perimeter::LEFT].timeOutSecIfNotInside);
   eereadwrite(readflag, addr, trackingBlockInnerWheelWhilePerimeterStruggling);
   eereadwrite(readflag, addr, lawnSensor.used);
   eereadwrite(readflag, addr, imu.use);
@@ -448,11 +448,11 @@ void Robot::printSettingSerial()
   Console.print(F("trackRevTime : "));
   Console.println(perimeterTrackRevTime);
   Console.print(F("pid.Kp : "));
-  Console.println(perimeter.pid.Kp);
+  Console.println(perimeters.perimeter[Perimeter::LEFT].pid.Kp);
   Console.print(F("pid.Ki : "));
-  Console.println(perimeter.pid.Ki);
+  Console.println(perimeters.perimeter[Perimeter::LEFT].pid.Ki);
   Console.print(F("pid.Kd : "));
-  Console.println(perimeter.pid.Kd);
+  Console.println(perimeters.perimeter[Perimeter::LEFT].pid.Kd);
   Console.print(F("trackingPerimeterTransitionTimeOut : "));
   Console.println(trackingPerimeterTransitionTimeOut);
   Console.print(F("trackingErrorTimeOut : "));
@@ -878,7 +878,7 @@ void Robot::motorControlImuRoll()
 // PID controller: track perimeter
 void Robot::motorControlPerimeter()
 {
-  if (!perimeter.isTimeToControl())
+  if (!perimeters.isTimeToControl())
   {
     return;
   }
@@ -938,11 +938,11 @@ void Robot::motorControlPerimeter()
   {
     x = 0;
   }
-  perimeter.pid.setSetpoint(0);
-  perimeter.pid.y_min = -wheels.wheel[Wheel::LEFT].motor.pwmMax;
-  perimeter.pid.y_max = wheels.wheel[Wheel::LEFT].motor.pwmMax;
-  perimeter.pid.max_output = wheels.wheel[Wheel::LEFT].motor.pwmMax;
-  float y = perimeter.pid.compute(x);
+  perimeters.perimeter[Perimeter::LEFT].pid.setSetpoint(0);
+  perimeters.perimeter[Perimeter::LEFT].pid.y_min = -wheels.wheel[Wheel::LEFT].motor.pwmMax;
+  perimeters.perimeter[Perimeter::LEFT].pid.y_max = wheels.wheel[Wheel::LEFT].motor.pwmMax;
+  perimeters.perimeter[Perimeter::LEFT].pid.max_output = wheels.wheel[Wheel::LEFT].motor.pwmMax;
+  float y = perimeters.perimeter[Perimeter::LEFT].pid.compute(x);
 
   int leftSpeed = max(-wheels.wheel[Wheel::LEFT].motor.pwmMax,
                       min(wheels.wheel[Wheel::LEFT].motor.pwmMax,
@@ -1287,6 +1287,9 @@ void Robot::setup()
 #ifdef USE_DEVELOPER_TEST
   Console.println("Warning: USE_DEVELOPER_TEST activated");
 #endif
+#ifdef USE_BARKER_CODE
+  Console.println("Warning: USE_BARKER_CODE activated");
+#endif
   Console.print(F("Config: "));
   Console.println(name);
   Console.println(F("press..."));
@@ -1331,16 +1334,11 @@ void Robot::printInfo(Stream &s)
 
   if (consoleMode == CONSOLE_PERIMETER)
   {
-    Streamprint(s, "sig min %4d max %4d avg %4d mag %5d qty %3d",
-                perimeter.getSignalMin(0),
-                perimeter.getSignalMax(0),
-                perimeter.getSignalAvg(0),
-                perimeterMag,
-                (int)(perimeter.getFilterQuality(0) * 100.0));
-    Streamprint(s, "  in %2d  cnt %4d  on %1d\r\n",
+    perimeters.perimeter[Perimeter::LEFT].printInfo(s);
+    Streamprint(s, "  in %-2d  cnt %-4d  on %-1d\r\n",
                 perimeterInside,
                 perimeterCounter,
-                !perimeter.signalTimedOut(0));
+                !perimeters.perimeter[Perimeter::LEFT].signalTimedOut());
   }
   else if (consoleMode == CONSOLE_IMU)
   {
@@ -1894,13 +1892,14 @@ void Robot::readSensors()
   {
     nextTimePerimeter = curMillis + 50;
     perimeterMag = readSensor(SEN_PERIM_LEFT);
-    if (perimeter.isInside(0) != perimeterInside)
+    bool inside = perimeters.perimeter[Perimeter::LEFT].isInside();
+    if (inside != perimeterInside)
     {
       perimeterCounter++;
       perimeterLastTransitionTime = millis();
-      perimeterInside = perimeter.isInside(0);
+      perimeterInside = inside;
     }
-    if (perimeterMag < 0)
+    if (perimeterInside)
     {
       setActuator(ACT_LED, HIGH);
     }
@@ -1920,7 +1919,7 @@ void Robot::readSensors()
         perimeterTriggerTime = curMillis;
       }
     }
-    if (perimeter.signalTimedOut(0))
+    if (perimeters.perimeter[Perimeter::LEFT].signalTimedOut())
     {
       if (stateCurr != STATE_OFF &&
           stateCurr != STATE_MANUAL &&
@@ -2833,7 +2832,7 @@ void Robot::checkPerimeterFind()
 {
   if (stateCurr == STATE_PERI_FIND)
   {
-    if (perimeter.isInside(0))
+    if (perimeters.perimeter[Perimeter::LEFT].isInside())
     {
       // inside
       if (wheels.wheel[Wheel::LEFT].motor.rpmSet != wheels.wheel[Wheel::RIGHT].motor.rpmSet)
