@@ -283,6 +283,7 @@ class Robot
 
     // --------------------------------------------------
     Robot();
+    virtual ~Robot() {};
 
     // robot setup
     virtual void setup();
