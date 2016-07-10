@@ -126,6 +126,10 @@ class Motor
       this->zeroTimeout = zeroTimeout;
     }
 
+    bool isOverpowered(void)
+    {
+      return powerMeas > powerMax;
+    }
   protected:
     int16_t powerMeas {};
 

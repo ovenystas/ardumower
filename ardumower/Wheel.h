@@ -14,12 +14,12 @@
 class Wheel
 {
   public:
-    enum wheelE
+    typedef enum wheelE
     {
       LEFT,
       RIGHT,
       END
-    };
+    } wheelE;
 
     MotorShield motor;
 };
@@ -37,6 +37,27 @@ class Wheels
     Wheel::wheelE rotateDir {Wheel::LEFT};
 
     bool isTimeToRotationChange(void);
+
+    void stop(void);
+    void slowDown(void);
+    void speedUp(void);
+    void forwardFullSpeed(void);
+    void forwardHalfSpeed(void);
+    void reverseFullSpeed(void);
+    void reverseFastSpeed(void);
+    void reverseSlowSpeed(void);
+    void rollFullRight(void);
+    void rollFullLeft(void);
+    void rollFull(bool dir);
+    void rollFastRight(void);
+    void rollFastLeft(void);
+    void rollFast(bool dir);
+    void rollHalfRight(void);
+    void rollHalfLeft(void);
+    void rollHalf(bool dir);
+    void rollSlowRight(void);
+    void rollSlowLeft(void);
+    void rollSlow(bool dir);
 
   private:
     static const uint16_t TIME_BETWEEN_ROTATION_CHANGE {60000};

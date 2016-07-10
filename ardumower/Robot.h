@@ -303,7 +303,7 @@ class Robot
                                    const boolean remoteSwitchState);
 
     // state machine
-    virtual void setNextState(byte stateNew, byte dir);
+    virtual void setNextState(byte stateNew, bool dir = LEFT);
 
     // motor
     virtual void setMotorPWMs(const int pwmLeft, const int pwmRight,
@@ -497,7 +497,7 @@ class Robot
     unsigned long perimeterTriggerTime; // time to trigger perimeter transition (timeout)
     unsigned long perimeterLastTransitionTime;
     int perimeterCounter;         // counts perimeter transitions
-    unsigned long nextTimePerimeter;
+    unsigned long nextTimePerimeter {};
 
     // --------- pfodApp ----------------------------------
     unsigned long nextTimePfodLoop;
@@ -521,7 +521,7 @@ class Robot
     int loopsPerSecCounter {};
     byte consoleMode { CONSOLE_SENSOR_COUNTERS };
     unsigned long nextTimeInfo;
-    byte rollDir;
+    bool rollDir;
     unsigned long nextTimeErrorCounterReset;
     unsigned long nextTimeErrorBeep;
 

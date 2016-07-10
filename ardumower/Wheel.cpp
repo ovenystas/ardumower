@@ -7,6 +7,12 @@
 
 #include "Wheel.h"
 
+enum dirE
+{
+  LEFT,
+  RIGHT
+};
+
 bool Wheels::isTimeToRotationChange(void)
 {
   unsigned long curMillis = millis();
@@ -16,4 +22,148 @@ bool Wheels::isTimeToRotationChange(void)
     return true;
   }
   return false;
+}
+
+void Wheels::stop(void)
+{
+  wheel[Wheel::LEFT].motor.rpmSet = 0;
+  wheel[Wheel::RIGHT].motor.rpmSet = 0;
+}
+
+void Wheels::slowDown(void)
+{
+  wheel[Wheel::LEFT].motor.rpmSet /= 1.5;
+  wheel[Wheel::RIGHT].motor.rpmSet /= 1.5;
+}
+
+void Wheels::speedUp(void)
+{
+  wheel[Wheel::LEFT].motor.rpmSet *= 1.5;
+  wheel[Wheel::RIGHT].motor.rpmSet *= 1.5;
+}
+
+void Wheels::forwardFullSpeed(void)
+{
+  wheel[Wheel::LEFT].motor.rpmSet = wheel[Wheel::LEFT].motor.rpmMax;
+  wheel[Wheel::RIGHT].motor.rpmSet = wheel[Wheel::RIGHT].motor.rpmMax;
+}
+
+void Wheels::forwardHalfSpeed(void)
+{
+  wheel[Wheel::LEFT].motor.rpmSet = wheel[Wheel::LEFT].motor.rpmMax / 1.5;
+  wheel[Wheel::RIGHT].motor.rpmSet = wheel[Wheel::RIGHT].motor.rpmMax / 1.5;
+}
+
+void Wheels::reverseFullSpeed(void)
+{
+  wheel[Wheel::LEFT].motor.rpmSet = -wheel[Wheel::LEFT].motor.rpmMax;
+  wheel[Wheel::RIGHT].motor.rpmSet = -wheel[Wheel::RIGHT].motor.rpmMax;
+}
+
+void Wheels::reverseFastSpeed(void)
+{
+  wheel[Wheel::LEFT].motor.rpmSet = -wheel[Wheel::LEFT].motor.rpmMax / 1.25;
+  wheel[Wheel::RIGHT].motor.rpmSet = -wheel[Wheel::RIGHT].motor.rpmMax / 1.25;
+}
+
+void Wheels::reverseSlowSpeed(void)
+{
+  wheel[Wheel::LEFT].motor.rpmSet = -wheel[Wheel::LEFT].motor.rpmMax / 2;
+  wheel[Wheel::RIGHT].motor.rpmSet = -wheel[Wheel::RIGHT].motor.rpmMax / 2;
+}
+
+void Wheels::rollFullRight(void)
+{
+  wheel[Wheel::LEFT].motor.rpmSet = wheel[Wheel::LEFT].motor.rpmMax;
+  wheel[Wheel::RIGHT].motor.rpmSet = -wheel[Wheel::RIGHT].motor.rpmMax;
+}
+
+void Wheels::rollFullLeft(void)
+{
+  wheel[Wheel::LEFT].motor.rpmSet = -wheel[Wheel::LEFT].motor.rpmMax;
+  wheel[Wheel::RIGHT].motor.rpmSet = wheel[Wheel::RIGHT].motor.rpmMax;
+}
+
+void Wheels::rollFull(bool dir)
+{
+  if (dir == LEFT)
+  {
+    rollFullLeft();
+  }
+  else
+  {
+    rollFullRight();
+  }
+}
+
+void Wheels::rollFastRight(void)
+{
+  wheel[Wheel::LEFT].motor.rpmSet = wheel[Wheel::LEFT].motor.rpmMax / 1.25;
+  wheel[Wheel::RIGHT].motor.rpmSet = -wheel[Wheel::RIGHT].motor.rpmMax / 1.25;
+}
+
+void Wheels::rollFastLeft(void)
+{
+  wheel[Wheel::LEFT].motor.rpmSet = -wheel[Wheel::LEFT].motor.rpmMax / 1.25;
+  wheel[Wheel::RIGHT].motor.rpmSet = wheel[Wheel::RIGHT].motor.rpmMax / 1.25;
+}
+
+void Wheels::rollFast(bool dir)
+{
+  if (dir == LEFT)
+  {
+    rollFastLeft();
+  }
+  else
+  {
+    rollFastRight();
+  }
+}
+
+void Wheels::rollHalfRight(void)
+{
+  wheel[Wheel::LEFT].motor.rpmSet = wheel[Wheel::LEFT].motor.rpmMax / 1.5;
+  wheel[Wheel::RIGHT].motor.rpmSet = -wheel[Wheel::RIGHT].motor.rpmMax / 1.5;
+}
+
+void Wheels::rollHalfLeft(void)
+{
+  wheel[Wheel::LEFT].motor.rpmSet = -wheel[Wheel::LEFT].motor.rpmMax / 1.5;
+  wheel[Wheel::RIGHT].motor.rpmSet = wheel[Wheel::RIGHT].motor.rpmMax / 1.5;
+}
+
+void Wheels::rollHalf(bool dir)
+{
+  if (dir == LEFT)
+  {
+    rollHalfLeft();
+  }
+  else
+  {
+    rollHalfRight();
+  }
+}
+
+void Wheels::rollSlowRight(void)
+{
+  wheel[Wheel::LEFT].motor.rpmSet = wheel[Wheel::LEFT].motor.rpmMax / 2;
+  wheel[Wheel::RIGHT].motor.rpmSet = -wheel[Wheel::RIGHT].motor.rpmMax / 2;
+}
+
+void Wheels::rollSlowLeft(void)
+{
+  wheel[Wheel::LEFT].motor.rpmSet = -wheel[Wheel::LEFT].motor.rpmMax / 2;
+  wheel[Wheel::RIGHT].motor.rpmSet = wheel[Wheel::RIGHT].motor.rpmMax / 2;
+}
+
+void Wheels::rollSlow(bool dir)
+{
+  if (dir == LEFT)
+  {
+    rollSlowLeft();
+  }
+  else
+  {
+    rollSlowRight();
+  }
 }

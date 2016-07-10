@@ -40,6 +40,11 @@ void Bumpers::clearHit(void)
   bumper[RIGHT].clearHit();
 }
 
+bool Bumpers::isAnyHit(void)
+{
+  return bumper[LEFT].isHit() || bumper[RIGHT].isHit();
+}
+
 bool Bumpers::isTimeToRun(void)
 {
   unsigned long curMillis = millis();

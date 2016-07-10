@@ -13,7 +13,7 @@
 class Button
 {
   public:
-    bool used { false };
+    bool used { true };
     unsigned long nextTime {};
     unsigned long nextTimeCheck {};
 

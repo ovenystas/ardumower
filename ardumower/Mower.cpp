@@ -418,7 +418,7 @@ void Mower::setActuator(char type, int value)
       {
         Console.println("RTC comm error!");
         addErrorCounter(ERR_RTC_COMM);
-        setNextState(STATE_ERROR, 0);
+        setNextState(STATE_ERROR);
       }
       break;
 

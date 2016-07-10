@@ -57,6 +57,7 @@ class Bumpers
     Bumper bumper[END];
 
     void check(void);
+    bool isAnyHit(void);
     void clearHit(void);
     bool isTimeToRun(void);
 
