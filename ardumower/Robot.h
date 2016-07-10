@@ -54,36 +54,8 @@
 // code version
 #define VERSION "0.1"
 
-// sensors
-enum
-{
-  SEN_PERIM_LEFT,        // 0..MAX_PERIMETER
-  SEN_PERIM_RIGHT,       // 0..MAX_PERIMETER
-  SEN_PERIM_LEFT_EXTRA,  // 0..MAX_PERIMETER
-  SEN_PERIM_RIGHT_EXTRA, // 0..MAX_PERIMETER
-  SEN_BAT_VOLTAGE,       // Volt * 100
-  SEN_CHG_CURRENT,       // Ampere * 100
-  SEN_CHG_VOLTAGE,       // Volt * 100
-  SEN_IMU,
-  SEN_MOTOR_MOW_RPM,
-  SEN_RTC,
-};
-
-// actuators
-enum
-{
-  ACT_BUZZER,
-  ACT_LED,
-  ACT_USER_SW1,
-  ACT_USER_SW2,
-  ACT_USER_SW3,
-  ACT_RTC,
-  ACT_CHGRELAY,
-  ACT_BATTERY_SW,
-};
-
 // error types
-enum errorE
+typedef enum errorE
 {
   ERR_MOTOR_LEFT,
   ERR_MOTOR_RIGHT,
@@ -107,7 +79,7 @@ enum errorE
   ERR_STUCK,
   // <---- add new error types here (NOTE: increase MAGIC to avoid corrupt EEPROM error data!)
   ERR_ENUM_COUNT,
-};
+} errorE;
 
 // finite state machine states
 enum
@@ -169,11 +141,36 @@ enum consoleE
 class Robot
 {
   public:
+    // sensors
+    typedef enum sensorE
+    {
+      SEN_PERIM_LEFT,        // 0..MAX_PERIMETER
+      SEN_PERIM_RIGHT,       // 0..MAX_PERIMETER
+      SEN_BAT_VOLTAGE,       // Volt * 100
+      SEN_CHG_CURRENT,       // Ampere * 100
+      SEN_CHG_VOLTAGE,       // Volt * 100
+      SEN_IMU,
+      SEN_RTC,
+    } sensorE;
+
+    // actuators
+    typedef enum actuatorE
+    {
+      ACT_BUZZER,
+      ACT_LED,
+      ACT_USER_SW1,
+      ACT_USER_SW2,
+      ACT_USER_SW3,
+      ACT_RTC,
+      ACT_CHGRELAY,
+      ACT_BATTERY_SW,
+    } actuatorE;
+
     String name;
     bool developerActive;
 
     // --------- state machine --------------------------
-    char* stateName();
+    const char* stateName();
 
     // --------- timer ----------------------------------
     ttimer_t timer[MAX_TIMERS];
@@ -182,7 +179,7 @@ class Robot
 
     // -------- mow pattern -----------------------------
     byte mowPatternCurr { MOW_RANDOM };
-    char* mowPatternName();
+    const char* mowPatternName();
 
     // -------- gps state -------------------------------
     Gps gps;
@@ -314,14 +311,10 @@ class Robot
     virtual void processGPSData();
 
     // read hardware sensor (HAL)
-    virtual int readSensor(char type)
-    {
-    }
+    virtual int readSensor(Robot::sensorE type) { return 0; }
 
     // set hardware actuator (HAL)
-    virtual void setActuator(char type, int value)
-    {
-    }
+    virtual void setActuator(Robot::actuatorE type, int value) { }
 
     // settings
     virtual void deleteUserSettings();
@@ -329,7 +322,7 @@ class Robot
     virtual void deleteRobotStats();
 
     // other
-    virtual void beep(const int numberOfBeeps, const boolean shortbeep);
+    virtual void beep(const int numberOfBeeps, const boolean shortbeep = false);
     virtual void printInfo(Stream &s);
     virtual void setUserSwitches();
     virtual void addErrorCounter(const enum errorE errType);

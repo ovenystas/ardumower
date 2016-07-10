@@ -38,7 +38,7 @@
 
 // ---------- date time --------------------------------------
 
-extern char *dayOfWeek[];
+extern const char *dayOfWeek[];
 
 typedef struct timehm_t
 {

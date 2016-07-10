@@ -41,8 +41,8 @@ class Mower: public Robot
     Mower();
     virtual void setup(void);
     virtual void configureBluetooth(boolean quick);
-    virtual int readSensor(char type);
-    virtual void setActuator(char type, int value);
+    virtual int readSensor(Robot::sensorE type);
+    virtual void setActuator(Robot::actuatorE type, int value);
 };
 
 extern Mower robot;

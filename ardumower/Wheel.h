@@ -31,7 +31,7 @@ class Wheels
     int rollTimeMax {};         // max. roll time (ms)
     int rollTimeMin {};         // min. roll time (ms)
     int reverseTime {};         // max. reverse time (ms)
-    long forwardTimeMax {};     // max. forward time (ms) / timeout
+    unsigned long forwardTimeMax {};     // max. forward time (ms) / timeout
     float biDirSpeedRatio1 {};  // bidir mow pattern speed ratio 1
     float biDirSpeedRatio2 {};  // bidir mow pattern speed ratio 2
     Wheel::wheelE rotateDir {Wheel::LEFT};

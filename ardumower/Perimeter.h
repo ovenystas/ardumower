@@ -86,8 +86,8 @@ class Perimeter
     void printInfo(Stream &s);
 
     Pid pid;             // perimeter PID controller
-    int16_t timedOutIfBelowSmag { 300 };
-    int16_t timeOutSecIfNotInside { 8 };
+    uint16_t timedOutIfBelowSmag { 300 };
+    uint16_t timeOutSecIfNotInside { 8 };
     // use differential perimeter signal as input for the matched filter?
     bool useDifferentialPerimeterSignal { true };
     // swap coil polarity?

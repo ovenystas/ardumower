@@ -31,14 +31,20 @@
 #define ADDR_ERR_COUNTERS 400
 #define ADDR_ROBOT_STATS 800
 
-char* stateNames[] = { "OFF ", "RC  ", "FORW", "ROLL", "REV ", "CIRC", "ERR ",
-                       "PFND", "PTRK", "PROL", "PREV", "STAT", "CHARG", "STCHK",
-                       "STREV", "STROL", "STFOR", "MANU", "ROLW", "POUTFOR",
-                       "POUTREV", "POUTROLL" };
+const char* stateNames[] =
+{
+  "OFF ", "RC  ", "FORW", "ROLL", "REV ", "CIRC", "ERR ",
+  "PFND", "PTRK", "PROL", "PREV", "STAT", "CHARG", "STCHK",
+  "STREV", "STROL", "STFOR", "MANU", "ROLW", "POUTFOR",
+  "POUTREV", "POUTROLL"
+};
 
-char *mowPatternNames[] = { "RANDOM", "LANE", "BIDIR" };
+const char *mowPatternNames[] = { "RANDOM", "LANE", "BIDIR" };
 
-char* consoleModeNames[] = { "sen_counters", "sen_values", "perimeter", "imu" };
+const char* consoleModeNames[] =
+{
+    "sen_counters", "sen_values", "perimeter", "imu"
+};
 
 Robot::Robot()
 {
@@ -101,12 +107,12 @@ Robot::Robot()
   statsBatteryChargingCounter = 0;
 }
 
-char* Robot::stateName()
+const char* Robot::stateName()
 {
   return stateNames[stateCurr];
 }
 
-char *Robot::mowPatternName()
+const char *Robot::mowPatternName()
 {
   return mowPatternNames[mowPatternCurr];
 }
@@ -965,7 +971,6 @@ void Robot::motorControlPerimeter()
 // PID controller: correct direction during normal driving (requires IMU)
 void Robot::motorControlImuDir()
 {
-  unsigned long curMillis = millis();
   if (!imu.isTimeToControl())
   {
     return;
@@ -1111,8 +1116,6 @@ void Robot::motorControl()
     return;
   }
 
-  static unsigned long nextMotorControlOutputTime = 0;
-
   int speed[2];
   if (odometer.use)
   {
@@ -1218,7 +1221,7 @@ void Robot::resetIdleTime()
   idleTimeSec = 0;
 }
 
-void Robot::beep(const int numberOfBeeps, const boolean shortbeep = false)
+void Robot::beep(const int numberOfBeeps, const boolean shortbeep)
 {
   int delayTime1;
   int delayTime2;
@@ -1873,7 +1876,6 @@ void Robot::readSensors()
     unsigned long timeSinceLast;
     if (cutter.motor.isTimeForRpmMeas(&timeSinceLast))
     {
-      cutter.motor.setRpmMeas(readSensor(SEN_MOTOR_MOW_RPM));
       if ((cutter.motor.getRpmMeas() == 0) && (cutter.motor.getRpmCounter() != 0))
       {
         // rpm may be updated via interrupt
@@ -2112,7 +2114,6 @@ void Robot::setDefaults()
 void Robot::setNextState(byte stateNew, bool dir)
 {
   unsigned long curMillis = millis();
-  unsigned long stateTime = curMillis - stateStartTime;
   if (stateNew == stateCurr)
   {
     return;
@@ -2701,11 +2702,11 @@ void Robot::checkPerimeterBoundary()
   {
     if (wheels.rotateDir == Wheel::LEFT)
     {
-      wheels.rotateDir == Wheel::RIGHT;
+      wheels.rotateDir = Wheel::RIGHT;
     }
     else
     {
-      wheels.rotateDir == Wheel::LEFT;
+      wheels.rotateDir = Wheel::LEFT;
     }
   }
 

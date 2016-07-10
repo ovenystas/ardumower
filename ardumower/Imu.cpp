@@ -234,7 +234,7 @@ void Imu::calibrateGyro(void)
     int16_t noise = 0;
     memset(&offset, 0.0, sizeof(offset));
 
-    for (int i = 0; i < numberOfSamples; i++)
+    for (unsigned int i = 0; i < numberOfSamples; i++)
     {
       readGyroscope();
 
@@ -574,7 +574,7 @@ boolean Imu::calibrateAccelerometerNextAxis(void)
 
   // Get sample values from accelerometer
   point_int_t acc = { 0, 0, 0 };
-  for (int i = 0; i < numberOfSamples; i++)
+  for (unsigned int i = 0; i < numberOfSamples; i++)
   {
     readAccelerometer();
 

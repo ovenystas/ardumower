@@ -34,10 +34,10 @@
 //#define LANG_GERMAN
 
 #ifdef LANG_SWEDISH
-  char *dayOfWeek[] = { "Sön", "Mån", "Tis", "Ons", "Tor", "Fre", "Lör" };
+  const char *dayOfWeek[] = { "Sön", "Mån", "Tis", "Ons", "Tor", "Fre", "Lör" };
 #endif
 #ifdef LANG_ENGLISH
-  char *dayOfWeek[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+  const char *dayOfWeek[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 #endif
 
 // ---- print helpers ----------------------------------------------------------
@@ -295,7 +295,7 @@ boolean readDS1307(datetime_t &dt)
       (buf[3] >> 3 != 0) ||
       (buf[4] >> 6 != 0) ||
       (buf[5] >> 5 != 0) ||
-      (buf[7] & B01101100 != 0))
+      ((buf[7] & B01101100) != 0))
   {
     Console.println("DS1307 data1 error");
     //addErrorCounter(ERR_RTC_DATA);

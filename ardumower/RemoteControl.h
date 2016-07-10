@@ -96,6 +96,7 @@ class RemoteControl
                     const float minvalue = 0);
     void processSlider(const String result, float &value, const double scale);
     void processSlider(const String result, long &value, const double scale);
+    void processSlider(const String result, unsigned long &value, const double scale);
     void processSlider(const String result, int &value, const double scale);
     void processSlider(const String result, unsigned int &value, const double scale);
     void processSlider(const String result, byte &value, const double scale);

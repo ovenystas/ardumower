@@ -327,7 +327,7 @@ void Mower::setup()
   Robot::setup();
 }
 
-int Mower::readSensor(char type)
+int Mower::readSensor(Robot::sensorE type)
 {
   switch (type)
   {
@@ -336,9 +336,9 @@ int Mower::readSensor(char type)
       return perimeters.perimeter[Perimeter::LEFT].calcMagnitude();
       break;
 
-      //case SEN_PERIM_RIGHT:
+    case SEN_PERIM_RIGHT:
       //  return perimeters.perimeter[Perimeter::RIGHT].calcMagnitude();
-      //  break;
+      break;
 
 // battery----------------------------------------------------------------------
     case SEN_BAT_VOLTAGE:
@@ -363,11 +363,11 @@ int Mower::readSensor(char type)
     //  break;
 
 // imu--------------------------------------------------------------------------
-    //case SEN_IMU:
+    case SEN_IMU:
     //  imuYaw = imu.ypr.yaw;
     //  imuPitch = imu.ypr.pitch;
     //  imuRoll = imu.ypr.roll;
-    //  break;
+      break;
 
 // rtc--------------------------------------------------------------------------
     case SEN_RTC:
@@ -382,7 +382,7 @@ int Mower::readSensor(char type)
   return 0;
 }
 
-void Mower::setActuator(char type, int value)
+void Mower::setActuator(Robot::actuatorE type, int value)
 {
   switch (type)
   {

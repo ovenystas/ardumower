@@ -281,7 +281,7 @@ boolean BluetoothConfig::detectBaudrate(boolean quickBaudScan)
         btRate = 1200;
         break;
     }
-    for (int j = 0; j < sizeof btTestConfig; j++)
+    for (unsigned int j = 0; j < sizeof(btTestConfig); j++)
     {
       btConfig = btTestConfig[j];
       Console.print(F("trying baudrate "));

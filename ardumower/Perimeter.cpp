@@ -86,7 +86,7 @@ void Perimeter::setup(const uint8_t idxPin)
   }
 
   // Use max. 255 samples and multiple of signal size
-  int adcSampleCount { sizeof(sigcode_norm) * subSample };
+  unsigned int adcSampleCount { sizeof(sigcode_norm) * subSample };
   uint8_t samplecount = (255 / adcSampleCount) * adcSampleCount;
 
   ADCMan.setCapture(idxPin, samplecount, true);
@@ -202,7 +202,7 @@ void Perimeter::matchedFilter(void)
 
 boolean Perimeter::signalTimedOut(void)
 {
-  if ((int16_t)smoothMag < timedOutIfBelowSmag)
+  if ((uint16_t)smoothMag < timedOutIfBelowSmag)
   {
     return true;
   }

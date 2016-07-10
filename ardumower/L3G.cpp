@@ -110,6 +110,9 @@ bool L3G::init(deviceTypeE device, sa0StateE sa0)
     case DEVICE_4200D:
       address = (sa0 == SA0_HIGH) ? L3G4200D_SA0_HIGH_ADDRESS : L3G4200D_SA0_LOW_ADDRESS;
       break;
+
+    case DEVICE_AUTO:
+      return false;
   }
 
   return true;

@@ -224,6 +224,14 @@ void RemoteControl::processSlider(const String result, long &value,
   value = v;
 }
 
+void RemoteControl::processSlider(const String result, unsigned long &value,
+                                  const double scale)
+{
+  float v;
+  processSlider(result, v, scale);
+  value = v;
+}
+
 void RemoteControl::processSlider(const String result, int &value,
                                   const double scale)
 {
@@ -1387,7 +1395,7 @@ void RemoteControl::processDateTimeMenu(const String pfodCmd)
   sendDateTimeMenu(true);
   Console.print(F("setting RTC datetime: "));
   Console.println(date2str(robot_p->datetime.date));
-  robot_p->setActuator(ACT_RTC, 0);
+  robot_p->setActuator(Robot::ACT_RTC, 0);
 }
 
 void RemoteControl::sendTimerDetailMenu(const int timerIdx,
@@ -1405,8 +1413,6 @@ void RemoteControl::sendTimerDetailMenu(const int timerIdx,
   Bluetooth.print(timerIdx);
   Bluetooth.print("~Use ");
   sendYesNo(robot_p->timer[timerIdx].active);
-  int startm = time2minutes(robot_p->timer[timerIdx].startTime);
-  int stopm = time2minutes(robot_p->timer[timerIdx].stopTime);
   String sidx = String(timerIdx);
   sendSlider("p1" + sidx, F("Start hour "),
              robot_p->timer[timerIdx].startTime.hour, "", 1, 23, 0);

@@ -40,19 +40,25 @@
 
  */
 
-#include <Arduino.h>
+// Do not remove the include below
+#include "ArduMower.h"
+
 #include <Wire.h>
 #include <EEPROM.h>
 #include "Config.h"
 
 // requires: Arduino Mega
 
+//The setup function is called once at startup of the sketch
 void setup()
 {
+  // Add your initialization code here
   robot.setup();
 }
 
+// The loop function is called in an endless loop
 void loop()
 {
+  //Add your repeated code here
   robot.loop();
 }
