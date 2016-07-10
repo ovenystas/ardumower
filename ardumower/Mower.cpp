@@ -231,8 +231,10 @@ void Mower::setup()
   cutter.motor.pid.setup(0.005, 0.01, 0.01, -127, 127, 127);  // Kp, Ki, Kd
 
   // lawn sensor
-  lawnSensor.setup(PIN_LAWN_FRONT_SEND, PIN_LAWN_FRONT_RECV,
-                   PIN_LAWN_BACK_SEND, PIN_LAWN_BACK_RECV);
+  lawnSensor.setup(PIN_LAWN_FRONT_SEND,
+                   PIN_LAWN_FRONT_RECV,
+                   PIN_LAWN_BACK_SEND,
+                   PIN_LAWN_BACK_RECV);
 
   // perimeter
   perimeters.perimeter[Perimeter::LEFT].setup(PIN_PERIMETER_LEFT);
@@ -331,15 +333,6 @@ int Mower::readSensor(Robot::sensorE type)
 {
   switch (type)
   {
-// perimeter--------------------------------------------------------------------
-    case SEN_PERIM_LEFT:
-      return perimeters.perimeter[Perimeter::LEFT].calcMagnitude();
-      break;
-
-    case SEN_PERIM_RIGHT:
-      //  return perimeters.perimeter[Perimeter::RIGHT].calcMagnitude();
-      break;
-
 // battery----------------------------------------------------------------------
     case SEN_BAT_VOLTAGE:
       ADCMan.read(PIN_VOLTAGE_MEASUREMENT);
@@ -352,21 +345,6 @@ int Mower::readSensor(Robot::sensorE type)
 
     case SEN_CHG_CURRENT:
       return ADCMan.read(PIN_CHARGE_CURRENT);
-      break;
-
-// lawn detector----------------------------------------------------------------
-    //case SEN_LAWN_FRONT:
-    //  return (measureLawnCapacity(pinLawnFrontSend, pinLawnFrontRecv));
-    //  break;
-    //case SEN_LAWN_BACK:
-    //  return (measureLawnCapacity(PIN_LAWN_BACK_SEND, PIN_LAWN_BACK_RECV));
-    //  break;
-
-// imu--------------------------------------------------------------------------
-    case SEN_IMU:
-    //  imuYaw = imu.ypr.yaw;
-    //  imuPitch = imu.ypr.pitch;
-    //  imuRoll = imu.ypr.roll;
       break;
 
 // rtc--------------------------------------------------------------------------
@@ -387,13 +365,13 @@ void Mower::setActuator(Robot::actuatorE type, int value)
   switch (type)
   {
     case ACT_BUZZER:
-      if (value == 0)
+      if (value)
       {
-        noTone(PIN_BUZZER);
+        tone(PIN_BUZZER, value);
       }
       else
       {
-        tone(PIN_BUZZER, value);
+        noTone(PIN_BUZZER);
       }
       break;
 
@@ -426,10 +404,6 @@ void Mower::setActuator(Robot::actuatorE type, int value)
       digitalWrite(PIN_CHARGE_RELAY, value);
       break;
 
-      //case ACT_CHGRELAY:
-    //  digitalWrite(pinChargeRelay, !value);
-    //  break;
-
     case ACT_BATTERY_SW:
       digitalWrite(PIN_BATTERY_SWITCH, value);
       break;
@@ -443,4 +417,3 @@ void Mower::configureBluetooth(boolean quick)
 }
 
 #endif
-

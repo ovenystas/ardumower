@@ -15,6 +15,7 @@
 class MotorDrv: public Motor
 {
   public:
+    virtual ~MotorDrv() {};
     virtual void setup(void) = 0;
     virtual void setSpeed(void) = 0;
     virtual void setSpeed(const int16_t speed) = 0;

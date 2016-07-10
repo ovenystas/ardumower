@@ -144,12 +144,9 @@ class Robot
     // sensors
     typedef enum sensorE
     {
-      SEN_PERIM_LEFT,        // 0..MAX_PERIMETER
-      SEN_PERIM_RIGHT,       // 0..MAX_PERIMETER
       SEN_BAT_VOLTAGE,       // Volt * 100
       SEN_CHG_CURRENT,       // Ampere * 100
       SEN_CHG_VOLTAGE,       // Volt * 100
-      SEN_IMU,
       SEN_RTC,
     } sensorE;
 
@@ -175,7 +172,7 @@ class Robot
     // --------- timer ----------------------------------
     ttimer_t timer[MAX_TIMERS];
     datetime_t datetime;
-    boolean timerUse;       // use timer?
+    boolean timerUse { false }; // use timer?
 
     // -------- mow pattern -----------------------------
     byte mowPatternCurr { MOW_RANDOM };
@@ -214,7 +211,7 @@ class Robot
 
     // ------- perimeter state --------------------------
     Perimeters perimeters;
-    boolean perimeterUse;      // use perimeter?
+    boolean perimeterUse { false }; // use perimeter?
     int perimeterOutRollTimeMax;
     int perimeterOutRollTimeMin;
     int perimeterOutRevTime;
@@ -242,14 +239,14 @@ class Robot
     Button button;
 
     // ----- user-defined switch ---------------------------
-    boolean userSwitch1;       // user-defined switch 1 (default value)
-    boolean userSwitch2;       // user-defined switch 2 (default value)
-    boolean userSwitch3;       // user-defined switch 3 (default value)
+    boolean userSwitch1 { false }; // user-defined switch 1 (default value)
+    boolean userSwitch2 { false }; // user-defined switch 2 (default value)
+    boolean userSwitch3 { false }; // user-defined switch 3 (default value)
 
     // --------- charging -------------------------------
     boolean batMonitor;              // monitor battery and charge voltage?
     float batGoHomeIfBelow;     // drive home voltage (Volt)
-    float batSwitchOffIfBelow;  // switch off if below voltage (Volt)
+    float batSwitchOffIfBelow {};  // switch off if below voltage (Volt)
     int batSwitchOffIfIdle;      // switch off battery if idle for minutes
     float batFactor;     // battery conversion factor
     float batChgFactor;     // battery conversion factor
@@ -264,7 +261,7 @@ class Robot
     byte chgChange;       // messwertumkehr von - nach +         1oder 0
     byte chgSelection;       // Senor Auswahl
     int chgNull;        // Nulldurchgang Ladestromsensor
-    int stationRevTime;    // charge station reverse time (ms)
+    int stationRevTime {};    // charge station reverse time (ms)
     int stationRollTime;    // charge station roll time (ms)
     int stationForwTime;    // charge station forward time (ms)
     int stationCheckTime;    // charge station reverse check time (ms)
@@ -279,7 +276,7 @@ class Robot
 
     // ------------robot stats---------------------------
     boolean statsOverride;
-    unsigned long statsMowTimeMinutesTotal;
+    unsigned long statsMowTimeMinutesTotal {};
 
     // --------------------------------------------------
     Robot();
@@ -305,7 +302,7 @@ class Robot
 
     // motor
     virtual void setMotorPWMs(const int pwmLeft, const int pwmRight,
-                              const boolean useAccel);
+                              const boolean useAccel = false);
     virtual void setMotorMowPWM(const int pwm, const boolean useAccel);
 
     // GPS

@@ -22,7 +22,7 @@ class Button
     bool isTimeToCheck();
     bool isTimeToRun();
 
-    uint8_t getCounter(void) const
+    const uint8_t getCounter(void) const
     {
       return counter;
     }
