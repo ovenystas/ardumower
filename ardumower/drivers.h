@@ -75,7 +75,7 @@ typedef struct ttimer_t
 // ---- other ----------------------------------
 
 // returns sign of variable (-1, 0, +1)
-template<typename T> int sign(T val)
+template<typename T> int8_t sign(T val)
 {
   return (T(0) < val) - (val < T(0));
 }

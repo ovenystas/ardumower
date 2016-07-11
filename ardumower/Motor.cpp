@@ -11,6 +11,13 @@
 #include "drivers.h"
 #include "Filter.h"
 
+void Motor::updateRpms(void)
+{
+  rpmFast = (int)(((float)rpmMax / RPM_DIVISOR_FAST) + 0.5);
+  rpmHalf = (int)(((float)rpmMax / RPM_DIVISOR_HALF) + 0.5);
+  rpmSlow = (int)(((float)rpmMax / RPM_DIVISOR_SLOW) + 0.5);
+}
+
 void Motor::config(const float acceleration, const int pwmMax, const int powerMax,
                    const bool regulate, const int rpmMax, const int rpmSet)
 {
@@ -19,6 +26,7 @@ void Motor::config(const float acceleration, const int pwmMax, const int powerMa
   this->powerMax = powerMax;
   this->regulate = regulate;
   this->rpmMax = rpmMax;
+  updateRpms();
   this->rpmSet = rpmSet;
 }
 
@@ -71,3 +79,4 @@ bool Motor::isTimeTo(uint32_t* nextTime_p, const uint16_t timeBetween)
   }
   return false;
 }
+

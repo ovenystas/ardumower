@@ -41,6 +41,18 @@ i Toggle imu.use
 1 Automode
 
 
+Button
+------
+Beeps Mode
+  1   Start normal with random moving / OFF
+  2   Start normal with bidir moving
+  3   Remote control
+  4   Start normal without perimeter
+  5   Drive home
+  6   Track perimeter
+  7   Start normal with lanes mowing
+
+
 IMU
 ---
 Don't have

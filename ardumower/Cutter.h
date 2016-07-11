@@ -34,6 +34,8 @@ class Cutter
     void disable()
     {
       enabled = false;
+      motor.setRpmSet(0);
+      motor.setPwmSet(0);
     }
 
     void toggleEnabled()

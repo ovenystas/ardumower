@@ -30,6 +30,7 @@ class MotorDrv: public Motor
 
     int16_t getAverageCurrent(void);   // Get average motor current in mA
     void calcPower(float batV);
+    void control(void);
 
     void setFilterAlpha(double alpha)
     {

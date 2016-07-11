@@ -438,9 +438,9 @@ void RemoteControl::sendMotorMenu(const boolean update)
              robot_p->wheels.wheel[Wheel::RIGHT].motor.getAverageCurrent(),
              "", 1, 1000, 0);
   Bluetooth.print(F("|a05~Speed l, r"));
-  Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.pwmCur);
+  Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.getPwmCur());
   Bluetooth.print(", ");
-  Bluetooth.print(robot_p->wheels.wheel[Wheel::RIGHT].motor.pwmCur);
+  Bluetooth.print(robot_p->wheels.wheel[Wheel::RIGHT].motor.getPwmCur());
   sendSlider("a06", F("Speed max in rpm"),
              robot_p->wheels.wheel[Wheel::LEFT].motor.rpmMax, "", 1, 100);
   sendSlider("a15", F("Speed max in pwm"),
@@ -526,7 +526,9 @@ void RemoteControl::processMotorMenu(const String pfodCmd)
   else if (pfodCmd.startsWith("a06"))
   {
     processSlider(pfodCmd, robot_p->wheels.wheel[Wheel::LEFT].motor.rpmMax, 1);
+    robot_p->wheels.wheel[Wheel::LEFT].motor.updateRpms();
     processSlider(pfodCmd, robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmMax, 1);
+    robot_p->wheels.wheel[Wheel::RIGHT].motor.updateRpms();
   }
   else if (pfodCmd.startsWith("a15"))
   {
@@ -633,7 +635,7 @@ void RemoteControl::sendMowMenu(const boolean update)
   sendSlider("o03", F("calibrate mow motor "),
              robot_p->cutter.motor.getAverageCurrent(), "", 1, 3000, 0);
   Bluetooth.print(F("|o04~Speed "));
-  Bluetooth.print(robot_p->cutter.motor.pwmCur);
+  Bluetooth.print(robot_p->cutter.motor.getPwmCur());
   sendSlider("o05", F("Speed max"), robot_p->cutter.motor.pwmMax, "", 1, 255);
   if (robot_p->developerActive)
   {
@@ -1648,7 +1650,7 @@ void RemoteControl::sendCommandMenu(const boolean update)
   Bluetooth.print(F("|rh~Home|rk~Track|rs~State is "));
   Bluetooth.print(robot_p->stateName());
   Bluetooth.print(F("|rr~Auto rotate is "));
-  Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.pwmCur);
+  Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.getPwmCur());
   Bluetooth.print(F("|r1~User switch 1 is "));
   sendOnOff(robot_p->userSwitch1);
   Bluetooth.print(F("|r2~User switch 2 is "));
@@ -1839,7 +1841,7 @@ void RemoteControl::processManualMenu(const String pfodCmd)
         sign * robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmSet)
     {
       robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet =
-          sign * robot_p->wheels.wheel[Wheel::LEFT].motor.rpmMax / 2;
+          sign * robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSlow;
     }
     else
     {
@@ -1863,7 +1865,7 @@ void RemoteControl::processManualMenu(const String pfodCmd)
         sign * robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet)
     {
       robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmSet =
-          sign * robot_p->wheels.wheel[Wheel::LEFT].motor.rpmMax / 2;
+          sign * robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSlow;
     }
     else
     {
@@ -2266,9 +2268,9 @@ void RemoteControl::run()
       //      Bluetooth.print(robot->motorRightSpeedRpmSet);
       Bluetooth.print(robot_p->wheels.wheel[Wheel::RIGHT].motor.pid.getSetpoint());
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.pwmCur);
+      Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.getPwmCur());
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->wheels.wheel[Wheel::RIGHT].motor.pwmCur);
+      Bluetooth.print(robot_p->wheels.wheel[Wheel::RIGHT].motor.getPwmCur());
       Bluetooth.print(",");
       Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.pid.getEold());
       Bluetooth.print(",");

@@ -221,6 +221,10 @@ void Robot::loadSaveUserSettings(const boolean readflag)
   eereadwrite(readflag, addr, developerActive);
   eereadwrite(readflag, addr, wheels.wheel[Wheel::LEFT].motor.acceleration);
   eereadwrite(readflag, addr, wheels.wheel[Wheel::LEFT].motor.rpmMax);
+  if (readflag)
+  {
+    wheels.wheel[Wheel::LEFT].motor.updateRpms();
+  }
   eereadwrite(readflag, addr, wheels.wheel[Wheel::LEFT].motor.pwmMax);
   eereadwrite(readflag, addr, wheels.wheel[Wheel::LEFT].motor.powerMax);
   eereadwrite(readflag, addr, wheels.wheel[Wheel::RIGHT].motor.scale);
@@ -746,10 +750,11 @@ void Robot::setRemotePPMState(const unsigned long timeMicros,
 
 //motor is LEFT or RIGHT (0 or 1)
 void Robot::setMotorPWM(int pwm,
-                        const unsigned long samplingTime,
                         const uint8_t motor,
                         const boolean useAccel)
 {
+  const unsigned long samplingTime = wheels.wheel[motor].motor.getSamplingTime();
+
   if (useAccel)
   {
     // http://phrogz.net/js/framerate-independent-low-pass-filter.html
@@ -771,7 +776,7 @@ void Robot::setMotorPWM(int pwm,
   if (odometer.use)
   {
     wheels.wheel[motor].motor.pwmCur = pwm;
-    if (abs(odometer.encoder[motor].getWheelRpmCurr()) < 1)
+    if (abs(odometer.encoder[motor].getWheelRpmCurr()) == 0)
     {
       wheels.wheel[motor].motor.setZeroTimeout(
           max(0, wheels.wheel[motor].motor.getZeroTimeout() - samplingTime));
@@ -805,39 +810,13 @@ void Robot::setMotorPWM(int pwm,
 void Robot::setMotorPWMs(const int pwmLeft, int const pwmRight,
                          const boolean useAccel)
 {
-  unsigned long samplingTime;
 //  Console.print("setPwm: ");
 //  Console.print(pwmLeft);
 //  Console.print(" ");
 //  Console.println(pwmRight);
 
-  samplingTime = wheels.wheel[Wheel::LEFT].motor.getSamplingTime();
-  setMotorPWM(pwmLeft, samplingTime, LEFT, useAccel);
-
-  samplingTime = wheels.wheel[Wheel::RIGHT].motor.getSamplingTime();
-  setMotorPWM(pwmRight, samplingTime, RIGHT, useAccel);
-}
-
-// sets mower motor actuator
-// - ensures that the motor is not switched to 100% too fast (cutter.motor.acceleration)
-// - ensures that the motor voltage is not higher than motorMowSpeedMaxPwm
-void Robot::setMotorMowPWM(const int pwm, const boolean useAccel)
-{
-  unsigned long samplingTime = cutter.motor.getSamplingTime();
-
-  // we need to ignore acceleration for PID control, and we can ignore if speed is lowered (e.g. motor is shut down)
-  if (!useAccel || pwm < cutter.motor.pwmCur)
-  {
-    cutter.motor.pwmCur = min(cutter.motor.pwmMax, max(0, pwm));
-  }
-  else
-  {
-    // http://phrogz.net/js/framerate-independent-low-pass-filter.html
-    // smoothed += elapsedTime * ( newValue - smoothed ) / smoothing;
-    int addPwm = samplingTime * (pwm - cutter.motor.pwmCur) / cutter.motor.acceleration;
-    cutter.motor.pwmCur = min(cutter.motor.pwmMax, max(0, cutter.motor.pwmCur + addPwm));
-  }
-  cutter.motor.setSpeed();
+  setMotorPWM(pwmLeft, LEFT, useAccel);
+  setMotorPWM(pwmRight, RIGHT, useAccel);
 }
 
 // PID controller: roll robot to heading (requires IMU)
@@ -855,7 +834,7 @@ void Robot::motorControlImuRoll()
   float imuPidX = distancePI(imu.getYaw(), imuRollHeading) / PI * 180.0;
   pid_p = &imu.pid[Imu::ROLL];
   pid_p->setSetpoint(0);
-  int rpmMax80Percent = wheels.wheel[Wheel::LEFT].motor.rpmMax / 1.25;
+  int rpmMax80Percent = wheels.wheel[Wheel::LEFT].motor.rpmFast;
   pid_p->y_min = -rpmMax80Percent ; // da der Roll generell langsamer erfolgen soll
   pid_p->y_max = rpmMax80Percent;   //
   pid_p->max_output = rpmMax80Percent; //
@@ -938,19 +917,6 @@ void Robot::motorControlPerimeter()
     return;
   }
 
-  float x;
-  if (perimeterMag < 0)
-  {
-    x = -1;
-  }
-  else if (perimeterMag > 0)
-  {
-    x = 1;
-  }
-  else
-  {
-    x = 0;
-  }
   Pid* pid_p = &perimeters.perimeter[Perimeter::LEFT].pid;
   pid_p->setSetpoint(0);
   int pwmMax;
@@ -958,13 +924,13 @@ void Robot::motorControlPerimeter()
   pid_p->y_min = -pwmMax;
   pid_p->y_max = pwmMax;
   pid_p->max_output = pwmMax;
-  float y = pid_p->compute(x);
+  float y = pid_p->compute(sign(perimeterMag));
 
   pwmMax = wheels.wheel[Wheel::LEFT].motor.pwmMax;
-  int leftSpeed = max(-pwmMax, min(pwmMax, pwmMax / 2 - y));
+  int leftSpeed = constrain(pwmMax / 2 - y, -pwmMax, pwmMax);
 
   pwmMax = wheels.wheel[Wheel::RIGHT].motor.pwmMax;
-  int rightSpeed = max(-pwmMax, min(pwmMax, pwmMax / 2 + y));
+  int rightSpeed = constrain(pwmMax / 2 + y, -pwmMax, pwmMax);
 
   setMotorPWMs(leftSpeed, rightSpeed);
 }
@@ -1127,17 +1093,17 @@ void Robot::motorControl()
       // um auch an Steigungen höchstes Drehmoment für die Solldrehzahl zu gewährleisten
       if (millis() < stateStartTime + wheels.wheel[i].motor.zeroSettleTime)
       {
-        pid_p->setSetpoint(0); // get zero speed first after state change
+        pid_p->setSetpoint(0); // set zero speed first after state change
       }
-      int pwmMax = wheels.wheel[i].motor.pwmMax;
+      uint8_t pwmMax = wheels.wheel[i].motor.pwmMax;
       pid_p->y_min = -pwmMax; // Regel-MIN
       pid_p->y_max = pwmMax; // Regel-MAX
       pid_p->max_output = pwmMax; // Begrenzung
-      float x = odometer.encoder[i].getWheelRpmCurr();
-      float y = pid_p->compute(x);
-      speed[i] = max(-pwmMax, min(pwmMax, wheels.wheel[i].motor.pwmCur + y));
+      float wheelRpm = odometer.encoder[i].getWheelRpmCurr();
+      float y = pid_p->compute(wheelRpm);
+      speed[i] = constrain(wheels.wheel[i].motor.pwmCur + (int16_t)y, -pwmMax, pwmMax);
 
-      if (abs(x) < 2 && abs(pid_p->getSetpoint()) < 0.1)
+      if (abs(wheelRpm) < 2 && abs(pid_p->getSetpoint()) < 0.1)
       {
         speed[i] = 0; // ensures PWM is really zero
       }
@@ -1150,9 +1116,9 @@ void Robot::motorControl()
     {
       int pwmMax = wheels.wheel[i].motor.pwmMax;
       int rpmMax = wheels.wheel[i].motor.rpmMax;
-      speed[i] = min(pwmMax, max(-pwmMax, map(wheels.wheel[i].motor.rpmSet,
-                                              -rpmMax, rpmMax,
-                                              -pwmMax, pwmMax)));
+      int pwmNew = map(wheels.wheel[i].motor.rpmSet,
+                       -rpmMax, rpmMax, -pwmMax, pwmMax);
+      speed[i] = constrain(pwmNew, -pwmMax, pwmMax);
     }
     if (millis() < stateStartTime + wheels.wheel[Wheel::LEFT].motor.zeroSettleTime)
     {
@@ -1169,9 +1135,7 @@ void Robot::motorControl()
   }
 }
 
-// motor mow speed controller (slowly adjusts output speed to given input speed)
-// input: motorMowEnable, motorMowModulate, motorMowRpmCurr
-// output: motorMowPWMCurr
+// Cutter motor speed controller (slowly adjusts output speed to set speed)
 void Robot::motorMowControl()
 {
   if (!cutter.motor.isTimeToControl())
@@ -1179,37 +1143,12 @@ void Robot::motorMowControl()
     return;
   }
 
-  Pid* pid_p = &cutter.motor.pid;
-
   if (cutter.isEnableOverriden())
   {
     cutter.disable();
   }
 
-  if (cutter.isDisabled())
-  {
-    pid_p->setSetpoint(0);
-    setMotorMowPWM(0, false);
-  }
-  else
-  {
-    // Need speed sensor to be able to regulate speed
-    if (cutter.motor.regulate)
-    {
-      pid_p->setSetpoint(cutter.motor.rpmSet);
-      float newPwm = pid_p->compute(cutter.motor.getRpmMeas());
-
-      setMotorMowPWM(newPwm, false);
-    }
-    else
-    {
-      if (errorCounter[ERR_MOW_SENSE] == 0 && errorCounter[ERR_STUCK] == 0)
-      {
-        // no speed sensor available
-        setMotorMowPWM(cutter.motor.getPwmSet(), true);
-      }
-    }
-  }
+  cutter.motor.control();
 }
 
 void Robot::resetIdleTime()
@@ -1550,8 +1489,7 @@ void Robot::testMotors()
 
   Console.println(F("testing left motor (forward) full speed..."));
   delay(1000);
-  wheels.wheel[Wheel::LEFT].motor.pwmCur = wheels.wheel[Wheel::LEFT].motor
-      .pwmMax;
+  wheels.wheel[Wheel::LEFT].motor.pwmCur = wheels.wheel[Wheel::LEFT].motor.pwmMax;
   wheels.wheel[Wheel::RIGHT].motor.pwmCur = 0;
   setMotorPWMs(wheels.wheel[Wheel::LEFT].motor.pwmCur,
                wheels.wheel[Wheel::RIGHT].motor.pwmCur);
@@ -3146,7 +3084,7 @@ void Robot::loop()
     case STATE_REMOTE:
       // remote control mode (RC)
       //if (remoteSwitch > 50) setNextState(STATE_FORWARD, 0);
-      steer = (int)(((double)wheels.wheel[Wheel::LEFT].motor.rpmMax / 2) * (((double)remoteSteer) / 100.0));
+      steer = (int)(((double)wheels.wheel[Wheel::LEFT].motor.rpmSlow) * (((double)remoteSteer) / 100.0));
       if (remoteSpeed < 0)
       {
         steer *= -1;

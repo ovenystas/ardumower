@@ -303,7 +303,6 @@ class Robot
     // motor
     virtual void setMotorPWMs(const int pwmLeft, const int pwmRight,
                               const boolean useAccel = false);
-    virtual void setMotorMowPWM(const int pwm, const boolean useAccel);
 
     // GPS
     virtual void processGPSData();
@@ -523,8 +522,7 @@ class Robot
     unsigned long nextTimeRobotStats;
 
 
-    void setMotorPWM(int pwm, const unsigned long samplingTime,
-                     const uint8_t motor, const boolean useAccel);
+    void setMotorPWM(int pwm, const uint8_t motor, const boolean useAccel);
     void loadRobotStats();
     void saveRobotStats();
 };

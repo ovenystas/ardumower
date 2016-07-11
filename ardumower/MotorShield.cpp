@@ -28,14 +28,14 @@ void MotorShield::setup(void)
 
 void MotorShield::setSpeed(void)
 {
-  setSpeed((int)(pwmCur + 0.5));
+  setSpeed(pwmCur);
 }
 
 void MotorShield::setSpeed(const int16_t speed)
 {
   int16_t tmpSpeed = swapDir ? -speed : speed;
   digitalWrite(pinDir[channel], tmpSpeed < 0);
-  analogWrite(pinPwm[channel], abs(tmpSpeed));
+  analogWrite(pinPwm[channel], constrain(abs(tmpSpeed), 0, pwmMax));
 //  Console.print("MotorShield::setSpeed ch=");
 //  Console.print(channel);
 //  Console.print(" pinDir=");

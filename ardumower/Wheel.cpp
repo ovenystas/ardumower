@@ -50,8 +50,8 @@ void Wheels::forwardFullSpeed(void)
 
 void Wheels::forwardHalfSpeed(void)
 {
-  wheel[Wheel::LEFT].motor.rpmSet = wheel[Wheel::LEFT].motor.rpmMax / 1.5;
-  wheel[Wheel::RIGHT].motor.rpmSet = wheel[Wheel::RIGHT].motor.rpmMax / 1.5;
+  wheel[Wheel::LEFT].motor.rpmSet = wheel[Wheel::LEFT].motor.rpmHalf;
+  wheel[Wheel::RIGHT].motor.rpmSet = wheel[Wheel::RIGHT].motor.rpmHalf;
 }
 
 void Wheels::reverseFullSpeed(void)
@@ -62,14 +62,14 @@ void Wheels::reverseFullSpeed(void)
 
 void Wheels::reverseFastSpeed(void)
 {
-  wheel[Wheel::LEFT].motor.rpmSet = -wheel[Wheel::LEFT].motor.rpmMax / 1.25;
-  wheel[Wheel::RIGHT].motor.rpmSet = -wheel[Wheel::RIGHT].motor.rpmMax / 1.25;
+  wheel[Wheel::LEFT].motor.rpmSet = -wheel[Wheel::LEFT].motor.rpmFast;
+  wheel[Wheel::RIGHT].motor.rpmSet = -wheel[Wheel::RIGHT].motor.rpmFast;
 }
 
 void Wheels::reverseSlowSpeed(void)
 {
-  wheel[Wheel::LEFT].motor.rpmSet = -wheel[Wheel::LEFT].motor.rpmMax / 2;
-  wheel[Wheel::RIGHT].motor.rpmSet = -wheel[Wheel::RIGHT].motor.rpmMax / 2;
+  wheel[Wheel::LEFT].motor.rpmSet = -wheel[Wheel::LEFT].motor.rpmSlow;
+  wheel[Wheel::RIGHT].motor.rpmSet = -wheel[Wheel::RIGHT].motor.rpmSlow;
 }
 
 void Wheels::rollFullRight(void)
@@ -98,14 +98,14 @@ void Wheels::rollFull(bool dir)
 
 void Wheels::rollFastRight(void)
 {
-  wheel[Wheel::LEFT].motor.rpmSet = wheel[Wheel::LEFT].motor.rpmMax / 1.25;
-  wheel[Wheel::RIGHT].motor.rpmSet = -wheel[Wheel::RIGHT].motor.rpmMax / 1.25;
+  wheel[Wheel::LEFT].motor.rpmSet = wheel[Wheel::LEFT].motor.rpmFast;
+  wheel[Wheel::RIGHT].motor.rpmSet = -wheel[Wheel::RIGHT].motor.rpmFast;
 }
 
 void Wheels::rollFastLeft(void)
 {
-  wheel[Wheel::LEFT].motor.rpmSet = -wheel[Wheel::LEFT].motor.rpmMax / 1.25;
-  wheel[Wheel::RIGHT].motor.rpmSet = wheel[Wheel::RIGHT].motor.rpmMax / 1.25;
+  wheel[Wheel::LEFT].motor.rpmSet = -wheel[Wheel::LEFT].motor.rpmFast;
+  wheel[Wheel::RIGHT].motor.rpmSet = wheel[Wheel::RIGHT].motor.rpmFast;
 }
 
 void Wheels::rollFast(bool dir)
@@ -122,14 +122,14 @@ void Wheels::rollFast(bool dir)
 
 void Wheels::rollHalfRight(void)
 {
-  wheel[Wheel::LEFT].motor.rpmSet = wheel[Wheel::LEFT].motor.rpmMax / 1.5;
-  wheel[Wheel::RIGHT].motor.rpmSet = -wheel[Wheel::RIGHT].motor.rpmMax / 1.5;
+  wheel[Wheel::LEFT].motor.rpmSet = wheel[Wheel::LEFT].motor.rpmHalf;
+  wheel[Wheel::RIGHT].motor.rpmSet = -wheel[Wheel::RIGHT].motor.rpmHalf;
 }
 
 void Wheels::rollHalfLeft(void)
 {
-  wheel[Wheel::LEFT].motor.rpmSet = -wheel[Wheel::LEFT].motor.rpmMax / 1.5;
-  wheel[Wheel::RIGHT].motor.rpmSet = wheel[Wheel::RIGHT].motor.rpmMax / 1.5;
+  wheel[Wheel::LEFT].motor.rpmSet = -wheel[Wheel::LEFT].motor.rpmHalf;
+  wheel[Wheel::RIGHT].motor.rpmSet = wheel[Wheel::RIGHT].motor.rpmHalf;
 }
 
 void Wheels::rollHalf(bool dir)
@@ -146,14 +146,14 @@ void Wheels::rollHalf(bool dir)
 
 void Wheels::rollSlowRight(void)
 {
-  wheel[Wheel::LEFT].motor.rpmSet = wheel[Wheel::LEFT].motor.rpmMax / 2;
-  wheel[Wheel::RIGHT].motor.rpmSet = -wheel[Wheel::RIGHT].motor.rpmMax / 2;
+  wheel[Wheel::LEFT].motor.rpmSet = wheel[Wheel::LEFT].motor.rpmSlow;
+  wheel[Wheel::RIGHT].motor.rpmSet = -wheel[Wheel::RIGHT].motor.rpmSlow;
 }
 
 void Wheels::rollSlowLeft(void)
 {
-  wheel[Wheel::LEFT].motor.rpmSet = -wheel[Wheel::LEFT].motor.rpmMax / 2;
-  wheel[Wheel::RIGHT].motor.rpmSet = wheel[Wheel::RIGHT].motor.rpmMax / 2;
+  wheel[Wheel::LEFT].motor.rpmSet = -wheel[Wheel::LEFT].motor.rpmSlow;
+  wheel[Wheel::RIGHT].motor.rpmSet = wheel[Wheel::RIGHT].motor.rpmSlow;
 }
 
 void Wheels::rollSlow(bool dir)

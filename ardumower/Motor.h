@@ -18,13 +18,16 @@ class Motor
   public:
     Pid pid;
     float acceleration {};
-    bool regulate {false};
+    bool regulate { false };
     int rpmMax {};
+    int rpmFast {};
+    int rpmHalf {};
+    int rpmSlow {};
     int rpmSet {};
-    int pwmMax {};
-    float pwmCur {};  // TODO: Move to private
+    uint8_t pwmMax {};
+    int16_t pwmCur {};  // TODO: Move to private
     int powerMax {};
-    bool swapDir {false};
+    bool swapDir { false };
     int powerIgnoreTime {};
     int zeroSettleTime {};  // TODO: Make it configurable
 
@@ -130,23 +133,48 @@ class Motor
     {
       return powerMeas > powerMax;
     }
+
+    void updateRpms(void);
+
+    const int getRpmSet() const
+    {
+      return rpmSet;
+    }
+    void setRpmSet(int rpmSet)
+    {
+      this->rpmSet = rpmSet;
+    }
+
+    const uint8_t getPwmCur() const
+    {
+      return pwmCur;
+    }
+    void setPwmCur(uint8_t pwmCur)
+    {
+      this->pwmCur = pwmCur;
+    }
+
   protected:
     int16_t powerMeas {};
+    int pwmSet {};
+    int rpmMeas {};
 
   private:
-    static const uint16_t TIME_BETWEEN_RPM_MEAS {500};
-    static const uint8_t TIME_BETWEEN_CONTROL {100};
-    static const uint8_t TIME_BETWEEN_CHECK_POWER {100};
-    static const uint8_t TIME_BETWEEN_READ_SENSOR {50};
-    static const uint16_t TIME_WAIT_AFTER_STUCK {30000};
+    static const uint16_t TIME_BETWEEN_RPM_MEAS { 500 };
+    static const uint8_t TIME_BETWEEN_CONTROL { 100 };
+    static const uint8_t TIME_BETWEEN_CHECK_POWER { 100 };
+    static const uint8_t TIME_BETWEEN_READ_SENSOR { 50 };
+    static const uint16_t TIME_WAIT_AFTER_STUCK { 30000 };
+
+    static constexpr float RPM_DIVISOR_FAST { 1.25 };
+    static constexpr float RPM_DIVISOR_HALF { 1.5 };
+    static constexpr float RPM_DIVISOR_SLOW { 2.0 };
 
     uint8_t pinDir;
     uint8_t pinPwm;
     uint8_t pinSense;
     uint8_t pinRpm;
     uint8_t pinBrake;
-    int rpmMeas {};
-    int pwmSet {};
     uint16_t overloadCounter {};
     uint32_t lastRpmTime {};
     uint32_t nextTimeRpmMeas {};
