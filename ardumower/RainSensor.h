@@ -11,7 +11,7 @@
 class RainSensor
 {
   public:
-    bool used {false};
+    bool use {false};
 
     void setup(const uint8_t pin);
     void check(void);

@@ -22,7 +22,7 @@ bool Button::isPressed(void)
 bool Button::isTimeToCheck()
 {
   unsigned long curMillis = millis();
-  if (used && curMillis >= nextTimeCheck)
+  if (use && curMillis >= nextTimeCheck)
   {
     nextTimeCheck = curMillis + timeBetweenChecks;
     return true;
@@ -33,7 +33,7 @@ bool Button::isTimeToCheck()
 bool Button::isTimeToRun()
 {
   unsigned long curMillis = millis();
-  if (used && curMillis >= nextTime)
+  if (use && curMillis >= nextTime)
   {
     nextTime = curMillis + timeBetweenRuns;
     return true;

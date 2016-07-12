@@ -10,6 +10,7 @@
 
 #include "Motor.h"
 #include "MotorShield.h"
+#include "Encoder.h"
 
 class Wheel
 {
@@ -22,6 +23,7 @@ class Wheel
     } wheelE;
 
     MotorShield motor;
+    Encoder encoder;
 };
 
 class Wheels

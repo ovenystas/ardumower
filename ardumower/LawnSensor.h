@@ -11,7 +11,7 @@
 class LawnSensor
 {
   public:
-    bool used { false };
+    bool use { false };
     enum lawnSensorE
     {
       FRONT,

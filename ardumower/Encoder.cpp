@@ -18,7 +18,16 @@ void Encoder::setup(const uint8_t pin, const uint8_t pin2, const bool swapDir)
   pinMode(pin2, INPUT_PULLUP);
 }
 
-void Encoder::read()
+void Encoder::setup(const uint8_t pin, const bool swapDir)
+{
+  this->twoWay = false;
+  this->pin = pin;
+  this->swapDir = swapDir;
+
+  pinMode(pin, INPUT_PULLUP);
+}
+
+void Encoder::read(void)
 {
   curState = digitalRead(pin);
   if (twoWay)
@@ -28,17 +37,20 @@ void Encoder::read()
 }
 
 // ---- odometer (interrupt) --------------------------------------------------------
-// Determines the rotation count and direction of the odometer encoders. Called in the odometer pins interrupt.
-// encoder signal/Ardumower pinout etc. at http://wiki.ardumower.de/index.php?title=Odometry
+// Determines the rotation count and direction of the odometer encoders.
+// Called in the odometer pins interrupt.
+// Encoder signal/Ardumower pinout etc. at
+// http://wiki.ardumower.de/index.php?title=Odometry
+//
 // Logic is:
-//    If the pin1 change transition (odometerLeftState) is LOW -> HIGH...
-//      If the pin2 current state is HIGH :  step count forward   (odometerLeft++)
-//        Otherwise :  step count reverse   (odometerLeft--)
-// odometerState:  1st left and right odometer signal
-// odometerState2: 2nd left and right odometer signal (optional two-wire encoders)
-void Encoder::setState(unsigned long timeMicros)
+//   If the pin1 change transition (odometerLeftState) is LOW -> HIGH...
+//     If the pin2 current state is HIGH :  step count forward   (odometerLeft++)
+//       Otherwise :  step count reverse   (odometerLeft--)
+// odometerState:  1st odometer signal
+// odometerState2: 2nd odometer signal (optional two-wire encoders)
+void Encoder::setState(void)
 {
-  int step = swapDir ? -1 : 1;
+  int8_t step = swapDir ? -1 : 1;
 
   if (curState != lastState)
   {

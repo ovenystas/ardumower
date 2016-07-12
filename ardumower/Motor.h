@@ -54,9 +54,9 @@ class Motor
       return isTimeTo(&nextTimeCheckPower, TIME_BETWEEN_CHECK_POWER);
     }
 
-    bool isTimeToReadSensor(void)
+    bool isTimeToReadCurrent(void)
     {
-      return isTimeTo(&nextTimeReadSensor, TIME_BETWEEN_READ_SENSOR);
+      return isTimeTo(&nextTimeReadSensor, TIME_BETWEEN_READ_CURRENT);
     }
 
     bool isWaitAfterStuckEnd(void)
@@ -163,7 +163,7 @@ class Motor
     static const uint16_t TIME_BETWEEN_RPM_MEAS { 500 };
     static const uint8_t TIME_BETWEEN_CONTROL { 100 };
     static const uint8_t TIME_BETWEEN_CHECK_POWER { 100 };
-    static const uint8_t TIME_BETWEEN_READ_SENSOR { 50 };
+    static const uint8_t TIME_BETWEEN_READ_CURRENT { 50 };
     static const uint16_t TIME_WAIT_AFTER_STUCK { 30000 };
 
     static constexpr float RPM_DIVISOR_FAST { 1.25 };
@@ -184,7 +184,7 @@ class Motor
     uint32_t lastTimeStucked {};
     uint32_t lastSetSpeedTime {};
     uint16_t rpmCounter {};
-    bool rpmLastState {false};
+    bool rpmLastState { false };
     uint32_t zeroTimeout {};
 
     bool isTimeTo(uint32_t* nextTime_p, const uint16_t timeBetween);

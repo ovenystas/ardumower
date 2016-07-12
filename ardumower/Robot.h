@@ -59,8 +59,8 @@ typedef enum errorE
 {
   ERR_MOTOR_LEFT,
   ERR_MOTOR_RIGHT,
-  ERR_MOTOR_MOW,
-  ERR_MOW_SENSE,
+  ERR_MOTOR_CUTTER,
+  ERR_CUTTER_SENSE,
   ERR_IMU_COMM,
   ERR_IMU_TILT,
   ERR_RTC_COMM,
@@ -131,7 +131,8 @@ enum consoleE
   CONSOLE_SENSOR_VALUES,
   CONSOLE_PERIMETER,
   CONSOLE_IMU,
-  CONSOLE_OFF
+  CONSOLE_OFF,
+  CONSOLE_END
 };
 
 #define MAX_TIMERS 5
@@ -262,14 +263,9 @@ class Robot
     byte chgSelection;       // Senor Auswahl
     int chgNull;        // Nulldurchgang Ladestromsensor
     int stationRevTime {};    // charge station reverse time (ms)
-    int stationRollTime;    // charge station roll time (ms)
-    int stationForwTime;    // charge station forward time (ms)
-    int stationCheckTime;    // charge station reverse check time (ms)
-    int statsBatteryChargingCounterTotal;
-    float statsBatteryChargingCapacityTrip;
-    float statsBatteryChargingCapacityTotal;
-    float statsBatteryChargingCapacityAverage;
-    int statsMowTimeMinutesTrip;
+    int stationRollTime {};    // charge station roll time (ms)
+    int stationForwTime {};    // charge station forward time (ms)
+    int stationCheckTime {};    // charge station reverse check time (ms)
 
     // --------- error counters --------------------------
     byte errorCounterMax[ERR_ENUM_COUNT] {};
@@ -277,6 +273,11 @@ class Robot
     // ------------robot stats---------------------------
     boolean statsOverride;
     unsigned long statsMowTimeMinutesTotal {};
+    unsigned int statsMowTimeMinutesTrip {};
+    unsigned int statsBatteryChargingCounterTotal {};
+    float statsBatteryChargingCapacityTrip {};
+    float statsBatteryChargingCapacityTotal {};
+    float statsBatteryChargingCapacityAverage {};
 
     // --------------------------------------------------
     Robot();
@@ -319,8 +320,13 @@ class Robot
     virtual void deleteRobotStats();
 
     // other
-    virtual void beep(const int numberOfBeeps, const boolean shortbeep = false);
+    virtual void beep(const uint8_t numberOfBeeps,
+                      const bool shortbeep = false);
     virtual void printInfo(Stream &s);
+    virtual void printInfo_perimeter(Stream &s);
+    virtual void printInfo_odometer(Stream &s);
+    virtual void printInfo_sensorValues(Stream &s);
+    virtual void printInfo_sensorCounters(Stream &s);
     virtual void setUserSwitches();
     virtual void addErrorCounter(const enum errorE errType);
     virtual void resetErrorCounters();
@@ -354,6 +360,7 @@ class Robot
     {
       return batVoltage;
     }
+    float getBatteryVoltage();
 
     float getBatCapacity() const
     {
@@ -397,7 +404,9 @@ class Robot
     virtual void checkButton();
     virtual void checkBattery();
     virtual void checkTimer();
-    virtual void checkPower();
+    virtual void checkMotorPower();
+    virtual void checkCutterMotorPower();
+    virtual void checkWheelMotorPower(Wheel::wheelE side);
     virtual void checkBumpers();
     virtual void checkDrop();
     virtual void checkBumpersPerimeter();
@@ -411,6 +420,9 @@ class Robot
     virtual void checkOdometerFaults();
     virtual void checkIfStuck();
     virtual void checkRobotStats();
+    virtual void checkRobotStats_mowTime();
+    virtual void checkRobotStats_battery();
+
 
     // motor controllers
     virtual void motorControl();
@@ -423,7 +435,7 @@ class Robot
     virtual void setDefaultTime();
 
     // set reverse
-    virtual void reverseOrBidir(const byte aRollDir);
+    virtual void reverseOrChangeDirection(const byte aRollDir);
 
     // other
     virtual void printRemote();
@@ -500,7 +512,6 @@ class Robot
     float chgCurrent;  // charge current  (Ampere)
     unsigned long nextTimeBattery;
     unsigned long nextTimeCheckBattery;
-    int statsBatteryChargingCounter;
     float lastTimeBatCapacity;
 
     // --------- error counters --------------------------
@@ -516,10 +527,11 @@ class Robot
     unsigned long nextTimeErrorBeep;
 
     // ------------robot stats---------------------------
+    unsigned long nextTimeRobotStats;
     boolean statsMowTimeTotalStart { false };
     unsigned int statsMowTimeMinutesTripCounter;
     float statsMowTimeHoursTotal;
-    unsigned long nextTimeRobotStats;
+    unsigned int statsBatteryChargingCounter;
 
 
     void setMotorPWM(int pwm, const uint8_t motor, const boolean useAccel);

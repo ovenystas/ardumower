@@ -31,7 +31,7 @@ void RainSensor::check(void)
 bool RainSensor::isTimeToRun(void)
 {
   unsigned long curMillis = millis();
-  if (used && curMillis >= nextTime)
+  if (use && curMillis >= nextTime)
   {
     nextTime = curMillis + TIME_BETWEEN_RUNS;
     return true;

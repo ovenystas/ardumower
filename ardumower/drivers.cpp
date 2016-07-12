@@ -255,28 +255,6 @@ int I2CreadFrom(const uint8_t device, const uint8_t address,
 }
 
 
-// L298N motor driver
-// IN2/C(10)/PinPWM   IN1/D(12)/PinDir
-// H                  L     Forward
-// L                  H     Reverse
-void setArdumoto(const uint8_t pinDir, const uint8_t pinPWM, const int speed)
-{
-  bool dir;
-
-  if (speed < 0)
-  {
-    dir = HIGH;
-  }
-  else
-  {
-    dir = LOW;
-  }
-
-  digitalWrite(pinDir, dir);
-  analogWrite(pinPWM, (byte)speed);
-}
-
-
 // ---- sensor drivers --------------------------------------------------------------
 
 // DS1307 real time driver

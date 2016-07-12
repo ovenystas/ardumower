@@ -47,7 +47,6 @@ Mower::Mower()
   name = "Ardumower";
 
   // ------ perimeter ---------------------------------
-  perimeterUse = true;            // use perimeter?
   perimeterTriggerTimeout = 0;    // perimeter trigger timeout when escaping from inside (ms)
   perimeterOutRollTimeMax = 2000; // roll time max after perimeter out (ms)
   perimeterOutRollTimeMin = 750;  // roll time min after perimeter out (ms)
@@ -138,9 +137,7 @@ ISR(PCINT0_vect)
 // http://www.nongnu.org/avr-libc/user-manual/group__avr__interrupts.html
 ISR(PCINT2_vect, ISR_NOBLOCK)
 {
-  unsigned long timeMicros = micros();
-  robot.odometer.read();
-  robot.odometer.setState(timeMicros);
+  robot.odometer.readAndSetState();
 
   // TODO: Move this elsewhere
   robot.cutter.motor.setRpmState();
@@ -201,7 +198,9 @@ void Mower::setup()
   wheels.wheel[Wheel::LEFT].motor.powerIgnoreTime = 2000;  // time to ignore motor power (ms)
   wheels.wheel[Wheel::LEFT].motor.zeroSettleTime = 3000;   // how long (ms) to wait for motors to settle at zero speed
   wheels.wheel[Wheel::LEFT].motor.swapDir = 0;  // inverse left motor direction?
-
+  wheels.wheel[Wheel::LEFT].encoder.setup(PIN_ODOMETER_LEFT,
+                                          PIN_ODOMETER_LEFT_2,
+                                          ODOMETER_SWAP_DIR_LEFT);
   // right wheel motor
   wheels.wheel[Wheel::RIGHT].motor.config(1000.0,   // Acceleration
                                           255,      // Max PWM
@@ -219,6 +218,9 @@ void Mower::setup()
   wheels.wheel[Wheel::RIGHT].motor.powerIgnoreTime = 2000;  // time to ignore motor power (ms)
   wheels.wheel[Wheel::RIGHT].motor.zeroSettleTime = 3000;   // how long (ms) to wait for motors to settle at zero speed
   wheels.wheel[Wheel::RIGHT].motor.swapDir = 0; // inverse right motor direction?
+  wheels.wheel[Wheel::RIGHT].encoder.setup(PIN_ODOMETER_RIGHT,
+                                          PIN_ODOMETER_RIGHT_2,
+                                          ODOMETER_SWAP_DIR_RIGHT);
 
   // mower motor
   cutter.motor.config(2000.0,     // Acceleration
@@ -237,6 +239,7 @@ void Mower::setup()
                    PIN_LAWN_BACK_RECV);
 
   // perimeter
+  perimeters.use = false;
   perimeters.perimeter[Perimeter::LEFT].setup(PIN_PERIMETER_LEFT);
   //perimeters.perimeter[Perimeter::RIGHT].setup(PIN_PERIMETER_RIGHT);
 
@@ -270,15 +273,12 @@ void Mower::setup()
   pinMode(PIN_REMOTE_SWITCH, INPUT);
 
   // odometer
-  const uint8_t odometerPins[] = { PIN_ODOMETER_LEFT, PIN_ODOMETER_RIGHT };
-  const uint8_t odometerPins2[] = { PIN_ODOMETER_LEFT_2, PIN_ODOMETER_RIGHT_2 };
-  const bool odometerSwaps[] = { ODOMETER_SWAP_DIR_LEFT, ODOMETER_SWAP_DIR_RIGHT };
   odometer.setup(ODOMETER_TICKS_PER_REVOLUTION,
                  ODOMETER_TICKS_PER_CM,
                  ODOMETER_WHEELBASE_CM,
-                 odometerPins,
-                 odometerPins2,
-                 odometerSwaps);
+                 &wheels.wheel[Wheel::LEFT].encoder,
+                 &wheels.wheel[Wheel::RIGHT].encoder,
+                 &imu);
 
   // user switches
   pinMode(PIN_USER_SWITCH_1, OUTPUT);

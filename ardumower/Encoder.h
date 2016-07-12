@@ -13,21 +13,26 @@
 class Encoder
 {
   public:
-    void setup(const uint8_t pin, const uint8_t pin2, const bool swapDir);
-    void read();
-    void setState(unsigned long timeMicros);
+    // Setup for one-way encoder (1-pin)
+    void setup(const uint8_t pin, const bool swapDir);
 
-    int getCounter() const
+    // Setup for two-way encoder (2-pins)
+    void setup(const uint8_t pin, const uint8_t pin2, const bool swapDir);
+
+    void read(void);
+    void setState(void);
+
+    const int16_t getCounter(void) const
     {
       return counter;
     }
 
-    void clearCounter()
+    void clearCounter(void)
     {
       counter = 0;
     }
 
-    float getWheelRpmCurr() const
+    const float getWheelRpmCurr() const
     {
       return wheelRpmCurr;
     }
@@ -37,17 +42,17 @@ class Encoder
       this->wheelRpmCurr = wheelRpmCurr;
     }
 
-    bool twoWay;                // using 2-pin encoder
-    bool swapDir { false };     // inverse encoder direction?
+    bool twoWay { false };  // using 2-pin encoder
+    bool swapDir { false }; // invert encoder direction?
 
   private:
     uint8_t pin;
     uint8_t pin2;
-    boolean curState { LOW };   // current state
-    boolean curState2 { LOW };  // current state on 2nd pin
-    boolean lastState { LOW };  // last state
-    boolean lastState2 { LOW }; // last state on 2nd pin
-    int counter {};             // wheel counter
+    bool curState { LOW };   // current state
+    bool curState2 { LOW };  // current state on 2nd pin
+    bool lastState { LOW };  // last state
+    bool lastState2 { LOW }; // last state on 2nd pin
+    int16_t counter {};             // wheel counter
     float wheelRpmCurr {};      // wheel rpm
 };
 

@@ -365,9 +365,9 @@ void RemoteControl::sendErrorMenu(const boolean update)
   Bluetooth.print(F("|zz~Motor right "));
   Bluetooth.print(robot_p->errorCounterMax[ERR_MOTOR_RIGHT]);
   Bluetooth.print(F("|zz~Motor mow "));
-  Bluetooth.print(robot_p->errorCounterMax[ERR_MOTOR_MOW]);
+  Bluetooth.print(robot_p->errorCounterMax[ERR_MOTOR_CUTTER]);
   Bluetooth.print(F("|zz~Mow sense "));
-  Bluetooth.print(robot_p->errorCounterMax[ERR_MOW_SENSE]);
+  Bluetooth.print(robot_p->errorCounterMax[ERR_CUTTER_SENSE]);
   Bluetooth.print(F("|zz~Odometer left "));
   Bluetooth.print(robot_p->errorCounterMax[ERR_ODOMETER_LEFT]);
   Bluetooth.print(F("|zz~Odometer right "));
@@ -848,7 +848,7 @@ void RemoteControl::sendPerimeterMenu(const boolean update)
     Bluetooth.print(F("{.Perimeter`1000"));
   }
   Bluetooth.print(F("|e00~Use "));
-  sendYesNo(robot_p->perimeterUse);
+  sendYesNo(robot_p->perimeters.use);
   Bluetooth.println(F("|e02~Value"));
   Bluetooth.print(robot_p->getPerimeterMag());
   if (robot_p->getPerimeterMag() < 0)
@@ -893,7 +893,7 @@ void RemoteControl::processPerimeterMenu(const String pfodCmd)
 {
   if (pfodCmd == "e00")
   {
-    TOGGLE(robot_p->perimeterUse);
+    TOGGLE(robot_p->perimeters.use);
   }
   else if (pfodCmd.startsWith("e04"))
   {
@@ -965,7 +965,7 @@ void RemoteControl::sendLawnSensorMenu(const boolean update)
     Bluetooth.print(F("{.Lawn sensor`1000"));
   }
   Bluetooth.print(F("|f00~Use "));
-  sendYesNo(robot_p->lawnSensor.used);
+  sendYesNo(robot_p->lawnSensor.use);
   Bluetooth.print(F("|f01~Counter "));
   Bluetooth.print(robot_p->lawnSensor.getCounter());
   Bluetooth.println(F("|f02~Value f, b"));
@@ -979,7 +979,7 @@ void RemoteControl::processLawnSensorMenu(const String pfodCmd)
 {
   if (pfodCmd == "f00")
   {
-    TOGGLE(robot_p->lawnSensor.used);
+    TOGGLE(robot_p->lawnSensor.use);
   }
   sendLawnSensorMenu(true);
 }
@@ -995,7 +995,7 @@ void RemoteControl::sendRainMenu(const boolean update)
     Bluetooth.print(F("{.Rain`1000"));
   }
   Bluetooth.print(F("|m00~Use "));
-  sendYesNo(robot_p->rainSensor.used);
+  sendYesNo(robot_p->rainSensor.use);
   Bluetooth.print(F("|m01~Counter "));
   Bluetooth.print(robot_p->rainSensor.getCounter());
   Bluetooth.println(F("|m02~Value"));
@@ -1007,7 +1007,7 @@ void RemoteControl::processRainMenu(const String pfodCmd)
 {
   if (pfodCmd == "m00")
   {
-    TOGGLE(robot_p->rainSensor.used);
+    TOGGLE(robot_p->rainSensor.use);
   }
   sendRainMenu(true);
 }
@@ -1287,13 +1287,13 @@ void RemoteControl::sendOdometerMenu(const boolean update)
   Bluetooth.print(F("|l00~Use "));
   sendYesNo(robot_p->odometer.use);
   Bluetooth.print(F("|l01~Value l, r "));
-  Bluetooth.print(robot_p->odometer.encoder[Odometer::LEFT].getCounter());
+  Bluetooth.print(robot_p->odometer.encoder.left_p->getCounter());
   Bluetooth.print(", ");
-  Bluetooth.println(robot_p->odometer.encoder[Odometer::RIGHT].getCounter());
+  Bluetooth.println(robot_p->odometer.encoder.right_p->getCounter());
   Bluetooth.println(F("|l03~RPM Motor l, r "));
-  Bluetooth.print(robot_p->odometer.encoder[Odometer::LEFT].getWheelRpmCurr());
+  Bluetooth.print(robot_p->odometer.encoder.left_p->getWheelRpmCurr());
   Bluetooth.print(", ");
-  Bluetooth.println(robot_p->odometer.encoder[Odometer::RIGHT].getWheelRpmCurr());
+  Bluetooth.println(robot_p->odometer.encoder.right_p->getWheelRpmCurr());
   sendSlider("l04", F("Ticks per one full revolution"),
              robot_p->odometer.ticksPerRevolution, "", 1, 2000);
   sendSlider("l01", F("Ticks per cm"),
@@ -1301,11 +1301,11 @@ void RemoteControl::sendOdometerMenu(const boolean update)
   sendSlider("l02", F("Wheel base cm"),
              robot_p->odometer.wheelBaseCm, "", 0.1, 50);
   Bluetooth.print(F("|l08~Use two-way encoder "));
-  sendYesNo(robot_p->odometer.encoder[Odometer::LEFT].twoWay);  // TODO: Only checking sensing left here
+  sendYesNo(robot_p->odometer.encoder.left_p->twoWay);  // TODO: Only checking sensing left here
   Bluetooth.print(F("|l05~Swap left direction "));
-  sendYesNo(robot_p->odometer.encoder[Odometer::LEFT].swapDir);
+  sendYesNo(robot_p->odometer.encoder.left_p->swapDir);
   Bluetooth.print(F("|l06~Swap right direction "));
-  sendYesNo(robot_p->odometer.encoder[Odometer::RIGHT].swapDir);
+  sendYesNo(robot_p->odometer.encoder.right_p->swapDir);
   Bluetooth.println("}");
 }
 
@@ -1329,17 +1329,17 @@ void RemoteControl::processOdometerMenu(const String pfodCmd)
   }
   else if (pfodCmd.startsWith("l05"))
   {
-    TOGGLE(robot_p->odometer.encoder[Odometer::LEFT].swapDir);
+    TOGGLE(robot_p->odometer.encoder.left_p->swapDir);
   }
   else if (pfodCmd.startsWith("l06"))
   {
-    TOGGLE(robot_p->odometer.encoder[Odometer::RIGHT].swapDir);
+    TOGGLE(robot_p->odometer.encoder.right_p->swapDir);
   }
   else if (pfodCmd.startsWith("l08"))
   {
-    bool twoWay = robot_p->odometer.encoder[Odometer::LEFT].twoWay;
-    robot_p->odometer.encoder[Odometer::LEFT].twoWay = !twoWay;
-    robot_p->odometer.encoder[Odometer::RIGHT].twoWay = !twoWay;
+    bool twoWay = robot_p->odometer.encoder.left_p->twoWay;
+    robot_p->odometer.encoder.left_p->twoWay = !twoWay;
+    robot_p->odometer.encoder.right_p->twoWay = !twoWay;
   }
   sendOdometerMenu(true);
 }
@@ -2016,9 +2016,9 @@ void RemoteControl::run()
     Bluetooth.print(",");
     Bluetooth.print(robot_p->getPerimeterMag());
     Bluetooth.print(",");
-    Bluetooth.print(robot_p->odometer.encoder[Odometer::LEFT].getCounter());
+    Bluetooth.print(robot_p->odometer.encoder.left_p->getCounter());
     Bluetooth.print(",");
-    Bluetooth.print(robot_p->odometer.encoder[Odometer::RIGHT].getCounter());
+    Bluetooth.print(robot_p->odometer.encoder.right_p->getCounter());
     Bluetooth.print(",");
     Bluetooth.print(robot_p->imu.getYawDeg());
     Bluetooth.print(",");
@@ -2258,9 +2258,9 @@ void RemoteControl::run()
       nextPlotTime = curMillis + 50;
       Bluetooth.print(elapsedSeconds);
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->odometer.encoder[Odometer::LEFT].getWheelRpmCurr());
+      Bluetooth.print(robot_p->odometer.encoder.left_p->getWheelRpmCurr());
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->odometer.encoder[Odometer::RIGHT].getWheelRpmCurr());
+      Bluetooth.print(robot_p->odometer.encoder.right_p->getWheelRpmCurr());
       Bluetooth.print(",");
       //      Bluetooth.print(robot->motorLeftSpeedRpmSet);
       Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.pid.getSetpoint());

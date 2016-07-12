@@ -11,6 +11,12 @@
 #include "Encoder.h"
 #include "Imu.h"
 
+typedef struct encoderS
+{
+  Encoder* left_p { nullptr };
+  Encoder* right_p { nullptr };
+} encoderS;
+
 class Odometer
 {
   public:
@@ -24,19 +30,18 @@ class Odometer
     void setup(const int ticksPerRevolution,
                const float ticksPerCm,
                const float wheelBaseCm,
-               const uint8_t pin[2],
-               const uint8_t pin2[2],
-               const bool swapDir[2]);
-    void read();
-    void setState(unsigned long timeMicros);
-    void calc(const Imu &imu);
+               Encoder* encoderLeft,
+               Encoder* encoderRight,
+               Imu* imu);
+    void loop(void);
+    void readAndSetState(void);
 
-    float getX() const
+    const float getX() const
     {
       return x;
     }
 
-    float getY() const
+    const float getY() const
     {
       return y;
     }
@@ -45,14 +50,21 @@ class Odometer
     int ticksPerRevolution;  // encoder ticks per one full resolution
     float ticksPerCm;        // encoder ticks per cm
     float wheelBaseCm;       // wheel-to-wheel distance (cm)
-    Encoder encoder[END];
+    encoderS encoder;
+    Imu* imu_p;
 
   private:
+    const int16_t TIME_BETWEEN_CALCS { 300 }; // (ms)
+
     unsigned long nextTime {};          // when to trigger next time
     unsigned long lastWheelRpmTime {};  // last time it was updated
+    int16_t lastOdoLeft {};
+    int16_t lastOdoRight {};
     float theta {};                     // theta angle (radiant)
     float x {};                         // X map position (cm)
     float y {};                         // Y map position (cm)
+
+    void calc();
 };
 
 #endif /* ODOMETER_H */

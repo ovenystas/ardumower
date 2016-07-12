@@ -124,6 +124,7 @@ class Perimeters
 {
   public:
     Perimeter perimeter[Perimeter::END];
+    bool use { false };
 
     bool isTimeToControl(void);
     void printInfo(Stream &s);

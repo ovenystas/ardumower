@@ -151,10 +151,6 @@ double scalePI(const double v);
 // computes minimum distance between x radiant (current-value) and w radiant (set-value)
 double distancePI(const double x, const double w);
 
-// motor drivers
-void setPwmFrequency(uint8_t pin, int divisor);
-void setArdumoto(const uint8_t pinDir, const uint8_t pinPWM, const int speed);
-
 // real time drivers
 boolean readDS1307(datetime_t &dt);
 boolean setDS1307(const datetime_t &dt);

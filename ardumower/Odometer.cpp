@@ -12,48 +12,49 @@
 void Odometer::setup(const int ticksPerRevolution,
                      const float ticksPerCm,
                      const float wheelBaseCm,
-                     const uint8_t pin[2],
-                     const uint8_t pin2[2],
-                     const bool swapDir[2])
+                     Encoder* encoderLeft_p,
+                     Encoder* encoderRight_p,
+                     Imu* imu_p)
 {
   this->ticksPerRevolution = ticksPerRevolution;
   this->ticksPerCm = ticksPerCm;
   this->wheelBaseCm = wheelBaseCm;
-
-  encoder[LEFT].setup(pin[LEFT], pin2[LEFT], swapDir[LEFT]);
-  encoder[RIGHT].setup(pin[RIGHT], pin2[RIGHT], swapDir[RIGHT]);
+  this->encoder.left_p = encoderLeft_p;
+  this->encoder.right_p = encoderRight_p;
+  this->imu_p = imu_p;
 }
 
-void Odometer::read()
-{
-  encoder[LEFT].read();
-  encoder[RIGHT].read();
-}
-
-void Odometer::setState(unsigned long timeMicros)
-{
-  encoder[LEFT].setState(timeMicros);
-  encoder[RIGHT].setState(timeMicros);
-}
-
-// calculate map position by odometer sensors
-void Odometer::calc(const Imu &imu)
+void Odometer::loop(void)
 {
   unsigned long curMillis = millis();
   if (!use || curMillis < nextTime)
   {
     return;
   }
-  nextTime = curMillis + 300;
+  nextTime = curMillis + TIME_BETWEEN_CALCS;
 
-  static int lastOdoLeft = 0;
-  static int lastOdoRight = 0;
+  calc();
+}
 
-  int odoLeft = encoder[Odometer::LEFT].getCounter();
-  int odoRight = encoder[Odometer::RIGHT].getCounter();
+void Odometer::readAndSetState(void)
+{
+  encoder.left_p->read();
+  encoder.right_p->read();
 
-  int ticksLeft = odoLeft - lastOdoLeft;
-  int ticksRight = odoRight - lastOdoRight;
+  encoder.left_p->setState();
+  encoder.right_p->setState();
+}
+
+// calculate map position by odometer sensors
+void Odometer::calc(void)
+{
+  unsigned long curMillis = millis();
+
+  int16_t odoLeft = encoder.left_p->getCounter();
+  int16_t odoRight = encoder.right_p->getCounter();
+
+  int16_t ticksLeft = odoLeft - lastOdoLeft;
+  int16_t ticksRight = odoRight - lastOdoRight;
 
   lastOdoLeft = odoLeft;
   lastOdoRight = odoRight;
@@ -61,23 +62,23 @@ void Odometer::calc(const Imu &imu)
   float left_cm = (float)ticksLeft / ticksPerCm;
   float right_cm = (float)ticksRight / ticksPerCm;
   float avg_cm = (left_cm + right_cm) / 2.0;
-  float wheel_theta = (left_cm - right_cm) / wheelBaseCm;
+  float wheelTheta = (left_cm - right_cm) / wheelBaseCm;
   float thetaOld = theta;
-  theta += wheel_theta;
+  theta += wheelTheta;
 
-  encoder[Odometer::LEFT].setWheelRpmCurr(
-      double((((float)ticksLeft / (float)ticksPerRevolution) /
-              (float)(millis() - lastWheelRpmTime)) * 60000.0));
+  float revolutionLeft = (float)ticksLeft / (float)ticksPerRevolution;
+  float revolutionRight = (float)ticksRight / (float)ticksPerRevolution;
 
-  encoder[Odometer::RIGHT].setWheelRpmCurr(
-      double((((float)ticksRight / (float)ticksPerRevolution) /
-              (float)(millis() - lastWheelRpmTime)) * 60000.0));
+  float deltaTime = (float)(curMillis - lastWheelRpmTime) / 60000.0;
 
-  lastWheelRpmTime = millis();
+  encoder.left_p->setWheelRpmCurr(revolutionLeft / deltaTime);
+  encoder.right_p->setWheelRpmCurr(revolutionRight / deltaTime);
 
-  if (imu.use)
+  lastWheelRpmTime = curMillis;
+
+  if (imu_p->use)
   {
-    float yaw = imu.getYaw();
+    float yaw = imu_p->getYaw();
     x += avg_cm * sin(yaw);
     y += avg_cm * cos(yaw);
   }
