@@ -62,6 +62,7 @@ void Odometer::calc(void)
   float left_cm = (float)ticksLeft / ticksPerCm;
   float right_cm = (float)ticksRight / ticksPerCm;
   float avg_cm = (left_cm + right_cm) / 2.0;
+
   float wheelTheta = (left_cm - right_cm) / wheelBaseCm;
   float thetaOld = theta;
   theta += wheelTheta;
@@ -71,8 +72,11 @@ void Odometer::calc(void)
 
   float deltaTime = (float)(curMillis - lastWheelRpmTime) / 60000.0;
 
-  encoder.left_p->setWheelRpmCurr(revolutionLeft / deltaTime);
-  encoder.right_p->setWheelRpmCurr(revolutionRight / deltaTime);
+  float rpmLeft = revolutionLeft / deltaTime;
+  float rpmRight = revolutionRight / deltaTime;
+
+  encoder.left_p->setWheelRpmCurr(round(rpmLeft));
+  encoder.right_p->setWheelRpmCurr(round(rpmRight));
 
   lastWheelRpmTime = curMillis;
 

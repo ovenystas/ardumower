@@ -526,9 +526,7 @@ void RemoteControl::processMotorMenu(const String pfodCmd)
   else if (pfodCmd.startsWith("a06"))
   {
     processSlider(pfodCmd, robot_p->wheels.wheel[Wheel::LEFT].motor.rpmMax, 1);
-    robot_p->wheels.wheel[Wheel::LEFT].motor.updateRpms();
     processSlider(pfodCmd, robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmMax, 1);
-    robot_p->wheels.wheel[Wheel::RIGHT].motor.updateRpms();
   }
   else if (pfodCmd.startsWith("a15"))
   {
@@ -1841,7 +1839,7 @@ void RemoteControl::processManualMenu(const String pfodCmd)
         sign * robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmSet)
     {
       robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet =
-          sign * robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSlow;
+          sign * robot_p->wheels.wheel[Wheel::LEFT].motor.rpmMax / 2;
     }
     else
     {
@@ -1865,7 +1863,7 @@ void RemoteControl::processManualMenu(const String pfodCmd)
         sign * robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet)
     {
       robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmSet =
-          sign * robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSlow;
+          sign * robot_p->wheels.wheel[Wheel::LEFT].motor.rpmMax / 2;
     }
     else
     {
@@ -2272,9 +2270,9 @@ void RemoteControl::run()
       Bluetooth.print(",");
       Bluetooth.print(robot_p->wheels.wheel[Wheel::RIGHT].motor.getPwmCur());
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.pid.getEold());
+      Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.pid.getErrorOld());
       Bluetooth.print(",");
-      Bluetooth.println(robot_p->wheels.wheel[Wheel::RIGHT].motor.pid.getEold());
+      Bluetooth.println(robot_p->wheels.wheel[Wheel::RIGHT].motor.pid.getErrorOld());
     }
   }
 }

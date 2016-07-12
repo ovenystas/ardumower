@@ -47,47 +47,40 @@ void Pid::setup(const float Kp, const float Ki, const float Kd,
   this->max_output = max_output;
 }
 
-float Pid::compute(float x)
+float Pid::compute(float processValue)
 {
   unsigned long now = micros();
 
-  float Ta = ((now - lastControlTime) / 1000000.0);
+  float dt = ((now - lastControlTime) / 1000000.0);
   lastControlTime = now;
-  if (Ta > 1.0)
+  if (dt > 1.0)
   {
-    Ta = 1.0;   // should only happen for the very first call
+    dt = 1.0;   // should only happen for the very first call
   }
 
   // compute error
-  float e = (w - x);
+  float error = setPoint - processValue;
 
   // integrate error
-  esum += e;
+  errorSum += error;
 
   // anti wind-up
-  float iTerm = Ki * Ta * esum;
+  float iTerm = Ki * dt * errorSum;
   if (iTerm < -max_output)
   {
     iTerm = -max_output;
-    esum = -max_output / Ta / Ki;
+    errorSum = -max_output / dt / Ki;
   }
   if (iTerm > max_output)
   {
     iTerm = max_output;
-    esum = max_output / Ta / Ki;
+    errorSum = max_output / dt / Ki;
   }
-  float y = Kp * e + iTerm + Kd / Ta * (e - eold);
-  eold = e;
+  float out = Kp * error + iTerm + Kd / dt * (error - errorOld);
+  errorOld = error;
 
   // restrict output to min/max
-  if (y > y_max)
-  {
-    y = y_max;
-  }
-  if (y < y_min)
-  {
-    y = y_min;
-  }
+  out = constrain(out, y_min, y_max);
 
-  return y;
+  return out;
 }

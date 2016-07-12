@@ -328,7 +328,7 @@ class Robot
     virtual void printInfo_sensorValues(Stream &s);
     virtual void printInfo_sensorCounters(Stream &s);
     virtual void setUserSwitches();
-    virtual void addErrorCounter(const enum errorE errType);
+    virtual void incErrorCounter(const enum errorE errType);
     virtual void resetErrorCounters();
 
     byte getStateCurr() const
@@ -425,11 +425,11 @@ class Robot
 
 
     // motor controllers
-    virtual void motorControl();
-    virtual void motorControlImuRoll();
-    virtual void motorControlPerimeter();
-    virtual void motorControlImuDir();
-    virtual void motorMowControl();
+    virtual void wheelControl_normal();
+    virtual void wheelControl_imuRoll();
+    virtual void wheelControl_perimeter();
+    virtual void wheelControl_imuDir();
+    virtual void cutterControl();
 
     // date & time
     virtual void setDefaultTime();
@@ -453,7 +453,7 @@ class Robot
     ;
 
   private:
-    // --------- state machine --------------------------
+    // --------- state machine ----------------------------
     byte stateCurr { STATE_OFF };
     byte stateLast { STATE_OFF };
     byte stateNext { STATE_OFF };
@@ -462,10 +462,10 @@ class Robot
     unsigned long stateEndTime;
     int idleTimeSec {};
 
-    // --------- timer ----------------------------------
+    // --------- timer ------------------------------------
     unsigned long nextTimeTimer;
 
-    // -------- gps state -------------------------------
+    // -------- gps state ---------------------------------
     float gpsLat;
     float gpsLon;
     float gpsX;   // X position (m)
@@ -474,7 +474,7 @@ class Robot
     unsigned long nextTimeCheckIfStuck;
     int robotIsStuckCounter;
 
-    // -------- RC remote control state -----------------
+    // -------- RC remote control state -------------------
     int remoteSteer;  // range -100..100
     int remoteSpeed;  // range -100..100
     int remoteMow;    // range 0..100
@@ -489,11 +489,11 @@ class Robot
     boolean remoteSwitchLastState;
     unsigned long nextTimeRTC;
 
-    // ------- IMU state --------------------------------
+    // ------- IMU state ----------------------------------
     byte imuRollDir;
     unsigned long nextTimeCheckTilt; // check if
 
-    // ------- perimeter state --------------------------
+    // ------- perimeter state ----------------------------
     int perimeterMag;             // perimeter magnitude
     boolean perimeterInside;      // is inside perimeter?
     unsigned long perimeterTriggerTime; // time to trigger perimeter transition (timeout)
@@ -504,7 +504,7 @@ class Robot
     // --------- pfodApp ----------------------------------
     unsigned long nextTimePfodLoop;
 
-    // --------- charging -------------------------------
+    // --------- charging ---------------------------------
     int batADC;
     float batVoltage;  // battery voltage (Volt)
     float batCapacity; // battery capacity (mAh)
@@ -514,10 +514,14 @@ class Robot
     unsigned long nextTimeCheckBattery;
     float lastTimeBatCapacity;
 
-    // --------- error counters --------------------------
+    // --------- driving ----------------------------------
+    int8_t speed {}; // Range -100..+100, - = reverse, + = forward
+    int8_t steer {}; // Range -100..+100, - = left, + = right
+
+    // --------- error counters ---------------------------
     byte errorCounter[ERR_ENUM_COUNT] {};
 
-    // --------- other ----------------------------------
+    // --------- other ------------------------------------
     int loopsPerSec {};  // main loops per second
     int loopsPerSecCounter {};
     byte consoleMode { CONSOLE_SENSOR_COUNTERS };
@@ -526,7 +530,7 @@ class Robot
     unsigned long nextTimeErrorCounterReset;
     unsigned long nextTimeErrorBeep;
 
-    // ------------robot stats---------------------------
+    // ------------robot stats-----------------------------
     unsigned long nextTimeRobotStats;
     boolean statsMowTimeTotalStart { false };
     unsigned int statsMowTimeMinutesTripCounter;

@@ -39,32 +39,34 @@ class Wheels
     Wheel::wheelE rotateDir {Wheel::LEFT};
 
     bool isTimeToRotationChange(void);
+    void control(void);
 
-    void stop(void);
-    void slowDown(void);
-    void speedUp(void);
-    void forwardFullSpeed(void);
-    void forwardHalfSpeed(void);
-    void reverseFullSpeed(void);
-    void reverseFastSpeed(void);
-    void reverseSlowSpeed(void);
-    void rollFullRight(void);
-    void rollFullLeft(void);
-    void rollFull(bool dir);
-    void rollFastRight(void);
-    void rollFastLeft(void);
-    void rollFast(bool dir);
-    void rollHalfRight(void);
-    void rollHalfLeft(void);
-    void rollHalf(bool dir);
-    void rollSlowRight(void);
-    void rollSlowLeft(void);
-    void rollSlow(bool dir);
+    const int8_t getSpeed() const
+    {
+      return speed;
+    }
+
+    void setSpeed(int8_t speed)
+    {
+      this->speed = speed;
+    }
+
+    const int8_t getSteer() const
+    {
+      return steer;
+    }
+
+    void setSteer(int8_t steer)
+    {
+      this->steer = steer;
+    }
 
   private:
     static const uint16_t TIME_BETWEEN_ROTATION_CHANGE {60000};
 
     unsigned long nextTimeRotationChange {};
+    int8_t speed {}; // Range -100..+100, - = reverse, + = forward
+    int8_t steer {}; // Range -100..+100, - = left, + = right
 };
 
 #endif /* WHEEL_H */

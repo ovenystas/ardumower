@@ -37,34 +37,65 @@ class Pid
     void setup(const float Kp, const float Ki, const float Kd);
     void setup(const float Kp, const float Ki, const float Kd,
                const float y_min, const float y_max, const float max_output);
-    float compute(float x);
+    float compute(float processValue);
 
-    const float getEold() const
+    const float getErrorOld() const
     {
-      return eold;
+      return errorOld;
     }
 
     const float getSetpoint() const
     {
-      return w;
+      return setPoint;
     }
 
-    void setSetpoint(float w)
+    void setSetpoint(float setPoint)
     {
-      this->w = w;
+      this->setPoint = setPoint;
     }
 
-    float y_min {};      // minimum control output
-    float y_max {};      // maximum control output
-    float max_output {}; // maximum output
+    float getMaxOutput() const
+    {
+      return max_output;
+    }
+
+    void setMaxOutput(float maxOutput)
+    {
+      max_output = maxOutput;
+    }
+
+    float getYMax() const
+    {
+      return y_max;
+    }
+
+    void setYMax(float y_max)
+    {
+      this->y_max = y_max;
+    }
+
+    float getYMin() const
+    {
+      return y_min;
+    }
+
+    void setYMin(float y_min)
+    {
+      this->y_min = y_min;
+    }
+
     float Kp {};         // proportional control
     float Ki {};         // integral control
     float Kd {};         // differential control
 
   private:
-    float eold {};       // last error
-    float w {};          // set value
-    float esum {};       // error sum
+    float setPoint {};   // set value
+    float y_min {};      // minimum control output
+    float y_max {};      // maximum control output
+    float max_output {}; // maximum output
+
+    float errorOld {};   // last error
+    float errorSum {};   // error sum
     unsigned long lastControlTime {};
 };
 

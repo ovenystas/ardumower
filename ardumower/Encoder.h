@@ -32,12 +32,12 @@ class Encoder
       counter = 0;
     }
 
-    const float getWheelRpmCurr() const
+    const int16_t getWheelRpmCurr() const
     {
       return wheelRpmCurr;
     }
 
-    void setWheelRpmCurr(float wheelRpmCurr)
+    void setWheelRpmCurr(int16_t wheelRpmCurr)
     {
       this->wheelRpmCurr = wheelRpmCurr;
     }
@@ -53,7 +53,7 @@ class Encoder
     bool lastState { LOW };  // last state
     bool lastState2 { LOW }; // last state on 2nd pin
     int16_t counter {};             // wheel counter
-    float wheelRpmCurr {};      // wheel rpm
+    int16_t wheelRpmCurr {};      // wheel rpm
 };
 
 #endif /* ENCODER_H */

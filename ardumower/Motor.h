@@ -16,13 +16,10 @@
 class Motor
 {
   public:
-    Pid pid;
+    Pid pid; //TODO: Move to MotorDrv
     float acceleration {};
     bool regulate { false };
     int rpmMax {};
-    int rpmFast {};
-    int rpmHalf {};
-    int rpmSlow {};
     int rpmSet {};
     uint8_t pwmMax {};
     int16_t pwmCur {};  // TODO: Move to private

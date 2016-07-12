@@ -58,9 +58,22 @@ class Cutter
       enableOverriden = !enableOverriden;
     }
 
+    const int8_t getSpeed() const
+    {
+      return speed;
+    }
+
+    void setSpeed(int8_t speed)
+    {
+      this->speed = speed;
+    }
+
+    void control(void);
+
   private:
     bool enabled {false};
     bool enableOverriden {false};
+    int8_t speed; // Range 0..100
 };
 
 #endif /* CUTTER_H */

@@ -57,7 +57,7 @@ Mower::Mower()
   //perimeters.perimeter[Perimeter::RIGHT].pid.setup(51.0, 12.5, 0.8);  // perimeter PID controller
   trackingPerimeterTransitionTimeOut = 2000;
   trackingErrorTimeOut = 10000;
-  trackingBlockInnerWheelWhilePerimeterStruggling = 1;
+  trackingBlockInnerWheelWhilePerimeterStruggling = true;
 
   // ------  IMU (compass/accel/gyro) ----------------------
   imu.pid[Imu::DIR].setup(5.0, 1.0, 1.0);  // direction PID controller
@@ -185,7 +185,7 @@ void Mower::setup()
   wheels.wheel[Wheel::LEFT].motor.config(1000.0,   // Acceleration
                                          255,      // Max PWM
                                          75,       // Max Power
-                                         false,    // Modulation
+                                         false,    // Regulate
                                          100,      // Max RPM
                                          0.0);     // Set RPM
   wheels.wheel[Wheel::LEFT].motor.setScale(3.25839);
@@ -205,7 +205,7 @@ void Mower::setup()
   wheels.wheel[Wheel::RIGHT].motor.config(1000.0,   // Acceleration
                                           255,      // Max PWM
                                           75,       // Max Power
-                                          false,    // Modulation
+                                          false,    // Regulate
                                           100,      // Max RPM
                                           0.0);     // Set RPM
   wheels.wheel[Wheel::RIGHT].motor.setScale(3.25839);
@@ -230,7 +230,7 @@ void Mower::setup()
                       0,          // Max RPM
                       3300);      // Set RPM
   cutter.motor.setScale(3.25839);
-  cutter.motor.pid.setup(0.005, 0.01, 0.01, -127, 127, 127);  // Kp, Ki, Kd
+  cutter.motor.pid.setup(0.005, 0.01, 0.01);  // Kp, Ki, Kd
 
   // lawn sensor
   lawnSensor.setup(PIN_LAWN_FRONT_SEND,
@@ -395,7 +395,7 @@ void Mower::setActuator(Robot::actuatorE type, int value)
       if (!setDS1307(datetime))
       {
         Console.println("RTC comm error!");
-        addErrorCounter(ERR_RTC_COMM);
+        incErrorCounter(ERR_RTC_COMM);
         setNextState(STATE_ERROR);
       }
       break;

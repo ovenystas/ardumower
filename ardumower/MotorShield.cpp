@@ -59,3 +59,43 @@ void MotorShield::readCurrent(void)
   int16_t newAdcValue = ADCMan.read(pinSense[channel]);
   filter.addValue(newAdcValue);
 }
+
+// Sets motor PWM
+// - ensures that the motor is not switched to 100% too fast (acceleration)
+// - ensures that the motor voltage is not higher than pwmMax
+void MotorShield::control(void)
+{
+  int pwmNew;
+
+  if (regulate)
+  {
+    // Use PID regulator.
+    pid.setYMin(-pwmMax);
+    pid.setYMax(pwmMax);
+    pid.setMaxOutput(pwmMax);
+    pid.setSetpoint(rpmSet);
+    float y = pid.compute(rpmMeas);
+    pwmNew = (int)(round(y));
+  }
+  else
+  {
+    // Direct control of PWM
+    pwmSet = map(rpmSet, -rpmMax, rpmMax, -pwmMax, pwmMax);
+    if (pwmSet <= pwmCur)
+    {
+      // Ignore acceleration if speed is lowered (e.g. motor is shut down).
+      pwmNew = pwmSet;
+    }
+    else
+    {
+      // Use acceleration when speed is increased
+      // http://phrogz.net/js/framerate-independent-low-pass-filter.html
+      // smoothed += elapsedTime * ( newValue - smoothed ) / smoothing;
+      int addPwm = getSamplingTime() * (float)(pwmSet - pwmCur) / acceleration;
+      pwmNew = pwmCur + addPwm;
+    }
+  }
+
+  pwmCur = constrain(pwmNew, -pwmMax, pwmMax);
+  setSpeed();
+}

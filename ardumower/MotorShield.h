@@ -22,6 +22,7 @@ class MotorShield: public MotorDrv
     void setSpeed(const int16_t speed);
     void setSpeed(const int16_t speed, const bool brake);
     void readCurrent(void);
+    void control(void);
 
   private:
     static const uint8_t PIN_DIRA {12};
