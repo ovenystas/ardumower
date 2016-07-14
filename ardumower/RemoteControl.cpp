@@ -593,20 +593,26 @@ void RemoteControl::processMotorMenu(const String pfodCmd)
     {
       case 0:
         robot_p->setNextState(STATE_OFF, 0);
+        robot_p->setSpeed(0);
+        robot_p->setSteer(0);
         break;
 
       case 1:
         robot_p->setNextState(STATE_MANUAL, 0);
-        robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmSet = 0;
-        robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet =
-            robot_p->wheels.wheel[Wheel::LEFT].motor.rpmMax;
+        robot_p->setSpeed(+50);
+        robot_p->setSteer(+50);
+//        robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmSet = 0;
+//        robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet =
+//            robot_p->wheels.wheel[Wheel::LEFT].motor.rpmMax;
         break;
 
       case 2:
         robot_p->setNextState(STATE_MANUAL, 0);
-        robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet = 0;
-        robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmSet =
-            robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmMax;
+        robot_p->setSpeed(+50);
+        robot_p->setSteer(-50);
+//        robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet = 0;
+//        robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmSet =
+//            robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmMax;
         break;
     }
   }
@@ -796,17 +802,16 @@ void RemoteControl::sendSonarMenu(const boolean update)
   sendYesNo(robot_p->sonars.sonar[Sonars::RIGHT].use);
   Bluetooth.print(F("|d01~Counter "));
   Bluetooth.print(robot_p->sonars.getDistanceCounter());
-  Bluetooth.println(F("|d02~Value [us] l, c, r"));
+  Bluetooth.println(F("|d02~Value [cm] l, c, r"));
   for (uint8_t i = 0; i < Sonars::END; i++)
   {
-    Bluetooth.print(robot_p->sonars.sonar[i].getDistance_us());
+    Bluetooth.print(robot_p->sonars.sonar[i].getDistance_cm());
     if (i < Sonars::END - 1)
     {
       Bluetooth.print(", ");
     }
   }
-  sendSlider("d03", F("Trigger below"),
-             robot_p->sonars.triggerBelow, "", 1, 3000);
+  sendSlider("d03", F("Trigger below [us]"), robot_p->sonars.triggerBelow, "", 1, 3000);
   Bluetooth.println("}");
 }
 
@@ -2167,7 +2172,7 @@ void RemoteControl::run()
       Bluetooth.print(",");
       for (uint8_t i = 0; i < Sonars::END; i++)
       {
-        Bluetooth.print(robot_p->sonars.sonar[i].getDistance_us());
+        Bluetooth.print(robot_p->sonars.sonar[i].getDistance_cm());
         Bluetooth.print(",");
       }
       Bluetooth.print(robot_p->perimeters.perimeter[Perimeter::LEFT].isInside());
@@ -2185,7 +2190,7 @@ void RemoteControl::run()
   {
     if (curMillis >= nextPlotTime)
     {
-      if (perimeterCaptureIdx == 32 * 3)
+      if (perimeterCaptureIdx >= 32 * 3)
       {
         if (ADCMan.isCaptureComplete(A2))  //FIXME: Use define PIN_PERIMETER_LEFT
         {
@@ -2353,9 +2358,7 @@ bool RemoteControl::readSerial()
       else if (pfodCmd == "y5")
       {
         // plot sensor counters
-        Bluetooth.print(
-            F("{=Sensor counters`300|time s`0|state`1|motL`2|motR`3|motM`4|"
-                "bumL`5|bumR`6"));
+        Bluetooth.print(F("{=Sensor counters`300|time s`0|state`1|motL`2|motR`3|motM`4|bumL`5|bumR`6"));
         Bluetooth.println(F("|son`7|peri`8|lawn`9|rain`10|dropL`11|dropR`12}"));
         nextPlotTime = 0;
         pfodState = PFOD_PLOT_SENSOR_COUNTERS;
@@ -2366,19 +2369,15 @@ bool RemoteControl::readSerial()
         /*Bluetooth.print(F("{=Perimeter spectrum`"));
          Bluetooth.print(Perimeter.getFilterBinCount());
          Bluetooth.print(F("|freq (Hz)`0|magnitude`0~60~-1|selected band`0~60~-1}"));*/
-        Bluetooth.println(
-            F("{=Perimeter`128|sig`1|mag`2|smag`3|in`4|cnt`5|on`6|qty`7}"));
+        Bluetooth.println(F("{=Perimeter`128|sig`1|mag`2|smag`3|in`4|cnt`5|on`6|qty`7}"));
         nextPlotTime = 0;
         pfodState = PFOD_PLOT_PERIMETER;
       }
       else if (pfodCmd == "y7")
       {
         // plot sensor values
-        Bluetooth.print(
-            F("{=Sensors`300|time s`0|state`1|motL`2|motR`3|motM`4|"
-                "sonL`5|sonC`6"));
-        Bluetooth.println(
-            F("|sonR`7|peri`8|lawn`9|rain`10|dropL`11|dropR`12}"));
+        Bluetooth.print(F("{=Sensors`300|time s`0|state`1|motL`2|motR`3|motM`4|sonL`5|sonC`6"));
+        Bluetooth.println(F("|sonR`7|peri`8|lawn`9|rain`10|dropL`11|dropR`12}"));
         nextPlotTime = 0;
         pfodState = PFOD_PLOT_SENSORS;
       }

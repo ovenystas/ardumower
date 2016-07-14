@@ -382,6 +382,26 @@ class Robot
       return statsMowTimeHoursTotal;
     }
 
+    int8_t getSpeed() const
+    {
+      return speed;
+    }
+
+    void setSpeed(int8_t speed)
+    {
+      this->speed = speed;
+    }
+
+    int8_t getSteer() const
+    {
+      return steer;
+    }
+
+    void setSteer(int8_t steer)
+    {
+      this->steer = steer;
+    }
+
   protected:
     // convert ppm time to RC slider value
     virtual int rcValue(const int ppmTime);

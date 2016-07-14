@@ -163,7 +163,7 @@ void Perimeter::matchedFilter(void)
   if (callCounter2 >= 200UL)
   {
     callCounter2 = 0;
-    print = true;
+    //print = true;
   }
   mag = corrFilter(sigcode_p, subSample / 2, sigcode_size, hSum, samples_p,
                    numSamples - sigcode_size * subSample / 2, filterQuality, print);
