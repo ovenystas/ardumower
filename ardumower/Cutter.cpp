@@ -10,9 +10,8 @@
 
 void Cutter::control(void)
 {
-  // TODO: Optimize speed by using int math instead of double
-  int16_t rpmMax = motor.pwmMax;
-  int16_t rpmNew = (double)rpmMax * ((double)speed / 100.0);
+  int16_t rpmMax = motor.rpmMax;
+  int16_t rpmNew = rpmMax * speed / 100;
   rpmNew = constrain(rpmNew, 0, rpmMax);
   motor.setRpmSet(rpmNew);
   motor.control();

@@ -22,7 +22,7 @@ class Motor
     int rpmMax {};
     int rpmSet {};
     uint8_t pwmMax {};
-    int16_t pwmCur {};  // TODO: Move to private
+    uint8_t pwmCur {};  // TODO: Move to private
     int powerMax {};
     bool swapDir { false };
     int powerIgnoreTime {};

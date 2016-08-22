@@ -24,6 +24,8 @@ class Wheel
 
     MotorShield motor;
     Encoder encoder;
+
+    void control(int8_t speed);
 };
 
 class Wheels

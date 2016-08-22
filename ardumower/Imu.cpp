@@ -139,22 +139,9 @@ float Imu::fusionPI(const float w, const float a, const float b)
   return scalePI(c);
 }
 
-void Imu::loadSaveCalibrationData(const boolean readflag)
-{
-  int addr = ADDR;
-  short magic = MAGIC;
-  eereadwrite(readflag, addr, magic); // magic
-  eereadwrite(readflag, addr, accelOffset);
-  eereadwrite(readflag, addr, accelScale);
-  eereadwrite(readflag, addr, magnetometerOffset);
-  eereadwrite(readflag, addr, magnetometerScale);
-}
-
 void Imu::loadCalibrationData(void)
 {
-  short magic;
-  int addr = ADDR;
-  eeread(addr, magic);
+  uint8_t magic = EEPROM.read(ADDR);
   if (magic != MAGIC)
   {
     Console.println(F("IMU error: no calib data"));
@@ -162,17 +149,21 @@ void Imu::loadCalibrationData(void)
   }
   calibrationAvailable = true;
   Console.println(F("IMU: Found calibration data"));
-  loadSaveCalibrationData(true);
+  EEPROM.get(ADDR + 1, calibrationData);
+}
+
+void Imu::saveCalibrationData(void)
+{
+  EEPROM.put(ADDR + 1, calibrationData);
 }
 
 void Imu::deleteCalibrationData(void)
 {
-  int addr = ADDR;
-  eewrite(addr, (short)0); // magic
-  memset(&accelOffset, 0, sizeof(accelOffset));
-  memset(&accelScale, 1, sizeof(accelScale));
-  memset(&magnetometerOffset, 0, sizeof(magnetometerOffset));
-  memset(&magnetometerScale, 1, sizeof(magnetometerScale));
+  EEPROM.write(ADDR, 0); // clear magic
+  calibrationData.accelOffset = {0.0, 0.0, 0.0};
+  calibrationData.accelScale = {1.0, 1.0, 1.0};
+  calibrationData.magnetometerOffset = {0, 0, 0};
+  calibrationData.magnetometerScale = {1, 1, 1};
   calibrationAvailable = false;
   Console.println(F("IMU calibration deleted"));
 }
@@ -209,32 +200,32 @@ void Imu::printCalibrationData(void)
 {
   Console.println(F("--------"));
   Console.print(F("accOffset="));
-  printPointln(accelOffset);
+  printPointln(calibrationData.accelOffset);
   Console.print(F("accScale="));
-  printPointln(accelScale);
+  printPointln(calibrationData.accelScale);
   Console.print(F("magOffset="));
-  printPointln(magnetometerOffset);
+  printPointln(calibrationData.magnetometerOffset);
   Console.print(F("magScale="));
-  printPointln(magnetometerScale);
+  printPointln(calibrationData.magnetometerScale);
   Console.println(F("--------"));
 }
 
 // Calculate gyro offsets
 void Imu::calibrateGyro(void)
 {
-  unsigned int numberOfSamples = 32;
+  const uint8_t numberOfSamples = 32;
   Console.println(F("---calibGyro---"));
   useGyroCalibration = false;
-  memset(&gyroOffset, 0, sizeof(gyroOffset));
+  gyroOffset = { 0, 0, 0 };
   point_int_t offset;
   for (;;)
   {
     int16_t zmin = INT16_MAX;
     int16_t zmax = INT16_MIN;
     int16_t noise = 0;
-    memset(&offset, 0.0, sizeof(offset));
+    offset = { 0, 0, 0 };
 
-    for (unsigned int i = 0; i < numberOfSamples; i++)
+    for (uint8_t i = 0; i < numberOfSamples; i++)
     {
       readGyroscope();
 
@@ -329,9 +320,9 @@ void Imu::readAccelerometer()
 
   if (useAccelCalibration)
   {
-    accel.x = (accMag.a.x - accelOffset.x) / accelScale.x;
-    accel.y = (accMag.a.y - accelOffset.y) / accelScale.y;
-    accel.z = (accMag.a.z - accelOffset.z) / accelScale.z;
+    accel.x = ((float)accMag.a.x - calibrationData.accelOffset.x) / calibrationData.accelScale.x;
+    accel.y = ((float)accMag.a.y - calibrationData.accelOffset.y) / calibrationData.accelScale.y;
+    accel.z = ((float)accMag.a.z - calibrationData.accelOffset.z) / calibrationData.accelScale.z;
   }
   else
   {
@@ -409,12 +400,12 @@ void Imu::readMagnetometer()
 
   if (useMagnetometerCalibration)
   {
-    mag.x = (float)(accMag.a.x - magnetometerOffset.x) /
-            (float)magnetometerScale.x;
-    mag.y = (float)(accMag.a.y - magnetometerOffset.y) /
-            (float)magnetometerScale.y;
-    mag.z = (float)(accMag.a.z - magnetometerOffset.z) /
-            (float)magnetometerScale.z;
+    mag.x = (float)(accMag.a.x - calibrationData.magnetometerOffset.x) /
+            (float)calibrationData.magnetometerScale.x;
+    mag.y = (float)(accMag.a.y - calibrationData.magnetometerOffset.y) /
+            (float)calibrationData.magnetometerScale.y;
+    mag.z = (float)(accMag.a.z - calibrationData.magnetometerOffset.z) /
+            (float)calibrationData.magnetometerScale.z;
   }
   else
   {
@@ -453,13 +444,13 @@ void Imu::calibrateMagnetometerStartStop(void)
     range.y = magMax.y - magMin.y;
     range.z = magMax.z - magMin.z;
 
-    magnetometerScale.x = roundDivision(range.x, 2);
-    magnetometerScale.y = roundDivision(range.y, 2);
-    magnetometerScale.z = roundDivision(range.z, 2);
+    calibrationData.magnetometerScale.x = roundDivision(range.x, 2);
+    calibrationData.magnetometerScale.y = roundDivision(range.y, 2);
+    calibrationData.magnetometerScale.z = roundDivision(range.z, 2);
 
-    magnetometerOffset.x = magnetometerScale.x + magMin.x;
-    magnetometerOffset.y = magnetometerScale.y + magMin.y;
-    magnetometerOffset.z = magnetometerScale.z + magMin.z;
+    calibrationData.magnetometerOffset.x = calibrationData.magnetometerScale.x + magMin.x;
+    calibrationData.magnetometerOffset.y = calibrationData.magnetometerScale.y + magMin.y;
+    calibrationData.magnetometerOffset.z = calibrationData.magnetometerScale.z + magMin.z;
 
     saveCalibrationData();
     printCalibrationData();
@@ -548,7 +539,7 @@ void Imu::calibrateMagnetometerUpdate(void)
 // calculate acceleration sensor offsets
 boolean Imu::calibrateAccelerometerNextAxis(void)
 {
-  unsigned int numberOfSamples = 32;
+  const uint8_t numberOfSamples = 32;
   boolean complete = false;
   tone(pinBuzzer, 440);
 
@@ -574,7 +565,7 @@ boolean Imu::calibrateAccelerometerNextAxis(void)
 
   // Get sample values from accelerometer
   point_int_t acc = { 0, 0, 0 };
-  for (unsigned int i = 0; i < numberOfSamples; i++)
+  for (uint8_t i = 0; i < numberOfSamples; i++)
   {
     readAccelerometer();
 
@@ -643,13 +634,13 @@ boolean Imu::calibrateAccelerometerNextAxis(void)
     range.y = accelMax.y - accelMin.y;
     range.z = accelMax.z - accelMin.z;
 
-    accelScale.x = range.x / 2;
-    accelScale.y = range.y / 2;
-    accelScale.z = range.z / 2;
+    calibrationData.accelScale.x = range.x / 2;
+    calibrationData.accelScale.y = range.y / 2;
+    calibrationData.accelScale.z = range.z / 2;
 
-    accelOffset.x = accelScale.x + accelMin.x;
-    accelOffset.y = accelScale.y + accelMin.y;
-    accelOffset.z = accelScale.z + accelMin.z;
+    calibrationData.accelOffset.x = calibrationData.accelScale.x + accelMin.x;
+    calibrationData.accelOffset.y = calibrationData.accelScale.y + accelMin.y;
+    calibrationData.accelOffset.z = calibrationData.accelScale.z + accelMin.z;
 
     printCalibrationData();
     saveCalibrationData();

@@ -73,6 +73,14 @@ typedef struct ypr_t
   float roll;
 } ypr_t;
 
+typedef struct calibrationData_t
+{
+  point_float_t accelOffset;
+  point_float_t accelScale;
+  point_int_t magnetometerOffset;
+  point_int_t magnetometerScale;
+} calibrationData_t;
+
 class Imu
 {
   public:
@@ -152,7 +160,6 @@ class Imu
 
   private:
     void read();
-    void loadSaveCalibrationData(const boolean readflag);
     void calibrateGyro(void);
     void loadCalibrationData(void);
 
@@ -162,10 +169,7 @@ class Imu
     void printPoint(const point_float_t point);
     void printPointln(const point_float_t point);
     void printCalibrationData(void);
-    void saveCalibrationData(void)
-    {
-      loadSaveCalibrationData(false);
-    }
+    void saveCalibrationData(void);
 
     // hardware
     void initAccelerometer(void);
@@ -209,13 +213,17 @@ class Imu
     boolean calibrationAvailable { false };
     byte state { IMU_RUN };
     unsigned long lastAHRSTime {};
+    calibrationData_t calibrationData {
+      { 0, 0, 0 },
+      { 1, 1, 1 },
+      { 0, 0, 0 },
+      { 1, 1, 1 }
+    };
 
     // --------- acceleration state ---------------------
     LSM303 accMag;
     point_float_t accelMin {};
     point_float_t accelMax {};
-    point_float_t accelOffset { 0, 0, 0 };
-    point_float_t accelScale { 1, 1, 1 };
     int calibAccelAxisCounter {};
     boolean useAccelCalibration { true };
 
@@ -229,8 +237,6 @@ class Imu
     point_int_t magLast {};
     point_int_t magMin {}; // magnetometer sensor data (raw)
     point_int_t magMax {}; // magnetometer sensor data (raw)
-    point_int_t magnetometerOffset { 0, 0, 0 };
-    point_int_t magnetometerScale { 1, 1, 1 };
     boolean useMagnetometerCalibration { true };
 
     float accelPitch {};
