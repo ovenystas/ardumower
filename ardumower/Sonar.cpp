@@ -117,3 +117,16 @@ bool Sonars::isTimeToCheck()
   }
   return false;
 }
+
+bool Sonars::isClose()
+{
+  uint16_t closeLimit = triggerBelow * 2;
+  for (uint8_t i = 0; i < Sonars::END; i++)
+  {
+    if (sonar[i].getDistance_us() < closeLimit)
+    {
+      return true;
+    }
+  }
+  return false;
+}

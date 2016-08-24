@@ -31,6 +31,7 @@
 #include <EEPROM.h>
 
 #include "AdcManager.h"
+#include "Battery.h"
 #include "Bumper.h"
 #include "Button.h"
 #include "Cutter.h"
@@ -139,15 +140,22 @@ enum consoleE
 
 #define BATTERY_SW_OFF -1
 
+typedef struct statsT
+{
+  unsigned long mowTimeMinutesTotal {};
+  unsigned int mowTimeMinutesTrip {};
+  unsigned int batteryChargingCounterTotal {};
+  float batteryChargingCapacityTrip {};
+  float batteryChargingCapacityTotal {};
+  float batteryChargingCapacityAverage {};
+} statsT;
+
 class Robot
 {
   public:
     // sensors
     typedef enum sensorE
     {
-      SEN_BAT_VOLTAGE,       // Volt * 100
-      SEN_CHG_CURRENT,       // Ampere * 100
-      SEN_CHG_VOLTAGE,       // Volt * 100
       SEN_RTC,
     } sensorE;
 
@@ -160,7 +168,6 @@ class Robot
       ACT_USER_SW2,
       ACT_USER_SW3,
       ACT_RTC,
-      ACT_CHGRELAY,
       ACT_BATTERY_SW,
     } actuatorE;
 
@@ -245,23 +252,8 @@ class Robot
     boolean userSwitch3 { false }; // user-defined switch 3 (default value)
 
     // --------- charging -------------------------------
-    boolean batMonitor;              // monitor battery and charge voltage?
-    float batGoHomeIfBelow;     // drive home voltage (Volt)
-    float batSwitchOffIfBelow {};  // switch off if below voltage (Volt)
-    int batSwitchOffIfIdle;      // switch off battery if idle for minutes
-    float batFactor;     // battery conversion factor
-    float batChgFactor;     // battery conversion factor
-    float batFull;      // battery reference Voltage (fully charged)
-    float batChargingCurrentMax; // maximum current your charger can devliver
-    float batFullCurrent; // current flowing when battery is fully charged
-    float startChargingIfBelow; // start charging if battery Voltage is below
-    unsigned long chargingTimeout; // safety timer for charging
-    float chgSenseZero;       // charge current sense zero point
-    float chgFactor;     // charge current conversion factor
-    float chgSense; // mV/A empfindlichkeit des Ladestromsensors in mV/A (Für ACS712 5A = 185)
-    byte chgChange;       // messwertumkehr von - nach +         1oder 0
-    byte chgSelection;       // Senor Auswahl
-    int chgNull;        // Nulldurchgang Ladestromsensor
+    Battery battery;
+
     int stationRevTime {};    // charge station reverse time (ms)
     int stationRollTime {};    // charge station roll time (ms)
     int stationForwTime {};    // charge station forward time (ms)
@@ -271,13 +263,7 @@ class Robot
     byte errorCounterMax[ERR_ENUM_COUNT] {};
 
     // ------------robot stats---------------------------
-    boolean statsOverride;
-    unsigned long statsMowTimeMinutesTotal {};
-    unsigned int statsMowTimeMinutesTrip {};
-    unsigned int statsBatteryChargingCounterTotal {};
-    float statsBatteryChargingCapacityTrip {};
-    float statsBatteryChargingCapacityTotal {};
-    float statsBatteryChargingCapacityAverage {};
+    statsT stats {};
 
     // --------------------------------------------------
     Robot();
@@ -356,27 +342,6 @@ class Robot
       return perimeterMag;
     }
 
-    float getBatVoltage() const
-    {
-      return batVoltage;
-    }
-    float getBatteryVoltage();
-
-    float getBatCapacity() const
-    {
-      return batCapacity;
-    }
-
-    float getChgCurrent() const
-    {
-      return chgCurrent;
-    }
-
-    float getChgVoltage() const
-    {
-      return chgVoltage;
-    }
-
     float getStatsMowTimeHoursTotal() const
     {
       return statsMowTimeHoursTotal;
@@ -405,11 +370,9 @@ class Robot
   protected:
     // convert ppm time to RC slider value
     virtual int rcValue(const int ppmTime);
-    virtual void loadSaveErrorCounters(const boolean readflag);
     virtual void loadErrorCounters();
     virtual void saveErrorCounters();
     virtual void loadSaveUserSettings(const boolean readflag);
-    virtual void loadSaveRobotStats(boolean readflag);
     virtual void loadUserSettings();
     virtual void checkErrorCounter();
     virtual void printSettingSerial();
@@ -524,16 +487,6 @@ class Robot
     // --------- pfodApp ----------------------------------
     unsigned long nextTimePfodLoop;
 
-    // --------- charging ---------------------------------
-    int batADC;
-    float batVoltage;  // battery voltage (Volt)
-    float batCapacity; // battery capacity (mAh)
-    float chgVoltage;  // charge voltage (Volt)
-    float chgCurrent;  // charge current  (Ampere)
-    unsigned long nextTimeBattery;
-    unsigned long nextTimeCheckBattery;
-    float lastTimeBatCapacity;
-
     // --------- driving ----------------------------------
     int8_t speed {}; // Range -100..+100, - = reverse, + = forward
     int8_t steer {}; // Range -100..+100, - = left, + = right
@@ -551,11 +504,11 @@ class Robot
     unsigned long nextTimeErrorBeep;
 
     // ------------robot stats-----------------------------
-    unsigned long nextTimeRobotStats;
+    unsigned long nextTimeRobotStats {};
     boolean statsMowTimeTotalStart { false };
-    unsigned int statsMowTimeMinutesTripCounter;
-    float statsMowTimeHoursTotal;
-    unsigned int statsBatteryChargingCounter;
+    unsigned int statsMowTimeMinutesTripCounter {};
+    float statsMowTimeHoursTotal {};
+    unsigned int statsBatteryChargingCounter {};
 
 
     void setMotorPWM(int pwm, const uint8_t motor, const boolean useAccel);

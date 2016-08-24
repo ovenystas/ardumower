@@ -5,4 +5,6 @@
 /build/
 .cproject
 .project
-.settings/*
+*.settings/
+*/Release/
+

@@ -48,7 +48,7 @@ bool Bumpers::isAnyHit(void)
 bool Bumpers::isTimeToRun(void)
 {
   unsigned long curMillis = millis();
-  if (used && curMillis >= nextTime)
+  if (settings.used && curMillis >= nextTime)
   {
     nextTime = curMillis + TIME_BETWEEN_RUNS;
     return true;

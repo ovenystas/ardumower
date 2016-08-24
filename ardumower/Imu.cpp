@@ -901,8 +901,3 @@ bool Imu::isTimeToControl(void)
   }
   return false;
 }
-
-float Imu::convertRadToDeg(const float rad)
-{
-  return rad / PI * 180.0;
-}

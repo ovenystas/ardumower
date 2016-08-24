@@ -32,9 +32,9 @@
 
 void Pid::setup(const float Kp, const float Ki, const float Kd)
 {
-  this->Kp = Kp;
-  this->Ki = Ki;
-  this->Kd = Kd;
+  this->settings.Kp = Kp;
+  this->settings.Ki = Ki;
+  this->settings.Kd = Kd;
 }
 
 void Pid::setup(const float Kp, const float Ki, const float Kd,
@@ -65,18 +65,19 @@ float Pid::compute(float processValue)
   errorSum += error;
 
   // anti wind-up
-  float iTerm = Ki * dt * errorSum;
+  float iTerm = settings.Ki * dt * errorSum;
   if (iTerm < -max_output)
   {
     iTerm = -max_output;
-    errorSum = -max_output / dt / Ki;
+    errorSum = -max_output / dt / settings.Ki;
   }
   if (iTerm > max_output)
   {
     iTerm = max_output;
-    errorSum = max_output / dt / Ki;
+    errorSum = max_output / dt / settings.Ki;
   }
-  float out = Kp * error + iTerm + Kd / dt * (error - errorOld);
+  float out = settings.Kp * error + iTerm +
+      settings.Kd / dt * (error - errorOld);
   errorOld = error;
 
   // restrict output to min/max

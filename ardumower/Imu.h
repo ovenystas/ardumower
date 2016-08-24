@@ -113,7 +113,7 @@ class Imu
     }
     float getYawDeg()
     {
-      return convertRadToDeg(ypr.yaw);
+      return degrees(ypr.yaw);
     }
 
     float getPitch() const
@@ -122,7 +122,7 @@ class Imu
     }
     float getPitchDeg()
     {
-      return convertRadToDeg(ypr.pitch);
+      return degrees(ypr.pitch);
     }
 
     float getRoll() const
@@ -131,7 +131,7 @@ class Imu
     }
     float getRollDeg()
     {
-      return convertRadToDeg(ypr.roll);
+      return degrees(ypr.roll);
     }
 
     // --------- gyro state -----------------------------
@@ -190,7 +190,6 @@ class Imu
     float distancePI(const float x, const float w);
     float distance180(const float x, const float w);
     float fusionPI(const float w, const float a, const float b);
-    float convertRadToDeg(const float rad);
 
     // Filter
     float Complementary(const float newAngle, const float newRate,

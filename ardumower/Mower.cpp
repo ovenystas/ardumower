@@ -66,28 +66,6 @@ Mower::Mower()
   // ------ model R/C ------------------------------------
   remoteUse = false; // use model remote control (R/C)?
 
-  // ------ battery -------------------------------------
-  batMonitor = false;          // monitor battery and charge voltage?
-  batGoHomeIfBelow = 11.8;     // drive home voltage (Volt)
-  batSwitchOffIfBelow = 10.8;  // switch off battery if below voltage (Volt)
-  batSwitchOffIfIdle = 1;      // switch off battery if idle (minutes)
-  batFactor = 0.495;           // battery conversion factor  / 10 due to arduremote bug, can be removed after fixing (look in robot.cpp)
-  batChgFactor = 0.495;        // battery conversion factor  / 10 due to arduremote bug, can be removed after fixing (look in robot.cpp)
-  batFull = 14.7;              // battery reference Voltage (fully charged) PLEASE ADJUST IF USING A DIFFERENT BATTERY VOLTAGE! FOR a 12V SYSTEM TO 14.4V
-  batChargingCurrentMax = 1.6; // maximum current your charger can deliver
-  batFullCurrent = 0.3;        // current flowing when battery is fully charged
-  startChargingIfBelow = 13.5; // start charging if battery Voltage is below
-  chargingTimeout = 12600000;  // safety timer for charging (ms) 12600000 = 3.5hrs
-  // Sensorausgabe Konsole      (chgSelection = 0)
-  // Einstellungen ACS712 5A    (chgSelection = 1 / chgSenseZero ~ 511 / chgFactor = 39 / chgSense = 185.0 / chgChange = 0 oder 1 (je nach Stromrichtung) / chgNull  = 2)
-  // Einstellungen INA169 board (chgSelection = 2)
-  chgSelection = 2;
-  chgSenseZero = 511;          // charge current sense zero point
-  chgFactor = 39;              // charge current conversion factor - Empfindlichkeit nimmt mit ca. 39/V Vcc ab
-  chgSense = 185.0;            // mV/A empfindlichkeit des Ladestromsensors in mV/A (Für ACS712 5A = 185)
-  chgChange = 0;               // Messwertumkehr von - nach +         1 oder 0
-  chgNull = 2;                 // Nullduchgang abziehen (1 oder 2)
-
   // ------  charging station ---------------------------
   stationRevTime = 1800;   // charge station reverse time (ms)
   stationRollTime = 1000;  // charge station roll time (ms)
@@ -106,12 +84,6 @@ Mower::Mower()
 
   // ----- timer -----------------------------------------
   timerUse = false; // use RTC and timer?
-
-  // ------ mower stats-------------------------------------------
-  statsOverride = false; // if set to true mower stats are overwritten with the values below - be careful
-  statsMowTimeMinutesTotal = 300;
-  statsBatteryChargingCounterTotal = 11;
-  statsBatteryChargingCapacityTotal = 30000;
 
   // -----------configuration end-------------------------------------
 }
@@ -155,10 +127,6 @@ void Mower::setup()
   Console.println("SETUP");
   rc.initSerial(PFOD_BAUDRATE);
 
-  // Keep battery switched ON
-  pinMode(PIN_BATTERY_SWITCH, OUTPUT);
-  digitalWrite(PIN_BATTERY_SWITCH, HIGH);
-
   // LED
   pinMode(PIN_LED, OUTPUT);
 
@@ -167,11 +135,8 @@ void Mower::setup()
   digitalWrite(PIN_BUZZER, 0);
 
   // Battery
-  pinMode(PIN_BATTERY_VOLTAGE, INPUT);
-  pinMode(PIN_CHARGE_CURRENT, INPUT);
-  pinMode(PIN_CHARGE_VOLTAGE, INPUT);
-  pinMode(PIN_CHARGE_RELAY, OUTPUT);
-  setActuator(ACT_CHGRELAY, 0);
+  battery.setup(PIN_BATTERY_VOLTAGE, PIN_CHARGE_VOLTAGE, PIN_CHARGE_CURRENT,
+                PIN_CHARGE_RELAY, PIN_BATTERY_SWITCH);
 
   // ------- wheel motors -----------------------------
   wheels.rollTimeMax = 1500;      // max. roll time (ms)
@@ -285,8 +250,6 @@ void Mower::setup()
   pinMode(PIN_USER_SWITCH_2, OUTPUT);
   pinMode(PIN_USER_SWITCH_3, OUTPUT);
 
-  // other
-  pinMode(PIN_VOLTAGE_MEASUREMENT, INPUT);
 
   // PWM frequency setup
   // For obstacle detection, motor torque should be detectable - torque can be computed by motor current.
@@ -318,10 +281,6 @@ void Mower::setup()
 
   // ADC
   ADCMan.init();
-  ADCMan.setCapture(PIN_CHARGE_CURRENT, 1, true); //Aktivierung des LaddeStrom Pins beim ADC-Managers
-  ADCMan.setCapture(PIN_BATTERY_VOLTAGE, 1, false);
-  ADCMan.setCapture(PIN_CHARGE_VOLTAGE, 1, false);
-  ADCMan.setCapture(PIN_VOLTAGE_MEASUREMENT, 1, false);
 
   imu.init(PIN_BUZZER);
   gps.init();
@@ -333,20 +292,6 @@ int Mower::readSensor(Robot::sensorE type)
 {
   switch (type)
   {
-// battery----------------------------------------------------------------------
-    case SEN_BAT_VOLTAGE:
-      ADCMan.read(PIN_VOLTAGE_MEASUREMENT);
-      return ADCMan.read(PIN_BATTERY_VOLTAGE);
-      break;
-
-    case SEN_CHG_VOLTAGE:
-      return ADCMan.read(PIN_CHARGE_VOLTAGE);
-      break;
-
-    case SEN_CHG_CURRENT:
-      return ADCMan.read(PIN_CHARGE_CURRENT);
-      break;
-
 // rtc--------------------------------------------------------------------------
     case SEN_RTC:
       if (!readDS1307(datetime))
@@ -398,10 +343,6 @@ void Mower::setActuator(Robot::actuatorE type, int value)
         incErrorCounter(ERR_RTC_COMM);
         setNextState(STATE_ERROR);
       }
-      break;
-
-    case ACT_CHGRELAY:
-      digitalWrite(PIN_CHARGE_RELAY, value);
       break;
 
     case ACT_BATTERY_SW:

@@ -77,6 +77,7 @@ class RemoteControl
     int8_t perimeterCapture[32];
     int perimeterCaptureIdx {0};
     float stringToFloat(const String &s);
+    void parsePfodCmd();
 
     // generic
     void sendYesNo(const bool value);

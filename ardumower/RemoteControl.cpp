@@ -121,7 +121,6 @@ void RemoteControl::sendTimer(const ttimer_t timer)
   }
 }
 
-// NOTE: pfodApp rev57 changed slider protocol:  displayValue = (sliderValue + offset) * scale
 void RemoteControl::sendSlider(const String cmd, const String title,
                                const float value, const String unit,
                                const double scale, const float maxvalue,
@@ -168,18 +167,9 @@ void RemoteControl::sendPIDSlider(const String cmd, const String title,
                                   const Pid &pid, const double scale,
                                   const float maxvalue)
 {
-  sendSlider(cmd + "p", title + " P", pid.Kp, "", scale, maxvalue);
-  sendSlider(cmd + "i", title + " I", pid.Ki, "", scale, maxvalue);
-  sendSlider(cmd + "d", title + " D", pid.Kd, "", scale, maxvalue);
-}
-
-void RemoteControl::processSlider(const String result, float &value,
-                                  const double scale)
-{
-  int idx = result.indexOf('`');
-  String s = result.substring(idx + 1);
-  float v = stringToFloat(s);
-  value = v * scale;
+  sendSlider(cmd + "p", title + " P", pid.settings.Kp, "", scale, maxvalue);
+  sendSlider(cmd + "i", title + " I", pid.settings.Ki, "", scale, maxvalue);
+  sendSlider(cmd + "d", title + " D", pid.settings.Kd, "", scale, maxvalue);
 }
 
 void RemoteControl::processPIDSlider(const String result, const String cmd,
@@ -192,28 +182,37 @@ void RemoteControl::processPIDSlider(const String result, const String cmd,
   float v = stringToFloat(s);
   if (pfodCmd.startsWith(cmd + "p"))
   {
-    pid.Kp = v * scale;
-    if (pid.Kp < scale)
+    pid.settings.Kp = v * scale;
+    if (pid.settings.Kp < scale)
     {
-      pid.Kp = 0.0;
+      pid.settings.Kp = 0.0;
     }
   }
   else if (pfodCmd.startsWith(cmd + "i"))
   {
-    pid.Ki = v * scale;
-    if (pid.Ki < scale)
+    pid.settings.Ki = v * scale;
+    if (pid.settings.Ki < scale)
     {
-      pid.Ki = 0.0;
+      pid.settings.Ki = 0.0;
     }
   }
   else if (pfodCmd.startsWith(cmd + "d"))
   {
-    pid.Kd = v * scale;
-    if (pid.Kd < scale)
+    pid.settings.Kd = v * scale;
+    if (pid.settings.Kd < scale)
     {
-      pid.Kd = 0.0;
+      pid.settings.Kd = 0.0;
     }
   }
+}
+
+void RemoteControl::processSlider(const String result, float &value,
+                                  const double scale)
+{
+  int idx = result.indexOf('`');
+  String s = result.substring(idx + 1);
+  float v = stringToFloat(s);
+  value = v * scale;
 }
 
 void RemoteControl::processSlider(const String result, long &value,
@@ -272,14 +271,13 @@ void RemoteControl::sendMainMenu(const boolean update)
   }
   else
   {
-    Bluetooth.print(F("{.Ardumower"));
-    Bluetooth.print(" (");
+    Bluetooth.print(F("{.Ardumower ("));
     Bluetooth.print(robot_p->name);
     Bluetooth.print(")");
   }
-  Bluetooth.print(F("|r~Commands|n~Manual|s~Settings|in~Info|c~Test compass|"
-                    "m1~Log sensors|yp~Plot"));
-  Bluetooth.println(F("|y4~Error counters|y9~ADC calibration}"));
+  Bluetooth.println(F("|r~Commands|n~Manual|s~Settings|in~Info|c~Test compass"
+                      "|m1~Log sensors|yp~Plot|y4~Error counters"
+                      "|y9~ADC calibration}"));
 }
 
 void RemoteControl::sendADCMenu(const boolean update)
@@ -322,8 +320,9 @@ void RemoteControl::sendPlotMenu(const boolean update)
   {
     Bluetooth.print(F("{.Plot"));
   }
-  Bluetooth.print(F("|y7~Sensors|y5~Sensor counters|y3~IMU|y6~Perimeter|y8~GPS"));
-  Bluetooth.println(F("|y1~Battery|y2~Odometer2D|y11~Motor control|y10~GPS2D}"));
+  Bluetooth.println(F("|y7~Sensors|y5~Sensor counters|y3~IMU|y6~Perimeter"
+                      "|y8~GPS|y1~Battery|y2~Odometer2D|y11~Motor control"
+                      "|y10~GPS2D}"));
 }
 
 void RemoteControl::sendSettingsMenu(const boolean update)
@@ -336,11 +335,11 @@ void RemoteControl::sendSettingsMenu(const boolean update)
   {
     Bluetooth.print(F("{.Settings"));
   }
-  Bluetooth.print(F("|sz~Save settings|s1~Motor|s2~Mow|s3~Bumper|s4~Sonar|"
-                    "s5~Perimeter|s6~Lawn sensor|s7~IMU|s8~R/C"));
-  Bluetooth.println(F("|s9~Battery|s10~Station|s11~Odometer|s13~Rain|"
-                      "s15~Drop sensor|s14~GPS|i~Timer|s12~Date/time|"
-                      "sx~Factory settings}"));
+  Bluetooth.println(F("|sz~Save settings|s1~Motor|s2~Mow|s3~Bumper|s4~Sonar"
+                      "|s5~Perimeter|s6~Lawn sensor|s7~IMU|s8~R/C"
+                      "|s9~Battery|s10~Station|s11~Odometer|s13~Rain"
+                      "|s15~Drop sensor|s14~GPS|i~Timer|s12~Date/time"
+                      "|sx~Factory settings}"));
 }
 
 void RemoteControl::sendErrorMenu(const boolean update)
@@ -729,7 +728,7 @@ void RemoteControl::sendBumperMenu(const boolean update)
     Bluetooth.print(F("{.Bumper`1000"));
   }
   Bluetooth.print(F("|b00~Use "));
-  sendYesNo(robot_p->bumpers.used);
+  sendYesNo(robot_p->bumpers.settings.used);
   Bluetooth.println(F("|b01~Counter l, r "));
   Bluetooth.print(robot_p->bumpers.bumper[Bumpers::LEFT].getCounter());
   Bluetooth.print(", ");
@@ -768,7 +767,7 @@ void RemoteControl::processBumperMenu(const String pfodCmd)
 {
   if (pfodCmd == "b00")
   {
-    TOGGLE(robot_p->bumpers.used);
+    TOGGLE(robot_p->bumpers.settings.used);
   }
   sendBumperMenu(true);
 }
@@ -1155,39 +1154,39 @@ void RemoteControl::sendBatteryMenu(const boolean update)
     Bluetooth.print(F("{.Battery`1000"));
   }
   Bluetooth.print(F("|j00~Battery "));
-  Bluetooth.print(robot_p->getBatVoltage());
+  Bluetooth.print(robot_p->battery.getVoltage());
   Bluetooth.print(" V");
   Bluetooth.print(F("|j01~Monitor "));
-  sendYesNo(robot_p->batMonitor);
+  sendYesNo(robot_p->battery.monitored);
   if (robot_p->developerActive)
   {
-    sendSlider("j05", F("Calibrate batFactor "), robot_p->batFactor, "",
+    sendSlider("j05", F("Calibrate batFactor "), robot_p->battery.batFactor, "",
                0.01, 1.0);
   }
   //Console.print("batFactor=");
   //Console.println(robot->batFactor);
   sendSlider("j02", F("Go home if below Volt"),
-             robot_p->batGoHomeIfBelow, "", 0.1, robot_p->batFull,
-             (robot_p->batFull * 0.72)); // for Sony Konion cells 4.2V * 0,72= 3.024V which is pretty safe to use
+             robot_p->battery.batGoHomeIfBelow, "", 0.1, robot_p->battery.batFull,
+             (robot_p->battery.batFull * 0.72)); // for Sony Konion cells 4.2V * 0,72= 3.024V which is pretty safe to use
   sendSlider("j12", F("Switch off if idle minutes"),
-             robot_p->batSwitchOffIfIdle, "", 1, 300, 1);
+             robot_p->battery.batSwitchOffIfIdle, "", 1, 300, 1);
   sendSlider("j03", F("Switch off if below Volt"),
-             robot_p->batSwitchOffIfBelow, "", 0.1, robot_p->batFull,
-             (robot_p->batFull * 0.72));
+             robot_p->battery.batSwitchOffIfBelow, "", 0.1, robot_p->battery.batFull,
+             (robot_p->battery.batFull * 0.72));
   Bluetooth.print(F("|j04~Charge "));
-  Bluetooth.print(robot_p->getChgVoltage());
+  Bluetooth.print(robot_p->battery.getChargeVoltage());
   Bluetooth.print("V ");
-  Bluetooth.print(robot_p->getChgCurrent());
+  Bluetooth.print(robot_p->battery.getChargeCurrent());
   Bluetooth.print("A");
   sendSlider("j09", F("Calibrate batChgFactor"),
-             robot_p->batChgFactor, "", 0.01, 1.0);
+             robot_p->battery.batChgFactor, "", 0.01, 1.0);
   sendSlider("j06", F("Charge sense zero"),
-             robot_p->chgSenseZero, "", 1, 600, 400);
-  sendSlider("j08", F("Charge factor"), robot_p->chgFactor, "", 0.01, 80);
+             robot_p->battery.chgSenseZero, "", 1, 600, 400);
+  sendSlider("j08", F("Charge factor"), robot_p->battery.chgFactor, "", 0.01, 80);
   sendSlider("j10", F("charging starts if Voltage is below"),
-             robot_p->startChargingIfBelow, "", 0.1, robot_p->batFull);
+             robot_p->battery.startChargingIfBelow, "", 0.1, robot_p->battery.batFull);
   sendSlider("j11", F("Battery is fully charged if current is below"),
-             robot_p->batFullCurrent, "", 0.1, robot_p->batChargingCurrentMax);
+             robot_p->battery.batFullCurrent, "", 0.1, robot_p->battery.batChargingCurrentMax);
   Bluetooth.println("}");
 }
 
@@ -1195,45 +1194,45 @@ void RemoteControl::processBatteryMenu(const String pfodCmd)
 {
   if (pfodCmd == "j01")
   {
-    TOGGLE(robot_p->batMonitor);
+    TOGGLE(robot_p->battery.monitored);
   }
   else if (pfodCmd.startsWith("j02"))
   {
-    processSlider(pfodCmd, robot_p->batGoHomeIfBelow, 0.1);
+    processSlider(pfodCmd, robot_p->battery.batGoHomeIfBelow, 0.1);
     //Console.print("gohomeifbelow=");
     //Console.println(robot->batGoHomeIfBelow);
   }
   else if (pfodCmd.startsWith("j03"))
   {
-    processSlider(pfodCmd, robot_p->batSwitchOffIfBelow, 0.1);
+    processSlider(pfodCmd, robot_p->battery.batSwitchOffIfBelow, 0.1);
   }
   else if (pfodCmd.startsWith("j05"))
   {
-    processSlider(pfodCmd, robot_p->batFactor, 0.01);
+    processSlider(pfodCmd, robot_p->battery.batFactor, 0.01);
   }
   else if (pfodCmd.startsWith("j06"))
   {
-    processSlider(pfodCmd, robot_p->chgSenseZero, 1);
+    processSlider(pfodCmd, robot_p->battery.chgSenseZero, 1);
   }
   else if (pfodCmd.startsWith("j08"))
   {
-    processSlider(pfodCmd, robot_p->chgFactor, 0.01);
+    processSlider(pfodCmd, robot_p->battery.chgFactor, 0.01);
   }
   else if (pfodCmd.startsWith("j09"))
   {
-    processSlider(pfodCmd, robot_p->batChgFactor, 0.01);
+    processSlider(pfodCmd, robot_p->battery.batChgFactor, 0.01);
   }
   else if (pfodCmd.startsWith("j10"))
   {
-    processSlider(pfodCmd, robot_p->startChargingIfBelow, 0.1);
+    processSlider(pfodCmd, robot_p->battery.startChargingIfBelow, 0.1);
   }
   else if (pfodCmd.startsWith("j11"))
   {
-    processSlider(pfodCmd, robot_p->batFullCurrent, 0.1);
+    processSlider(pfodCmd, robot_p->battery.batFullCurrent, 0.1);
   }
   else if (pfodCmd.startsWith("j12"))
   {
-    processSlider(pfodCmd, robot_p->batSwitchOffIfIdle, 1);
+    processSlider(pfodCmd, robot_p->battery.batSwitchOffIfIdle, 1);
   }
   sendBatteryMenu(true);
 }
@@ -1570,8 +1569,7 @@ void RemoteControl::sendFactorySettingsMenu(const boolean update)
   {
     Bluetooth.println(F("{.Factory settings"));
   }
-  Bluetooth.print(F("|x0~Set factory settings (requires reboot)"));
-  Bluetooth.println("}");
+  Bluetooth.println(F("|x0~Set factory settings (requires reboot)}"));
 }
 
 void RemoteControl::processFactorySettingsMenu(const String pfodCmd)
@@ -1597,20 +1595,18 @@ void RemoteControl::sendInfoMenu(const boolean update)
   Bluetooth.print(VERSION);
   Bluetooth.print(F("|v01~Developer "));
   sendYesNo(robot_p->developerActive);
-  Bluetooth.print(F("|v04~Stats override "));
-  sendYesNo(robot_p->statsOverride);
   Bluetooth.print(F("|v02~Mowing time trip (min) "));
-  Bluetooth.print(robot_p->statsMowTimeMinutesTrip);
+  Bluetooth.print(robot_p->stats.mowTimeMinutesTrip);
   Bluetooth.print(F("|v03~Mowing time total (hrs) "));
   Bluetooth.print(robot_p->getStatsMowTimeHoursTotal());
   Bluetooth.print(F("|v05~Battery charging cycles "));
-  Bluetooth.print(robot_p->statsBatteryChargingCounterTotal);
+  Bluetooth.print(robot_p->stats.batteryChargingCounterTotal);
   Bluetooth.print(F("|v06~Battery recharged capacity trip (mAh)"));
-  Bluetooth.print(robot_p->statsBatteryChargingCapacityTrip);
+  Bluetooth.print(robot_p->stats.batteryChargingCapacityTrip);
   Bluetooth.print(F("|v07~Battery recharged capacity total (Ah)"));
-  Bluetooth.print(robot_p->statsBatteryChargingCapacityTotal / 1000);
+  Bluetooth.print(robot_p->stats.batteryChargingCapacityTotal / 1000);
   Bluetooth.print(F("|v08~Battery recharged capacity average (mAh)"));
-  Bluetooth.print(robot_p->statsBatteryChargingCapacityAverage);
+  Bluetooth.print(robot_p->stats.batteryChargingCapacityAverage);
   //Bluetooth.print("|d01~Perimeter v");
   //Bluetooth.print(verToString(readPerimeterVer()));
   //Bluetooth.print("|d02~IMU v");
@@ -1625,10 +1621,6 @@ void RemoteControl::processInfoMenu(const String pfodCmd)
   if (pfodCmd == "v01")
   {
     TOGGLE(robot_p->developerActive);
-  }
-  if (pfodCmd == "v04")
-  {
-    TOGGLE(robot_p->statsOverride);
   }
   robot_p->saveUserSettings();
 
@@ -1660,8 +1652,7 @@ void RemoteControl::sendCommandMenu(const boolean update)
   sendOnOff(robot_p->userSwitch2);
   Bluetooth.print(F("|r3~User switch 3 is "));
   sendOnOff(robot_p->userSwitch3);
-  Bluetooth.print("}");
-  Bluetooth.println();
+  Bluetooth.println("}");
 }
 
 void RemoteControl::processCommandMenu(const String pfodCmd)
@@ -2072,13 +2063,13 @@ void RemoteControl::run()
       nextPlotTime = curMillis + 60000;
       Bluetooth.print(curMillis / 60000);
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->getBatVoltage());
+      Bluetooth.print(robot_p->battery.getVoltage());
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->getChgVoltage());
+      Bluetooth.print(robot_p->battery.getChargeVoltage());
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->getChgCurrent());
+      Bluetooth.print(robot_p->battery.getChargeCurrent());
       Bluetooth.print(",");
-      Bluetooth.println(robot_p->getBatCapacity());
+      Bluetooth.println(robot_p->battery.getCapacity());
     }
   }
   else if (pfodState == PFOD_PLOT_ODO2D)
@@ -2309,254 +2300,273 @@ bool RemoteControl::readSerial()
     }
     if (pfodCmdComplete)
     {
-      Console.print("pfod cmd=");
-      Console.println(pfodCmd);
-      pfodState = PFOD_MENU;
-      if (pfodCmd == ".")
-      {
-        sendMainMenu(false);
-      }
-      else if (pfodCmd == "m1")
-      {
-        // log raw sensors
-        Bluetooth.println(F("{=Log sensors}"));
-        Bluetooth.print(
-            F("time,leftsen,rightsen,mowsen,sonleft,soncenter,sonright,"));
-        Bluetooth.print(
-            F("perinside,permag,odoleft,odoright,yaw,pitch,roll,gyrox,gyroy,"));
-        Bluetooth.print(
-            F("gyroz,accx,accy,accz,comx,comy,comz,hdop,sats,gspeed,gcourse,"));
-        Bluetooth.println(F("galt,lat,lon"));
-        pfodState = PFOD_LOG_SENSORS;
-      }
-      else if (pfodCmd == "y1")
-      {
-        // plot battery
-        Bluetooth.println(
-            F("{=battery|time min`0|battery V`1|charge V`1|charge A`2|"
-                "capacity Ah`3}"));
-        nextPlotTime = 0;
-        pfodState = PFOD_PLOT_BAT;
-      }
-      else if (pfodCmd == "y2")
-      {
-        // plot odometer 2d
-        Bluetooth.println(F("{=odometer2d|position`0~~~x|`~~~y}"));
-        nextPlotTime = 0;
-        pfodState = PFOD_PLOT_ODO2D;
-      }
-      else if (pfodCmd == "y3")
-      {
-        // plot IMU
-        Bluetooth.print(
-            F("{=IMU`60|time s`0|yaw`1~180~-180|pitch`1|roll`1|"
-                "gyroX`2~90~-90|gyroY`2|gyroZ`2|accX`3~2~-2|accY`3|accZ`3"));
-        Bluetooth.println(F("|comX`4~2~-2|comY`4|comZ`4}"));
-        nextPlotTime = 0;
-        pfodState = PFOD_PLOT_IMU;
-      }
-      else if (pfodCmd == "y5")
-      {
-        // plot sensor counters
-        Bluetooth.print(F("{=Sensor counters`300|time s`0|state`1|motL`2|motR`3|motM`4|bumL`5|bumR`6"));
-        Bluetooth.println(F("|son`7|peri`8|lawn`9|rain`10|dropL`11|dropR`12}"));
-        nextPlotTime = 0;
-        pfodState = PFOD_PLOT_SENSOR_COUNTERS;
-      }
-      else if (pfodCmd == "y6")
-      {
-        // plot perimeter spectrum
-        /*Bluetooth.print(F("{=Perimeter spectrum`"));
-         Bluetooth.print(Perimeter.getFilterBinCount());
-         Bluetooth.print(F("|freq (Hz)`0|magnitude`0~60~-1|selected band`0~60~-1}"));*/
-        Bluetooth.println(F("{=Perimeter`128|sig`1|mag`2|smag`3|in`4|cnt`5|on`6|qty`7}"));
-        nextPlotTime = 0;
-        pfodState = PFOD_PLOT_PERIMETER;
-      }
-      else if (pfodCmd == "y7")
-      {
-        // plot sensor values
-        Bluetooth.print(F("{=Sensors`300|time s`0|state`1|motL`2|motR`3|motM`4|sonL`5|sonC`6"));
-        Bluetooth.println(F("|sonR`7|peri`8|lawn`9|rain`10|dropL`11|dropR`12}"));
-        nextPlotTime = 0;
-        pfodState = PFOD_PLOT_SENSORS;
-      }
-      else if (pfodCmd == "y8")
-      {
-        // plot GPS
-        Bluetooth.println(
-            F("{=GPS`300|time s`0|hdop`1|sat`2|spd`3|course`4|alt`5|"
-                "lat`6|lon`7}"));
-        nextPlotTime = 0;
-        pfodState = PFOD_PLOT_GPS;
-      }
-      else if (pfodCmd == "y10")
-      {
-        // plot GPS 2d
-        Bluetooth.println(F("{=gps2d|position`0~~~x|`~~~y}"));
-        nextPlotTime = 0;
-        pfodState = PFOD_PLOT_GPS2D;
-      }
-      else if (pfodCmd == "c1")
-      {
-        // ADC calibration
-        ADCMan.calibrate();
-        robot_p->beep(2, false);
-      }
-      else if (pfodCmd == "y11")
-      {
-        // motor control
-        Bluetooth.println(
-            F("{=Motor control`300|time s`0|lrpm_curr`1|rrpm_curr`2|"
-                "lrpm_set`3|rrpm_set`4|lpwm`5|rpwm`6|lerr`7|rerr`8}"));
-        nextPlotTime = 0;
-        pfodState = PFOD_PLOT_MOTOR;
-      }
-      else if (pfodCmd == "yp")
-      {
-        sendPlotMenu(false);
-      }
-      else if (pfodCmd == "y4")
-      {
-        sendErrorMenu(false);
-      }
-      else if (pfodCmd == "y9")
-      {
-        sendADCMenu(false);
-      }
-      else if (pfodCmd == "n")
-      {
-        sendManualMenu(false);
-      }
-      else if (pfodCmd == "s")
-      {
-        sendSettingsMenu(false);
-      }
-      else if (pfodCmd == "r")
-      {
-        sendCommandMenu(false);
-      }
-      else if (pfodCmd == "c")
-      {
-        sendCompassMenu(false);
-      }
-      else if (pfodCmd == "t")
-      {
-        sendDateTimeMenu(false);
-      }
-      else if (pfodCmd == "i")
-      {
-        sendTimerMenu(false);
-      }
-      else if (pfodCmd == "in")
-      {
-        sendInfoMenu(false);
-      }
-      else if (pfodCmd.startsWith("s"))
-      {
-        processSettingsMenu(pfodCmd);
-      }
-      else if (pfodCmd.startsWith("r"))
-      {
-        processCommandMenu(pfodCmd);
-      }
-      else if (pfodCmd.startsWith("c"))
-      {
-        processCompassMenu(pfodCmd);
-      }
-      else if (pfodCmd.startsWith("n"))
-      {
-        processManualMenu(pfodCmd);
-      }
-      else if (pfodCmd.startsWith("a"))
-      {
-        processMotorMenu(pfodCmd);
-      }
-      else if (pfodCmd.startsWith("o"))
-      {
-        processMowMenu(pfodCmd);
-      }
-      else if (pfodCmd.startsWith("b"))
-      {
-        processBumperMenu(pfodCmd);
-      }
-      else if (pfodCmd.startsWith("d"))
-      {
-        processSonarMenu(pfodCmd);
-      }
-      else if (pfodCmd.startsWith("e"))
-      {
-        processPerimeterMenu(pfodCmd);
-      }
-      else if (pfodCmd.startsWith("f"))
-      {
-        processLawnSensorMenu(pfodCmd);
-      }
-      else if (pfodCmd.startsWith("g"))
-      {
-        processImuMenu(pfodCmd);
-      }
-      else if (pfodCmd.startsWith("h"))
-      {
-        processRemoteMenu(pfodCmd);
-      }
-      else if (pfodCmd.startsWith("j"))
-      {
-        processBatteryMenu(pfodCmd);
-      }
-      else if (pfodCmd.startsWith("k"))
-      {
-        processStationMenu(pfodCmd);
-      }
-      else if (pfodCmd.startsWith("l"))
-      {
-        processOdometerMenu(pfodCmd);
-      }
-      else if (pfodCmd.startsWith("m"))
-      {
-        processRainMenu(pfodCmd);
-      }
-      else if (pfodCmd.startsWith("q"))
-      {
-        processGPSMenu(pfodCmd);
-      }
-      else if (pfodCmd.startsWith("t"))
-      {
-        processDateTimeMenu(pfodCmd);
-      }
-      else if (pfodCmd.startsWith("i"))
-      {
-        processTimerMenu(pfodCmd);
-      }
-      else if (pfodCmd.startsWith("p"))
-      {
-        processTimerDetailMenu(pfodCmd);
-      }
-      else if (pfodCmd.startsWith("x"))
-      {
-        processFactorySettingsMenu(pfodCmd);
-      }
-      else if (pfodCmd.startsWith("u"))
-      {
-        processDropMenu(pfodCmd);
-      }
-      else if (pfodCmd.startsWith("v"))
-      {
-        processInfoMenu(pfodCmd);
-      }
-      else if (pfodCmd.startsWith("z"))
-      {
-        processErrorMenu(pfodCmd);
-      }
-      else
-      {
-        // no match
-        Bluetooth.println("{}");
-      }
-      Bluetooth.flush();
+      parsePfodCmd();
       pfodCmd = "";
       pfodCmdComplete = false;
     }
   }
   return res;
+}
+
+void RemoteControl::parsePfodCmd()
+{
+  Console.print("pfod cmd=");
+  Console.println(pfodCmd);
+  pfodState = PFOD_MENU;
+  if (pfodCmd == ".")
+  {
+    sendMainMenu(false);
+  }
+  else if (pfodCmd == "m1")
+  {
+    // log raw sensors
+    Bluetooth.println(F("{=Log sensors}"));
+    Bluetooth.println(F("time,"
+                        "leftsen,rightsen,mowsen,"
+                        "sonleft,soncenter,sonright,"
+                        "perinside,permag,"
+                        "odoleft,odoright,"
+                        "yaw,pitch,roll,"
+                        "gyrox,gyroy,gyroz,"
+                        "accx,accy,accz,"
+                        "comx,comy,comz,"
+                        "hdop,sats,gspeed,gcourse,galt,lat,lon"));
+    pfodState = PFOD_LOG_SENSORS;
+  }
+  else if (pfodCmd == "y1")
+  {
+    // plot battery
+    Bluetooth.println(F("{=battery|time min`0|battery V`1|"
+                        "charge V`1|charge A`2|capacity Ah`3}"));
+    nextPlotTime = 0;
+    pfodState = PFOD_PLOT_BAT;
+  }
+  else if (pfodCmd == "y2")
+  {
+    // plot odometer 2d
+    Bluetooth.println(F("{=odometer2d|position`0~~~x|`~~~y}"));
+    nextPlotTime = 0;
+    pfodState = PFOD_PLOT_ODO2D;
+  }
+  else if (pfodCmd == "y3")
+  {
+    // plot IMU
+    Bluetooth.println(F("{=IMU`60|time s`0|yaw`1~180~-180|pitch`1|roll`1"
+                        "|gyroX`2~90~-90|gyroY`2|gyroZ`2"
+                        "|accX`3~2~-2|accY`3|accZ`3"
+                        "|comX`4~2~-2|comY`4|comZ`4}"));
+    nextPlotTime = 0;
+    pfodState = PFOD_PLOT_IMU;
+  }
+  else if (pfodCmd == "y5")
+  {
+    // plot sensor counters
+    Bluetooth.println(F("{=Sensor counters`300"
+                        "|time s`0|state`1"
+                        "|motL`2|motR`3|motM`4"
+                        "|bumL`5|bumR`6"
+                        "|son`7|peri`8|lawn`9|rain`10"
+                        "|dropL`11|dropR`12}"));
+    nextPlotTime = 0;
+    pfodState = PFOD_PLOT_SENSOR_COUNTERS;
+  }
+  else if (pfodCmd == "y6")
+  {
+    // plot perimeter spectrum
+    /*Bluetooth.print(F("{=Perimeter spectrum`"));
+     Bluetooth.print(Perimeter.getFilterBinCount());
+     Bluetooth.print(F("|freq (Hz)`0|magnitude`0~60~-1|selected band`0~60~-1}"));*/
+    Bluetooth.println(F("{=Perimeter`128|sig`1|mag`2|smag`3"
+                        "|in`4|cnt`5|on`6|qty`7}"));
+    nextPlotTime = 0;
+    pfodState = PFOD_PLOT_PERIMETER;
+  }
+  else if (pfodCmd == "y7")
+  {
+    // plot sensor values
+    Bluetooth.println(F("{=Sensors`300"
+                        "|time s`0|state`1"
+                        "|motL`2|motR`3|motM`4"
+                        "|sonL`5|sonC`6|sonR`7"
+                        "|peri`8|lawn`9|rain`10"
+                        "|dropL`11|dropR`12}"));
+    nextPlotTime = 0;
+    pfodState = PFOD_PLOT_SENSORS;
+  }
+  else if (pfodCmd == "y8")
+  {
+    // plot GPS
+    Bluetooth.println(F("{=GPS`300"
+                        "|time s`0|hdop`1|sat`2|spd`3|course`4|alt`5"
+                        "|lat`6|lon`7}"));
+    nextPlotTime = 0;
+    pfodState = PFOD_PLOT_GPS;
+  }
+  else if (pfodCmd == "y10")
+  {
+    // plot GPS 2d
+    Bluetooth.println(F("{=gps2d|position`0~~~x|`~~~y}"));
+    nextPlotTime = 0;
+    pfodState = PFOD_PLOT_GPS2D;
+  }
+  else if (pfodCmd == "c1")
+  {
+    // ADC calibration
+    ADCMan.calibrate();
+    robot_p->beep(2, false);
+  }
+  else if (pfodCmd == "y11")
+  {
+    // motor control
+    Bluetooth.println(F("{=Motor control`300"
+                        "|time s`0"
+                        "|lrpm_curr`1|rrpm_curr`2"
+                        "|lrpm_set`3|rrpm_set`4"
+                        "|lpwm`5|rpwm`6"
+                        "|lerr`7|rerr`8}"));
+    nextPlotTime = 0;
+    pfodState = PFOD_PLOT_MOTOR;
+  }
+  else if (pfodCmd == "yp")
+  {
+    sendPlotMenu(false);
+  }
+  else if (pfodCmd == "y4")
+  {
+    sendErrorMenu(false);
+  }
+  else if (pfodCmd == "y9")
+  {
+    sendADCMenu(false);
+  }
+  else if (pfodCmd == "n")
+  {
+    sendManualMenu(false);
+  }
+  else if (pfodCmd == "s")
+  {
+    sendSettingsMenu(false);
+  }
+  else if (pfodCmd == "r")
+  {
+    sendCommandMenu(false);
+  }
+  else if (pfodCmd == "c")
+  {
+    sendCompassMenu(false);
+  }
+  else if (pfodCmd == "t")
+  {
+    sendDateTimeMenu(false);
+  }
+  else if (pfodCmd == "i")
+  {
+    sendTimerMenu(false);
+  }
+  else if (pfodCmd == "in")
+  {
+    sendInfoMenu(false);
+  }
+  else if (pfodCmd.startsWith("s"))
+  {
+    processSettingsMenu(pfodCmd);
+  }
+  else if (pfodCmd.startsWith("r"))
+  {
+    processCommandMenu(pfodCmd);
+  }
+  else if (pfodCmd.startsWith("c"))
+  {
+    processCompassMenu(pfodCmd);
+  }
+  else if (pfodCmd.startsWith("n"))
+  {
+    processManualMenu(pfodCmd);
+  }
+  else if (pfodCmd.startsWith("a"))
+  {
+    processMotorMenu(pfodCmd);
+  }
+  else if (pfodCmd.startsWith("o"))
+  {
+    processMowMenu(pfodCmd);
+  }
+  else if (pfodCmd.startsWith("b"))
+  {
+    processBumperMenu(pfodCmd);
+  }
+  else if (pfodCmd.startsWith("d"))
+  {
+    processSonarMenu(pfodCmd);
+  }
+  else if (pfodCmd.startsWith("e"))
+  {
+    processPerimeterMenu(pfodCmd);
+  }
+  else if (pfodCmd.startsWith("f"))
+  {
+    processLawnSensorMenu(pfodCmd);
+  }
+  else if (pfodCmd.startsWith("g"))
+  {
+    processImuMenu(pfodCmd);
+  }
+  else if (pfodCmd.startsWith("h"))
+  {
+    processRemoteMenu(pfodCmd);
+  }
+  else if (pfodCmd.startsWith("j"))
+  {
+    processBatteryMenu(pfodCmd);
+  }
+  else if (pfodCmd.startsWith("k"))
+  {
+    processStationMenu(pfodCmd);
+  }
+  else if (pfodCmd.startsWith("l"))
+  {
+    processOdometerMenu(pfodCmd);
+  }
+  else if (pfodCmd.startsWith("m"))
+  {
+    processRainMenu(pfodCmd);
+  }
+  else if (pfodCmd.startsWith("q"))
+  {
+    processGPSMenu(pfodCmd);
+  }
+  else if (pfodCmd.startsWith("t"))
+  {
+    processDateTimeMenu(pfodCmd);
+  }
+  else if (pfodCmd.startsWith("i"))
+  {
+    processTimerMenu(pfodCmd);
+  }
+  else if (pfodCmd.startsWith("p"))
+  {
+    processTimerDetailMenu(pfodCmd);
+  }
+  else if (pfodCmd.startsWith("x"))
+  {
+    processFactorySettingsMenu(pfodCmd);
+  }
+  else if (pfodCmd.startsWith("u"))
+  {
+    processDropMenu(pfodCmd);
+  }
+  else if (pfodCmd.startsWith("v"))
+  {
+    processInfoMenu(pfodCmd);
+  }
+  else if (pfodCmd.startsWith("z"))
+  {
+    processErrorMenu(pfodCmd);
+  }
+  else
+  {
+    // no match
+    Bluetooth.println("{}");
+  }
+  Bluetooth.flush();
 }

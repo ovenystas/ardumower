@@ -114,6 +114,8 @@ class Sonars
       ++distanceCounter;
     }
 
+    bool isClose(void);
+
   private:
     static const uint8_t TIME_BETWEEN_RUN {250};
     static const uint8_t TIME_BETWEEN_CHECK {200};

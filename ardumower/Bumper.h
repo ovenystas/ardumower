@@ -10,6 +10,11 @@
 
 #include <Arduino.h>
 
+typedef struct Bumper_settingsT
+{
+  bool used {false};
+} Bumper_settingsT;
+
 class Bumper
 {
   public:
@@ -53,7 +58,7 @@ class Bumpers
       END
     };
 
-    bool used {false};
+    Bumper_settingsT settings;
     Bumper bumper[END];
 
     void check(void);

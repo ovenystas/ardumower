@@ -27,9 +27,12 @@
 
 #define MAGIC 51
 
-#define ADDR_USER_SETTINGS 0
-#define ADDR_ERR_COUNTERS 400
-#define ADDR_ROBOT_STATS 800
+#define ADDR_USER_SETTINGS  0
+#define ADDR_ERROR_COUNTERS 400
+#define ADDR_ROBOT_STATS    800
+
+#define OFF 0
+#define ON  1
 
 const char* stateNames[] =
 {
@@ -82,18 +85,8 @@ Robot::Robot()
   perimeterTriggerTime = 0;
   perimeterOutRevTime = 0;
 
-  batADC = 0;
-  batVoltage = 0;
-  batCapacity = 0;
-  batChgFactor = 0;
-  lastTimeBatCapacity = 0;
-  chgVoltage = 0;
-  chgCurrent = 0;
-
   nextTimeInfo = 0;
   nextTimeCheckTilt = 0;
-  nextTimeBattery = 0;
-  nextTimeCheckBattery = 0;
   nextTimePerimeter = 0;
   nextTimeTimer = millis() + 60000;
   nextTimeRTC = 0;
@@ -104,8 +97,6 @@ Robot::Robot()
   nextTimeErrorBeep = 0;
 
   nextTimeRobotStats = 0;
-  statsMowTimeMinutesTripCounter = 0;
-  statsBatteryChargingCounter = 0;
 }
 
 const char* Robot::stateName()
@@ -118,67 +109,44 @@ const char *Robot::mowPatternName()
   return mowPatternNames[mowPatternCurr];
 }
 
-void Robot::loadSaveRobotStats(boolean readflag)
+void Robot::loadRobotStats()
 {
-  if (readflag)
-  {
-    Console.println(F("Loading RobotStats"));
-  }
-  else
-  {
-    Console.println(F("Saving RobotStats"));
-  }
   int addr = ADDR_ROBOT_STATS;
-  short magic = 0;
-  if (!readflag)
-  {
-    magic = MAGIC;
-  }
-  eereadwrite(readflag, addr, magic); // magic
-  if (readflag && (magic != MAGIC))
+  Console.print(F("Loading RobotStats, address="));
+  Console.print(addr);
+  uint8_t magic = EEPROM.read(addr);
+  addr++;
+  if (magic != MAGIC)
   {
     Console.println(F("PLEASE CHECK IF YOUR ROBOT STATS ARE CORRECT"));
   }
-  eereadwrite(readflag, addr, statsMowTimeMinutesTrip);
-  eereadwrite(readflag, addr, statsMowTimeMinutesTotal);
-  eereadwrite(readflag, addr, statsBatteryChargingCounterTotal);
-  eereadwrite(readflag, addr, statsBatteryChargingCapacityTrip);
-  eereadwrite(readflag, addr, statsBatteryChargingCapacityTotal);
-  eereadwrite(readflag, addr, statsBatteryChargingCapacityAverage);
-  // <----------------------------new robot stats to save goes here!----------------
-  Console.print(F("loadSaveRobotStats: addrstop="));
+  EEPROM.get(addr, stats);
+  addr += sizeof(stats);
+  Console.print('-');
   Console.println(addr);
-}
-
-void Robot::loadRobotStats()
-{
-  loadSaveRobotStats(true);
 }
 
 void Robot::saveRobotStats()
 {
-  loadSaveRobotStats(false);
+  int addr = ADDR_ROBOT_STATS;
+  Console.println(F("Saving RobotStats, address="));
+  Console.print(addr);
+  EEPROM.update(addr, MAGIC);
+  addr++;
+  EEPROM.put(addr, stats);
+  addr += sizeof(stats);
+  Console.print('-');
+  Console.println(addr);
 }
 
-void Robot::loadSaveErrorCounters(const boolean readflag)
+void Robot::loadErrorCounters()
 {
-  if (readflag)
-  {
-    Console.println(F("Loading ErrorCounters"));
-  }
-  else
-  {
-    Console.println(F("Saving ErrorCounters"));
-  }
-
-  int addr = ADDR_ERR_COUNTERS;
-  short magic = 0;
-  if (!readflag)
-  {
-    magic = MAGIC;
-  }
-  eereadwrite(readflag, addr, magic); // magic
-  if (readflag && (magic != MAGIC))
+  int addr = ADDR_ERROR_COUNTERS;
+  Console.println(F("Loading ErrorCounters, address="));
+  Console.print(addr);
+  uint8_t magic = EEPROM.read(addr);
+  addr++;
+  if (magic != MAGIC)
   {
     Console.println(F("EEPROM ERR COUNTERS: NO EEPROM ERROR DATA"));
     Console.println(F("PLEASE CHECK AND SAVE YOUR SETTINGS"));
@@ -186,38 +154,28 @@ void Robot::loadSaveErrorCounters(const boolean readflag)
     setNextState(STATE_ERROR);
     return;
   }
-  eereadwrite(readflag, addr, errorCounterMax);
-  Console.print(F("loadSaveErrorCounters: addrstop="));
+  EEPROM.get(addr, errorCounterMax);
+  addr += sizeof(errorCounterMax);
+  Console.print('-');
   Console.println(addr);
-}
-
-void Robot::loadErrorCounters()
-{
-  loadSaveErrorCounters(true);
 }
 
 void Robot::saveErrorCounters()
 {
-  loadSaveErrorCounters(false);
+  int addr = ADDR_ERROR_COUNTERS;
+  Console.println(F("Saving ErrorCounters, address="));
+  Console.print(addr);
+  EEPROM.update(addr, MAGIC);
+  addr++;
+  EEPROM.put(addr, errorCounterMax);
+  addr += sizeof(errorCounterMax);
+  Console.print('-');
+  Console.println(addr);
 }
 
 void Robot::loadSaveUserSettings(const boolean readflag)
 {
-  int addr = ADDR_USER_SETTINGS;
-  short magic = 0;
-  if (!readflag)
-  {
-    magic = MAGIC;
-  }
-  eereadwrite(readflag, addr, magic); // magic
-  if (readflag && (magic != MAGIC))
-  {
-    Console.println(F("EEPROM USERDATA: NO EEPROM USER DATA"));
-    Console.println(F("PLEASE CHECK AND SAVE YOUR SETTINGS"));
-    incErrorCounter(ERR_EEPROM_DATA);
-    setNextState(STATE_ERROR);
-    return;
-  }
+  int addr = ADDR_USER_SETTINGS + 1;
   eereadwrite(readflag, addr, developerActive);
   eereadwrite(readflag, addr, wheels.wheel[Wheel::LEFT].motor.acceleration);
   eereadwrite(readflag, addr, wheels.wheel[Wheel::LEFT].motor.rpmMax);
@@ -234,17 +192,17 @@ void Robot::loadSaveUserSettings(const boolean readflag)
   eereadwrite(readflag, addr, cutter.motor.powerMax);
   eereadwrite(readflag, addr, cutter.motor.rpmSet);
   eereadwrite(readflag, addr, cutter.motor.scale);
-  eereadwrite(readflag, addr, wheels.wheel[Wheel::LEFT].motor.pid.Kp);
-  eereadwrite(readflag, addr, wheels.wheel[Wheel::LEFT].motor.pid.Ki);
-  eereadwrite(readflag, addr, wheels.wheel[Wheel::LEFT].motor.pid.Kd);
-  eereadwrite(readflag, addr, cutter.motor.pid.Kp);
-  eereadwrite(readflag, addr, cutter.motor.pid.Ki);
-  eereadwrite(readflag, addr, cutter.motor.pid.Kd);
+  eereadwrite(readflag, addr, wheels.wheel[Wheel::LEFT].motor.pid.settings.Kp);
+  eereadwrite(readflag, addr, wheels.wheel[Wheel::LEFT].motor.pid.settings.Ki);
+  eereadwrite(readflag, addr, wheels.wheel[Wheel::LEFT].motor.pid.settings.Kd);
+  eereadwrite(readflag, addr, cutter.motor.pid.settings.Kp);
+  eereadwrite(readflag, addr, cutter.motor.pid.settings.Ki);
+  eereadwrite(readflag, addr, cutter.motor.pid.settings.Kd);
   eereadwrite(readflag, addr, wheels.biDirSpeedRatio1);
   eereadwrite(readflag, addr, wheels.biDirSpeedRatio2);
   eereadwrite(readflag, addr, wheels.wheel[Wheel::LEFT].motor.swapDir);
   eereadwrite(readflag, addr, wheels.wheel[Wheel::RIGHT].motor.swapDir);
-  eereadwrite(readflag, addr, bumpers.used);
+  eereadwrite(readflag, addr, bumpers.settings.used);
   eereadwrite(readflag, addr, sonars.use);
   for (uint8_t i = 0; i < Sonars::END; i++)
   {
@@ -260,9 +218,9 @@ void Robot::loadSaveUserSettings(const boolean readflag)
   eereadwrite(readflag, addr, perimeterOutRevTime);
   eereadwrite(readflag, addr, perimeterTrackRollTime);
   eereadwrite(readflag, addr, perimeterTrackRevTime);
-  eereadwrite(readflag, addr, perimeters.perimeter[Perimeter::LEFT].pid.Kp);
-  eereadwrite(readflag, addr, perimeters.perimeter[Perimeter::LEFT].pid.Ki);
-  eereadwrite(readflag, addr, perimeters.perimeter[Perimeter::LEFT].pid.Kd);
+  eereadwrite(readflag, addr, perimeters.perimeter[Perimeter::LEFT].pid.settings.Kp);
+  eereadwrite(readflag, addr, perimeters.perimeter[Perimeter::LEFT].pid.settings.Ki);
+  eereadwrite(readflag, addr, perimeters.perimeter[Perimeter::LEFT].pid.settings.Kd);
   eereadwrite(
       readflag, addr,
       perimeters.perimeter[Perimeter::LEFT].useDifferentialPerimeterSignal);
@@ -274,23 +232,23 @@ void Robot::loadSaveUserSettings(const boolean readflag)
   eereadwrite(readflag, addr, lawnSensor.use);
   eereadwrite(readflag, addr, imu.use);
   eereadwrite(readflag, addr, imu.correctDir);
-  eereadwrite(readflag, addr, imu.pid[Imu::DIR].Kp);
-  eereadwrite(readflag, addr, imu.pid[Imu::DIR].Ki);
-  eereadwrite(readflag, addr, imu.pid[Imu::DIR].Kd);
-  eereadwrite(readflag, addr, imu.pid[Imu::ROLL].Kp);
-  eereadwrite(readflag, addr, imu.pid[Imu::ROLL].Ki);
-  eereadwrite(readflag, addr, imu.pid[Imu::ROLL].Kd);
+  eereadwrite(readflag, addr, imu.pid[Imu::DIR].settings.Kp);
+  eereadwrite(readflag, addr, imu.pid[Imu::DIR].settings.Ki);
+  eereadwrite(readflag, addr, imu.pid[Imu::DIR].settings.Kd);
+  eereadwrite(readflag, addr, imu.pid[Imu::ROLL].settings.Kp);
+  eereadwrite(readflag, addr, imu.pid[Imu::ROLL].settings.Ki);
+  eereadwrite(readflag, addr, imu.pid[Imu::ROLL].settings.Kd);
   eereadwrite(readflag, addr, remoteUse);
-  eereadwrite(readflag, addr, batMonitor);
-  eereadwrite(readflag, addr, batGoHomeIfBelow);
-  eereadwrite(readflag, addr, batSwitchOffIfBelow);
-  eereadwrite(readflag, addr, batSwitchOffIfIdle);
-  eereadwrite(readflag, addr, batFactor);
-  eereadwrite(readflag, addr, batChgFactor);
-  eereadwrite(readflag, addr, chgSenseZero);
-  eereadwrite(readflag, addr, chgFactor);
-  eereadwrite(readflag, addr, batFullCurrent);
-  eereadwrite(readflag, addr, startChargingIfBelow);
+  eereadwrite(readflag, addr, battery.monitored);
+  eereadwrite(readflag, addr, battery.batGoHomeIfBelow);
+  eereadwrite(readflag, addr, battery.batSwitchOffIfBelow);
+  eereadwrite(readflag, addr, battery.batSwitchOffIfIdle);
+  eereadwrite(readflag, addr, battery.batFactor);
+  eereadwrite(readflag, addr, battery.batChgFactor);
+  eereadwrite(readflag, addr, battery.chgSenseZero);
+  eereadwrite(readflag, addr, battery.chgFactor);
+  eereadwrite(readflag, addr, battery.batFullCurrent);
+  eereadwrite(readflag, addr, battery.startChargingIfBelow);
   eereadwrite(readflag, addr, stationRevTime);
   eereadwrite(readflag, addr, stationRollTime);
   eereadwrite(readflag, addr, stationForwTime);
@@ -313,29 +271,44 @@ void Robot::loadSaveUserSettings(const boolean readflag)
   eereadwrite(readflag, addr, stuckIfGpsSpeedBelow);
   eereadwrite(readflag, addr, gpsSpeedIgnoreTime);
   eereadwrite(readflag, addr, dropSensors.used);
-  eereadwrite(readflag, addr, statsOverride);
-  Console.print(F("loadSaveUserSettings addrstop="));
+  Console.print('-');
   Console.println(addr);
 }
 
 void Robot::loadUserSettings()
 {
-  Console.println(F("USER SETTINGS ARE LOADED"));
+  int addr = ADDR_USER_SETTINGS;
+  Console.println(F("USER SETTINGS ARE LOADED, address="));
+  Console.print(addr);
+  uint8_t magic = EEPROM.read(addr);
+  addr++;
+  if (magic != MAGIC)
+  {
+    Console.println(F("EEPROM USERDATA: NO EEPROM USER DATA"));
+    Console.println(F("PLEASE CHECK AND SAVE YOUR SETTINGS"));
+    incErrorCounter(ERR_EEPROM_DATA);
+    setNextState(STATE_ERROR);
+    return;
+  }
   loadSaveUserSettings(true);
 }
 
 void Robot::saveUserSettings()
 {
-  Console.println(F("USER SETTINGS ARE SAVED"));
+  int addr = ADDR_USER_SETTINGS;
+  Console.println(F("USER SETTINGS ARE SAVED, address="));
+  Console.print(addr);
+  EEPROM.update(addr, MAGIC);
+  addr++;
   loadSaveUserSettings(false);
 }
 
 void Robot::deleteUserSettings()
 {
   loadRobotStats();
-  int addr = 0;
+  int addr = ADDR_USER_SETTINGS;
   Console.println(F("ALL USER SETTINGS ARE DELETED"));
-  eewrite(addr, (short)0); // magic
+  EEPROM.update(addr, 0); // clear magic
   saveRobotStats();
 }
 
@@ -373,19 +346,22 @@ void Robot::printSettingSerial()
   Console.print(F("biDirSpeedRatio2 : "));
   Console.println(wheels.biDirSpeedRatio2);
 
+  Pid_settingsT pidSettings;
+  pidSettings = wheels.wheel[Wheel::LEFT].motor.pid.getSettings();
   Console.print(F("LEFT.pid.Kp : "));
-  Console.println(wheels.wheel[Wheel::LEFT].motor.pid.Kp);
+  Console.println(pidSettings.Kp);
   Console.print(F("LEFT.pid.Ki : "));
-  Console.println(wheels.wheel[Wheel::LEFT].motor.pid.Ki);
+  Console.println(pidSettings.Ki);
   Console.print(F("LEFT.pid.Kd : "));
-  Console.println(wheels.wheel[Wheel::LEFT].motor.pid.Kd);
+  Console.println(pidSettings.Kd);
 
+  pidSettings = wheels.wheel[Wheel::RIGHT].motor.pid.getSettings();
   Console.print(F("RIGHT.pid.Kp : "));
-  Console.println(wheels.wheel[Wheel::RIGHT].motor.pid.Kp);
+  Console.println(pidSettings.Kp);
   Console.print(F("RIGHT.pid.Ki : "));
-  Console.println(wheels.wheel[Wheel::RIGHT].motor.pid.Ki);
+  Console.println(pidSettings.Ki);
   Console.print(F("RIGHT.pid.Kd : "));
-  Console.println(wheels.wheel[Wheel::RIGHT].motor.pid.Kd);
+  Console.println(pidSettings.Kd);
 
   Console.print(F("LEFT.swapDir : "));
   Console.println(wheels.wheel[Wheel::LEFT].motor.swapDir);
@@ -406,17 +382,18 @@ void Robot::printSettingSerial()
   Console.println(cutter.motor.rpmSet);
   Console.print(F("scale : "));
   Console.println(cutter.motor.getScale());
+  pidSettings = cutter.motor.pid.getSettings();
   Console.print(F("pid.Kp : "));
-  Console.println(cutter.motor.pid.Kp);
+  Console.println(pidSettings.Kp);
   Console.print(F("pid.Ki : "));
-  Console.println(cutter.motor.pid.Ki);
+  Console.println(pidSettings.Ki);
   Console.print(F("pid.Kd : "));
-  Console.println(cutter.motor.pid.Kd);
+  Console.println(pidSettings.Kd);
 
   // ------ bumper ------------------------------------
   Console.println(F("== Bumpers =="));
   Console.print(F("use : "));
-  Console.println(bumpers.used);
+  Console.println(bumpers.settings.used);
 
   // ------ drop ------------------------------------
   Console.println(F("== Drop sensors =="));
@@ -459,12 +436,13 @@ void Robot::printSettingSerial()
   Console.println(perimeterTrackRollTime);
   Console.print(F("trackRevTime : "));
   Console.println(perimeterTrackRevTime);
+  pidSettings = perimeters.perimeter[Perimeter::LEFT].pid.getSettings();
   Console.print(F("pid.Kp : "));
-  Console.println(perimeters.perimeter[Perimeter::LEFT].pid.Kp);
+  Console.println(pidSettings.Kp);
   Console.print(F("pid.Ki : "));
-  Console.println(perimeters.perimeter[Perimeter::LEFT].pid.Ki);
+  Console.println(pidSettings.Ki);
   Console.print(F("pid.Kd : "));
-  Console.println(perimeters.perimeter[Perimeter::LEFT].pid.Kd);
+  Console.println(pidSettings.Kd);
   Console.print(F("trackingPerimeterTransitionTimeOut : "));
   Console.println(trackingPerimeterTransitionTimeOut);
   Console.print(F("trackingErrorTimeOut : "));
@@ -483,18 +461,20 @@ void Robot::printSettingSerial()
   Console.println(imu.use);
   Console.print(F("correctDir : "));
   Console.println(imu.correctDir);
+  pidSettings = imu.pid[Imu::DIR].getSettings();
   Console.print(F("pid[DIR].Kp : "));
-  Console.println(imu.pid[Imu::DIR].Kp);
+  Console.println(pidSettings.Kp);
   Console.print(F("pid[DIR].Ki : "));
-  Console.println(imu.pid[Imu::DIR].Ki);
+  Console.println(pidSettings.Ki);
   Console.print(F("pid[DIR].Kd : "));
-  Console.println(imu.pid[Imu::DIR].Kd);
+  Console.println(pidSettings.Kd);
+  pidSettings = imu.pid[Imu::ROLL].getSettings();
   Console.print(F("pid[ROLL].Kp : "));
-  Console.println(imu.pid[Imu::ROLL].Kp);
+  Console.println(pidSettings.Kp);
   Console.print(F("pid[ROLL].Ki : "));
-  Console.println(imu.pid[Imu::ROLL].Ki);
+  Console.println(pidSettings.Ki);
   Console.print(F("pid[ROLL].Kd : "));
-  Console.println(imu.pid[Imu::ROLL].Kd);
+  Console.println(pidSettings.Kd);
 
   // ------ model R/C ------------------------------------
   Console.println(F("== R/C =="));
@@ -504,39 +484,39 @@ void Robot::printSettingSerial()
   // ------ battery -------------------------------------
   Console.println(F("== Battery =="));
   Console.print(F("batMonitor : "));
-  Console.println(batMonitor);
+  Console.println(battery.monitored);
   Console.print(F("batGoHomeIfBelow : "));
-  Console.println(batGoHomeIfBelow);
+  Console.println(battery.batGoHomeIfBelow);
   Console.print(F("batSwitchOffIfBelow : "));
-  Console.println(batSwitchOffIfBelow);
+  Console.println(battery.batSwitchOffIfBelow);
   Console.print(F("batSwitchOffIfIdle : "));
-  Console.println(batSwitchOffIfIdle);
+  Console.println(battery.batSwitchOffIfIdle);
   Console.print(F("batFactor : "));
-  Console.println(batFactor);
+  Console.println(battery.batFactor);
   Console.print(F("batChgFactor : "));
-  Console.println(batChgFactor);
+  Console.println(battery.batChgFactor);
   Console.print(F("batFull : "));
-  Console.println(batFull);
+  Console.println(battery.batFull);
   Console.print(F("batChargingCurrentMax : "));
-  Console.println(batChargingCurrentMax);
+  Console.println(battery.batChargingCurrentMax);
   Console.print(F("batFullCurrent : "));
-  Console.println(batFullCurrent);
+  Console.println(battery.batFullCurrent);
   Console.print(F("startChargingIfBelow : "));
-  Console.println(startChargingIfBelow);
+  Console.println(battery.startChargingIfBelow);
   Console.print(F("chargingTimeout : "));
-  Console.println(chargingTimeout);
+  Console.println(battery.chargingTimeout);
   Console.print(F("chgSelection : "));
-  Console.println(chgSelection);
+  Console.println(battery.chgSelection);
   Console.print(F("chgSenseZero : "));
-  Console.println(chgSenseZero);
+  Console.println(battery.chgSenseZero);
   Console.print(F("chgFactor : "));
-  Console.println(chgFactor);
+  Console.println(battery.chgFactor);
   Console.print(F("chgSense : "));
-  Console.println(chgSense);
+  Console.println(battery.chgSense);
   Console.print(F("chgChange : "));
-  Console.println(chgChange);
+  Console.println(battery.chgChange);
   Console.print(F("chgNull : "));
-  Console.println(chgNull);
+  Console.println(battery.chgNull);
 
   // ------  charging station ---------------------------
   Console.println(F("== Station =="));
@@ -596,27 +576,23 @@ void Robot::printSettingSerial()
 
   // -------robot stats------------------------------------
   Console.println(F("== Robot status =="));
-  Console.print(F("mowTimeMinutesTrip : "));
-  Console.println(statsMowTimeMinutesTrip);
-  Console.print(F("mowTimeMinutesTotal : "));
-  Console.println(statsMowTimeMinutesTotal);
+  Console.print(F("Mowing time, trip [min] : "));
+  Console.println(stats.mowTimeMinutesTrip);
+  Console.print(F("Mowing time, total [min] : "));
+  Console.println(stats.mowTimeMinutesTotal);
   Console.print(F("batteryChargingCounterTotal : "));
-  Console.println(statsBatteryChargingCounterTotal);
-  Console.print(F("batteryChargingCapacityTrip in mAh : "));
-  Console.println(statsBatteryChargingCapacityTrip);
-  Console.print(F("batteryChargingCapacityTotal in Ah : "));
-  Console.println(statsBatteryChargingCapacityTotal / 1000);
-  Console.print(F("batteryChargingCapacityAverage in mAh : "));
-  Console.println(statsBatteryChargingCapacityAverage);
+  Console.println(stats.batteryChargingCounterTotal);
+  Console.print(F("batteryChargingCapacityTrip [mAh] : "));
+  Console.println(stats.batteryChargingCapacityTrip);
+  Console.print(F("batteryChargingCapacityTotal [Ah] : "));
+  Console.println(stats.batteryChargingCapacityTotal / 1000);
+  Console.print(F("batteryChargingCapacityAverage [mAh] : "));
+  Console.println(stats.batteryChargingCapacityAverage);
 }
 
 void Robot::deleteRobotStats()
 {
-  statsMowTimeMinutesTrip = 0;
-  statsMowTimeMinutesTotal = 0;
-  statsBatteryChargingCounterTotal = 0;
-  statsBatteryChargingCapacityTotal = 0;
-  statsBatteryChargingCapacityTrip = 0;
+  memset(&stats, 0, sizeof(statsT));
   saveRobotStats();
   Console.println(F("ALL ROBOT STATS ARE DELETED"));
 }
@@ -1040,7 +1016,7 @@ void Robot::resetIdleTime()
   if (idleTimeSec == BATTERY_SW_OFF)
   {
     Console.println(F("BATTERY switching ON again"));
-    setActuator(ACT_BATTERY_SW, 1); // switch on battery again (if connected via USB)
+    battery.setBatterySwitch(ON); // switch on battery again (if connected via USB)
   }
   idleTimeSec = 0;
 }
@@ -1098,14 +1074,7 @@ void Robot::setup()
   setMotorPWMs(0, 0);
   loadErrorCounters();
   loadUserSettings();
-  if (!statsOverride)
-  {
-    loadRobotStats();
-  }
-  else
-  {
-    saveRobotStats();
-  }
+  loadRobotStats();
   setUserSwitches();
 
   if (!button.use)
@@ -1279,14 +1248,18 @@ void Robot::printInfo(Stream &s)
       printInfo_sensorCounters(s);
     }
 
+    float batVolt = battery.getVoltage();
     Streamprint(s, "bat %2d.%01d ",
-                (int)batVoltage,
-                (int)((batVoltage * 10) - ((int)batVoltage * 10)));
+                (int)batVolt,
+                (int)((batVolt * 10) - ((int)batVolt * 10)));
+
+    float chgVolt = battery.getChargeVoltage();
+    float chgCurr = battery.getChargeCurrent();
     Streamprint(s, "chg %2d.%01d %2d.%01d ",
-                (int)chgVoltage,
-                (int)((chgVoltage * 10) - ((int)chgVoltage * 10)),
-                (int)chgCurrent,
-                (int)((abs(chgCurrent) * 10) - ((int)abs(chgCurrent) * 10)));
+                (int)chgVolt,
+                (int)((chgVolt * 10) - ((int)chgVolt * 10)),
+                (int)chgCurr,
+                (int)((abs(chgCurr) * 10) - ((int)abs(chgCurr) * 10)));
     Streamprint(s, "imu %3d ", imu.getCallCounter());
     Streamprint(s, "adc %3d\r\n", ADCMan.getCapturedChannels());
     //Streamprint(s, "%s\r\n", name.c_str());
@@ -1703,21 +1676,6 @@ void Robot::checkButton()
   }
 }
 
-float Robot::getBatteryVoltage()
-{
-  if (batVoltage > 8)
-  {
-    // Use measured battery voltage
-    return batVoltage;
-  }
-  else
-  {
-    // Use reference voltage for fully battery in absence of battery voltage
-    // measurement
-    return batFull;
-  }
-}
-
 void Robot::readSensors()
 {
 // NOTE: This function should only read in sensors into variables.
@@ -1731,7 +1689,7 @@ void Robot::readSensors()
     cutter.motor.readCurrent();
 
     // Conversion to power in Watts
-    float batV = getBatteryVoltage();
+    float batV = battery.getVoltage();
     wheels.wheel[Wheel::RIGHT].motor.calcPower(batV);
     wheels.wheel[Wheel::LEFT].motor.calcPower(batV);
     cutter.motor.calcPower(batV);
@@ -1862,98 +1820,9 @@ void Robot::readSensors()
     }
   }
 
-  if (curMillis >= nextTimeBattery)
+  if (battery.isTimeToRead())
   {
-    nextTimeBattery = curMillis + 100;
-    // read battery
-    if (abs(chgCurrent) > 0.04 && chgVoltage > 5)
-    {
-      // charging
-      batCapacity += (chgCurrent / 36.0); //TODO: What is 36.0?
-    }
-
-    // convert to double
-    batADC = readSensor(SEN_BAT_VOLTAGE);
-    double batvolt = (double)batADC * batFactor / 10; // / 10 due to arduremote bug, can be removed after fixing
-    int chgADC = readSensor(SEN_CHG_VOLTAGE);
-    double chgvolt = (double)chgADC * batChgFactor / 10; // / 10 due to arduremote bug, can be removed after fixing
-    double current = (double)readSensor(SEN_CHG_CURRENT);
-
-    // low-pass filter
-    double accel = 0.01;
-
-    if (abs(batVoltage - batvolt) > 5)
-    {
-      batVoltage = batvolt;
-    }
-    else
-    {
-      batVoltage = (1.0 - accel) * batVoltage + accel * batvolt;
-    }
-
-    if (abs(chgVoltage - chgvolt) > 5)
-    {
-      chgVoltage = chgvolt;
-    }
-    else
-    {
-      chgVoltage = (1.0 - accel) * chgVoltage + accel * chgvolt;
-    }
-
-    //Deaktiviert für Ladestromsensor berechnung
-//    if (abs(chgCurrent - current) > 0.4)
-//    {
-//      chgCurrent = current;
-//    }
-//    else
-//    {
-//      chgCurrent = (1.0 - accel) * chgCurrent + accel * current;
-//    }
-
-    // Sensor Wert Ausgabe auf Seriellen Monitor oder HandyApp
-    if (chgSelection == 0)
-    {
-      chgCurrent = current;
-    }
-
-    // Berechnung für Ladestromsensor ACS712 5A
-    if (chgSelection == 1)
-    {
-      float chgAMP = current;              //Sensorwert übergabe vom Ladestrompin
-      float vcc = 3.30 / chgSenseZero * 1023.0; // Versorgungsspannung ermitteln!  chgSenseZero=511  ->Die Genauigkeit kann erhöt werden wenn der 3.3V Pin an ein Analogen Pin eingelesen wird. Dann ist vcc = (float) 3.30 / analogRead(X) * 1023.0;
-      float asensor = chgAMP * vcc / 1023.0;              // Messwert auslesen
-      asensor = asensor - (vcc / chgNull); // Nulldurchgang (vcc/2) abziehen
-      chgSense = chgSense - ((5.00 - vcc) * chgFactor); // Korrekturfactor für Vcc!  chgFactor=39
-      float amp = asensor / chgSense * 1000;               // Ampere berechnen
-      if (chgChange == 1)
-      {
-        amp = -amp;                 //Lade Strom Messwertumkehr von - nach +
-      }
-      if (amp < 0.0)
-      {
-        chgCurrent = 0.0;
-      }
-      else
-      {
-        chgCurrent = amp; // Messwertrückgabe in chgCurrent   (Wenn Messwert kleiner als 0 dann Messwert =0 anssonsten messwertau8sgabe in Ampere)
-      }
-    }
-
-    // Berechnung für Ladestromsensor INA169 board
-    if (chgSelection == 2)
-    {
-      float chgAMP = current;
-      float asensor = (chgAMP * 5) / 1023; // umrechnen von messwert in Spannung (5V Reference)
-      float amp = asensor / (10 * 0.1); // Ampere berechnen RL = 10k    Is = (Vout x 1k) / (RS x RL)
-      if (amp < 0.0)
-      {
-        chgCurrent = 0.0;
-      }
-      else
-      {
-        chgCurrent = amp; // Messwertrückgabe in chgCurrent   (Wenn Messwert kleiner als 0 dann Messwert =0 ansonsten Messwertaußsgabe in Ampere)
-      }
-    }
+    battery.read();
   }
 
   if (rainSensor.isTimeToRun())
@@ -2009,7 +1878,7 @@ void Robot::setNextState(byte stateNew, bool dir)
         stateCurr == STATE_STATION_CHARGING)
     {
       stateNew = STATE_STATION_CHECK;
-      setActuator(ACT_CHGRELAY, 0);
+      battery.setChargeRelay(OFF);
       cutter.disable();
     }
   }
@@ -2110,19 +1979,19 @@ void Robot::setNextState(byte stateNew, bool dir)
   }
   else if (stateNew == STATE_STATION)
   {
-    setActuator(ACT_CHGRELAY, 0);
+    battery.setChargeRelay(OFF);
     setDefaults();
     statsMowTimeTotalStart = false;  // stop stats mowTime counter
     saveRobotStats();
   }
   else if (stateNew == STATE_STATION_CHARGING)
   {
-    setActuator(ACT_CHGRELAY, 1);
+    battery.setChargeRelay(ON);
     setDefaults();
   }
   else if (stateNew == STATE_OFF)
   {
-    setActuator(ACT_CHGRELAY, 0);
+    battery.setChargeRelay(OFF);
     setDefaults();
     statsMowTimeTotalStart = false; // stop stats mowTime counter
     saveRobotStats();
@@ -2130,7 +1999,7 @@ void Robot::setNextState(byte stateNew, bool dir)
   else if (stateNew == STATE_ERROR)
   {
     setDefaults();
-    setActuator(ACT_CHGRELAY, 0);
+    battery.setChargeRelay(OFF);
     statsMowTimeTotalStart = false;
     //saveRobotStats();
   }
@@ -2146,7 +2015,7 @@ void Robot::setNextState(byte stateNew, bool dir)
     //motorMowEnable = false;     // FIXME: should be an option?
     speed = 50;
     steer = 0;
-    setActuator(ACT_CHGRELAY, 0);
+    battery.setChargeRelay(OFF);
     //beep(6);
   }
   else if (stateNew != STATE_REMOTE)
@@ -2166,16 +2035,14 @@ void Robot::setNextState(byte stateNew, bool dir)
 
 void Robot::checkBattery()
 {
-  unsigned long curMillis = millis();
-  if (curMillis < nextTimeCheckBattery)
+  if (!battery.isTimeToCheck())
   {
     return;
   }
-  nextTimeCheckBattery = curMillis + 1000;
 
-  if (batMonitor)
+  if (battery.monitored)
   {
-    if (batVoltage < batSwitchOffIfBelow &&
+    if (battery.getVoltage() < battery.batSwitchOffIfBelow &&
         stateCurr != STATE_ERROR &&
         stateCurr != STATE_OFF &&
         stateCurr != STATE_STATION &&
@@ -2186,7 +2053,7 @@ void Robot::checkBattery()
       beep(2, true);
       setNextState(STATE_OFF);
     }
-    else if (batVoltage < batGoHomeIfBelow &&
+    else if (battery.getVoltage() < battery.batGoHomeIfBelow &&
              stateCurr != STATE_OFF &&
              stateCurr != STATE_MANUAL &&
              stateCurr != STATE_STATION &&
@@ -2210,7 +2077,7 @@ void Robot::checkBattery()
     {
       // battery already switched off?
       idleTimeSec++; // add one second idle time
-      if (idleTimeSec > batSwitchOffIfIdle * 60)
+      if (idleTimeSec > battery.batSwitchOffIfIdle * 60)
       {
         Console.println(F("Triggered batSwitchOffIfIdle"));
         beep(1, true);
@@ -2218,7 +2085,7 @@ void Robot::checkBattery()
         saveRobotStats();
         idleTimeSec = BATTERY_SW_OFF; // flag to remember that battery is switched off
         Console.println(F("BATTERY switching OFF"));
-        setActuator(ACT_BATTERY_SW, 0);  // switch off battery
+        battery.setBatterySwitch(OFF);  // switch off battery
       }
     }
   }
@@ -2285,12 +2152,12 @@ void Robot::receiveGPSTime()
 
 void Robot::checkRobotStats_mowTime()
 {
-  statsMowTimeHoursTotal = float(statsMowTimeMinutesTotal) / 60;
+  statsMowTimeHoursTotal = float(stats.mowTimeMinutesTotal) / 60;
   if (statsMowTimeTotalStart)
   {
     statsMowTimeMinutesTripCounter++;
-    statsMowTimeMinutesTrip = statsMowTimeMinutesTripCounter;
-    statsMowTimeMinutesTotal++;
+    stats.mowTimeMinutesTrip = statsMowTimeMinutesTripCounter;
+    stats.mowTimeMinutesTotal++;
   }
   else
   {
@@ -2306,39 +2173,39 @@ void Robot::checkRobotStats_battery()
     statsBatteryChargingCounter++; // temporary counter
     if (statsBatteryChargingCounter == 1)
     {
-      statsBatteryChargingCounterTotal++;
+      stats.batteryChargingCounterTotal++;
     }
-    statsBatteryChargingCapacityTrip = batCapacity;
+    stats.batteryChargingCapacityTrip = battery.getCapacity();
     // Sum up only the difference between actual batCapacity and last batCapacity
-    statsBatteryChargingCapacityTotal += (batCapacity - lastTimeBatCapacity);
-    lastTimeBatCapacity = batCapacity;
+    stats.batteryChargingCapacityTotal += (battery.getCapacity() - battery.getLastTimeCapacity());
+    battery.updateLastTimeCapacity();
   }
   else
   {
     // Reset values to 0 when mower is not charging
     statsBatteryChargingCounter = 0;
-    batCapacity = 0;
+    battery.clearCapacity();
   }
 
-  if (isnan(statsBatteryChargingCapacityTrip))
+  if (isnan(stats.batteryChargingCapacityTrip))
   {
-    statsBatteryChargingCapacityTrip = 0;
+    stats.batteryChargingCapacityTrip = 0;
   }
 
-  if (isnan(statsBatteryChargingCapacityTotal))
+  if (isnan(stats.batteryChargingCapacityTotal))
   {
-    statsBatteryChargingCapacityTotal = 0;
+    stats.batteryChargingCapacityTotal = 0;
   }
 
-  if (statsBatteryChargingCapacityTotal <= 0 ||
-      statsBatteryChargingCounterTotal == 0)
+  if (stats.batteryChargingCapacityTotal <= 0 ||
+      stats.batteryChargingCounterTotal == 0)
   {
-    statsBatteryChargingCapacityAverage = 0; // Avoid divide by zero
+    stats.batteryChargingCapacityAverage = 0; // Avoid divide by zero
   }
   else
   {
-    statsBatteryChargingCapacityAverage =
-        statsBatteryChargingCapacityTotal / statsBatteryChargingCounterTotal;
+    stats.batteryChargingCapacityAverage =
+        stats.batteryChargingCapacityTotal / stats.batteryChargingCounterTotal;
   }
 }
 
@@ -2686,15 +2553,7 @@ void Robot::checkSonar()
   {
     if (sonars.obstacleTimeout == 0)
     {
-      bool isClose = false;
-      for (uint8_t i = 0; i < Sonars::END; i++)
-      {
-        if (sonars.sonar[i].getDistance_us() < (sonars.triggerBelow * 2))
-        {
-          isClose = true;
-        }
-      }
-      if (isClose)
+      if (sonars.isClose())
       {
         sonars.tempDistanceCounter++;
         if (sonars.tempDistanceCounter >= 5)
@@ -2968,9 +2827,9 @@ void Robot::loop()
 
     case STATE_OFF:
       // robot is turned off
-      if (batMonitor && curMillis - stateStartTime > 2000)
+      if (battery.isMonitored() && curMillis - stateStartTime > 2000)
       {
-        if (chgVoltage > 5.0 && batVoltage > 8)
+        if (battery.getChargeVoltage() > 5.0 && battery.getVoltage() > 8)
         {
           beep(2, true);
           setNextState(STATE_STATION);
@@ -3141,9 +3000,9 @@ void Robot::loop()
       checkMotorPower();
       checkBumpersPerimeter();
       //checkSonar();
-      if (batMonitor)
+      if (battery.isMonitored())
       {
-        if (chgVoltage > 5.0)
+        if (battery.getChargeVoltage() > 5.0)
         {
           setNextState(STATE_STATION);
         }
@@ -3152,11 +3011,11 @@ void Robot::loop()
 
     case STATE_STATION:
       // waiting until auto-start by user or timer triggered
-      if (batMonitor)
+      if (battery.isMonitored())
       {
-        if (chgVoltage > 5.0 && batVoltage > 8)
+        if (battery.getChargeVoltage() > 5.0 && battery.getVoltage() > 8)
         {
-          if (batVoltage < startChargingIfBelow &&
+          if (battery.getVoltage() < battery.startChargingIfBelow &&
               curMillis - stateStartTime > 2000)
           {
             setNextState(STATE_STATION_CHARGING);
@@ -3179,13 +3038,14 @@ void Robot::loop()
 
     case STATE_STATION_CHARGING:
       // waiting until charging completed
-      if (batMonitor)
+      if (battery.isMonitored())
       {
-        if (chgCurrent < batFullCurrent && curMillis - stateStartTime > 2000)
+        if (battery.getChargeCurrent() < battery.batFullCurrent &&
+            curMillis - stateStartTime > 2000)
         {
           setNextState(STATE_STATION);
         }
-        else if (curMillis - stateStartTime > chargingTimeout)
+        else if (curMillis - stateStartTime > battery.chargingTimeout)
         {
           incErrorCounter(ERR_BATTERY);
           setNextState(STATE_ERROR);
@@ -3222,7 +3082,7 @@ void Robot::loop()
       // check for charging voltage disappearing before leaving charging station
       if (millis() >= stateEndTime)
       {
-        if (chgVoltage > 5)
+        if (battery.getChargeVoltage() > 5)
         {
           incErrorCounter(ERR_CHARGER);
           setNextState(STATE_ERROR);

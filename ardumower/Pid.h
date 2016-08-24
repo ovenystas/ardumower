@@ -28,12 +28,19 @@
  digital PID controller
  */
 
+typedef struct Pid_settingsT
+{
+  float Kp {};         // proportional control
+  float Ki {};         // integral control
+  float Kd {};         // differential control
+} Pid_settingsT;
+
 class Pid
 {
   public:
     Pid(void) {};
-    Pid(float Kp, float Ki, float Kd) :
-        Kp(Kp), Ki(Ki), Kd(Kd) {};
+//    Pid(float Kp, float Ki, float Kd) :
+//        settings.Kp(Kp), settings.Ki(Ki), settings.Kd(Kd) {};
     void setup(const float Kp, const float Ki, const float Kd);
     void setup(const float Kp, const float Ki, const float Kd,
                const float y_min, const float y_max, const float max_output);
@@ -84,9 +91,11 @@ class Pid
       this->y_min = y_min;
     }
 
-    float Kp {};         // proportional control
-    float Ki {};         // integral control
-    float Kd {};         // differential control
+    Pid_settingsT settings;
+    Pid_settingsT getSettings() const
+    {
+      return settings;
+    }
 
   private:
     float setPoint {};   // set value

@@ -59,7 +59,7 @@
 #define PIN_CHARGE_VOLTAGE A9         // charging voltage sensor
 #define PIN_CHARGE_CURRENT A8         // charge current sensor
 #define PIN_CHARGE_RELAY 50           // charge relay
-#define PIN_VOLTAGE_MEASUREMENT A7    // test pin for your own voltage measurements
+//#define PIN_VOLTAGE_MEASUREMENT A7    // test pin for your own voltage measurements
 #define PIN_RAIN 44                   // rain sensor
 
 #define PIN_REMOTE_MOW 53             // remote control mower motor
