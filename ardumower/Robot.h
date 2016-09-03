@@ -47,6 +47,7 @@
 #include "RemoteControl.h"
 #include "Sonar.h"
 #include "Wheel.h"
+#include "StateMachine.h"
 
 /*
  Generic robot class - subclass to implement concrete hardware!
@@ -81,33 +82,6 @@ typedef enum errorE
   // <---- add new error types here (NOTE: increase MAGIC to avoid corrupt EEPROM error data!)
   ERR_ENUM_COUNT,
 } errorE;
-
-// finite state machine states
-enum
-{
-  STATE_OFF,              // off
-  STATE_REMOTE,           // model remote control (R/C)
-  STATE_FORWARD,          // drive forward
-  STATE_ROLL,             // drive roll right/left
-  STATE_REVERSE,          // drive reverse
-  STATE_CIRCLE,           // drive circle
-  STATE_ERROR,            // error
-  STATE_PERI_FIND,        // perimeter find
-  STATE_PERI_TRACK,       // perimeter track
-  STATE_PERI_ROLL,        // perimeter roll
-  STATE_PERI_REV,         // perimeter reverse
-  STATE_STATION,          // in station
-  STATE_STATION_CHARGING, // in station charging
-  STATE_STATION_CHECK,    // checks if station is present
-  STATE_STATION_REV,      // charge reverse
-  STATE_STATION_ROLL,     // charge roll
-  STATE_STATION_FORW,     // charge forward
-  STATE_MANUAL,           // manual navigation
-  STATE_ROLL_WAIT,        // drive roll right/left
-  STATE_PERI_OUT_FORW,    // outside perimeter forward driving without checkPerimeterBoundary()
-  STATE_PERI_OUT_REV,     // outside perimeter reverse driving without checkPerimeterBoundary()
-  STATE_PERI_OUT_ROLL,    // outside perimeter rolling driving without checkPerimeterBoundary()
-};
 
 #define MOW 2
 
@@ -175,7 +149,7 @@ class Robot
     bool developerActive;
 
     // --------- state machine --------------------------
-    const char* stateName();
+    StateMachine stateMachine;
 
     // --------- timer ----------------------------------
     ttimer_t timer[MAX_TIMERS];
@@ -285,7 +259,7 @@ class Robot
                                    const boolean remoteSwitchState);
 
     // state machine
-    virtual void setNextState(byte stateNew, bool dir = LEFT);
+    virtual void setNextState(StateMachine::stateE stateNew, bool dir = LEFT);
 
     // motor
     virtual void setMotorPWMs(const int pwmLeft, const int pwmRight,
@@ -324,11 +298,6 @@ class Robot
     virtual void setUserSwitches();
     virtual void incErrorCounter(const enum errorE errType);
     virtual void resetErrorCounters();
-
-    byte getStateCurr() const
-    {
-      return stateCurr;
-    }
 
     float getGpsX() const
     {
@@ -446,12 +415,6 @@ class Robot
 
   private:
     // --------- state machine ----------------------------
-    byte stateCurr { STATE_OFF };
-    byte stateLast { STATE_OFF };
-    byte stateNext { STATE_OFF };
-    unsigned long stateTime {};
-    unsigned long stateStartTime;
-    unsigned long stateEndTime;
     int idleTimeSec {};
 
     // --------- timer ------------------------------------

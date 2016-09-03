@@ -405,7 +405,7 @@ void RemoteControl::processErrorMenu(const String pfodCmd)
   if (pfodCmd == "z00")
   {
     robot_p->resetErrorCounters();
-    robot_p->setNextState(STATE_OFF, 0);
+    robot_p->setNextState(StateMachine::STATE_OFF, 0);
   }
   sendErrorMenu(true);
 }
@@ -595,13 +595,13 @@ void RemoteControl::processMotorMenu(const String pfodCmd)
     switch (testmode)
     {
       case 0:
-        robot_p->setNextState(STATE_OFF, 0);
+        robot_p->setNextState(StateMachine::STATE_OFF, 0);
         robot_p->setSpeed(0);
         robot_p->setSteer(0);
         break;
 
       case 1:
-        robot_p->setNextState(STATE_MANUAL, 0);
+        robot_p->setNextState(StateMachine::STATE_MANUAL, 0);
         robot_p->setSpeed(+50);
         robot_p->setSteer(+50);
 //        robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmSet = 0;
@@ -610,7 +610,7 @@ void RemoteControl::processMotorMenu(const String pfodCmd)
         break;
 
       case 2:
-        robot_p->setNextState(STATE_MANUAL, 0);
+        robot_p->setNextState(StateMachine::STATE_MANUAL, 0);
         robot_p->setSpeed(+50);
         robot_p->setSteer(-50);
 //        robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet = 0;
@@ -707,13 +707,13 @@ void RemoteControl::processMowMenu(const String pfodCmd)
     switch (testmode)
     {
       case 0:
-        robot_p->setNextState(STATE_OFF, 0);
+        robot_p->setNextState(StateMachine::STATE_OFF, 0);
         robot_p->cutter.motor.setRpmMeas(0);
         robot_p->cutter.disable();
         break;
 
       case 1:
-        robot_p->setNextState(STATE_MANUAL, 0);
+        robot_p->setNextState(StateMachine::STATE_MANUAL, 0);
         robot_p->cutter.enable();
         break;
     }
@@ -1647,7 +1647,7 @@ void RemoteControl::sendCommandMenu(const boolean update)
   Bluetooth.print(F("|rp~Pattern is "));
   Bluetooth.print(robot_p->mowPatternName());
   Bluetooth.print(F("|rh~Home|rk~Track|rs~State is "));
-  Bluetooth.print(robot_p->stateName());
+  Bluetooth.print(robot_p->stateMachine.getCurrentStateName());
   Bluetooth.print(F("|rr~Auto rotate is "));
   Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.getPwmCur());
   Bluetooth.print(F("|r1~User switch 1 is "));
@@ -1664,18 +1664,18 @@ void RemoteControl::processCommandMenu(const String pfodCmd)
   if (pfodCmd == "ro")
   {
     // cmd: off
-    robot_p->setNextState(STATE_OFF, 0);
+    robot_p->setNextState(StateMachine::STATE_OFF, 0);
     sendCommandMenu(true);
   }
   else if (pfodCmd == "rh")
   {
     // cmd: home
-    robot_p->setNextState(STATE_PERI_FIND, 0);
+    robot_p->setNextState(StateMachine::STATE_PERI_FIND, 0);
     sendCommandMenu(true);
   }
   else if (pfodCmd == "rr")
   {
-    robot_p->setNextState(STATE_MANUAL, 0);
+    robot_p->setNextState(StateMachine::STATE_MANUAL, 0);
     robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet += 10;
     robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmSet =
         -robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet;
@@ -1684,14 +1684,14 @@ void RemoteControl::processCommandMenu(const String pfodCmd)
   else if (pfodCmd == "rk")
   {
     // cmd: track perimeter
-    robot_p->setNextState(STATE_PERI_TRACK, 0);
+    robot_p->setNextState(StateMachine::STATE_PERI_TRACK, 0);
     sendCommandMenu(true);
   }
   else if (pfodCmd == "ra")
   {
     // cmd: start auto mowing
     robot_p->cutter.enable();
-    robot_p->setNextState(STATE_FORWARD, 0);
+    robot_p->setNextState(StateMachine::STATE_FORWARD, 0);
     sendCommandMenu(true);
   }
   else if (pfodCmd == "rc")
@@ -1699,14 +1699,14 @@ void RemoteControl::processCommandMenu(const String pfodCmd)
     // cmd: start remote control (RC)
     robot_p->cutter.enable();
     robot_p->cutter.motor.regulate = false;
-    robot_p->setNextState(STATE_REMOTE, 0);
+    robot_p->setNextState(StateMachine::STATE_REMOTE, 0);
     sendCommandMenu(true);
   }
   else if (pfodCmd == "rm")
   {
     // cmd: mower motor on/off
-    if (robot_p->getStateCurr() == STATE_OFF ||
-        robot_p->getStateCurr() == STATE_MANUAL)
+    if (robot_p->stateMachine.isCurrentState(StateMachine::STATE_OFF) ||
+        robot_p->stateMachine.isCurrentState(StateMachine::STATE_MANUAL))
     {
       robot_p->cutter.setEnableOverriden(false);
     }
@@ -1726,7 +1726,7 @@ void RemoteControl::processCommandMenu(const String pfodCmd)
   {
     // cmd: pattern
     robot_p->mowPatternCurr = (robot_p->mowPatternCurr + 1) % 3;
-    robot_p->setNextState(STATE_OFF, 0);
+    robot_p->setNextState(StateMachine::STATE_OFF, 0);
     sendCommandMenu(true);
   }
   else if (pfodCmd == "r1")
@@ -1801,25 +1801,25 @@ void RemoteControl::processCompassMenu(const String pfodCmd)
   else if (pfodCmd == "cn")
   {
     robot_p->imuRollHeading = 0;
-    robot_p->setNextState(STATE_ROLL_WAIT, 0);
+    robot_p->setNextState(StateMachine::STATE_ROLL_WAIT, 0);
     sendCompassMenu(true);
   }
   else if (pfodCmd == "cs")
   {
     robot_p->imuRollHeading = PI;
-    robot_p->setNextState(STATE_ROLL_WAIT, 0);
+    robot_p->setNextState(StateMachine::STATE_ROLL_WAIT, 0);
     sendCompassMenu(true);
   }
   else if (pfodCmd == "cw")
   {
     robot_p->imuRollHeading = -PI / 2;
-    robot_p->setNextState(STATE_ROLL_WAIT, 0);
+    robot_p->setNextState(StateMachine::STATE_ROLL_WAIT, 0);
     sendCompassMenu(true);
   }
   else if (pfodCmd == "ce")
   {
     robot_p->imuRollHeading = PI / 2;
-    robot_p->setNextState(STATE_ROLL_WAIT, 0);
+    robot_p->setNextState(StateMachine::STATE_ROLL_WAIT, 0);
     sendCompassMenu(true);
   }
 }
@@ -1829,7 +1829,7 @@ void RemoteControl::processManualMenu(const String pfodCmd)
   if (pfodCmd == "nl")
   {
     // manual: left
-    robot_p->setNextState(STATE_MANUAL, 0);
+    robot_p->setNextState(StateMachine::STATE_MANUAL, 0);
     int sign = 1;
     if (robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet < 0)
     {
@@ -1853,7 +1853,7 @@ void RemoteControl::processManualMenu(const String pfodCmd)
   else if (pfodCmd == "nr")
   {
     // manual: right
-    robot_p->setNextState(STATE_MANUAL, 0);
+    robot_p->setNextState(StateMachine::STATE_MANUAL, 0);
     int sign = 1;
     if (robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmSet < 0)
     {
@@ -1877,7 +1877,7 @@ void RemoteControl::processManualMenu(const String pfodCmd)
   else if (pfodCmd == "nf")
   {
     // manual: forward
-    robot_p->setNextState(STATE_MANUAL, 0);
+    robot_p->setNextState(StateMachine::STATE_MANUAL, 0);
     robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet =
         robot_p->wheels.wheel[Wheel::LEFT].motor.rpmMax;
     robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmSet =
@@ -1887,7 +1887,7 @@ void RemoteControl::processManualMenu(const String pfodCmd)
   else if (pfodCmd == "nb")
   {
     // manual: reverse
-    robot_p->setNextState(STATE_MANUAL, 0);
+    robot_p->setNextState(StateMachine::STATE_MANUAL, 0);
     robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet =
         -robot_p->wheels.wheel[Wheel::LEFT].motor.rpmMax;
     robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmSet =
@@ -2125,7 +2125,7 @@ void RemoteControl::run()
       nextPlotTime = curMillis + 200;
       Bluetooth.print(elapsedSeconds);
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->getStateCurr());
+      Bluetooth.print(robot_p->stateMachine.getCurrentState());
       Bluetooth.print(",");
       Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.getOverloadCounter());
       Bluetooth.print(",");
@@ -2157,7 +2157,7 @@ void RemoteControl::run()
       nextPlotTime = curMillis + 200;
       Bluetooth.print(elapsedSeconds);
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->getStateCurr());
+      Bluetooth.print(robot_p->stateMachine.getCurrentState());
       Bluetooth.print(",");
       Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.getPowerMeas());
       Bluetooth.print(",");

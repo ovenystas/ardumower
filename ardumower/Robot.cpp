@@ -34,14 +34,6 @@
 #define OFF 0
 #define ON  1
 
-const char* stateNames[] =
-{
-  "OFF ", "RC  ", "FORW", "ROLL", "REV ", "CIRC", "ERR ",
-  "PFND", "PTRK", "PROL", "PREV", "STAT", "CHARG", "STCHK",
-  "STREV", "STROL", "STFOR", "MANU", "ROLW", "POUTFOR",
-  "POUTREV", "POUTROLL"
-};
-
 const char *mowPatternNames[] = { "RANDOM", "LANE", "BIDIR" };
 
 const char* consoleModeNames[] =
@@ -99,11 +91,6 @@ Robot::Robot()
   nextTimeRobotStats = 0;
 }
 
-const char* Robot::stateName()
-{
-  return stateNames[stateCurr];
-}
-
 const char *Robot::mowPatternName()
 {
   return mowPatternNames[mowPatternCurr];
@@ -151,7 +138,7 @@ void Robot::loadErrorCounters()
     Console.println(F("EEPROM ERR COUNTERS: NO EEPROM ERROR DATA"));
     Console.println(F("PLEASE CHECK AND SAVE YOUR SETTINGS"));
     incErrorCounter(ERR_EEPROM_DATA);
-    setNextState(STATE_ERROR);
+    setNextState(StateMachine::STATE_ERROR);
     return;
   }
   EEPROM.get(addr, errorCounterMax);
@@ -287,7 +274,7 @@ void Robot::loadUserSettings()
     Console.println(F("EEPROM USERDATA: NO EEPROM USER DATA"));
     Console.println(F("PLEASE CHECK AND SAVE YOUR SETTINGS"));
     incErrorCounter(ERR_EEPROM_DATA);
-    setNextState(STATE_ERROR);
+    setNextState(StateMachine::STATE_ERROR);
     return;
   }
   loadSaveUserSettings(true);
@@ -630,14 +617,14 @@ void Robot::checkErrorCounter()
     nextTimeErrorCounterReset = curMillis + 30000; // 30 sec
   }
 
-  if (stateCurr != STATE_OFF)
+  if (!stateMachine.isCurrentState(StateMachine::STATE_OFF))
   {
     for (uint8_t i = 0; i < ERR_ENUM_COUNT; i++)
     {
       // set to fatal error if any temporary error counter reaches 10
       if (errorCounter[i] > 10)
       {
-        setNextState(STATE_ERROR);
+        setNextState(StateMachine::STATE_ERROR);
       }
     }
   }
@@ -811,10 +798,10 @@ void Robot::wheelControl_imuRoll()
   float processValue = -distancePI(imu.getYaw(), imuRollHeading) / PI * 180.0;
   float y = pid_p->compute(processValue);
 
-  if ((stateCurr == STATE_OFF ||
-       stateCurr == STATE_STATION ||
-       stateCurr == STATE_ERROR) &&
-      (millis() - stateStartTime > 1000))
+  if ((stateMachine.isCurrentState(StateMachine::STATE_OFF) ||
+       stateMachine.isCurrentState(StateMachine::STATE_STATION) ||
+       stateMachine.isCurrentState(StateMachine::STATE_ERROR)) &&
+      (millis() - stateMachine.getStateStartTime() > 1000))
   {
     wheels.setSpeed(0);
     wheels.setSteer(0);
@@ -835,7 +822,7 @@ void Robot::wheelControl_perimeter()
   }
 
   unsigned long curMillis = millis();
-  if ((curMillis > stateStartTime + 5000) &&
+  if ((curMillis > stateMachine.getStateStartTime() + 5000) &&
       (curMillis > perimeterLastTransitionTime + trackingPerimeterTransitionTimeOut))
   {
     // Robot is wheel-spinning while perimeter tracking => roll to get ground again
@@ -857,8 +844,8 @@ void Robot::wheelControl_perimeter()
     {
       Console.println("Error: Tracking error");
       incErrorCounter(ERR_TRACKING);
-      //setNextState(STATE_ERROR,0);
-      setNextState(STATE_PERI_FIND);
+      //setNextState(StateMachine::STATE_ERROR,0);
+      setNextState(StateMachine::STATE_PERI_FIND);
     }
   }
   else
@@ -894,10 +881,10 @@ void Robot::wheelControl_imuDir()
   float processValue = -distancePI(imu.getYaw(), imuDriveHeading) / PI * 180.0;
   float y = pid_p->compute(processValue);
 
-  if ((stateCurr == STATE_OFF ||
-       stateCurr == STATE_STATION ||
-       stateCurr == STATE_ERROR) &&
-      (millis() > stateStartTime + 1000))
+  if ((stateMachine.isCurrentState(StateMachine::STATE_OFF) ||
+       stateMachine.isCurrentState(StateMachine::STATE_STATION) ||
+       stateMachine.isCurrentState(StateMachine::STATE_ERROR)) &&
+      (millis() > stateMachine.getStateStartTime() + 1000))
   {
     wheels.setSpeed(0);
     wheels.setSteer(0);
@@ -920,7 +907,7 @@ void Robot::wheelControl_normal()
   wheels.wheel[Wheel::LEFT].motor.regulate = odometer.use;
 
   int zeroSettleTime = wheels.wheel[Wheel::LEFT].motor.zeroSettleTime;
-  if (millis() < stateStartTime + zeroSettleTime)
+  if (millis() < stateMachine.getStateStartTime() + zeroSettleTime)
   {
     // Start from zero speed and zero steer at state start
     wheels.setSpeed(0);
@@ -950,7 +937,8 @@ void Robot::checkOdometerFaults()
   bool err[2] = { false };
   unsigned long curMillis = millis();
 
-  if (stateCurr == STATE_FORWARD && (curMillis - stateStartTime > 8000))
+  if (stateMachine.isCurrentState(StateMachine::STATE_FORWARD) &&
+      (curMillis - stateMachine.getStateStartTime() > 8000))
   {
     // just check if odometer sensors may not be working at all
     for (uint8_t i = LEFT; i <= RIGHT; i++)
@@ -963,7 +951,8 @@ void Robot::checkOdometerFaults()
     }
   }
 
-  if (stateCurr == STATE_ROLL && (curMillis - stateStartTime) > 1000)
+  if (stateMachine.isCurrentState(StateMachine::STATE_ROLL) &&
+      (curMillis - stateMachine.getStateStartTime()) > 1000)
   {
     // just check if odometer sensors may be turning in the wrong direction
     for (uint8_t i = LEFT; i <= RIGHT; i++)
@@ -985,7 +974,7 @@ void Robot::checkOdometerFaults()
     Console.print("\tRPM=");
     Console.println(wheels.wheel[Wheel::LEFT].encoder.getWheelRpmCurr());
     incErrorCounter(ERR_ODOMETER_LEFT);
-    setNextState(STATE_ERROR);
+    setNextState(StateMachine::STATE_ERROR);
   }
 
   if (err[RIGHT])
@@ -995,7 +984,7 @@ void Robot::checkOdometerFaults()
     Console.print("\tRPM=");
     Console.println(wheels.wheel[Wheel::RIGHT].encoder.getWheelRpmCurr());
     incErrorCounter(ERR_ODOMETER_RIGHT);
-    setNextState(STATE_ERROR);
+    setNextState(StateMachine::STATE_ERROR);
   }
 }
 
@@ -1082,11 +1071,11 @@ void Robot::setup()
   if (!button.use)
   {
     // robot has no ON/OFF button => start immediately
-    setNextState(STATE_FORWARD);
+    setNextState(StateMachine::STATE_FORWARD);
   }
 
   delay(2000);
-  stateStartTime = millis();
+  stateMachine.init();
   beep(1);
 
   Console.println(F("START"));
@@ -1216,11 +1205,11 @@ void Robot::printInfo(Stream &s)
     return;
   }
 
-  Streamprint(s, "t%4u ", (millis() - stateStartTime) / 1000);
+  Streamprint(s, "t%4u ", (millis() - stateMachine.getStateStartTime()) / 1000);
   Streamprint(s, "l%5u ", loopsPerSec);
   //Streamprint(s, "r%4u ", freeRam());
   Streamprint(s, "v%1d ", consoleMode);
-  Streamprint(s, "%8s ", stateNames[stateCurr]);
+  Streamprint(s, "%8s ", stateMachine.getCurrentStateName());
 
   if (consoleMode == CONSOLE_PERIMETER)
   {
@@ -1490,7 +1479,7 @@ void Robot::menu()
 
         case 'e':
           resetErrorCounters();
-          setNextState(STATE_OFF);
+          setNextState(StateMachine::STATE_OFF);
           Console.println(F("ALL ERRORS ARE DELETED"));
           break;
 
@@ -1522,11 +1511,11 @@ void Robot::readSerial()
         break;
 
       case 'h': // drive home
-        setNextState(STATE_PERI_FIND);
+        setNextState(StateMachine::STATE_PERI_FIND);
         break;
 
       case 't': // track perimeter
-        setNextState(STATE_PERI_TRACK);
+        setNextState(StateMachine::STATE_PERI_TRACK);
         break;
 
       case 'l': // simulate left bumper
@@ -1550,7 +1539,8 @@ void Robot::readSerial()
         break;
 
       case 'm': // toggle mower motor
-        if (stateCurr == STATE_OFF || stateCurr == STATE_MANUAL)
+        if (stateMachine.isCurrentState(StateMachine::STATE_OFF) ||
+            stateMachine.isCurrentState(StateMachine::STATE_MANUAL))
         {
           cutter.setEnableOverriden(false);
         }
@@ -1562,20 +1552,20 @@ void Robot::readSerial()
         break;
 
       case 'c': // simulate in station
-        setNextState(STATE_STATION);
+        setNextState(StateMachine::STATE_STATION);
         break;
 
       case 'a': // simulate in station charging
-        setNextState(STATE_STATION_CHARGING);
+        setNextState(StateMachine::STATE_STATION_CHARGING);
         break;
 
       case '+': // rotate 90 degrees clockwise (IMU)
-        setNextState(STATE_ROLL_WAIT);
+        setNextState(StateMachine::STATE_ROLL_WAIT);
         imuRollHeading = scalePI(imuRollHeading + PI / 2);
         break;
 
       case '-': // rotate 90 degrees anti-clockwise (IMU)
-        setNextState(STATE_ROLL_WAIT);
+        setNextState(StateMachine::STATE_ROLL_WAIT);
         imuRollHeading = scalePI(imuRollHeading - PI / 2);
         break;
 
@@ -1584,17 +1574,17 @@ void Robot::readSerial()
         break;
 
       case '3': // activate model RC
-        setNextState(STATE_REMOTE);
+        setNextState(StateMachine::STATE_REMOTE);
         break;
 
       case '0': // turn OFF
-        setNextState(STATE_OFF);
+        setNextState(StateMachine::STATE_OFF);
         break;
 
       case '1': // Automode
         cutter.enable();
         //motorMowModulate = false;
-        setNextState(STATE_FORWARD);
+        setNextState(StateMachine::STATE_FORWARD);
         break;
     }
   }
@@ -1620,10 +1610,10 @@ void Robot::checkButton()
     }
     else
     {
-      if ((stateCurr != STATE_OFF || stateCurr == STATE_ERROR) &&
-          stateCurr != STATE_STATION)
+      if ((!stateMachine.isCurrentState(StateMachine::STATE_OFF) || stateMachine.isCurrentState(StateMachine::STATE_ERROR)) &&
+          !stateMachine.isCurrentState(StateMachine::STATE_STATION))
       {
-        setNextState(STATE_OFF);
+        setNextState(StateMachine::STATE_OFF);
       }
       else
       {
@@ -1633,42 +1623,42 @@ void Robot::checkButton()
             // start normal with random mowing
             cutter.enable();
             mowPatternCurr = MOW_RANDOM;
-            setNextState(STATE_FORWARD);
+            setNextState(StateMachine::STATE_FORWARD);
             break;
 
           case 2:
             // start normal with bidir mowing
             cutter.enable();
             mowPatternCurr = MOW_BIDIR;
-            setNextState(STATE_FORWARD);
+            setNextState(StateMachine::STATE_FORWARD);
             break;
 
           case 3:
             // start remote control mode
-            setNextState(STATE_REMOTE);
+            setNextState(StateMachine::STATE_REMOTE);
             break;
 
           case 4:
             // start normal without perimeter
             perimeters.use = false;
-            setNextState(STATE_FORWARD);
+            setNextState(StateMachine::STATE_FORWARD);
             break;
 
           case 5:
             // drive home
-            setNextState(STATE_PERI_FIND);
+            setNextState(StateMachine::STATE_PERI_FIND);
             break;
 
           case 6:
             // track perimeter
-            setNextState(STATE_PERI_TRACK);
+            setNextState(StateMachine::STATE_PERI_TRACK);
             break;
 
           case 7:
             // start normal with lanes mowing
             cutter.enable();
             mowPatternCurr = MOW_LANES;
-            setNextState(STATE_FORWARD);
+            setNextState(StateMachine::STATE_FORWARD);
             break;
         }
       }
@@ -1711,7 +1701,7 @@ void Robot::readSensors()
       {
         Console.println(F("Error: Missing ADC calibration data"));
         incErrorCounter(ERR_ADC_CALIB);
-        setNextState(STATE_ERROR);
+        setNextState(StateMachine::STATE_ERROR);
       }
     }
   }
@@ -1741,7 +1731,7 @@ void Robot::readSensors()
     {
       // set perimeter trigger time
       // far away from perimeter?
-      if (curMillis > stateStartTime + 2000)
+      if (curMillis > stateMachine.getStateStartTime() + 2000)
       {
         perimeterTriggerTime = curMillis + perimeterTriggerTimeout;
       }
@@ -1753,22 +1743,22 @@ void Robot::readSensors()
 
     if (perimeters.perimeter[Perimeter::LEFT].signalTimedOut())
     {
-      if (stateCurr != STATE_OFF &&
-          stateCurr != STATE_MANUAL &&
-          stateCurr != STATE_STATION &&
-          stateCurr != STATE_STATION_CHARGING &&
-          stateCurr != STATE_STATION_CHECK &&
-          stateCurr != STATE_STATION_REV &&
-          stateCurr != STATE_STATION_ROLL &&
-          stateCurr != STATE_STATION_FORW &&
-          stateCurr != STATE_REMOTE &&
-          stateCurr != STATE_PERI_OUT_FORW &&
-          stateCurr != STATE_PERI_OUT_REV &&
-          stateCurr != STATE_PERI_OUT_ROLL)
+      if (!stateMachine.isCurrentState(StateMachine::STATE_OFF) &&
+          !stateMachine.isCurrentState(StateMachine::STATE_MANUAL) &&
+          !stateMachine.isCurrentState(StateMachine::STATE_STATION) &&
+          !stateMachine.isCurrentState(StateMachine::STATE_STATION_CHARGING) &&
+          !stateMachine.isCurrentState(StateMachine::STATE_STATION_CHECK) &&
+          !stateMachine.isCurrentState(StateMachine::STATE_STATION_REV) &&
+          !stateMachine.isCurrentState(StateMachine::STATE_STATION_ROLL) &&
+          !stateMachine.isCurrentState(StateMachine::STATE_STATION_FORW) &&
+          !stateMachine.isCurrentState(StateMachine::STATE_REMOTE) &&
+          !stateMachine.isCurrentState(StateMachine::STATE_PERI_OUT_FORW) &&
+          !stateMachine.isCurrentState(StateMachine::STATE_PERI_OUT_REV) &&
+          !stateMachine.isCurrentState(StateMachine::STATE_PERI_OUT_ROLL))
       {
         Console.println("Error: Perimeter too far away");
         incErrorCounter(ERR_PERIMETER_TIMEOUT);
-        setNextState(STATE_ERROR);
+        setNextState(StateMachine::STATE_ERROR);
       }
     }
   }
@@ -1818,7 +1808,7 @@ void Robot::readSensors()
     {
       Console.println(F("Error: Missing IMU calibration data"));
       incErrorCounter(ERR_IMU_CALIB);
-      setNextState(STATE_ERROR);
+      setNextState(StateMachine::STATE_ERROR);
     }
   }
 
@@ -1843,9 +1833,9 @@ void Robot::setDefaults()
 // set state machine new state
 // http://wiki.ardumower.de/images/f/ff/Ardumower_states.png
 // called *ONCE* to set to a *NEW* state
-void Robot::setNextState(byte stateNew, bool dir)
+void Robot::setNextState(StateMachine::stateE stateNew, bool dir)
 {
-  if (stateNew == stateCurr)
+  if (stateMachine.isCurrentState(stateNew))
   {
     return;
   }
@@ -1853,111 +1843,114 @@ void Robot::setNextState(byte stateNew, bool dir)
   unsigned long curMillis = millis();
 
   // state correction
-  if (stateCurr == STATE_PERI_FIND ||
-      stateCurr == STATE_PERI_TRACK)
+  if (stateMachine.isCurrentState(StateMachine::STATE_PERI_FIND) ||
+      stateMachine.isCurrentState(StateMachine::STATE_PERI_TRACK))
   {
-    if (stateNew == STATE_ROLL)
+    if (stateNew == StateMachine::STATE_ROLL)
     {
-      stateNew = STATE_PERI_ROLL;
+      stateNew = StateMachine::STATE_PERI_ROLL;
     }
 
-    if (stateNew == STATE_REVERSE)
+    if (stateNew == StateMachine::STATE_REVERSE)
     {
-      stateNew = STATE_PERI_REV;
+      stateNew = StateMachine::STATE_PERI_REV;
     }
   }
 
-  if (stateNew == STATE_FORWARD)
+  if (stateNew == StateMachine::STATE_FORWARD)
   {
-    if (stateCurr == STATE_STATION_REV ||
-        stateCurr == STATE_STATION_ROLL ||
-        stateCurr == STATE_STATION_CHECK)
+    if (stateMachine.isCurrentState(StateMachine::STATE_STATION_REV) ||
+        stateMachine.isCurrentState(StateMachine::STATE_STATION_ROLL) ||
+        stateMachine.isCurrentState(StateMachine::STATE_STATION_CHECK))
     {
       return;
     }
 
-    if (stateCurr == STATE_STATION ||
-        stateCurr == STATE_STATION_CHARGING)
+    if (stateMachine.isCurrentState(StateMachine::STATE_STATION) ||
+        stateMachine.isCurrentState(StateMachine::STATE_STATION_CHARGING))
     {
-      stateNew = STATE_STATION_CHECK;
+      stateNew = StateMachine::STATE_STATION_CHECK;
       battery.setChargeRelay(OFF);
       cutter.disable();
     }
   }
 
   // evaluate new state
-  stateNext = stateNew;
+  stateMachine.setNextState(stateNew);
   rollDir = dir;
   int zeroSettleTime = wheels.wheel[Wheel::LEFT].motor.zeroSettleTime;
 
-  if (stateNew == STATE_STATION_REV)
+  if (stateNew == StateMachine::STATE_STATION_REV)
   {
     speed = -100;
     steer = 0;
-    stateEndTime = curMillis + stationRevTime + zeroSettleTime;
+    stateMachine.setEndTime(curMillis + stationRevTime + zeroSettleTime);
   }
-  else if (stateNew == STATE_STATION_ROLL)
+  else if (stateNew == StateMachine::STATE_STATION_ROLL)
   {
     speed = 0;
     steer = +100;
-    stateEndTime = curMillis + stationRollTime + zeroSettleTime;
+    stateMachine.setEndTime(curMillis + stationRollTime + zeroSettleTime);
   }
-  else if (stateNew == STATE_STATION_FORW)
+  else if (stateNew == StateMachine::STATE_STATION_FORW)
   {
     speed = +100;
     steer = 0;
     cutter.enable();
-    stateEndTime = curMillis + stationForwTime + zeroSettleTime;
+    stateMachine.setEndTime(curMillis + stationForwTime + zeroSettleTime);
   }
-  else if (stateNew == STATE_STATION_CHECK)
+  else if (stateNew == StateMachine::STATE_STATION_CHECK)
   {
     speed = -25;
     steer = 0;
-    stateEndTime = curMillis + stationCheckTime + zeroSettleTime;
+    stateMachine.setEndTime(curMillis + stationCheckTime + zeroSettleTime);
   }
-  else if (stateNew == STATE_PERI_ROLL)
+  else if (stateNew == StateMachine::STATE_PERI_ROLL)
   {
     speed = 0;
     steer = (dir == LEFT) ? -25: +25;
-    stateEndTime = curMillis + perimeterTrackRollTime + zeroSettleTime;
+    stateMachine.setEndTime(curMillis + perimeterTrackRollTime + zeroSettleTime);
   }
-  else if (stateNew == STATE_PERI_REV)
+  else if (stateNew == StateMachine::STATE_PERI_REV)
   {
     speed = -25;
     steer = 0;
-    stateEndTime = curMillis + perimeterTrackRevTime + zeroSettleTime;
+    stateMachine.setEndTime(curMillis + perimeterTrackRevTime + zeroSettleTime);
   }
-  else if (stateNew == STATE_PERI_OUT_FORW)
+  else if (stateNew == StateMachine::STATE_PERI_OUT_FORW)
   {
     speed = +100;
     steer = 0;
-    stateEndTime = curMillis + perimeterOutRevTime + zeroSettleTime + 1000;
+    stateMachine.setEndTime(curMillis + perimeterOutRevTime + zeroSettleTime + 1000);
   }
-  else if (stateNew == STATE_PERI_OUT_REV)
+  else if (stateNew == StateMachine::STATE_PERI_OUT_REV)
   {
     speed = -75;
     steer = 0;
-    stateEndTime = curMillis + perimeterOutRevTime + zeroSettleTime;
+    stateMachine.setEndTime(curMillis + perimeterOutRevTime + zeroSettleTime);
   }
-  else if (stateNew == STATE_PERI_OUT_ROLL)
+  else if (stateNew == StateMachine::STATE_PERI_OUT_ROLL)
   {
     speed = 0;
     steer = (dir == LEFT) ? -75: +75;
-    stateEndTime = curMillis + random(perimeterOutRollTimeMin, perimeterOutRollTimeMax) + zeroSettleTime;
+    stateMachine.setEndTime(curMillis +
+                            random(perimeterOutRollTimeMin,
+                                   perimeterOutRollTimeMax) +
+                            zeroSettleTime);
   }
-  else if (stateNew == STATE_FORWARD)
+  else if (stateNew == StateMachine::STATE_FORWARD)
   {
     speed = 100;
     steer = 0;
     statsMowTimeTotalStart = true;
   }
-  else if (stateNew == STATE_REVERSE)
+  else if (stateNew == StateMachine::STATE_REVERSE)
   {
     speed = -75;
     steer = 0;
-    stateEndTime = curMillis + wheels.reverseTime + zeroSettleTime;
+    stateMachine.setEndTime(curMillis + wheels.reverseTime + zeroSettleTime);
   }
-  else if (stateNew == STATE_ROLL)
+  else if (stateNew == StateMachine::STATE_ROLL)
   {
     imuDriveHeading = scalePI(imuDriveHeading + PI); // Toggle heading 180 degree (IMU)
     if (imuRollDir == LEFT)
@@ -1972,47 +1965,49 @@ void Robot::setNextState(byte stateNew, bool dir)
     }
     speed = 0;
     steer = (dir == LEFT) ? -75: +75;
-    stateEndTime = curMillis + random(wheels.rollTimeMin, wheels.rollTimeMax) + zeroSettleTime;
+    stateMachine.setEndTime(curMillis +
+                            random(wheels.rollTimeMin, wheels.rollTimeMax) +
+                            zeroSettleTime);
   }
-  else if (stateNew == STATE_REMOTE)
+  else if (stateNew == StateMachine::STATE_REMOTE)
   {
     cutter.enable();
     //motorMowModulate = false;
   }
-  else if (stateNew == STATE_STATION)
+  else if (stateNew == StateMachine::STATE_STATION)
   {
     battery.setChargeRelay(OFF);
     setDefaults();
     statsMowTimeTotalStart = false;  // stop stats mowTime counter
     saveRobotStats();
   }
-  else if (stateNew == STATE_STATION_CHARGING)
+  else if (stateNew == StateMachine::STATE_STATION_CHARGING)
   {
     battery.setChargeRelay(ON);
     setDefaults();
   }
-  else if (stateNew == STATE_OFF)
+  else if (stateNew == StateMachine::STATE_OFF)
   {
     battery.setChargeRelay(OFF);
     setDefaults();
     statsMowTimeTotalStart = false; // stop stats mowTime counter
     saveRobotStats();
   }
-  else if (stateNew == STATE_ERROR)
+  else if (stateNew == StateMachine::STATE_ERROR)
   {
     setDefaults();
     battery.setChargeRelay(OFF);
     statsMowTimeTotalStart = false;
     //saveRobotStats();
   }
-  else if (stateNew == STATE_PERI_FIND)
+  else if (stateNew == StateMachine::STATE_PERI_FIND)
   {
     // find perimeter  => drive half speed
     speed = 50;
     steer = 0;
     //motorMowEnable = false;     // FIXME: should be an option?
   }
-  else if (stateNew == STATE_PERI_TRACK)
+  else if (stateNew == StateMachine::STATE_PERI_TRACK)
   {
     //motorMowEnable = false;     // FIXME: should be an option?
     speed = 50;
@@ -2020,18 +2015,17 @@ void Robot::setNextState(byte stateNew, bool dir)
     battery.setChargeRelay(OFF);
     //beep(6);
   }
-  else if (stateNew != STATE_REMOTE)
+  else if (stateNew != StateMachine::STATE_REMOTE)
   {
     // TODO: This feels dangerous!!!
     cutter.motor.setPwmSet(cutter.motor.pwmMax);
   }
 
+  stateMachine.changeState();
+
   sonars.obstacleTimeout = 0;
-  // state has changed
-  stateStartTime = curMillis;
-  stateLast = stateCurr;
-  stateCurr = stateNext;
   perimeterTriggerTime = 0;
+
   printInfo(Console);
 }
 
@@ -2045,35 +2039,35 @@ void Robot::checkBattery()
   if (battery.monitored)
   {
     if (battery.getVoltage() < battery.batSwitchOffIfBelow &&
-        stateCurr != STATE_ERROR &&
-        stateCurr != STATE_OFF &&
-        stateCurr != STATE_STATION &&
-        stateCurr != STATE_STATION_CHARGING)
+        !stateMachine.isCurrentState(StateMachine::STATE_ERROR) &&
+        !stateMachine.isCurrentState(StateMachine::STATE_OFF) &&
+        !stateMachine.isCurrentState(StateMachine::STATE_STATION) &&
+        !stateMachine.isCurrentState(StateMachine::STATE_STATION_CHARGING))
     {
       Console.println(F("Triggered batSwitchOffIfBelow"));
       incErrorCounter(ERR_BATTERY);
       beep(2, true);
-      setNextState(STATE_OFF);
+      setNextState(StateMachine::STATE_OFF);
     }
     else if (battery.getVoltage() < battery.batGoHomeIfBelow &&
-             stateCurr != STATE_OFF &&
-             stateCurr != STATE_MANUAL &&
-             stateCurr != STATE_STATION &&
-             stateCurr != STATE_STATION_CHARGING &&
-             stateCurr != STATE_REMOTE &&
-             stateCurr != STATE_ERROR &&
-             stateCurr != STATE_PERI_TRACK &&
+             !stateMachine.isCurrentState(StateMachine::STATE_OFF) &&
+             !stateMachine.isCurrentState(StateMachine::STATE_MANUAL) &&
+             !stateMachine.isCurrentState(StateMachine::STATE_STATION) &&
+             !stateMachine.isCurrentState(StateMachine::STATE_STATION_CHARGING) &&
+             !stateMachine.isCurrentState(StateMachine::STATE_REMOTE) &&
+             !stateMachine.isCurrentState(StateMachine::STATE_ERROR) &&
+             !stateMachine.isCurrentState(StateMachine::STATE_PERI_TRACK) &&
              perimeters.use)
     {
       Console.println(F("Triggered batGoHomeIfBelow"));
       beep(2, true);
-      setNextState(STATE_PERI_FIND);
+      setNextState(StateMachine::STATE_PERI_FIND);
     }
   }
 
   // Check if mower is idle and battery can be switched off
-  if (stateCurr == STATE_OFF ||
-      stateCurr == STATE_ERROR)
+  if (stateMachine.isCurrentState(StateMachine::STATE_OFF) ||
+      stateMachine.isCurrentState(StateMachine::STATE_ERROR))
   {
     if (idleTimeSec != BATTERY_SW_OFF)
     {
@@ -2169,8 +2163,9 @@ void Robot::checkRobotStats_mowTime()
 
 void Robot::checkRobotStats_battery()
 {
-  // Cunt only if mower has charged more than 60 seconds.
-  if (stateCurr == STATE_STATION_CHARGING && stateTime >= 60000)
+  // Count only if mower has charged more than 60 seconds.
+  if (stateMachine.isCurrentState(StateMachine::STATE_STATION_CHARGING) &&
+      stateMachine.getStateTime() >= 60000)
   {
     statsBatteryChargingCounter++; // temporary counter
     if (statsBatteryChargingCounter == 1)
@@ -2266,25 +2261,26 @@ void Robot::checkTimer()
       {
         // Start timer triggered
         stopTimerTriggered = false;
-        if (stateCurr == STATE_STATION || stateCurr == STATE_OFF)
+        if (stateMachine.isCurrentState(StateMachine::STATE_STATION) ||
+            stateMachine.isCurrentState(StateMachine::STATE_OFF))
         {
           Console.println(F("Timer start triggered"));
           cutter.enable();
-          setNextState(STATE_FORWARD);
+          setNextState(StateMachine::STATE_FORWARD);
         }
       }
     }
 
-    if (stopTimerTriggered && stateCurr == STATE_FORWARD)
+    if (stopTimerTriggered && stateMachine.isCurrentState(StateMachine::STATE_FORWARD))
     {
       Console.println(F("Timer stop triggered"));
       if (perimeters.use)
       {
-        setNextState(STATE_PERI_FIND);
+        setNextState(StateMachine::STATE_PERI_FIND);
       }
       else
       {
-        setNextState(STATE_OFF);
+        setNextState(StateMachine::STATE_OFF);
       }
     }
   }
@@ -2294,18 +2290,18 @@ void Robot::reverseOrChangeDirection(const byte aRollDir)
 {
   if (mowPatternCurr == MOW_BIDIR)
   {
-    if (stateCurr == STATE_FORWARD)
+    if (stateMachine.isCurrentState(StateMachine::STATE_FORWARD))
     {
-      setNextState(STATE_REVERSE, RIGHT);
+      setNextState(StateMachine::STATE_REVERSE, RIGHT);
     }
-    else if (stateCurr == STATE_REVERSE)
+    else if (stateMachine.isCurrentState(StateMachine::STATE_REVERSE))
     {
-      setNextState(STATE_FORWARD, LEFT);
+      setNextState(StateMachine::STATE_FORWARD, LEFT);
     }
   }
   else
   {
-    setNextState(STATE_REVERSE, aRollDir);
+    setNextState(StateMachine::STATE_REVERSE, aRollDir);
   }
 }
 
@@ -2341,7 +2337,7 @@ void Robot::checkCutterMotorPower()
 void Robot::checkWheelMotorPower(Wheel::wheelE side)
 {
   bool hasPassedPowerIgnoreTime =
-      millis() > (stateStartTime + wheels.wheel[side].motor.powerIgnoreTime);
+      millis() > (stateMachine.getStateStartTime() + wheels.wheel[side].motor.powerIgnoreTime);
 
   if (wheels.wheel[side].motor.isOverpowered() && hasPassedPowerIgnoreTime)
   {
@@ -2350,19 +2346,19 @@ void Robot::checkWheelMotorPower(Wheel::wheelE side)
     setMotorPWMs(0, 0);
     // TODO: wheels.stop();
 
-    if (stateCurr == STATE_FORWARD ||
-        stateCurr == STATE_PERI_FIND ||
-        stateCurr == STATE_PERI_TRACK)
+    if (stateMachine.isCurrentState(StateMachine::STATE_FORWARD) ||
+        stateMachine.isCurrentState(StateMachine::STATE_PERI_FIND) ||
+        stateMachine.isCurrentState(StateMachine::STATE_PERI_TRACK))
     {
       reverseOrChangeDirection(RIGHT);
     }
-    else if (stateCurr == STATE_REVERSE)
+    else if (stateMachine.isCurrentState(StateMachine::STATE_REVERSE))
     {
-      setNextState(STATE_ROLL, (bool)!side);
+      setNextState(StateMachine::STATE_ROLL, (bool)!side);
     }
-    else if (stateCurr == STATE_ROLL)
+    else if (stateMachine.isCurrentState(StateMachine::STATE_ROLL))
     {
-      setNextState(STATE_FORWARD);
+      setNextState(StateMachine::STATE_FORWARD);
     }
   }
 }
@@ -2380,7 +2376,7 @@ void Robot::checkMotorPower()
 // check bumpers
 void Robot::checkBumpers()
 {
-  if (mowPatternCurr == MOW_BIDIR && millis() < (stateStartTime + 4000))
+  if (mowPatternCurr == MOW_BIDIR && millis() < (stateMachine.getStateStartTime() + 4000))
   {
     return;
   }
@@ -2399,7 +2395,7 @@ void Robot::checkBumpers()
 void Robot::checkDrop()
 {
   unsigned long curMillis = millis();
-  if (mowPatternCurr == MOW_BIDIR && curMillis < (stateStartTime + 4000))
+  if (mowPatternCurr == MOW_BIDIR && curMillis < (stateMachine.getStateStartTime() + 4000))
   {
     return;
   }
@@ -2430,13 +2426,13 @@ void Robot::checkBumpersPerimeter()
   if (bumpers.isAnyHit())
   {
     if (bumpers.bumper[Bumpers::LEFT].isHit() ||
-        stateCurr == STATE_PERI_TRACK)
+        stateMachine.isCurrentState(StateMachine::STATE_PERI_TRACK))
     {
-      setNextState(STATE_PERI_REV, RIGHT);
+      setNextState(StateMachine::STATE_PERI_REV, RIGHT);
     }
     else
     {
-      setNextState(STATE_PERI_REV, LEFT);
+      setNextState(StateMachine::STATE_PERI_REV, LEFT);
     }
   }
 }
@@ -2453,7 +2449,7 @@ void Robot::checkPerimeterBoundary()
 
   if (mowPatternCurr == MOW_BIDIR)
   {
-    if (curMillis < stateStartTime + 3000)
+    if (curMillis < stateMachine.getStateStartTime() + 3000)
     {
       return;
     }
@@ -2467,15 +2463,15 @@ void Robot::checkPerimeterBoundary()
     if (perimeterTriggerTime > 0 && curMillis >= perimeterTriggerTime)
     {
       perimeterTriggerTime = 0;
-      if (stateCurr == STATE_FORWARD)
+      if (stateMachine.isCurrentState(StateMachine::STATE_FORWARD))
       {
-        setNextState(STATE_PERI_OUT_REV, wheels.rotateDir);
+        setNextState(StateMachine::STATE_PERI_OUT_REV, wheels.rotateDir);
       }
-      else if (stateCurr == STATE_ROLL)
+      else if (stateMachine.isCurrentState(StateMachine::STATE_ROLL))
       {
         speed = 0;
         steer = 0;
-        setNextState(STATE_PERI_OUT_FORW, wheels.rotateDir);
+        setNextState(StateMachine::STATE_PERI_OUT_FORW, wheels.rotateDir);
       }
     }
   }
@@ -2484,14 +2480,14 @@ void Robot::checkPerimeterBoundary()
 // Check perimeter while finding it
 void Robot::checkPerimeterFind()
 {
-  if (stateCurr == STATE_PERI_FIND)
+  if (stateMachine.isCurrentState(StateMachine::STATE_PERI_FIND))
   {
     if (perimeters.perimeter[Perimeter::LEFT].isInside())
     {
       if (wheels.wheel[Wheel::LEFT].motor.rpmSet != wheels.wheel[Wheel::RIGHT].motor.rpmSet)
       {
         // We just made an 'outside to inside' rotation, now track
-        setNextState(STATE_PERI_TRACK);
+        setNextState(StateMachine::STATE_PERI_TRACK);
       }
     }
     else
@@ -2508,7 +2504,7 @@ void Robot::checkLawn()
 {
   if (lawnSensor.use)
   {
-    if (lawnSensor.isDetected() && millis() > stateStartTime + 3000)
+    if (lawnSensor.isDetected() && millis() > stateMachine.getStateStartTime() + 3000)
     {
       reverseOrChangeDirection(!rollDir); // Toggle roll direction
     }
@@ -2526,11 +2522,11 @@ void Robot::checkRain()
     Console.println(F("RAIN"));
     if (perimeters.use)
     {
-      setNextState(STATE_PERI_FIND);
+      setNextState(StateMachine::STATE_PERI_FIND);
     }
     else
     {
-      setNextState(STATE_OFF);
+      setNextState(StateMachine::STATE_OFF);
     }
   }
 }
@@ -2544,14 +2540,14 @@ void Robot::checkSonar()
   }
 
   unsigned long curMillis = millis();
-  if (mowPatternCurr == MOW_BIDIR && curMillis < (stateStartTime + 4000))
+  if (mowPatternCurr == MOW_BIDIR && curMillis < (stateMachine.getStateStartTime() + 4000))
   {
     return;
   }
 
   // slow down motor wheel speed near obstacles
-  if (stateCurr == STATE_FORWARD ||
-      (mowPatternCurr == MOW_BIDIR && stateCurr == STATE_REVERSE))
+  if (stateMachine.isCurrentState(StateMachine::STATE_FORWARD) ||
+      (mowPatternCurr == MOW_BIDIR && stateMachine.isCurrentState(StateMachine::STATE_REVERSE)))
   {
     if (sonars.obstacleTimeout == 0)
     {
@@ -2621,9 +2617,9 @@ void Robot::checkTilt()
   {
     nextTimeCheckTilt = curMillis + 200; // 5Hz same as imu.nextTime
 
-    if (stateCurr != STATE_OFF &&
-        stateCurr != STATE_ERROR &&
-        stateCurr != STATE_STATION)
+    if (stateMachine.isCurrentState(StateMachine::STATE_OFF) &&
+        stateMachine.isCurrentState(StateMachine::STATE_ERROR) &&
+        stateMachine.isCurrentState(StateMachine::STATE_STATION))
     {
       int pitchAngle = (int)imu.getPitchDeg();
       int rollAngle = (int)imu.getRollDeg();
@@ -2631,7 +2627,7 @@ void Robot::checkTilt()
       {
         Console.println(F("Error: IMU tilt"));
         incErrorCounter(ERR_IMU_TILT);
-        setNextState(STATE_ERROR);
+        setNextState(StateMachine::STATE_ERROR);
       }
     }
   }
@@ -2661,12 +2657,12 @@ void Robot::checkIfStuck()
     // Console.println(gpsSpeed);
     // Console.println(robotIsStuckedCounter);
     // Console.println(errorCounter[ERR_STUCK]);
-    if (stateCurr != STATE_MANUAL &&
-        stateCurr != STATE_REMOTE &&
+    if (stateMachine.isCurrentState(StateMachine::STATE_MANUAL) &&
+        stateMachine.isCurrentState(StateMachine::STATE_REMOTE) &&
         gpsSpeed < stuckIfGpsSpeedBelow &&
         odometer.encoder.left_p->getWheelRpmCurr() != 0 &&
         odometer.encoder.right_p->getWheelRpmCurr() != 0 &&
-        curMillis > (stateStartTime + gpsSpeedIgnoreTime))
+        curMillis > (stateMachine.getStateStartTime() + gpsSpeedIgnoreTime))
     {
       robotIsStuckCounter++;
     }
@@ -2676,15 +2672,15 @@ void Robot::checkIfStuck()
       // cutter motor is re-enabled.
       robotIsStuckCounter = 0;    // resets temporary counter to zero
       if (errorCounter[ERR_STUCK] == 0 &&
-          stateCurr != STATE_OFF &&
-          stateCurr != STATE_MANUAL &&
-          stateCurr != STATE_STATION &&
-          stateCurr != STATE_STATION_CHARGING &&
-          stateCurr != STATE_STATION_CHECK &&
-          stateCurr != STATE_STATION_REV &&
-          stateCurr != STATE_STATION_ROLL &&
-          stateCurr != STATE_REMOTE &&
-          stateCurr != STATE_ERROR)
+          stateMachine.isCurrentState(StateMachine::STATE_OFF) &&
+          stateMachine.isCurrentState(StateMachine::STATE_MANUAL) &&
+          stateMachine.isCurrentState(StateMachine::STATE_STATION) &&
+          stateMachine.isCurrentState(StateMachine::STATE_STATION_CHARGING) &&
+          stateMachine.isCurrentState(StateMachine::STATE_STATION_CHECK) &&
+          stateMachine.isCurrentState(StateMachine::STATE_STATION_REV) &&
+          stateMachine.isCurrentState(StateMachine::STATE_STATION_ROLL) &&
+          stateMachine.isCurrentState(StateMachine::STATE_REMOTE) &&
+          stateMachine.isCurrentState(StateMachine::STATE_ERROR))
       {
         cutter.enable();
         errorCounterMax[ERR_STUCK] = 0;
@@ -2699,25 +2695,25 @@ void Robot::checkIfStuck()
         // robot is definitely stuck and unable to move
         Console.println(F("Error: Mower is stuck"));
         incErrorCounter(ERR_STUCK);
-        setNextState(STATE_ERROR);
+        setNextState(StateMachine::STATE_ERROR);
         //robotIsStuckedCounter = 0;
       }
       else if (errorCounter[ERR_STUCK] < 3)
       {
         // mower tries 3 times to get unstuck
-        if (stateCurr == STATE_FORWARD)
+        if (stateMachine.isCurrentState(StateMachine::STATE_FORWARD))
         {
           cutter.disable();
           incErrorCounter(ERR_STUCK);
           setMotorPWMs(0, 0);
           reverseOrChangeDirection(RIGHT);
         }
-        else if (stateCurr == STATE_ROLL)
+        else if (stateMachine.isCurrentState(StateMachine::STATE_ROLL))
         {
           cutter.disable();
           incErrorCounter(ERR_STUCK);
           setMotorPWMs(0, 0);
-          setNextState(STATE_FORWARD);
+          setNextState(StateMachine::STATE_FORWARD);
         }
       }
     }
@@ -2756,16 +2752,15 @@ void Robot::processGPSData()
 
 void Robot::checkTimeout()
 {
-  if (stateTime > wheels.forwardTimeMax)
+  if (stateMachine.getStateTime() > wheels.forwardTimeMax)
   {
-    setNextState(STATE_REVERSE, !rollDir); // Toggle roll direction
+    setNextState(StateMachine::STATE_REVERSE, !rollDir); // Toggle roll direction
   }
 }
 
 void Robot::loop()
 {
   unsigned long curMillis = millis();
-  stateTime = curMillis - stateStartTime;
   ADCMan.run();
   readSerial();
   if (rc.readSerial())
@@ -2805,7 +2800,7 @@ void Robot::loop()
   {
     nextTimeInfo = curMillis + 1000;
     printInfo(Console);
-    if (stateCurr == STATE_REMOTE)
+    if (stateMachine.isCurrentState(StateMachine::STATE_REMOTE))
     {
       printRemote();
     }
@@ -2816,9 +2811,9 @@ void Robot::loop()
   // state machine - things to do *PERMANENTLY* for current state
   // robot state machine
   // http://wiki.ardumower.de/images/f/ff/Ardumower_states.png
-  switch (stateCurr)
+  switch (stateMachine.getCurrentState())
   {
-    case STATE_ERROR:
+    case StateMachine::STATE_ERROR:
       // fatal-error
       if (curMillis >= nextTimeErrorBeep)
       {
@@ -2827,49 +2822,53 @@ void Robot::loop()
       }
       break;
 
-    case STATE_OFF:
+    case StateMachine::STATE_OFF:
       // robot is turned off
-      if (battery.isMonitored() && curMillis - stateStartTime > 2000)
+      if (battery.isMonitored() && curMillis - stateMachine.getStateStartTime() > 2000)
       {
         if (battery.getChargeVoltage() > 5.0 && battery.getVoltage() > 8)
         {
           beep(2, true);
-          setNextState(STATE_STATION);
+          setNextState(StateMachine::STATE_STATION);
         }
       }
       imuDriveHeading = imu.getYaw();
       break;
 
-    case STATE_REMOTE:
+    case StateMachine::STATE_REMOTE:
       // remote control mode (RC)
 //      if (remoteSwitch > 50)
 //      {
-//        setNextState(STATE_FORWARD, 0);
+//        setNextState(StateMachine::STATE_FORWARD, 0);
 //      }
       wheels.setSpeed(remoteSpeed);
       wheels.setSteer(remoteSteer);
       cutter.setSpeed(remoteMow);
       break;
 
-    case STATE_MANUAL:
+    case StateMachine::STATE_MANUAL:
       break;
 
-    case STATE_FORWARD:
+    case StateMachine::STATE_FORWARD:
       // driving forward
       if (mowPatternCurr == MOW_BIDIR)
       {
         double ratio = wheels.biDirSpeedRatio1;
-        if (stateTime > 4000)
+        if (stateMachine.getStateTime() > 4000)
         {
           ratio = wheels.biDirSpeedRatio2;
         }
         if (rollDir == RIGHT)
         {
+          wheels.setSpeed(remoteSpeed);
+          wheels.setSteer(remoteSteer);
           wheels.wheel[Wheel::RIGHT].motor.rpmSet =
               ((double)wheels.wheel[Wheel::LEFT].motor.rpmSet) * ratio;
         }
         else
         {
+          wheels.setSpeed(remoteSpeed);
+          wheels.setSteer(remoteSteer);
           wheels.wheel[Wheel::LEFT].motor.rpmSet =
               ((double)wheels.wheel[Wheel::RIGHT].motor.rpmSet) * ratio;
         }
@@ -2886,7 +2885,7 @@ void Robot::loop()
       checkTimeout();
       break;
 
-    case STATE_ROLL:
+    case StateMachine::STATE_ROLL:
       checkMotorPower();
       checkBumpers();
       checkDrop();
@@ -2898,28 +2897,28 @@ void Robot::loop()
       {
         if (abs(distancePI(imu.getYaw(), imuRollHeading)) < PI / 36)
         {
-          setNextState(STATE_FORWARD);
+          setNextState(StateMachine::STATE_FORWARD);
         }
       }
       else
       {
-        if (curMillis >= stateEndTime)
+        if (stateMachine.isStateEndTimeReached())
         {
-          setNextState(STATE_FORWARD);
+          setNextState(StateMachine::STATE_FORWARD);
         }
       }
       break;
 
-    case STATE_ROLL_WAIT:
+    case StateMachine::STATE_ROLL_WAIT:
       // making a roll (left/right)
-      //if (abs(distancePI(imuYaw, imuRollHeading)) < PI/36) setNextState(STATE_OFF,0);
+      //if (abs(distancePI(imuYaw, imuRollHeading)) < PI/36) setNextState(StateMachine::STATE_OFF,0);
       break;
 
-    case STATE_CIRCLE:
+    case StateMachine::STATE_CIRCLE:
       // driving circles
       break;
 
-    case STATE_REVERSE:
+    case StateMachine::STATE_REVERSE:
       // driving reverse
       checkErrorCounter();
       checkTimer();
@@ -2933,7 +2932,7 @@ void Robot::loop()
       if (mowPatternCurr == MOW_BIDIR)
       {
         double ratio = wheels.biDirSpeedRatio1;
-        if (stateTime > 4000)
+        if (stateMachine.getStateTime() > 4000)
         {
           ratio = wheels.biDirSpeedRatio2;
         }
@@ -2947,47 +2946,47 @@ void Robot::loop()
           wheels.wheel[Wheel::LEFT].motor.rpmSet =
               ((double)wheels.wheel[Wheel::RIGHT].motor.rpmSet) * ratio;
         }
-        if (stateTime > wheels.forwardTimeMax)
+        if (stateMachine.getStateTime() > wheels.forwardTimeMax)
         {
           // timeout
           if (rollDir == RIGHT)
           {
-            setNextState(STATE_FORWARD, LEFT); // toggle roll dir
+            setNextState(StateMachine::STATE_FORWARD, LEFT); // toggle roll dir
           }
           else
           {
-            setNextState(STATE_FORWARD, RIGHT);
+            setNextState(StateMachine::STATE_FORWARD, RIGHT);
           }
         }
       }
       else
       {
-        if (curMillis >= stateEndTime)
+        if (stateMachine.isStateEndTimeReached())
         {
-          setNextState(STATE_ROLL, rollDir);
+          setNextState(StateMachine::STATE_ROLL, rollDir);
         }
       }
       break;
 
-    case STATE_PERI_ROLL:
+    case StateMachine::STATE_PERI_ROLL:
       // perimeter tracking roll
-      if (curMillis >= stateEndTime)
+      if (stateMachine.isStateEndTimeReached())
       {
-        setNextState(STATE_PERI_FIND);
+        setNextState(StateMachine::STATE_PERI_FIND);
       }
       break;
 
-    case STATE_PERI_REV:
+    case StateMachine::STATE_PERI_REV:
       // perimeter tracking reverse
-      if (curMillis >= stateEndTime)
+      if (stateMachine.isStateEndTimeReached())
       {
-        setNextState(STATE_PERI_ROLL, rollDir);
+        setNextState(StateMachine::STATE_PERI_ROLL, rollDir);
       }
       break;
 
-    case STATE_PERI_FIND:
+    case StateMachine::STATE_PERI_FIND:
       // find perimeter
-      if (wheels.wheel[Wheel::LEFT].motor.rpmSet == wheels.wheel[Wheel::RIGHT].motor.rpmSet)
+      if (wheels.steer == 0)
       { // do not check during 'outside=>inside' rotation
         checkMotorPower();
         checkBumpersPerimeter();
@@ -2997,7 +2996,7 @@ void Robot::loop()
       checkTimeout();
       break;
 
-    case STATE_PERI_TRACK:
+    case StateMachine::STATE_PERI_TRACK:
       // track perimeter
       checkMotorPower();
       checkBumpersPerimeter();
@@ -3006,21 +3005,21 @@ void Robot::loop()
       {
         if (battery.getChargeVoltage() > 5.0)
         {
-          setNextState(STATE_STATION);
+          setNextState(StateMachine::STATE_STATION);
         }
       }
       break;
 
-    case STATE_STATION:
+    case StateMachine::STATE_STATION:
       // waiting until auto-start by user or timer triggered
       if (battery.isMonitored())
       {
         if (battery.getChargeVoltage() > 5.0 && battery.getVoltage() > 8)
         {
           if (battery.getVoltage() < battery.startChargingIfBelow &&
-              curMillis - stateStartTime > 2000)
+              stateMachine.getStateTime() > 2000)
           {
-            setNextState(STATE_STATION_CHARGING);
+            setNextState(StateMachine::STATE_STATION_CHARGING);
           }
           else
           {
@@ -3029,7 +3028,7 @@ void Robot::loop()
         }
         else
         {
-          setNextState(STATE_OFF);
+          setNextState(StateMachine::STATE_OFF);
         }
       }
       else
@@ -3038,85 +3037,85 @@ void Robot::loop()
       }
       break;
 
-    case STATE_STATION_CHARGING:
+    case StateMachine::STATE_STATION_CHARGING:
       // waiting until charging completed
       if (battery.isMonitored())
       {
         if (battery.getChargeCurrent() < battery.batFullCurrent &&
-            curMillis - stateStartTime > 2000)
+            stateMachine.getStateTime() > 2000)
         {
-          setNextState(STATE_STATION);
+          setNextState(StateMachine::STATE_STATION);
         }
-        else if (curMillis - stateStartTime > battery.chargingTimeout)
+        else if (curMillis - stateMachine.getStateStartTime() > battery.chargingTimeout)
         {
           incErrorCounter(ERR_BATTERY);
-          setNextState(STATE_ERROR);
+          setNextState(StateMachine::STATE_ERROR);
         }
       }
       break;
 
-    case STATE_PERI_OUT_FORW:
+    case StateMachine::STATE_PERI_OUT_FORW:
       checkPerimeterBoundary();
-      //if (millis() >= stateEndTime) setNextState(STATE_PERI_OUT_ROLL, rollDir);
-      if (perimeterInside || curMillis >= stateEndTime)
+      //if (millis() >= stateEndTime) setNextState(StateMachine::STATE_PERI_OUT_ROLL, rollDir);
+      if (perimeterInside || stateMachine.isStateEndTimeReached())
       {
-        setNextState(STATE_PERI_OUT_ROLL, rollDir);
+        setNextState(StateMachine::STATE_PERI_OUT_ROLL, rollDir);
       }
       break;
 
-    case STATE_PERI_OUT_REV:
+    case StateMachine::STATE_PERI_OUT_REV:
       checkPerimeterBoundary();
-      // if (millis() >= stateEndTime) setNextState(STATE_PERI_OUT_ROLL, rollDir);
-      if (perimeterInside || curMillis >= stateEndTime)
+      // if (millis() >= stateEndTime) setNextState(StateMachine::STATE_PERI_OUT_ROLL, rollDir);
+      if (perimeterInside || stateMachine.isStateEndTimeReached())
       {
-        setNextState(STATE_PERI_OUT_ROLL, rollDir);
+        setNextState(StateMachine::STATE_PERI_OUT_ROLL, rollDir);
       }
       break;
 
-    case STATE_PERI_OUT_ROLL:
-      if (millis() >= stateEndTime)
+    case StateMachine::STATE_PERI_OUT_ROLL:
+      if (stateMachine.isStateEndTimeReached())
       {
-        setNextState(STATE_FORWARD);
+        setNextState(StateMachine::STATE_FORWARD);
       }
       break;
 
-    case STATE_STATION_CHECK:
+    case StateMachine::STATE_STATION_CHECK:
       // check for charging voltage disappearing before leaving charging station
-      if (millis() >= stateEndTime)
+      if (stateMachine.isStateEndTimeReached())
       {
         if (battery.getChargeVoltage() > 5)
         {
           incErrorCounter(ERR_CHARGER);
-          setNextState(STATE_ERROR);
+          setNextState(StateMachine::STATE_ERROR);
         }
         else
         {
-          setNextState(STATE_STATION_REV);
+          setNextState(StateMachine::STATE_STATION_REV);
         }
       }
       break;
 
-    case STATE_STATION_REV:
+    case StateMachine::STATE_STATION_REV:
       // charging: drive reverse
-      if (curMillis >= stateEndTime)
+      if (stateMachine.isStateEndTimeReached())
       {
-        setNextState(STATE_STATION_ROLL);
+        setNextState(StateMachine::STATE_STATION_ROLL);
       }
       break;
 
-    case STATE_STATION_ROLL:
+    case StateMachine::STATE_STATION_ROLL:
       // charging: roll
-      if (curMillis >= stateEndTime)
+      if (stateMachine.isStateEndTimeReached())
       {
-        setNextState(STATE_STATION_FORW);
+        setNextState(StateMachine::STATE_STATION_FORW);
       }
       break;
 
-    case STATE_STATION_FORW:
+    case StateMachine::STATE_STATION_FORW:
       // forward (charge station)
-      if (curMillis >= stateEndTime)
+      if (stateMachine.isStateEndTimeReached())
       {
-        setNextState(STATE_FORWARD);
+        setNextState(StateMachine::STATE_FORWARD);
       }
       break;
   } // end switch
@@ -3124,20 +3123,20 @@ void Robot::loop()
   // next line deactivated (issue with RC failsafe)
 //  if (useRemoteRC && remoteSwitch < -50)
 //  {
-//    setNextState(STATE_REMOTE, 0);
+//    setNextState(StateMachine::STATE_REMOTE, 0);
 //  }
 
   // decide which motor control to use
-  if ((mowPatternCurr == MOW_LANES && stateCurr == STATE_ROLL) ||
-      stateCurr  == STATE_ROLL_WAIT)
+  if ((mowPatternCurr == MOW_LANES && stateMachine.isCurrentState(StateMachine::STATE_ROLL)) ||
+      stateMachine.isCurrentState(StateMachine::STATE_ROLL_WAIT))
   {
     wheelControl_imuRoll();
   }
-  else if (stateCurr == STATE_PERI_TRACK)
+  else if (stateMachine.isCurrentState(StateMachine::STATE_PERI_TRACK))
   {
     wheelControl_perimeter();
   }
-  else if (stateCurr == STATE_FORWARD &&
+  else if (stateMachine.isCurrentState(StateMachine::STATE_FORWARD) &&
            (imu.correctDir || mowPatternCurr == MOW_LANES))
   {
     wheelControl_imuDir();
@@ -3147,7 +3146,7 @@ void Robot::loop()
     wheelControl_normal();
   }
 
-  if (stateCurr != STATE_REMOTE)
+  if (!stateMachine.isCurrentState(StateMachine::STATE_REMOTE))
   {
     // TODO: This feels dangerous!!!
     cutter.motor.setPwmSet(cutter.motor.pwmMax);
