@@ -22,7 +22,7 @@ class Encoder
     void read(void);
     void setState(void);
 
-    const int16_t getCounter(void) const
+    int16_t getCounter(void) const
     {
       return counter;
     }
@@ -32,7 +32,7 @@ class Encoder
       counter = 0;
     }
 
-    const int16_t getWheelRpmCurr() const
+    int16_t getWheelRpmCurr() const
     {
       return wheelRpmCurr;
     }

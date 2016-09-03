@@ -23,7 +23,7 @@ class MotorDrv: public Motor
     virtual void readCurrent(void) = 0;
 
     // Get average ADC value 0..1023
-    const int16_t getAverageSenseAdc(void) const
+    int16_t getAverageSenseAdc(void) const
     {
       return filter.getAverage();
     }
@@ -41,7 +41,7 @@ class MotorDrv: public Motor
       this->channel = channel;
     }
 
-    const double getScale(void) const
+    double getScale(void) const
     {
       return scale;
     }

@@ -6,10 +6,10 @@
 
 // The Arduino two-wire interface uses a 7-bit number for the address,
 // and sets the last bit correctly based on reads and writes
-#define D20_SA0_HIGH_ADDRESS      0b1101011 // also applies to D20H
-#define D20_SA0_LOW_ADDRESS       0b1101010 // also applies to D20H
-#define L3G4200D_SA0_HIGH_ADDRESS 0b1101001
-#define L3G4200D_SA0_LOW_ADDRESS  0b1101000
+#define D20_SA0_HIGH_ADDRESS      0x6B //0b1101011 // also applies to D20H
+#define D20_SA0_LOW_ADDRESS       0x6A //0b1101010 // also applies to D20H
+#define L3G4200D_SA0_HIGH_ADDRESS 0x69 //0b1101001
+#define L3G4200D_SA0_LOW_ADDRESS  0x68 //0b1101000
 
 #define TEST_REG_ERROR -1
 

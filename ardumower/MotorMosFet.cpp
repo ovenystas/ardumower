@@ -50,7 +50,7 @@ void MotorMosFet::readCurrent(void)
 // - ensures that the motor voltage is not higher than pwmMax
 void MotorMosFet::control(void)
 {
-  int pwmNew;
+  int16_t pwmNew;
 
   if (regulate)
   {
@@ -76,7 +76,7 @@ void MotorMosFet::control(void)
       // Use acceleration when speed is increased
       // http://phrogz.net/js/framerate-independent-low-pass-filter.html
       // smoothed += elapsedTime * ( newValue - smoothed ) / smoothing;
-      int addPwm = getSamplingTime() * (float)(pwmSet - pwmCur) / acceleration;
+      int16_t addPwm = getSamplingTime() * (float)(pwmSet - pwmCur) / acceleration;
       pwmNew = pwmCur + addPwm;
     }
   }

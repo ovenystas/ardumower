@@ -295,10 +295,18 @@ class Robot
     virtual void processGPSData();
 
     // read hardware sensor (HAL)
-    virtual int readSensor(Robot::sensorE type) { return 0; }
+    virtual int readSensor(Robot::sensorE type)
+    {
+      (void)type;
+      return 0;
+    }
 
     // set hardware actuator (HAL)
-    virtual void setActuator(Robot::actuatorE type, int value) { }
+    virtual void setActuator(Robot::actuatorE type, int value)
+    {
+      (void)type;
+      (void)value;
+    }
 
     // settings
     virtual void deleteUserSettings();
@@ -432,8 +440,9 @@ class Robot
     virtual void menu();
     virtual void configureBluetooth(boolean quick)
     {
+      (void)quick;
     }
-    ;
+
 
   private:
     // --------- state machine ----------------------------

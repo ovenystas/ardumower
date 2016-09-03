@@ -109,7 +109,7 @@ class AdcManager
 
     uint8_t getCaptureSize(const uint8_t pin);
 
-    const uint8_t getSampleRate(void) const
+    uint8_t getSampleRate(void) const
     {
       return SAMPLE_RATE;
     }

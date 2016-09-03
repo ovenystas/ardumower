@@ -6,11 +6,11 @@
 
 // The Arduino two-wire interface uses a 7-bit number for the address,
 // and sets the last bit correctly based on reads and writes
-#define D_SA0_HIGH_ADDRESS                0b0011101
-#define D_SA0_LOW_ADDRESS                 0b0011110
-#define DLHC_DLM_DLH_MAG_ADDRESS          0b0011110
-#define DLHC_DLM_DLH_ACC_SA0_HIGH_ADDRESS 0b0011001
-#define DLM_DLH_ACC_SA0_LOW_ADDRESS       0b0011000
+#define D_SA0_HIGH_ADDRESS                0x1D //0b0011101
+#define D_SA0_LOW_ADDRESS                 0x1E //0b0011110
+#define DLHC_DLM_DLH_MAG_ADDRESS          0x1E //0b0011110
+#define DLHC_DLM_DLH_ACC_SA0_HIGH_ADDRESS 0x19 //0b0011001
+#define DLM_DLH_ACC_SA0_LOW_ADDRESS       0x18 //0b0011000
 
 #define TEST_REG_ERROR -1
 
@@ -461,11 +461,11 @@ float LSM303::heading(void)
 {
   if (deviceType == DEVICE_D)
   {
-    return heading((vector<int>){1, 0, 0});
+    return heading(vector<int>{1, 0, 0});
   }
   else
   {
-    return heading((vector<int>){0, -1, 0});
+    return heading(vector<int>{0, -1, 0});
   }
 }
 

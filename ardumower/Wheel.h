@@ -43,7 +43,7 @@ class Wheels
     bool isTimeToRotationChange(void);
     void control(void);
 
-    const int8_t getSpeed() const
+    int8_t getSpeed() const
     {
       return speed;
     }
@@ -53,7 +53,7 @@ class Wheels
       this->speed = speed;
     }
 
-    const int8_t getSteer() const
+    int8_t getSteer() const
     {
       return steer;
     }

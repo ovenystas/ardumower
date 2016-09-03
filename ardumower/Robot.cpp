@@ -726,7 +726,7 @@ void Robot::setMotorPWM(int pwm,
                         const uint8_t motor,
                         const boolean useAccel)
 {
-  const unsigned long samplingTime = wheels.wheel[motor].motor.getSamplingTime();
+  const uint16_t samplingTime = wheels.wheel[motor].motor.getSamplingTime();
 
   if (useAccel)
   {
@@ -752,7 +752,8 @@ void Robot::setMotorPWM(int pwm,
     if (abs(wheels.wheel[motor].encoder.getWheelRpmCurr()) == 0)
     {
       wheels.wheel[motor].motor.setZeroTimeout(
-          max(0, wheels.wheel[motor].motor.getZeroTimeout() - samplingTime));
+          (uint16_t)max(0, (int32_t)wheels.wheel[motor].motor.getZeroTimeout() -
+                           (int32_t)samplingTime));
     }
     else
     {
@@ -764,7 +765,8 @@ void Robot::setMotorPWM(int pwm,
     if (pwm == 0)
     {
       wheels.wheel[motor].motor.setZeroTimeout(
-          max(0, wheels.wheel[motor].motor.getZeroTimeout() - samplingTime));
+          (uint16_t)max(0, (int32_t)wheels.wheel[motor].motor.getZeroTimeout() -
+                           (int32_t)samplingTime));
     }
     else
     {
@@ -1299,8 +1301,8 @@ void Robot::delayInfo(const int ms)
 
 void Robot::testOdometer()
 {
-  int leftPwm = wheels.wheel[Wheel::LEFT].motor.pwmMax / 2;
-  int rightPwm = wheels.wheel[Wheel::RIGHT].motor.pwmMax / 2;
+  int16_t leftPwm = wheels.wheel[Wheel::LEFT].motor.pwmMax / 2;
+  int16_t rightPwm = wheels.wheel[Wheel::RIGHT].motor.pwmMax / 2;
 
   wheels.wheel[Wheel::LEFT].motor.setPwmCur(leftPwm);
   wheels.wheel[Wheel::RIGHT].motor.setPwmCur(rightPwm);

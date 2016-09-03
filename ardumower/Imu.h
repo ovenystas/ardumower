@@ -141,8 +141,8 @@ class Imu
     boolean calibrateAccelerometerNextAxis();
 
     // --------- accelerometer/magnetometer state -------
-    point_float_t accel {};
-    point_float_t mag {};
+    point_float_t accel { 0.0, 0.0, 0.0 };
+    point_float_t mag { 0.0, 0.0, 0.0 };
     boolean getUseAccelCalibration(void) const
     {
       return useAccelCalibration;
@@ -221,8 +221,8 @@ class Imu
 
     // --------- acceleration state ---------------------
     LSM303 accMag;
-    point_float_t accelMin {};
-    point_float_t accelMax {};
+    point_float_t accelMin { 0.0, 0.0, 0.0 };
+    point_float_t accelMax { 0.0, 0.0, 0.0 };
     int calibAccelAxisCounter {};
     boolean useAccelCalibration { true };
 
@@ -230,12 +230,12 @@ class Imu
     point_int_t gyroOffset { 0, 0, 0 }; // gyro calibration data
     int gyroNoise {};          // gyro noise
     boolean useGyroCalibration { true }; // gyro calibration flag
-    ypr_t ypr {};  // gyro yaw,pitch,roll
+    ypr_t ypr { 0.0, 0.0, 0.0 };  // gyro yaw,pitch,roll
 
     // --------- magnetometer state --------------------------
-    point_int_t magLast {};
-    point_int_t magMin {}; // magnetometer sensor data (raw)
-    point_int_t magMax {}; // magnetometer sensor data (raw)
+    point_int_t magLast { 0, 0, 0 };
+    point_int_t magMin { 0, 0, 0 }; // magnetometer sensor data (raw)
+    point_int_t magMax { 0, 0, 0 }; // magnetometer sensor data (raw)
     boolean useMagnetometerCalibration { true };
 
     float accelPitch {};
@@ -248,7 +248,7 @@ class Imu
     float scaledYaw {};
     float scaled2Yaw {};
     float filtYaw {};
-    point_float_t magTilt {};
+    point_float_t magTilt { 0.0, 0.0, 0.0 };
 };
 
 #endif

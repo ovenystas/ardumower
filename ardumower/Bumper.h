@@ -22,7 +22,7 @@ class Bumper
     void simHit(void);
     void check(void);
 
-    const bool isHit(void) const
+    bool isHit(void) const
     {
       return hit;
     }
@@ -32,7 +32,7 @@ class Bumper
       hit = false;
     }
 
-    const uint16_t getCounter(void) const
+    uint16_t getCounter(void) const
     {
       return counter;
     }

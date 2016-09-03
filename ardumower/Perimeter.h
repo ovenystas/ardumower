@@ -59,12 +59,12 @@ class Perimeter
     // get perimeter magnitude
     int16_t calcMagnitude(void);
 
-    const int16_t getMagnitude(void) const
+    int16_t getMagnitude(void) const
     {
       return mag;
     }
 
-    const int16_t getSmoothMagnitude(void) const
+    int16_t getSmoothMagnitude(void) const
     {
       return (int16_t)smoothMag;
     }
@@ -73,12 +73,12 @@ class Perimeter
     // perimeter signal timed out? (e.g. due to broken wire)
     boolean signalTimedOut(void);
 
-    const float getFilterQuality(void) const
+    float getFilterQuality(void) const
     {
       return filterQuality;
     }
 
-    const bool isInside(void) const
+    bool isInside(void) const
     {
       return inside;
     }

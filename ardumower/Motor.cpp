@@ -11,8 +11,9 @@
 #include "drivers.h"
 #include "Filter.h"
 
-void Motor::config(const float acceleration, const int pwmMax, const int powerMax,
-                   const bool regulate, const int rpmMax, const int rpmSet)
+void Motor::config(const float acceleration, const int16_t pwmMax,
+                   const int16_t powerMax, const bool regulate,
+                   const int16_t rpmMax, const int16_t rpmSet)
 {
   this->acceleration = acceleration;
   this->pwmMax = pwmMax;
@@ -35,22 +36,22 @@ void Motor::setRpmState(void)
   }
 }
 
-unsigned long Motor::getSamplingTime(void)
+uint16_t Motor::getSamplingTime(void)
 {
-  unsigned long curMillis = millis();
-  unsigned long samplingTime = curMillis - lastSetSpeedTime;
+  uint32_t curMillis = millis();
+  uint32_t samplingTime = curMillis - lastSetSpeedTime;
   lastSetSpeedTime = curMillis;
 
   if (samplingTime > 1000)
   {
     samplingTime = 1;
   }
-  return samplingTime;
+  return (uint16_t)samplingTime;
 }
 
 bool Motor::isTimeForRpmMeas(unsigned long* timeSinceLast_p)
 {
-  unsigned long curMillis = millis();
+  uint32_t curMillis = millis();
   *timeSinceLast_p = curMillis - lastRpmTime;
   if (curMillis >= nextTimeRpmMeas)
   {
@@ -63,7 +64,7 @@ bool Motor::isTimeForRpmMeas(unsigned long* timeSinceLast_p)
 
 bool Motor::isTimeTo(uint32_t* nextTime_p, const uint16_t timeBetween)
 {
-  unsigned long curMillis = millis();
+  uint32_t curMillis = millis();
   if (curMillis >= *nextTime_p)
   {
     *nextTime_p = curMillis + timeBetween;

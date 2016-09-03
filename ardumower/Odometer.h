@@ -36,12 +36,12 @@ class Odometer
     void loop(void);
     void readAndSetState(void);
 
-    const float getX() const
+    float getX() const
     {
       return x;
     }
 
-    const float getY() const
+    float getY() const
     {
       return y;
     }

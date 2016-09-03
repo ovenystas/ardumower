@@ -328,7 +328,7 @@ int16_t AdcManager::readMedian(const uint8_t pin)
     for (uint8_t i = 1; i < captureSize[ch]; ++i)
     {
       const int16_t j = sample[ch][i];
-      uint8_t k;
+      int8_t k;
       for (k = i - 1; (k >= 0) && (j > sample[ch][k]); k--)
       {
         sample[ch][k + 1] = sample[ch][k];

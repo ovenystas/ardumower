@@ -126,6 +126,8 @@ void RemoteControl::sendSlider(const String cmd, const String title,
                                const double scale, const float maxvalue,
                                const float minvalue)
 {
+  (void)unit; //FIXME: Remove unused parameter unit or start using it
+
   Bluetooth.print("|");
   Bluetooth.print(cmd);
   Bluetooth.print("~");
@@ -176,6 +178,8 @@ void RemoteControl::processPIDSlider(const String result, const String cmd,
                                      Pid &pid, const double scale,
                                      const float maxvalue)
 {
+  (void)maxvalue; //FIXME: Warning unused parameter
+
   int idx = result.indexOf('`');
   String s = result.substring(idx + 1);
   //Console.println(tmp);

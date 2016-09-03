@@ -17,12 +17,12 @@ class RainSensor
     void check(void);
     bool isTimeToRun(void);
 
-    const bool isRaining(void) const
+    bool isRaining(void) const
     {
       return raining;
     }
 
-    const uint16_t getCounter(void) const
+    uint16_t getCounter(void) const
     {
       return counter;
     }

@@ -42,17 +42,17 @@ class Sonar
 
     void ping(void);
 
-    const uint16_t getDistance_us(void) const
+    uint16_t getDistance_us(void) const
     {
       return distance_us;
     }
 
-    const uint16_t getDistance_cm(void)
+    uint16_t getDistance_cm(void)
     {
       return PING_CONVERT(distance_us, US_ROUNDTRIP_CM);
     }
 
-    const uint16_t getDistance_inch(void)
+    uint16_t getDistance_inch(void)
     {
       return PING_CONVERT(distance_us, US_ROUNDTRIP_INCH);
     }
@@ -104,7 +104,7 @@ class Sonars
       }
     }
 
-    const uint16_t getDistanceCounter(void) const
+    uint16_t getDistanceCounter(void) const
     {
       return distanceCounter;
     }

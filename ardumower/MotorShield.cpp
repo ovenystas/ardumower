@@ -91,7 +91,7 @@ void MotorShield::control(void)
       // Use acceleration when speed is increased
       // http://phrogz.net/js/framerate-independent-low-pass-filter.html
       // smoothed += elapsedTime * ( newValue - smoothed ) / smoothing;
-      int addPwm = getSamplingTime() * (float)(pwmSet - pwmCur) / acceleration;
+      int16_t addPwm = getSamplingTime() * (float)(pwmSet - pwmCur) / acceleration;
       pwmNew = pwmCur + addPwm;
     }
   }
