@@ -247,7 +247,7 @@ void Robot::loadSaveUserSettings(const boolean readflag)
   eereadwrite(readflag, addr, odometer.encoder.left_p->swapDir);
   eereadwrite(readflag, addr, odometer.encoder.right_p->swapDir);
   eereadwrite(readflag, addr, odometer.encoder.left_p->twoWay);
-  eereadwrite(readflag, addr, button.use);
+  eereadwrite(readflag, addr, button_use);
   eereadwrite(readflag, addr, userSwitch1);
   eereadwrite(readflag, addr, userSwitch2);
   eereadwrite(readflag, addr, userSwitch3);
@@ -545,7 +545,7 @@ void Robot::printSettingSerial()
   // ----- other -----------------------------------------
   Console.println(F("== Button =="));
   Console.print(F("use : "));
-  Console.println(button.use);
+  Console.println(button_use);
 
   // ----- user-defined switch ---------------------------
   Console.println(F("== User switches =="));
@@ -1068,7 +1068,7 @@ void Robot::setup()
   loadRobotStats();
   setUserSwitches();
 
-  if (!button.use)
+  if (!button_use)
   {
     // robot has no ON/OFF button => start immediately
     setNextState(StateMachine::STATE_FORWARD);
@@ -1592,20 +1592,16 @@ void Robot::readSerial()
 
 void Robot::checkButton()
 {
-  bool buttonPressed = false;
-  if (button.isTimeToCheck())
-  {
-    buttonPressed = button.isPressed();
-  }
+  bool buttonPressed = button_isPressed();
 
-  if ((!buttonPressed && button.getCounter() > 0) ||
-      (buttonPressed && button.isTimeToRun()))
+  if ((!buttonPressed && button_getCounter() > 0) ||
+      (buttonPressed && button_isTimeToRun()))
   {
     if (buttonPressed)
     {
       Console.println(F("Button is pressed"));
       beep(1);
-      button.incCounter();
+      button_incCounter();
       resetIdleTime();
     }
     else
@@ -1617,7 +1613,7 @@ void Robot::checkButton()
       }
       else
       {
-        switch (button.getCounter())
+        switch (button_getCounter())
         {
           case 1:
             // start normal with random mowing
@@ -1663,7 +1659,7 @@ void Robot::checkButton()
         }
       }
 
-      button.clearCounter();
+      button_clearCounter();
     }
   }
 }
@@ -3090,7 +3086,6 @@ void Robot::tasks_continious()
   checkRobotStats();
   odometer.loop();
   checkOdometerFaults();
-  checkButton();
   checkTilt();
 
   wheels.control();
@@ -3145,6 +3140,11 @@ void Robot::tasks_continious()
   dropSensors.clearDetected();
 
   loopsPerSecCounter++;
+}
+
+void Robot::tasks_50ms()
+{
+  checkButton();
 }
 
 void Robot::tasks_200ms()

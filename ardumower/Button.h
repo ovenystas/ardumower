@@ -10,38 +10,13 @@
 
 #include <Arduino.h>
 
-class Button
-{
-  public:
-    bool use { true };
-    unsigned long nextTime {};
-    unsigned long nextTimeCheck {};
+extern bool button_use;
 
-    void setup(const uint8_t pin);
-    bool isPressed(void);
-    bool isTimeToCheck();
-    bool isTimeToRun();
-
-    uint8_t getCounter(void) const
-    {
-      return counter;
-    }
-
-    void incCounter(void)
-    {
-      counter++;
-    }
-
-    void clearCounter(void)
-    {
-      counter = 0;
-    }
-
-  private:
-    uint8_t pin {};
-    uint8_t counter {};
-    unsigned int timeBetweenChecks { 50 };
-    unsigned int timeBetweenRuns { 1000 };
-};
+void button_setup(void);
+bool button_isPressed(void);
+bool button_isTimeToRun(void);
+uint8_t button_getCounter(void);
+void button_incCounter(void);
+void button_clearCounter(void);
 
 #endif /* BUTTON_H */

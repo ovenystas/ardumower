@@ -217,9 +217,6 @@ class Robot
     // --------- pfodApp ----------------------------------
     RemoteControl rc; // pfodApp
 
-    // ----- other -----------------------------------------
-    Button button;
-
     // ----- user-defined switch ---------------------------
     boolean userSwitch1 { false }; // user-defined switch 1 (default value)
     boolean userSwitch2 { false }; // user-defined switch 2 (default value)
@@ -247,6 +244,7 @@ class Robot
     virtual void setup();
 
     virtual void tasks_continious();
+    virtual void tasks_50ms();
     virtual void tasks_200ms();
     virtual void tasks_1000ms();
 

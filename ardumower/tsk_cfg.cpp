@@ -13,6 +13,11 @@ void run_task_continious(void)
   robot.tasks_continious();
 }
 
+void run_task_50ms(void)
+{
+  robot.tasks_50ms();
+}
+
 void run_task_200ms(void)
 {
   robot.tasks_200ms();
@@ -31,6 +36,7 @@ void run_task_1000ms(void)
 static TaskType Tasks[] =
 {
   { 0              , 0, run_task_continious },
+  { INTERVAL_50MS  , 0, run_task_50ms },
   { INTERVAL_200MS , 0, run_task_200ms },
   { INTERVAL_1000MS, 0, run_task_1000ms },
 };

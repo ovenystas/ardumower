@@ -209,7 +209,7 @@ void Mower::setup()
   //perimeters.perimeter[Perimeter::RIGHT].setup(PIN_PERIMETER_RIGHT);
 
   // button
-  button.setup(PIN_BUTTON);
+  button_setup();
 
   // bumpers
   bumpers.bumper[Bumpers::LEFT].setup(PIN_BUMBER_LEFT);
