@@ -10,66 +10,22 @@
 
 #include <Arduino.h>
 
-typedef struct Bumper_settingsT
+enum bumpersE
 {
-  bool used {false};
-} Bumper_settingsT;
-
-class Bumper
-{
-  public:
-    void setup(const uint8_t pin);
-    void simHit(void);
-    void check(void);
-
-    bool isHit(void) const
-    {
-      return hit;
-    }
-
-    void clearHit(void)
-    {
-      hit = false;
-    }
-
-    uint16_t getCounter(void) const
-    {
-      return counter;
-    }
-
-    void clearCounter(void)
-    {
-      counter = 0;
-    }
-
-  private:
-    uint8_t pin {};
-    uint16_t counter {};
-    boolean hit {false};
+  BUMPER_LEFT,
+  BUMPER_RIGHT,
+  NUM_BUMPERS
 };
 
-class Bumpers
-{
-  public:
-    enum bumpersE
-    {
-      LEFT,
-      RIGHT,
-      END
-    };
+extern bool bumpers_use;
 
-    Bumper_settingsT settings;
-    Bumper bumper[END];
+void bumper_simHit(uint8_t side);
+bool bumper_isHit(uint8_t side);
+uint16_t bumper_getCounter(uint8_t side);
 
-    void check(void);
-    bool isAnyHit(void);
-    void clearHit(void);
-    bool isTimeToRun(void);
+void bumpers_setup(void);
+void bumpers_check(void);
+bool bumpers_isAnyHit(void);
+void bumpers_clearHit(void);
 
-private:
-    static const uint8_t TIME_BETWEEN_RUNS {100};
-
-    unsigned long nextTime {};
-};
-
-#endif /* BUMPER_H */
+#endif // BUMPER_H

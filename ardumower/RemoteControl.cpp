@@ -732,15 +732,15 @@ void RemoteControl::sendBumperMenu(const boolean update)
     Bluetooth.print(F("{.Bumper`1000"));
   }
   Bluetooth.print(F("|b00~Use "));
-  sendYesNo(robot_p->bumpers.settings.used);
+  sendYesNo(bumpers_use);
   Bluetooth.println(F("|b01~Counter l, r "));
-  Bluetooth.print(robot_p->bumpers.bumper[Bumpers::LEFT].getCounter());
+  Bluetooth.print(bumper_getCounter(BUMPER_LEFT));
   Bluetooth.print(", ");
-  Bluetooth.print(robot_p->bumpers.bumper[Bumpers::RIGHT].getCounter());
+  Bluetooth.print(bumper_getCounter(BUMPER_RIGHT));
   Bluetooth.println(F("|b02~Value l, r "));
-  Bluetooth.print(robot_p->bumpers.bumper[Bumpers::LEFT].isHit());
+  Bluetooth.print(bumper_isHit(BUMPER_LEFT));
   Bluetooth.print(", ");
-  Bluetooth.print(robot_p->bumpers.bumper[Bumpers::RIGHT].isHit());
+  Bluetooth.print(bumper_isHit(BUMPER_RIGHT));
   Bluetooth.println("}");
 }
 
@@ -771,7 +771,7 @@ void RemoteControl::processBumperMenu(const String pfodCmd)
 {
   if (pfodCmd == "b00")
   {
-    TOGGLE(robot_p->bumpers.settings.used);
+    TOGGLE(bumpers_use);
   }
   sendBumperMenu(true);
 }
@@ -2133,9 +2133,9 @@ void RemoteControl::run()
       Bluetooth.print(",");
       Bluetooth.print(robot_p->cutter.motor.getOverloadCounter());
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->bumpers.bumper[Bumpers::LEFT].getCounter());
+      Bluetooth.print(bumper_getCounter(BUMPER_LEFT));
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->bumpers.bumper[Bumpers::RIGHT].getCounter());
+      Bluetooth.print(bumper_getCounter(BUMPER_RIGHT));
       Bluetooth.print(",");
       Bluetooth.print(robot_p->sonars.getDistanceCounter());
       Bluetooth.print(",");

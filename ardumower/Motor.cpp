@@ -49,19 +49,6 @@ uint16_t Motor::getSamplingTime(void)
   return (uint16_t)samplingTime;
 }
 
-bool Motor::isTimeForRpmMeas(unsigned long* timeSinceLast_p)
-{
-  uint32_t curMillis = millis();
-  *timeSinceLast_p = curMillis - lastRpmTime;
-  if (curMillis >= nextTimeRpmMeas)
-  {
-    nextTimeRpmMeas = curMillis + TIME_BETWEEN_RPM_MEAS;
-    lastRpmTime = curMillis;
-    return true;
-  }
-  return false;
-}
-
 bool Motor::isTimeTo(uint32_t* nextTime_p, const uint16_t timeBetween)
 {
   uint32_t curMillis = millis();

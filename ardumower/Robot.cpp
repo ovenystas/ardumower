@@ -189,7 +189,7 @@ void Robot::loadSaveUserSettings(const boolean readflag)
   eereadwrite(readflag, addr, wheels.biDirSpeedRatio2);
   eereadwrite(readflag, addr, wheels.wheel[Wheel::LEFT].motor.swapDir);
   eereadwrite(readflag, addr, wheels.wheel[Wheel::RIGHT].motor.swapDir);
-  eereadwrite(readflag, addr, bumpers.settings.used);
+  eereadwrite(readflag, addr, bumpers_use);
   eereadwrite(readflag, addr, sonars.use);
   for (uint8_t i = 0; i < Sonars::END; i++)
   {
@@ -380,7 +380,7 @@ void Robot::printSettingSerial()
   // ------ bumper ------------------------------------
   Console.println(F("== Bumpers =="));
   Console.print(F("use : "));
-  Console.println(bumpers.settings.used);
+  Console.println(bumpers_use);
 
   // ------ drop ------------------------------------
   Console.println(F("== Drop sensors =="));
@@ -1138,8 +1138,8 @@ void Robot::printInfo_sensorValues(Stream &s)
               wheels.wheel[Wheel::RIGHT].motor.getPowerMeas(),
               cutter.motor.getPowerMeas());
   Streamprint(s, "bum %4d %4d ",
-              bumpers.bumper[Bumpers::LEFT].isHit(),
-              bumpers.bumper[Bumpers::RIGHT].isHit());
+              bumper_isHit(BUMPER_LEFT),
+              bumper_isHit(BUMPER_RIGHT));
   Streamprint(s, "dro %4d %4d ",
               dropSensors.dropSensor[DropSensors::LEFT].isDetected(),
               dropSensors.dropSensor[DropSensors::RIGHT].isDetected());
@@ -1171,8 +1171,8 @@ void Robot::printInfo_sensorCounters(Stream &s)
               wheels.wheel[Wheel::RIGHT].motor.getOverloadCounter(),
               cutter.motor.getOverloadCounter());
   Streamprint(s, "bum %4d %4d ",
-              bumpers.bumper[Bumpers::LEFT].getCounter(),
-              bumpers.bumper[Bumpers::RIGHT].getCounter());
+              bumper_getCounter(BUMPER_LEFT),
+              bumper_getCounter(BUMPER_RIGHT));
   Streamprint(s, "dro %4d %4d ",
               dropSensors.dropSensor[DropSensors::LEFT].getCounter(),
               dropSensors.dropSensor[DropSensors::RIGHT].getCounter());
@@ -1519,11 +1519,11 @@ void Robot::readSerial()
         break;
 
       case 'l': // simulate left bumper
-        bumpers.bumper[Bumpers::LEFT].simHit();
+        bumper_simHit(BUMPER_LEFT);
         break;
 
       case 'r': // simulate right bumper
-        bumpers.bumper[Bumpers::RIGHT].simHit();
+        bumper_simHit(BUMPER_RIGHT);
         break;
 
       case 'j': // simulate left drop
@@ -1664,44 +1664,47 @@ void Robot::checkButton()
   }
 }
 
+void Robot::readCutterMotorCurrent()
+{
+  wheels.wheel[Wheel::LEFT].motor.readCurrent();
+  wheels.wheel[Wheel::RIGHT].motor.readCurrent();
+  cutter.motor.readCurrent();
+
+  // Conversion to power in Watts
+  float batV = battery.getVoltage();
+  wheels.wheel[Wheel::RIGHT].motor.calcPower(batV);
+  wheels.wheel[Wheel::LEFT].motor.calcPower(batV);
+  cutter.motor.calcPower(batV);
+}
+
+void Robot::measureCutterMotorRpm()
+{
+  static unsigned long timeLastMeasure = 0;
+  unsigned long curMillis = millis();
+  unsigned long timeSinceLast = curMillis - timeLastMeasure;
+  timeLastMeasure = curMillis;;
+  if ((cutter.motor.getRpmMeas() == 0) && (cutter.motor.getRpmCounter() != 0))
+  {
+    // rpm may be updated via interrupt
+    cutter.motor.setRpmMeas(
+        (int)(((double)cutter.motor.getRpmCounter() / (double)timeSinceLast)
+            * 60000.0));
+    cutter.motor.clearRpmCounter();
+  }
+  if (!ADCMan.calibrationDataAvail())
+  {
+    Console.println(F("Error: Missing ADC calibration data"));
+    incErrorCounter(ERR_ADC_CALIB);
+    setNextState(StateMachine::STATE_ERROR);
+  }
+}
+
 void Robot::readSensors()
 {
 // NOTE: This function should only read in sensors into variables.
 //       It should NOT change any state!
 
   unsigned long curMillis = millis();
-  if (cutter.motor.isTimeToReadCurrent())
-  {
-    wheels.wheel[Wheel::LEFT].motor.readCurrent();
-    wheels.wheel[Wheel::RIGHT].motor.readCurrent();
-    cutter.motor.readCurrent();
-
-    // Conversion to power in Watts
-    float batV = battery.getVoltage();
-    wheels.wheel[Wheel::RIGHT].motor.calcPower(batV);
-    wheels.wheel[Wheel::LEFT].motor.calcPower(batV);
-    cutter.motor.calcPower(batV);
-
-    unsigned long timeSinceLast;
-    if (cutter.motor.isTimeForRpmMeas(&timeSinceLast))
-    {
-      if ((cutter.motor.getRpmMeas() == 0) && (cutter.motor.getRpmCounter() != 0))
-      {
-        // rpm may be updated via interrupt
-        cutter.motor.setRpmMeas(
-            (int)(((double)cutter.motor.getRpmCounter() / (double)timeSinceLast)
-                * 60000.0));
-        cutter.motor.clearRpmCounter();
-      }
-      if (!ADCMan.calibrationDataAvail())
-      {
-        Console.println(F("Error: Missing ADC calibration data"));
-        incErrorCounter(ERR_ADC_CALIB);
-        setNextState(StateMachine::STATE_ERROR);
-      }
-    }
-  }
-
   if (perimeters.use && curMillis >= nextTimePerimeter)
   {
     nextTimePerimeter = curMillis + 50;
@@ -1772,11 +1775,6 @@ void Robot::readSensors()
   if (sonars.isTimeToRun())
   {
     sonars.ping();
-  }
-
-  if (bumpers.isTimeToRun())
-  {
-    bumpers.check();
   }
 
   if (dropSensors.isTimeToRun())
@@ -2377,11 +2375,11 @@ void Robot::checkBumpers()
     return;
   }
 
-  if (bumpers.bumper[Bumpers::LEFT].isHit())
+  if (bumper_isHit(BUMPER_LEFT))
   {
     reverseOrChangeDirection(RIGHT);
   }
-  if (bumpers.bumper[Bumpers::RIGHT].isHit())
+  if (bumper_isHit(BUMPER_RIGHT))
   {
     reverseOrChangeDirection(LEFT);
   }
@@ -2419,9 +2417,9 @@ void Robot::checkDrop()
 //   111|R
 void Robot::checkBumpersPerimeter()
 {
-  if (bumpers.isAnyHit())
+  if (bumpers_isAnyHit())
   {
-    if (bumpers.bumper[Bumpers::LEFT].isHit() ||
+    if (bumper_isHit(BUMPER_LEFT) ||
         stateMachine.isCurrentState(StateMachine::STATE_PERI_TRACK))
     {
       setNextState(StateMachine::STATE_PERI_REV, RIGHT);
@@ -3136,7 +3134,7 @@ void Robot::tasks_continious()
     cutter.motor.setPwmSet(cutter.motor.pwmMax);
   }
 
-  bumpers.clearHit();
+  bumpers_clearHit();
   dropSensors.clearDetected();
 
   loopsPerSecCounter++;
@@ -3145,11 +3143,22 @@ void Robot::tasks_continious()
 void Robot::tasks_50ms()
 {
   checkButton();
+  readCutterMotorCurrent();
+}
+
+void Robot::tasks_100ms()
+{
+  bumpers_check();
 }
 
 void Robot::tasks_200ms()
 {
   rc.run();
+}
+
+void Robot::tasks_500ms()
+{
+  measureCutterMotorRpm();
 }
 
 void Robot::tasks_1000ms()

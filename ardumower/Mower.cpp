@@ -212,8 +212,7 @@ void Mower::setup()
   button_setup();
 
   // bumpers
-  bumpers.bumper[Bumpers::LEFT].setup(PIN_BUMBER_LEFT);
-  bumpers.bumper[Bumpers::RIGHT].setup(PIN_BUMBER_RIGHT);
+  bumpers_setup();
 
   // drop sensor
   dropSensors.dropSensor[DropSensors::LEFT].setup(PIN_DROP_LEFT, DropSensor::NO);

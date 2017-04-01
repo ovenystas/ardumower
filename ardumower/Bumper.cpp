@@ -6,52 +6,56 @@
  */
 
 #include "Bumper.h"
+#include "Config.h"
 
-void Bumper::setup(const uint8_t pin)
+static bool hit[NUM_BUMPERS] = {false};
+static uint16_t counter[NUM_BUMPERS] = {0};
+static const uint8_t pin[NUM_BUMPERS] = {PIN_BUMBER_LEFT, PIN_BUMBER_RIGHT};
+bool bumpers_use = false;
+
+void bumper_simHit(uint8_t side)
 {
-  this->pin = pin;
-  pinMode(pin, INPUT_PULLUP);
+  hit[side] = true;
+  counter[side]++;
 }
 
-void Bumper::simHit(void)
+bool bumper_isHit(uint8_t side)
 {
-  hit = true;
-  counter++;
+  return hit[side];
 }
 
-void Bumper::check(void)
+uint16_t bumper_getCounter(uint8_t side)
 {
-  if (digitalRead(pin) == LOW)
+  return counter[side];
+}
+
+void bumpers_setup(void)
+{
+  pinMode(pin[BUMPER_LEFT], INPUT_PULLUP);
+  pinMode(pin[BUMPER_RIGHT], INPUT_PULLUP);
+}
+
+void bumpers_check(void)
+{
+  if (digitalRead(pin[BUMPER_LEFT]) == LOW)
   {
-    hit = true;
-    counter++;
+    hit[BUMPER_LEFT] = true;
+    counter[BUMPER_LEFT]++;
+  }
+  if (digitalRead(pin[BUMPER_RIGHT]) == LOW)
+  {
+    hit[BUMPER_RIGHT] = true;
+    counter[BUMPER_RIGHT]++;
   }
 }
 
-void Bumpers::check(void)
+void bumpers_clearHit(void)
 {
-  bumper[LEFT].check();
-  bumper[RIGHT].check();
+  hit[BUMPER_LEFT] = false;
+  hit[BUMPER_RIGHT] = false;
 }
 
-void Bumpers::clearHit(void)
+bool bumpers_isAnyHit(void)
 {
-  bumper[LEFT].clearHit();
-  bumper[RIGHT].clearHit();
-}
-
-bool Bumpers::isAnyHit(void)
-{
-  return bumper[LEFT].isHit() || bumper[RIGHT].isHit();
-}
-
-bool Bumpers::isTimeToRun(void)
-{
-  unsigned long curMillis = millis();
-  if (settings.used && curMillis >= nextTime)
-  {
-    nextTime = curMillis + TIME_BETWEEN_RUNS;
-    return true;
-  }
-  return false;
+  return hit[BUMPER_LEFT] || hit[BUMPER_RIGHT];
 }

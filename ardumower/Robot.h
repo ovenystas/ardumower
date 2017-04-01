@@ -179,10 +179,6 @@ class Robot
     // -------- mower motor state -----------------------
     Cutter cutter;
 
-    // --------- bumper state ---------------------------
-    // bumper state (true = pressed)
-    Bumpers bumpers;
-
     // --------- drop state ---------------------------
     DropSensors dropSensors;
 
@@ -245,7 +241,9 @@ class Robot
 
     virtual void tasks_continious();
     virtual void tasks_50ms();
+    virtual void tasks_100ms();
     virtual void tasks_200ms();
+    virtual void tasks_500ms();
     virtual void tasks_1000ms();
 
     virtual void resetIdleTime();
@@ -355,7 +353,8 @@ class Robot
 
     // read sensors
     virtual void readSensors();
-
+    virtual void readCutterMotorCurrent();
+    virtual void measureCutterMotorRpm();
     // read serial
     virtual void readSerial();
 
