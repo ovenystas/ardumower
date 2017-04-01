@@ -18,7 +18,7 @@ void Wheel::control(int8_t speed)
   int16_t rpmCurr = encoder.getWheelRpmCurr();
   motor.setRpmMeas(rpmCurr);
 
-  int16_t rpmNew = motor.rpmMax * speed / 100;
+  int16_t rpmNew = (motor.rpmMax * speed) / 100;
   motor.setRpmSet(rpmNew);
 
   motor.control();
@@ -42,7 +42,7 @@ void Wheels::control(void)
     return;
   }
 
-  int8_t localSteer;
+  int8_t localSteer = 0;
 
   // If reversing, steer should also be reversed
   if (speed < 0)

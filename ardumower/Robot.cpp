@@ -2986,7 +2986,7 @@ void Robot::loop()
 
     case StateMachine::STATE_PERI_FIND:
       // find perimeter
-      if (wheels.steer == 0)
+      if (wheels.getSteer() == 0)
       { // do not check during 'outside=>inside' rotation
         checkMotorPower();
         checkBumpersPerimeter();
