@@ -46,19 +46,45 @@
 #include <Wire.h>
 #include <EEPROM.h>
 #include "Config.h"
+#include "tsk_cfg.h"
+
 
 // requires: Arduino Mega
 
-//The setup function is called once at startup of the sketch
+// Cooperative scheduler -------------------------------------------------------
+static unsigned long tick = 0;      // System tick
+static TaskType *Task_ptr;          // Task pointer
+static byte NumTasks = 0;        // Number of tasks
+//------------------------------------------------------------------------------
+
 void setup()
 {
-  // Add your initialization code here
+  Task_ptr = Tsk_GetConfig();   // Get a pointer to the task configuration
+  NumTasks = Tsk_GetNumTasks();
+
   robot.setup();
 }
 
-// The loop function is called in an endless loop
+
 void loop()
 {
-  //Add your repeated code here
-  robot.loop();
+  tick = millis();   // Get current system tick
+
+  // Loop through all tasks. First, run all continuous tasks.
+  // Then, if the number of ticks since the last time the task was run is
+  //  greater than or equal to the task interval, execute the task.
+  for (uint8_t TaskIndex = 0; TaskIndex < NumTasks; TaskIndex++)
+  {
+    if (Task_ptr[TaskIndex].interval == 0)
+    {
+      // Run continuous tasks.
+      (*Task_ptr[TaskIndex].func)();
+    }
+    else if ((tick - Task_ptr[TaskIndex].lastTick) >=
+             Task_ptr[TaskIndex].interval)
+    {
+      (*Task_ptr[TaskIndex].func)();        // Execute Task
+      Task_ptr[TaskIndex].lastTick = tick;  // Save last tick the task was ran.
+    }
+  }
 }

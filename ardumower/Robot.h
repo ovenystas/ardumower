@@ -246,8 +246,9 @@ class Robot
     // robot setup
     virtual void setup();
 
-    // robot main loop
-    virtual void loop();
+    virtual void tasks_continious();
+    virtual void tasks_200ms();
+    virtual void tasks_1000ms();
 
     virtual void resetIdleTime();
 
@@ -486,6 +487,7 @@ class Robot
     void setMotorPWM(int pwm, const uint8_t motor, const boolean useAccel);
     void loadRobotStats();
     void saveRobotStats();
+    void runStateMachine();
 };
 
 #endif

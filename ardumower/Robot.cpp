@@ -2758,55 +2758,10 @@ void Robot::checkTimeout()
   }
 }
 
-void Robot::loop()
+
+void Robot::runStateMachine()
 {
   unsigned long curMillis = millis();
-  ADCMan.run();
-  readSerial();
-  if (rc.readSerial())
-  {
-    resetIdleTime();
-  }
-  readSensors();
-  checkBattery();
-  checkIfStuck();
-  checkRobotStats();
-  odometer.loop();
-  checkOdometerFaults();
-  checkButton();
-  checkTilt();
-
-  wheels.control();
-  cutterControl();
-
-  if (imu.use)
-  {
-    imu.update();
-  }
-
-  if (gpsUse)
-  {
-    gps.feed();
-    processGPSData();
-  }
-
-  if (curMillis >= nextTimePfodLoop)
-  {
-    nextTimePfodLoop = curMillis + 200;
-    rc.run();
-  }
-
-  if (curMillis >= nextTimeInfo)
-  {
-    nextTimeInfo = curMillis + 1000;
-    printInfo(Console);
-    if (stateMachine.isCurrentState(StateMachine::STATE_REMOTE))
-    {
-      printRemote();
-    }
-    loopsPerSec = loopsPerSecCounter;
-    loopsPerSecCounter = 0;
-  }
 
   // state machine - things to do *PERMANENTLY* for current state
   // robot state machine
@@ -3119,6 +3074,40 @@ void Robot::loop()
       }
       break;
   } // end switch
+}
+
+void Robot::tasks_continious()
+{
+  ADCMan.run();
+  readSerial();
+  if (rc.readSerial())
+  {
+    resetIdleTime();
+  }
+  readSensors();
+  checkBattery();
+  checkIfStuck();
+  checkRobotStats();
+  odometer.loop();
+  checkOdometerFaults();
+  checkButton();
+  checkTilt();
+
+  wheels.control();
+  cutterControl();
+
+  if (imu.use)
+  {
+    imu.update();
+  }
+
+  if (gpsUse)
+  {
+    gps.feed();
+    processGPSData();
+  }
+
+  runStateMachine();
 
   // next line deactivated (issue with RC failsafe)
 //  if (useRemoteRC && remoteSwitch < -50)
@@ -3156,4 +3145,20 @@ void Robot::loop()
   dropSensors.clearDetected();
 
   loopsPerSecCounter++;
+}
+
+void Robot::tasks_200ms()
+{
+  rc.run();
+}
+
+void Robot::tasks_1000ms()
+{
+  printInfo(Console);
+  if (stateMachine.isCurrentState(StateMachine::STATE_REMOTE))
+  {
+    printRemote();
+  }
+  loopsPerSec = loopsPerSecCounter;
+  loopsPerSecCounter = 0;
 }
