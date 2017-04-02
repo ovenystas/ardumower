@@ -25,7 +25,7 @@ class MotorDrv: public Motor
     // Get average ADC value 0..1023
     int16_t getAverageSenseAdc(void) const
     {
-      return filter.getAverage();
+      return FilterEmaI16_getAverage(&filter);
     }
 
     int16_t getAverageCurrent(void);   // Get average motor current in mA
@@ -33,7 +33,7 @@ class MotorDrv: public Motor
 
     void setFilterAlpha(double alpha)
     {
-      filter.setAlpha(alpha);
+      FilterEmaI16_setAlpha(alpha, &filter);
     }
 
     void setChannel(uint8_t channel)

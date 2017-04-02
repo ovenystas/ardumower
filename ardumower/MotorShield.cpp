@@ -57,7 +57,7 @@ void MotorShield::setSpeed(const int16_t speed, const bool brake)
 void MotorShield::readCurrent(void)
 {
   int16_t newAdcValue = ADCMan.read(pinSense[channel]);
-  filter.addValue(newAdcValue);
+  FilterEmaI16_addValue(newAdcValue, &filter);
 }
 
 // Sets motor PWM

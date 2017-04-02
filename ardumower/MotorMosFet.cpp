@@ -42,7 +42,7 @@ void MotorMosFet::setSpeed(const int16_t speed, const bool brake)
 void MotorMosFet::readCurrent(void)
 {
   int16_t newAdcValue = ADCMan.read(pinSense);
-  filter.addValue(newAdcValue);
+  FilterEmaI16_addValue(newAdcValue, &filter);
 }
 
 // Sets motor PWM

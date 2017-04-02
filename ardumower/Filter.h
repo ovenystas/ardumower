@@ -13,40 +13,44 @@
 #define FILTER_EMA_I32_ALPHA(x) ( (uint16_t)(x * 65535) )
 #define FILTER_EMA_I16_ALPHA(x) ( (uint8_t)(x * 255) )
 
-class FilterEmaI32
+typedef struct
 {
-  public:
-    void setAlpha(double alpha)
-    {
-      this->alpha = FILTER_EMA_I32_ALPHA(alpha);
-    }
-    void addValue(int32_t in);
-    int32_t getAverage(void) const
-    {
-      return average;
-    }
+  int32_t average;
+  uint16_t alpha;
+} FilterEmaI32;
 
-  private:
-    int32_t average {};
-    uint16_t alpha {FILTER_EMA_I32_ALPHA(1.0)};
-};
-
-class FilterEmaI16
+typedef struct
 {
-  public:
-    void setAlpha(double alpha)
-    {
-      this->alpha = FILTER_EMA_I16_ALPHA(alpha);
-    }
-    void addValue(int16_t in);
-    int16_t getAverage(void) const
-    {
-      return average;
-    }
+  int16_t average;
+  uint8_t alpha;
+} FilterEmaI16;
 
-  private:
-    int16_t average {};
-    uint8_t alpha {FILTER_EMA_I16_ALPHA(1.0)};
-};
+static inline
+void FilterEmaI32_setAlpha(double alpha, FilterEmaI32* filter_p)
+{
+  filter_p->alpha = FILTER_EMA_I32_ALPHA(alpha);
+}
+
+void FilterEmaI32_addValue(int32_t in, FilterEmaI32* filter_p);
+
+static inline
+int32_t FilterEmaI32_getAverage(const FilterEmaI32* filter_p)
+{
+  return filter_p->average;
+}
+
+static inline
+void FilterEmaI16_setAlpha(double alpha, FilterEmaI16* filter_p)
+{
+  filter_p->alpha = FILTER_EMA_I16_ALPHA(alpha);
+}
+
+void FilterEmaI16_addValue(int16_t in, FilterEmaI16* filter_p);
+
+static inline
+int16_t FilterEmaI16_getAverage(const FilterEmaI16* filter_p)
+{
+  return filter_p->average;
+}
 
 #endif /* FILTER_H */
