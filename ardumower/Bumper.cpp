@@ -6,56 +6,32 @@
  */
 
 #include "Bumper.h"
-#include "Config.h"
 
-static bool hit[NUM_BUMPERS] = {false};
-static uint16_t counter[NUM_BUMPERS] = {0};
-static const uint8_t pin[NUM_BUMPERS] = {PIN_BUMBER_LEFT, PIN_BUMBER_RIGHT};
-bool bumpers_use = false;
-
-void bumper_simHit(uint8_t side)
+void bumper_setup(const uint8_t pin, Bumper* bumper_p)
 {
-  hit[side] = true;
-  counter[side]++;
+  bumper_p->pin = pin;
+  bumper_p->hit = false;
+  bumper_p->counter = 0;
+  pinMode(bumper_p->pin, INPUT_PULLUP);
 }
 
-bool bumper_isHit(uint8_t side)
+void bumper_check(Bumper* bumper_p)
 {
-  return hit[side];
-}
-
-uint16_t bumper_getCounter(uint8_t side)
-{
-  return counter[side];
-}
-
-void bumpers_setup(void)
-{
-  pinMode(pin[BUMPER_LEFT], INPUT_PULLUP);
-  pinMode(pin[BUMPER_RIGHT], INPUT_PULLUP);
-}
-
-void bumpers_check(void)
-{
-  if (digitalRead(pin[BUMPER_LEFT]) == LOW)
+  if (digitalRead(bumper_p->pin) == LOW)
   {
-    hit[BUMPER_LEFT] = true;
-    counter[BUMPER_LEFT]++;
-  }
-  if (digitalRead(pin[BUMPER_RIGHT]) == LOW)
-  {
-    hit[BUMPER_RIGHT] = true;
-    counter[BUMPER_RIGHT]++;
+    bumper_p->hit = true;
+    bumper_p->counter++;
   }
 }
 
-void bumpers_clearHit(void)
+bool bumpers_isAnyHit(const Bumpers* bumpers_p)
 {
-  hit[BUMPER_LEFT] = false;
-  hit[BUMPER_RIGHT] = false;
-}
-
-bool bumpers_isAnyHit(void)
-{
-  return hit[BUMPER_LEFT] || hit[BUMPER_RIGHT];
+  for (uint8_t i = 0; i < bumpers_p->len; i++)
+  {
+    if (bumper_isHit(&bumpers_p->bumperArray_p[i]))
+    {
+      return true;
+    }
+  }
+  return false;
 }

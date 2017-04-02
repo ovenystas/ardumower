@@ -31,11 +31,7 @@
  Requires: Ardumower PCB v0.5  ( https://www.marotronics.de/Ardumower-Board-Prototyp )
  */
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-// NOTE: Verify in config.h that you have enabled 'USE_MOWER' !
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 #include "Config.h"
-#ifdef USE_MOWER
 
 #include <Arduino.h>
 #include "Mower.h"
@@ -209,10 +205,11 @@ void Mower::setup()
   //perimeters.perimeter[Perimeter::RIGHT].setup(PIN_PERIMETER_RIGHT);
 
   // button
-  button_setup();
+  button_setup(PIN_BUTTON, &button);
 
   // bumpers
-  bumpers_setup();
+  const uint8_t bumperPins[BUMPERS_NUM] = {PIN_BUMBER_LEFT, PIN_BUMBER_RIGHT};
+  bumpers_setup(bumperPins, bumperArray, &bumpers, BUMPERS_NUM);
 
   // drop sensor
   dropSensors.dropSensor[DropSensors::LEFT].setup(PIN_DROP_LEFT, DropSensor::NO);
@@ -355,5 +352,3 @@ void Mower::configureBluetooth(boolean quick)
   BluetoothConfig bt;
   bt.setParams(name, PFOD_PIN, PFOD_BAUDRATE, quick);
 }
-
-#endif

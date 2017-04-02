@@ -45,7 +45,7 @@
 
 #include <Wire.h>
 #include <EEPROM.h>
-#include "Config.h"
+#include "Mower.h"
 #include "tsk_cfg.h"
 
 

@@ -124,6 +124,8 @@ typedef struct statsT
   float batteryChargingCapacityAverage {};
 } statsT;
 
+#define BUMPERS_NUM 2
+
 class Robot
 {
   public:
@@ -179,6 +181,11 @@ class Robot
     // -------- mower motor state -----------------------
     Cutter cutter;
 
+    // --------- bumper state ---------------------------
+    // bumper state (true = pressed)
+    Bumper bumperArray[BUMPERS_NUM];
+    Bumpers bumpers;
+
     // --------- drop state ---------------------------
     DropSensors dropSensors;
 
@@ -212,6 +219,9 @@ class Robot
 
     // --------- pfodApp ----------------------------------
     RemoteControl rc; // pfodApp
+
+    // ----- other -----------------------------------------
+    Button button;
 
     // ----- user-defined switch ---------------------------
     boolean userSwitch1 { false }; // user-defined switch 1 (default value)

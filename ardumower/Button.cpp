@@ -6,47 +6,25 @@
  */
 
 #include "Button.h"
-#include <Arduino.h>
-#include "Config.h"
 
 #define TIME_BETWEEN_RUNS 1000
 
-static uint8_t counter = 0;
-bool button_use = true;
-
-void button_setup(void)
+void button_setup(uint8_t pin, Button* button_p)
 {
-  pinMode(PIN_BUTTON, INPUT_PULLUP);
+  button_p->use = true;
+  button_p->pin = pin;
+  button_p->counter = 0;
+  button_p->lastRun = 0;
+  pinMode(pin, INPUT_PULLUP);
 }
 
-bool button_isPressed(void)
+bool button_isTimeToRun(Button* button_p)
 {
-  return (digitalRead(PIN_BUTTON) == LOW);
-}
-
-bool button_isTimeToRun(void)
-{
-  static unsigned long nextTime = 0;
   unsigned long curMillis = millis();
-  if (button_use && curMillis >= nextTime)
+  if (button_p->use && curMillis - button_p->lastRun >= TIME_BETWEEN_RUNS)
   {
-    nextTime = curMillis + TIME_BETWEEN_RUNS;
+    button_p->lastRun = curMillis;
     return true;
   }
   return false;
-}
-
-uint8_t button_getCounter(void)
-{
-  return counter;
-}
-
-void button_incCounter(void)
-{
-  counter++;
-}
-
-void button_clearCounter(void)
-{
-  counter = 0;
 }

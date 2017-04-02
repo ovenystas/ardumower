@@ -10,22 +10,77 @@
 
 #include <Arduino.h>
 
-enum bumpersE
+typedef struct
 {
-  BUMPER_LEFT,
-  BUMPER_RIGHT,
-  NUM_BUMPERS
-};
+  uint8_t pin;
+  bool hit;
+  uint16_t counter;
+} Bumper;
 
-extern bool bumpers_use;
+typedef struct
+{
+  bool use;
+  uint8_t len;
+  Bumper* bumperArray_p;
+} Bumpers;
 
-void bumper_simHit(uint8_t side);
-bool bumper_isHit(uint8_t side);
-uint16_t bumper_getCounter(uint8_t side);
+void bumper_setup(const uint8_t pin, Bumper* bumper_p);
+void bumper_check(Bumper* bumper_p);
+bool bumpers_isAnyHit(const Bumpers* bumpers_p);
 
-void bumpers_setup(void);
-void bumpers_check(void);
-bool bumpers_isAnyHit(void);
-void bumpers_clearHit(void);
+static inline
+void bumper_simHit(Bumper* bumper_p)
+{
+  bumper_p->hit = true;
+  bumper_p->counter++;
+}
+
+static inline
+void bumper_clearHit(Bumper* bumper_p)
+{
+  bumper_p->hit = false;
+}
+
+static inline
+bool bumper_isHit(const Bumper* bumper_p)
+{
+  return bumper_p->hit;
+}
+
+static inline
+uint16_t bumper_getCounter(const Bumper* bumper_p)
+{
+  return bumper_p->counter;
+}
+
+static inline
+void bumpers_setup(const uint8_t* pins, Bumper* bumperArray_p,
+                   Bumpers* bumpers_p, const uint8_t len)
+{
+  bumpers_p->len = len;
+  bumpers_p->bumperArray_p = bumperArray_p;
+  for (uint8_t i = 0; i < len; i++)
+  {
+    bumper_setup(pins[i], &bumperArray_p[i]);
+  }
+}
+
+static inline
+void bumpers_check(Bumpers* bumpers_p)
+{
+  for (uint8_t i = 0; i < bumpers_p->len; i++)
+  {
+    bumper_check(&bumpers_p->bumperArray_p[i]);
+  }
+}
+
+static inline
+void bumpers_clearHit(Bumpers* bumpers_p)
+{
+  for (uint8_t i = 0; i < bumpers_p->len; i++)
+  {
+    bumper_clearHit(&bumpers_p->bumperArray_p[i]);
+  }
+}
 
 #endif // BUMPER_H

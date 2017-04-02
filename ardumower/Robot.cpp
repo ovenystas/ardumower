@@ -189,7 +189,7 @@ void Robot::loadSaveUserSettings(const boolean readflag)
   eereadwrite(readflag, addr, wheels.biDirSpeedRatio2);
   eereadwrite(readflag, addr, wheels.wheel[Wheel::LEFT].motor.swapDir);
   eereadwrite(readflag, addr, wheels.wheel[Wheel::RIGHT].motor.swapDir);
-  eereadwrite(readflag, addr, bumpers_use);
+  eereadwrite(readflag, addr, bumpers.use);
   eereadwrite(readflag, addr, sonars.use);
   for (uint8_t i = 0; i < Sonars::END; i++)
   {
@@ -247,7 +247,7 @@ void Robot::loadSaveUserSettings(const boolean readflag)
   eereadwrite(readflag, addr, odometer.encoder.left_p->swapDir);
   eereadwrite(readflag, addr, odometer.encoder.right_p->swapDir);
   eereadwrite(readflag, addr, odometer.encoder.left_p->twoWay);
-  eereadwrite(readflag, addr, button_use);
+  eereadwrite(readflag, addr, button.use);
   eereadwrite(readflag, addr, userSwitch1);
   eereadwrite(readflag, addr, userSwitch2);
   eereadwrite(readflag, addr, userSwitch3);
@@ -380,7 +380,7 @@ void Robot::printSettingSerial()
   // ------ bumper ------------------------------------
   Console.println(F("== Bumpers =="));
   Console.print(F("use : "));
-  Console.println(bumpers_use);
+  Console.println(bumpers.use);
 
   // ------ drop ------------------------------------
   Console.println(F("== Drop sensors =="));
@@ -545,7 +545,7 @@ void Robot::printSettingSerial()
   // ----- other -----------------------------------------
   Console.println(F("== Button =="));
   Console.print(F("use : "));
-  Console.println(button_use);
+  Console.println(button.use);
 
   // ----- user-defined switch ---------------------------
   Console.println(F("== User switches =="));
@@ -1068,7 +1068,7 @@ void Robot::setup()
   loadRobotStats();
   setUserSwitches();
 
-  if (!button_use)
+  if (!button.use)
   {
     // robot has no ON/OFF button => start immediately
     setNextState(StateMachine::STATE_FORWARD);
@@ -1138,8 +1138,8 @@ void Robot::printInfo_sensorValues(Stream &s)
               wheels.wheel[Wheel::RIGHT].motor.getPowerMeas(),
               cutter.motor.getPowerMeas());
   Streamprint(s, "bum %4d %4d ",
-              bumper_isHit(BUMPER_LEFT),
-              bumper_isHit(BUMPER_RIGHT));
+              bumper_isHit(&bumperArray[LEFT]),
+              bumper_isHit(&bumperArray[RIGHT]));
   Streamprint(s, "dro %4d %4d ",
               dropSensors.dropSensor[DropSensors::LEFT].isDetected(),
               dropSensors.dropSensor[DropSensors::RIGHT].isDetected());
@@ -1171,8 +1171,8 @@ void Robot::printInfo_sensorCounters(Stream &s)
               wheels.wheel[Wheel::RIGHT].motor.getOverloadCounter(),
               cutter.motor.getOverloadCounter());
   Streamprint(s, "bum %4d %4d ",
-              bumper_getCounter(BUMPER_LEFT),
-              bumper_getCounter(BUMPER_RIGHT));
+              bumper_getCounter(&bumperArray[LEFT]),
+              bumper_getCounter(&bumperArray[RIGHT]));
   Streamprint(s, "dro %4d %4d ",
               dropSensors.dropSensor[DropSensors::LEFT].getCounter(),
               dropSensors.dropSensor[DropSensors::RIGHT].getCounter());
@@ -1519,11 +1519,11 @@ void Robot::readSerial()
         break;
 
       case 'l': // simulate left bumper
-        bumper_simHit(BUMPER_LEFT);
+        bumper_simHit(&bumperArray[LEFT]);
         break;
 
       case 'r': // simulate right bumper
-        bumper_simHit(BUMPER_RIGHT);
+        bumper_simHit(&bumperArray[RIGHT]);
         break;
 
       case 'j': // simulate left drop
@@ -1592,16 +1592,16 @@ void Robot::readSerial()
 
 void Robot::checkButton()
 {
-  bool buttonPressed = button_isPressed();
+  bool buttonPressed = button_isPressed(&button);
 
-  if ((!buttonPressed && button_getCounter() > 0) ||
-      (buttonPressed && button_isTimeToRun()))
+  if ((!buttonPressed && button_getCounter(&button) > 0) ||
+      (buttonPressed && button_isTimeToRun(&button)))
   {
     if (buttonPressed)
     {
       Console.println(F("Button is pressed"));
       beep(1);
-      button_incCounter();
+      button_incCounter(&button);
       resetIdleTime();
     }
     else
@@ -1613,7 +1613,7 @@ void Robot::checkButton()
       }
       else
       {
-        switch (button_getCounter())
+        switch (button_getCounter(&button))
         {
           case 1:
             // start normal with random mowing
@@ -1659,7 +1659,7 @@ void Robot::checkButton()
         }
       }
 
-      button_clearCounter();
+      button_clearCounter(&button);
     }
   }
 }
@@ -2375,11 +2375,11 @@ void Robot::checkBumpers()
     return;
   }
 
-  if (bumper_isHit(BUMPER_LEFT))
+  if (bumper_isHit(&bumperArray[LEFT]))
   {
     reverseOrChangeDirection(RIGHT);
   }
-  if (bumper_isHit(BUMPER_RIGHT))
+  if (bumper_isHit(&bumperArray[RIGHT]))
   {
     reverseOrChangeDirection(LEFT);
   }
@@ -2417,9 +2417,9 @@ void Robot::checkDrop()
 //   111|R
 void Robot::checkBumpersPerimeter()
 {
-  if (bumpers_isAnyHit())
+  if (bumpers_isAnyHit(&bumpers))
   {
-    if (bumper_isHit(BUMPER_LEFT) ||
+    if (bumper_isHit(&bumperArray[LEFT]) ||
         stateMachine.isCurrentState(StateMachine::STATE_PERI_TRACK))
     {
       setNextState(StateMachine::STATE_PERI_REV, RIGHT);
@@ -3134,7 +3134,7 @@ void Robot::tasks_continious()
     cutter.motor.setPwmSet(cutter.motor.pwmMax);
   }
 
-  bumpers_clearHit();
+  bumpers_clearHit(&bumpers);
   dropSensors.clearDetected();
 
   loopsPerSecCounter++;
@@ -3148,7 +3148,7 @@ void Robot::tasks_50ms()
 
 void Robot::tasks_100ms()
 {
-  bumpers_check();
+  bumpers_check(&bumpers);
 }
 
 void Robot::tasks_200ms()
