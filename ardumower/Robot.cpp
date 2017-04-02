@@ -257,7 +257,7 @@ void Robot::loadSaveUserSettings(const boolean readflag)
   eereadwrite(readflag, addr, gpsUse);
   eereadwrite(readflag, addr, stuckIfGpsSpeedBelow);
   eereadwrite(readflag, addr, gpsSpeedIgnoreTime);
-  eereadwrite(readflag, addr, dropSensors.used);
+  eereadwrite(readflag, addr, dropSensors.use);
   Console.print('-');
   Console.println(addr);
 }
@@ -385,9 +385,9 @@ void Robot::printSettingSerial()
   // ------ drop ------------------------------------
   Console.println(F("== Drop sensors =="));
   Console.print(F("use : "));
-  Console.println(dropSensors.used);
+  Console.println(dropSensors.use);
   Console.print(F("contactType : "));
-  Console.println(dropSensors.dropSensor[DropSensors::LEFT].getContactType()); // Assume left and right has same contact type
+  Console.println(dropSensors_getContactType(&dropSensors));
 
   // ------ rain ------------------------------------
   Console.println(F("== Rain sensor =="));
@@ -1141,8 +1141,8 @@ void Robot::printInfo_sensorValues(Stream &s)
               bumper_isHit(&bumperArray[LEFT]),
               bumper_isHit(&bumperArray[RIGHT]));
   Streamprint(s, "dro %4d %4d ",
-              dropSensors.dropSensor[DropSensors::LEFT].isDetected(),
-              dropSensors.dropSensor[DropSensors::RIGHT].isDetected());
+              dropSensor_isDetected(&dropSensorArray[LEFT]),
+              dropSensor_isDetected(&dropSensorArray[RIGHT]));
   Streamprint(s, "son %4u %4u %4u ",
               sonars.sonar[Sonars::LEFT].getDistance_us(),
               sonars.sonar[Sonars::CENTER].getDistance_us(),
@@ -1174,8 +1174,8 @@ void Robot::printInfo_sensorCounters(Stream &s)
               bumper_getCounter(&bumperArray[LEFT]),
               bumper_getCounter(&bumperArray[RIGHT]));
   Streamprint(s, "dro %4d %4d ",
-              dropSensors.dropSensor[DropSensors::LEFT].getCounter(),
-              dropSensors.dropSensor[DropSensors::RIGHT].getCounter());
+              dropSensor_getCounter(&dropSensorArray[LEFT]),
+              dropSensor_getCounter(&dropSensorArray[RIGHT]));
   Streamprint(s, "son %3d ", sonars.getDistanceCounter());
   Streamprint(s, "yaw %3d ", (int)(imu.getYawDeg()));
   Streamprint(s, "pit %3d ", (int)(imu.getPitchDeg()));
@@ -1527,11 +1527,11 @@ void Robot::readSerial()
         break;
 
       case 'j': // simulate left drop
-        dropSensors.dropSensor[DropSensors::LEFT].simDetected();
+        dropSensor_simDetected(&dropSensorArray[LEFT]);
         break;
 
       case 'k': // simulate right drop
-        dropSensors.dropSensor[DropSensors::RIGHT].simDetected();
+        dropSensor_simDetected(&dropSensorArray[RIGHT]);
         break;
 
       case 's': // simulate lawn sensor
@@ -1777,9 +1777,9 @@ void Robot::readSensors()
     sonars.ping();
   }
 
-  if (dropSensors.isTimeToRun())
+  if (dropSensors_isTimeToRun(&dropSensors))
   {
-    dropSensors.check();
+    dropSensors_check(&dropSensors);
   }
 
   if (curMillis >= nextTimeRTC)
@@ -2394,11 +2394,11 @@ void Robot::checkDrop()
     return;
   }
 
-  if (dropSensors.dropSensor[DropSensors::LEFT].isDetected())
+  if (dropSensor_isDetected(&dropSensorArray[LEFT]))
   {
     reverseOrChangeDirection(RIGHT);
   }
-  if (dropSensors.dropSensor[DropSensors::RIGHT].isDetected())
+  if (dropSensor_isDetected(&dropSensorArray[RIGHT]))
   {
     reverseOrChangeDirection(LEFT);
   }
@@ -3135,7 +3135,7 @@ void Robot::tasks_continious()
   }
 
   bumpers_clearHit(&bumpers);
-  dropSensors.clearDetected();
+  dropSensors_clearDetected(&dropSensors);
 
   loopsPerSecCounter++;
 }

@@ -57,6 +57,7 @@ static inline
 void bumpers_setup(const uint8_t* pins, Bumper* bumperArray_p,
                    Bumpers* bumpers_p, const uint8_t len)
 {
+  bumpers_p->use = false;
   bumpers_p->len = len;
   bumpers_p->bumperArray_p = bumperArray_p;
   for (uint8_t i = 0; i < len; i++)

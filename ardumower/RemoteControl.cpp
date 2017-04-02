@@ -755,15 +755,19 @@ void RemoteControl::sendDropMenu(const boolean update)
     Bluetooth.print(F("{.Drop`1000"));
   }
   Bluetooth.print(F("|u00~Use "));
-  sendYesNo(robot_p->dropSensors.used);
+  sendYesNo(robot_p->dropSensors.use);
   Bluetooth.println(F("|u01~Counter l, r "));
-  Bluetooth.print(robot_p->dropSensors.dropSensor[DropSensors::LEFT].getCounter());
+  Bluetooth.print(dropSensor_getCounter(
+      &robot_p->dropSensors.dropSensorArray_p[LEFT]));
   Bluetooth.print(", ");
-  Bluetooth.print(robot_p->dropSensors.dropSensor[DropSensors::RIGHT].getCounter());
+  Bluetooth.print(dropSensor_getCounter(
+      &robot_p->dropSensors.dropSensorArray_p[RIGHT]));
   Bluetooth.println(F("|u02~Value l, r "));
-  Bluetooth.print(robot_p->dropSensors.dropSensor[DropSensors::LEFT].isDetected());
+  Bluetooth.print(dropSensor_isDetected(
+      &robot_p->dropSensors.dropSensorArray_p[LEFT]));
   Bluetooth.print(", ");
-  Bluetooth.print(robot_p->dropSensors.dropSensor[DropSensors::RIGHT].isDetected());
+  Bluetooth.print(dropSensor_isDetected(
+      &robot_p->dropSensors.dropSensorArray_p[RIGHT]));
   Bluetooth.println("}");
 }
 
@@ -780,7 +784,7 @@ void RemoteControl::processDropMenu(const String pfodCmd)
 {
   if (pfodCmd == "u00")
   {
-    TOGGLE(robot_p->dropSensors.used);
+    TOGGLE(robot_p->dropSensors.use);
   }
   sendDropMenu(true);
 }
@@ -2145,9 +2149,9 @@ void RemoteControl::run()
       Bluetooth.print(",");
       Bluetooth.print(robot_p->rainSensor.getCounter());
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->dropSensors.dropSensor[DropSensors::LEFT].getCounter());
+      Bluetooth.print(dropSensor_getCounter(&robot_p->dropSensorArray[LEFT]));
       Bluetooth.print(",");
-      Bluetooth.println(robot_p->dropSensors.dropSensor[DropSensors::RIGHT].getCounter());
+      Bluetooth.println(dropSensor_getCounter(&robot_p->dropSensorArray[RIGHT]));
     }
   }
   else if (pfodState == PFOD_PLOT_SENSORS)
@@ -2176,9 +2180,9 @@ void RemoteControl::run()
       Bluetooth.print(",");
       Bluetooth.print(robot_p->rainSensor.isRaining());
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->dropSensors.dropSensor[DropSensors::LEFT].isDetected());
+      Bluetooth.print(dropSensor_isDetected(&robot_p->dropSensorArray[LEFT]));
       Bluetooth.print(",");
-      Bluetooth.println(robot_p->dropSensors.dropSensor[DropSensors::RIGHT].isDetected());
+      Bluetooth.println(dropSensor_isDetected(&robot_p->dropSensorArray[RIGHT]));
     }
   }
   else if (pfodState == PFOD_PLOT_PERIMETER)

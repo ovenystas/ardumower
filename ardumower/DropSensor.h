@@ -10,72 +10,107 @@
 
 #include <Arduino.h>
 
-class DropSensor
+typedef enum
 {
-  public:
-    enum dropSensorContactE
-    {
-      NO = 0,
-      NC = 1
-    };
+  DROPSENSOR_NO = 0,
+  DROPSENSOR_NC = 1
+} dropSensorContactE;
 
-    void setup(const uint8_t pin, const boolean contactType);
-    void simDetected();
-    void check();
-
-
-    bool isDetected() const
-    {
-      return detected;
-    }
-
-    void clearDetected()
-    {
-      detected = false;
-    }
-
-    uint16_t getCounter() const
-    {
-      return counter;
-    }
-
-    void clearCounter()
-    {
-      counter = 0;
-    }
-
-    uint8_t getContactType() const
-    {
-      return contactType;
-    }
-
-  private:
-    uint8_t pin {};
-    boolean detected { false };
-    uint8_t contactType { NO }; // contact 1=NC 0=NO against GND
-    uint16_t counter {};
-};
-
-class DropSensors
+typedef struct
 {
-  public:
-    enum dropSensorE
-    {
-      LEFT,
-      RIGHT,
-      END
-    };
+  uint8_t pin;
+  boolean detected;
+  uint16_t counter;
+} DropSensor;
 
-    bool used { false };
-    DropSensor dropSensor[END];
+typedef struct
+{
+  bool use;
+  dropSensorContactE contactType; // contact 1=NC 0=NO against GND
+  uint8_t len;
+  unsigned long lastRun;
+  unsigned int timeBetweenRuns;
+  DropSensor* dropSensorArray_p;
+} DropSensors;
 
-    void check();
-    void clearDetected();
-    bool isTimeToRun();
+void dropSensor_setup(const uint8_t pin, DropSensor* dropSensor_p);
+void dropSensor_check(DropSensor* dropSensor_p, dropSensorContactE contactType);
 
-  private:
-    unsigned long nextTime {};
-    unsigned int timeBetweenRuns { 100 };
-};
+static inline
+void dropSensor_simDetected(DropSensor* dropSensor_p)
+{
+  dropSensor_p->detected = true;
+  dropSensor_p->counter++;
+}
+
+static inline
+bool dropSensor_isDetected(const DropSensor* dropSensor_p)
+{
+  return dropSensor_p->detected;
+}
+
+static inline
+void dropSensor_clearDetected(DropSensor* dropSensor_p)
+{
+  dropSensor_p->detected = false;
+}
+
+static inline
+uint16_t dropSensor_getCounter(const DropSensor* dropSensor_p)
+{
+  return dropSensor_p->counter;
+}
+
+static inline
+void dropSensor_clearCounter(DropSensor* dropSensor_p)
+{
+  dropSensor_p->counter = 0;
+}
+
+static inline
+void dropSensors_setup(const uint8_t* pins,
+                       const dropSensorContactE contactType,
+                       DropSensor* dropSensorArray_p,
+                       DropSensors* dropSensors_p,
+                       const uint8_t len)
+{
+  dropSensors_p->use = false;
+  dropSensors_p->contactType = contactType;
+  dropSensors_p->len = len;
+  dropSensors_p->lastRun = 0;
+  dropSensors_p->timeBetweenRuns = 100;
+  dropSensors_p->dropSensorArray_p = dropSensorArray_p;
+  for (uint8_t i = 0; i < len; i++)
+  {
+    dropSensor_setup(pins[i], &dropSensorArray_p[i]);
+  }
+}
+
+static inline
+uint8_t dropSensors_getContactType(const DropSensors* dropSensors_p)
+{
+  return dropSensors_p->contactType;
+}
+
+static inline
+void dropSensors_check(DropSensors* dropSensors_p)
+{
+  for (uint8_t i = 0; i < dropSensors_p->len; i++)
+  {
+    dropSensor_check(&dropSensors_p->dropSensorArray_p[i],
+                     dropSensors_p->contactType);
+  }
+}
+
+static inline
+void dropSensors_clearDetected(DropSensors* dropSensors_p)
+{
+  for (uint8_t i = 0; i < dropSensors_p->len; i++)
+  {
+    dropSensor_clearDetected(&dropSensors_p->dropSensorArray_p[i]);
+  }
+}
+
+bool dropSensors_isTimeToRun(DropSensors* dropSensors_p);
 
 #endif /* DROP_SENSOR_H */

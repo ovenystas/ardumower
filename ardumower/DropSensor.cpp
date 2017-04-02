@@ -5,50 +5,32 @@
  *      Author: ove
  */
 
-#include <Arduino.h>
 #include "DropSensor.h"
 
-void DropSensor::setup(const uint8_t pin, const boolean contactType)
+void dropSensor_setup(const uint8_t pin, DropSensor* dropSensor_p)
 {
-  this->pin = pin;
-  this->contactType = contactType;
-
+  dropSensor_p->pin = pin;
+  dropSensor_p->detected = false;
+  dropSensor_p->counter = 0;
   pinMode(pin, INPUT_PULLUP);
 }
 
-void DropSensor::simDetected()
+void dropSensor_check(DropSensor* dropSensor_p, dropSensorContactE contactType)
 {
-  detected = true;
-  counter++;
-}
-
-void DropSensor::check()
-{
-  if (digitalRead(pin) == contactType)
+  if (digitalRead(dropSensor_p->pin) == contactType)
   {
-    detected = true;
-    counter++;
+    dropSensor_p->detected = true;
+    dropSensor_p->counter++;
   }
 }
 
-void DropSensors::check()
-{
-  dropSensor[LEFT].check();
-  dropSensor[RIGHT].check();
-}
-
-void DropSensors::clearDetected()
-{
-  dropSensor[LEFT].clearDetected();
-  dropSensor[RIGHT].clearDetected();
-}
-
-bool DropSensors::isTimeToRun()
+bool dropSensors_isTimeToRun(DropSensors* dropSensors_p)
 {
   unsigned long curMillis = millis();
-  if (used && curMillis >= nextTime)
+  if (dropSensors_p->use &&
+      curMillis - dropSensors_p->lastRun >= dropSensors_p->timeBetweenRuns)
   {
-    nextTime = curMillis + timeBetweenRuns;
+    dropSensors_p->lastRun = curMillis;
     return true;
   }
   return false;

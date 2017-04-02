@@ -212,8 +212,9 @@ void Mower::setup()
   bumpers_setup(bumperPins, bumperArray, &bumpers, BUMPERS_NUM);
 
   // drop sensor
-  dropSensors.dropSensor[DropSensors::LEFT].setup(PIN_DROP_LEFT, DropSensor::NO);
-  dropSensors.dropSensor[DropSensors::RIGHT].setup(PIN_DROP_LEFT, DropSensor::NO);
+  const uint8_t dropSensorPins[DROPSENSORS_NUM] = {PIN_DROP_LEFT, PIN_DROP_RIGHT};
+  dropSensors_setup(dropSensorPins, DROPSENSOR_NO, dropSensorArray,
+                    &dropSensors, DROPSENSORS_NUM);
 
   // sonar
   sonars.use = true;

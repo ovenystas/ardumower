@@ -125,6 +125,7 @@ typedef struct statsT
 } statsT;
 
 #define BUMPERS_NUM 2
+#define DROPSENSORS_NUM 2
 
 class Robot
 {
@@ -187,6 +188,7 @@ class Robot
     Bumpers bumpers;
 
     // --------- drop state ---------------------------
+    DropSensor dropSensorArray[DROPSENSORS_NUM];
     DropSensors dropSensors;
 
     // ------- IMU state --------------------------------
