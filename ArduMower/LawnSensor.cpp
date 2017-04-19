@@ -5,97 +5,63 @@
  *      Author: ove
  */
 
-#include <Arduino.h>
-
 #include "LawnSensor.h"
 
 #define Console Serial
 
-// measure lawn sensor capacity
-uint16_t LawnSensor::measureLawnCapacity(const uint8_t pinSend,
-                                         const uint8_t pinReceive)
+void lawnSensor_setup(const uint8_t sendPin, const uint8_t receivePin,
+                      LawnSensor* lawnSensor_p)
+{
+  lawnSensor_p->sendPin = sendPin;
+  lawnSensor_p->receivePin = receivePin;
+
+  pinMode(lawnSensor_p->sendPin, OUTPUT);
+  pinMode(lawnSensor_p->receivePin, INPUT);
+}
+
+
+uint16_t lawnSensor_measureLawnCapacity(LawnSensor* lawnSensor_p)
 {
   uint16_t t = 0;
 
-  digitalWrite(pinSend, HIGH);
+  digitalWrite(lawnSensor_p->sendPin, HIGH);
 
   // TODO: Improve this
-  while (digitalRead(pinReceive) == LOW)
+  while (digitalRead(lawnSensor_p->receivePin) == LOW)
   {
     t++;
   }
 
-  digitalWrite(pinSend, LOW);
+  digitalWrite(lawnSensor_p->sendPin, LOW);
 
   return t;
 }
 
-void LawnSensor::setup(const uint8_t pinSendFront, const uint8_t pinReceiveFront,
-                       const uint8_t pinSendBack, const uint8_t pinReceiveBack)
-{
-  this->pinSend[FRONT] = pinSendFront;
-  this->pinReceive[FRONT] = pinReceiveFront;
-  this->pinSend[BACK] = pinSendBack;
-  this->pinReceive[BACK] = pinReceiveBack;
-
-  pinMode(pinSendFront, OUTPUT);
-  pinMode(pinReceiveFront, INPUT);
-  pinMode(pinSendBack, OUTPUT);
-  pinMode(pinReceiveBack, INPUT);
-}
-
-void LawnSensor::read()
+void lawnSensor_read(LawnSensor* lawnSensor_p)
 {
   const float accel = 0.03;
 
-  value[FRONT] = (1.0 - accel) * value[FRONT] +
-      accel * (float)measureLawnCapacity(pinSend[FRONT], pinReceive[FRONT]);
-
-  value[BACK]  = (1.0 - accel) * value[BACK] +
-      accel * (float)measureLawnCapacity(pinSend[BACK],  pinReceive[BACK]);
+  lawnSensor_p->value = (1.0 - accel) * lawnSensor_p->value +
+      accel * (float)lawnSensor_measureLawnCapacity(lawnSensor_p);
 }
 
-void LawnSensor::check()
+void lawnSensors_check(LawnSensors* lawnSensors_p)
 {
-  float deltaFront = (value[FRONT] / valueOld[FRONT]) * 100.0;
-  float deltaBack  = (value[BACK]  / valueOld[BACK])  * 100.0;
-  if (deltaFront <= 95 || deltaBack <= 95)
+  LawnSensor* sensorF_p = &lawnSensors_p->lawnSensorArray_p[0];
+  float deltaF = (sensorF_p->value / sensorF_p->valueOld) * 100.0;
+  LawnSensor* sensorB_p = &lawnSensors_p->lawnSensorArray_p[1];
+  float deltaB = (sensorB_p->value / sensorB_p->valueOld) * 100.0;
+
+  if (deltaF <= 95 || deltaB <= 95)
   {
     Console.print(F("LAWN "));
-    Console.print(deltaFront);
+    Console.print(deltaF);
     Console.print(",");
-    Console.println(deltaBack);
-    counter++;
-    detected = true;
+    Console.println(deltaB);
+    lawnSensors_p->counter++;
+    lawnSensors_p->detected = true;
   }
-  valueOld[FRONT] = value[FRONT];
-  valueOld[BACK] = value[BACK];
-}
 
-void LawnSensor::simDetected(void)
-{
-  detected = true;
-  counter++;
-}
-
-bool LawnSensor::isTimeToRead()
-{
-  unsigned long curMillis = millis();
-  if (use && curMillis >= nextTimeRead)
-  {
-    nextTimeRead = curMillis + timeBetweenRead;
-    return true;
-  }
-  return false;
-}
-
-bool LawnSensor::isTimeToCheck()
-{
-  unsigned long curMillis = millis();
-  if (use && curMillis >= nextTimeCheck)
-  {
-    nextTimeCheck = curMillis + timeBetweenCheck;
-    return true;
-  }
-  return false;
+  sensorF_p->valueOld = sensorF_p->value;
+  sensorB_p->valueOld = sensorB_p->value;
 }

@@ -194,10 +194,12 @@ void Mower::setup()
   cutter.motor.pid.setup(0.005, 0.01, 0.01);  // Kp, Ki, Kd
 
   // lawn sensor
-  lawnSensor.setup(PIN_LAWN_FRONT_SEND,
-                   PIN_LAWN_FRONT_RECV,
-                   PIN_LAWN_BACK_SEND,
-                   PIN_LAWN_BACK_RECV);
+  const uint8_t lawnSensorSendPins[LAWNSENSORS_NUM] = {
+      PIN_LAWN_FRONT_SEND, PIN_LAWN_BACK_SEND};
+  const uint8_t lawnSensorReceivePins[LAWNSENSORS_NUM] = {
+      PIN_LAWN_FRONT_RECV, PIN_LAWN_BACK_RECV};
+  lawnSensors_setup(lawnSensorSendPins, lawnSensorReceivePins, lawnSensorArray,
+      &lawnSensors, LAWNSENSORS_NUM);
 
   // perimeter
   perimeters.use = false;
@@ -351,5 +353,5 @@ void Mower::setActuator(Robot::actuatorE type, int value)
 void Mower::configureBluetooth(boolean quick)
 {
   BluetoothConfig bt;
-  bt.setParams(name, PFOD_PIN, PFOD_BAUDRATE, quick);
+  bt.setParams(name, PFOD_BLUETOOTH_PIN_CODE, PFOD_BAUDRATE, quick);
 }

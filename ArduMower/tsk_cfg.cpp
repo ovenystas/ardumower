@@ -38,6 +38,11 @@ void run_task_1000ms(void)
   robot.tasks_1000ms();
 }
 
+void run_task_2000ms(void)
+{
+  robot.tasks_2000ms();
+}
+
 /**
  * Task configuration table. Holds the task interval, last time executed, and
  * the function to be executed. A continuous task is defined as a task with
@@ -51,6 +56,7 @@ static TaskType Tasks[] =
   { INTERVAL_200MS , 0, run_task_200ms },
   { INTERVAL_500MS , 0, run_task_500ms },
   { INTERVAL_1000MS, 0, run_task_1000ms },
+  { INTERVAL_2000MS, 0, run_task_2000ms }
 };
 
 TaskType *Tsk_GetConfig(void)

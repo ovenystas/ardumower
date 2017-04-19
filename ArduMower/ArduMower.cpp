@@ -1,5 +1,5 @@
 /*
- Ardumower (www.ardumower.de)
+ ArduMower (www.ardumower.de)
  Copyright (c) 2013-2015 by Alexander Grau
  Copyright (c) 2013-2015 by Sven Gennat
  Copyright (c) 2014 by Maxime Carpentieri

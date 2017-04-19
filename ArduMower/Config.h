@@ -75,7 +75,7 @@
 // ------- baudrates---------------------------------
 #define BAUDRATE 115200               // serial output baud rate
 #define PFOD_BAUDRATE 19200           // pfod app serial output baud rate
-#define PFOD_PIN 1234                 // Bluetooth pin code
+#define PFOD_BLUETOOTH_PIN_CODE 1234  // Bluetooth pin code
 
 //#define USE_DEVELOPER_TEST 1        // Uncomment for new perimeter signal test (developers)
 #define USE_BARKER_CODE 1             // Uncomment when using Barker code for perimeter signal

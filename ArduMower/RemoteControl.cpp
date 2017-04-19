@@ -975,13 +975,13 @@ void RemoteControl::sendLawnSensorMenu(const boolean update)
     Bluetooth.print(F("{.Lawn sensor`1000"));
   }
   Bluetooth.print(F("|f00~Use "));
-  sendYesNo(robot_p->lawnSensor.use);
+  sendYesNo(robot_p->lawnSensors.use);
   Bluetooth.print(F("|f01~Counter "));
-  Bluetooth.print(robot_p->lawnSensor.getCounter());
+  Bluetooth.print(lawnSensors_getCounter(&robot_p->lawnSensors));
   Bluetooth.println(F("|f02~Value f, b"));
-  Bluetooth.print(robot_p->lawnSensor.getValue(LawnSensor::FRONT));
+  Bluetooth.print(lawnSensor_getValue(&robot_p->lawnSensorArray[FRONT]));
   Bluetooth.print(", ");
-  Bluetooth.print(robot_p->lawnSensor.getValue(LawnSensor::BACK));
+  Bluetooth.print(lawnSensor_getValue(&robot_p->lawnSensorArray[BACK]));
   Bluetooth.println("}");
 }
 
@@ -989,7 +989,7 @@ void RemoteControl::processLawnSensorMenu(const String pfodCmd)
 {
   if (pfodCmd == "f00")
   {
-    TOGGLE(robot_p->lawnSensor.use);
+    TOGGLE(robot_p->lawnSensors.use);
   }
   sendLawnSensorMenu(true);
 }
@@ -2145,7 +2145,7 @@ void RemoteControl::run()
       Bluetooth.print(",");
       Bluetooth.print(robot_p->getPerimeterCounter());
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->lawnSensor.getCounter());
+      Bluetooth.print(lawnSensors_getCounter(&robot_p->lawnSensors));
       Bluetooth.print(",");
       Bluetooth.print(robot_p->rainSensor.getCounter());
       Bluetooth.print(",");
@@ -2176,7 +2176,7 @@ void RemoteControl::run()
       }
       Bluetooth.print(robot_p->perimeters.perimeter[Perimeter::LEFT].isInside());
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->lawnSensor.isDetected());
+      Bluetooth.print(lawnSensors_isDetected(&robot_p->lawnSensors));
       Bluetooth.print(",");
       Bluetooth.print(robot_p->rainSensor.isRaining());
       Bluetooth.print(",");

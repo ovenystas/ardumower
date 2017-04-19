@@ -14,6 +14,7 @@
 #define INTERVAL_200MS  100UL
 #define INTERVAL_500MS  500UL
 #define INTERVAL_1000MS 1000UL
+#define INTERVAL_2000MS 2000UL
 
 /**
  * Struct TaskType

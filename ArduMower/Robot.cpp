@@ -216,7 +216,7 @@ void Robot::loadSaveUserSettings(const boolean readflag)
   eereadwrite(readflag, addr,
               perimeters.perimeter[Perimeter::LEFT].timeOutSecIfNotInside);
   eereadwrite(readflag, addr, trackingBlockInnerWheelWhilePerimeterStruggling);
-  eereadwrite(readflag, addr, lawnSensor.use);
+  eereadwrite(readflag, addr, lawnSensors.use);
   eereadwrite(readflag, addr, imu.use);
   eereadwrite(readflag, addr, imu.correctDir);
   eereadwrite(readflag, addr, imu.pid[Imu::DIR].settings.Kp);
@@ -440,7 +440,7 @@ void Robot::printSettingSerial()
   // ------ lawn sensor --------------------------------
   Console.println(F("== Lawn sensor =="));
   Console.print(F("use : "));
-  Console.println(lawnSensor.use);
+  Console.println(lawnSensors.use);
 
   // ------  IMU (compass/accel/gyro) ----------------------
   Console.println(F("== IMU =="));
@@ -1156,11 +1156,11 @@ void Robot::printInfo_sensorValues(Stream &s)
     Streamprint(s, "per %3d ", perimeterInside);
   }
 
-  if (lawnSensor.use)
+  if (lawnSensors.use)
   {
     Streamprint(s, "lawn %3d %3d ",
-                (int)lawnSensor.getValue(LawnSensor::FRONT),
-                (int)lawnSensor.getValue(LawnSensor::BACK));
+                (int)lawnSensor_getValue(&lawnSensorArray[FRONT]),
+                (int)lawnSensor_getValue(&lawnSensorArray[BACK]));
   }
 }
 
@@ -1187,9 +1187,9 @@ void Robot::printInfo_sensorCounters(Stream &s)
     Streamprint(s, "per %3d ", perimeterCounter);
   }
 
-  if (lawnSensor.use)
+  if (lawnSensors.use)
   {
-    Streamprint(s, "lawn %3d ", lawnSensor.getCounter());
+    Streamprint(s, "lawn %3d ", lawnSensors_getCounter(&lawnSensors));
   }
 
   if (gpsUse)
@@ -1535,7 +1535,7 @@ void Robot::readSerial()
         break;
 
       case 's': // simulate lawn sensor
-        lawnSensor.simDetected();
+        lawnSensors_simDetected(&lawnSensors);
         break;
 
       case 'm': // toggle mower motor
@@ -1760,16 +1760,6 @@ void Robot::readSensors()
         setNextState(StateMachine::STATE_ERROR);
       }
     }
-  }
-
-  if (lawnSensor.isTimeToRead())
-  {
-    lawnSensor.read();
-  }
-
-  if (lawnSensor.isTimeToCheck())
-  {
-    lawnSensor.check();
   }
 
   if (sonars.isTimeToRun())
@@ -2496,15 +2486,16 @@ void Robot::checkPerimeterFind()
 // check lawn
 void Robot::checkLawn()
 {
-  if (lawnSensor.use)
+  if (lawnSensors.use)
   {
-    if (lawnSensor.isDetected() && millis() > stateMachine.getStateStartTime() + 3000)
+    if (lawnSensors_isDetected(&lawnSensors) &&
+        millis() - stateMachine.getStateStartTime() >= 3000)
     {
       reverseOrChangeDirection(!rollDir); // Toggle roll direction
     }
     else
     {
-      lawnSensor.clearDetected();
+      lawnSensors_clearDetected(&lawnSensors);
     }
   }
 }
@@ -3148,7 +3139,14 @@ void Robot::tasks_50ms()
 
 void Robot::tasks_100ms()
 {
-  bumpers_check(&bumpers);
+  if (bumpers.use)
+  {
+    bumpers_check(&bumpers);
+  }
+  if (lawnSensors.use)
+  {
+    lawnSensors_read(&lawnSensors);
+  }
 }
 
 void Robot::tasks_200ms()
@@ -3170,4 +3168,12 @@ void Robot::tasks_1000ms()
   }
   loopsPerSec = loopsPerSecCounter;
   loopsPerSecCounter = 0;
+}
+
+void Robot::tasks_2000ms()
+{
+  if (lawnSensors.use)
+  {
+    lawnSensors_check(&lawnSensors);
+  }
 }

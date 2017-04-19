@@ -91,6 +91,12 @@ enum
   RIGHT
 };
 
+enum
+{
+  FRONT,
+  BACK
+};
+
 // mow patterns
 enum
 {
@@ -126,6 +132,7 @@ typedef struct statsT
 
 #define BUMPERS_NUM 2
 #define DROPSENSORS_NUM 2
+#define LAWNSENSORS_NUM 2
 
 class Robot
 {
@@ -210,7 +217,8 @@ class Robot
     boolean trackingBlockInnerWheelWhilePerimeterStruggling;
 
     //  --------- lawn state ----------------------------
-    LawnSensor lawnSensor;
+    LawnSensor lawnSensorArray[LAWNSENSORS_NUM];
+    LawnSensors lawnSensors;
 
     // --------- rain -----------------------------------
     RainSensor rainSensor;
@@ -257,6 +265,7 @@ class Robot
     virtual void tasks_200ms();
     virtual void tasks_500ms();
     virtual void tasks_1000ms();
+    virtual void tasks_2000ms();
 
     virtual void resetIdleTime();
 
