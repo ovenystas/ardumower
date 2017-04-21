@@ -8,34 +8,30 @@
 #ifndef RAINSENSOR_H
 #define RAINSENSOR_H
 
-class RainSensor
+#include <Arduino.h>
+
+typedef struct
 {
-  public:
-    bool use {false};
+  bool use;
+  uint8_t pin;
+  bool raining;
+  uint16_t counter;
+} RainSensor;
 
-    void setup(const uint8_t pin);
-    void check(void);
-    bool isTimeToRun(void);
+void rainSensor_setup(const uint8_t pin, RainSensor* rainSensor_p);
+void rainSensor_check(RainSensor* rainSensor_p);
+void rainSensor_read(RainSensor* rainSensor_p);
 
-    bool isRaining(void) const
-    {
-      return raining;
-    }
+static inline
+bool rainSensor_isRaining(RainSensor* rainSensor_p)
+{
+  return rainSensor_p->raining;
+}
 
-    uint16_t getCounter(void) const
-    {
-      return counter;
-    }
-
-  private:
-    static const uint16_t TIME_BETWEEN_RUNS {5000};
-
-    uint8_t pin;
-    bool raining {false};
-    uint16_t counter {};
-    unsigned long nextTime {};
-
-    void read(void);
-};
+static inline
+uint16_t rainSensor_getCounter(RainSensor* rainSensor_p)
+{
+  return rainSensor_p->counter;
+}
 
 #endif /* RAINSENSOR_H */

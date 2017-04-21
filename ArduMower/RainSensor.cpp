@@ -5,36 +5,26 @@
  *      Author: ove
  */
 
-#include <Arduino.h>
 #include "RainSensor.h"
 
-void RainSensor::setup(const uint8_t pin)
+void rainSensor_setup(const uint8_t pin, RainSensor* rainSensor_p)
 {
-  this->pin = pin;
-  pinMode(pin, INPUT);
+  rainSensor_p->pin = pin;
+  rainSensor_p->raining = false;
+  rainSensor_p->counter = 0;
+  pinMode(rainSensor_p->pin, INPUT);
 }
 
-void RainSensor::read(void)
+void rainSensor_read(RainSensor* rainSensor_p)
 {
-  raining = (digitalRead(pin) == LOW);
+  rainSensor_p->raining = (digitalRead(rainSensor_p->pin) == LOW);
 }
 
-void RainSensor::check(void)
+void rainSensor_check(RainSensor* rainSensor_p)
 {
-  read();
-  if (raining)
+  rainSensor_read(rainSensor_p);
+  if (rainSensor_p->raining)
   {
-    counter++;
+    rainSensor_p->counter++;
   }
-}
-
-bool RainSensor::isTimeToRun(void)
-{
-  unsigned long curMillis = millis();
-  if (use && curMillis >= nextTime)
-  {
-    nextTime = curMillis + TIME_BETWEEN_RUNS;
-    return true;
-  }
-  return false;
 }

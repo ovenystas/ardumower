@@ -1007,9 +1007,9 @@ void RemoteControl::sendRainMenu(const boolean update)
   Bluetooth.print(F("|m00~Use "));
   sendYesNo(robot_p->rainSensor.use);
   Bluetooth.print(F("|m01~Counter "));
-  Bluetooth.print(robot_p->rainSensor.getCounter());
+  Bluetooth.print(rainSensor_getCounter(&robot_p->rainSensor));
   Bluetooth.println(F("|m02~Value"));
-  Bluetooth.print(robot_p->rainSensor.isRaining());
+  Bluetooth.print(rainSensor_isRaining(&robot_p->rainSensor));
   Bluetooth.println("}");
 }
 
@@ -2147,7 +2147,7 @@ void RemoteControl::run()
       Bluetooth.print(",");
       Bluetooth.print(lawnSensors_getCounter(&robot_p->lawnSensors));
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->rainSensor.getCounter());
+      Bluetooth.print(rainSensor_getCounter(&robot_p->rainSensor));
       Bluetooth.print(",");
       Bluetooth.print(dropSensor_getCounter(&robot_p->dropSensorArray[LEFT]));
       Bluetooth.print(",");
@@ -2178,7 +2178,7 @@ void RemoteControl::run()
       Bluetooth.print(",");
       Bluetooth.print(lawnSensors_isDetected(&robot_p->lawnSensors));
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->rainSensor.isRaining());
+      Bluetooth.print(rainSensor_isRaining(&robot_p->rainSensor));
       Bluetooth.print(",");
       Bluetooth.print(dropSensor_isDetected(&robot_p->dropSensorArray[LEFT]));
       Bluetooth.print(",");

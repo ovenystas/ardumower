@@ -228,7 +228,8 @@ void Mower::setup()
   sonars.sonar[Sonars::CENTER].use = true;
 
   // rain
-  rainSensor.setup(PIN_RAIN);
+  rainSensor.use = false;
+  rainSensor_setup(PIN_RAIN, &rainSensor);
 
   // R/C
   pinMode(PIN_REMOTE_MOW, INPUT);

@@ -1801,10 +1801,6 @@ void Robot::readSensors()
     battery.read();
   }
 
-  if (rainSensor.isTimeToRun())
-  {
-    rainSensor.check();
-  }
 }
 
 void Robot::setDefaults()
@@ -2502,7 +2498,7 @@ void Robot::checkLawn()
 
 void Robot::checkRain()
 {
-  if (rainSensor.use && rainSensor.isRaining())
+  if (rainSensor.use && rainSensor_isRaining(&rainSensor))
   {
     Console.println(F("RAIN"));
     if (perimeters.use)
@@ -3175,5 +3171,13 @@ void Robot::tasks_2000ms()
   if (lawnSensors.use)
   {
     lawnSensors_check(&lawnSensors);
+  }
+}
+
+void Robot::tasks_5000ms()
+{
+  if (rainSensor.use)
+  {
+    rainSensor_check(&rainSensor);
   }
 }

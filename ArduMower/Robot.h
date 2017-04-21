@@ -266,6 +266,7 @@ class Robot
     virtual void tasks_500ms();
     virtual void tasks_1000ms();
     virtual void tasks_2000ms();
+    virtual void tasks_5000ms();
 
     virtual void resetIdleTime();
 
