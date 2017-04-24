@@ -1162,7 +1162,7 @@ void RemoteControl::sendBatteryMenu(const boolean update)
     Bluetooth.print(F("{.Battery`1000"));
   }
   Bluetooth.print(F("|j00~Battery "));
-  Bluetooth.print(robot_p->battery.getVoltage());
+  Bluetooth.print(battery_getVoltage(&robot_p->battery));
   Bluetooth.print(" V");
   Bluetooth.print(F("|j01~Monitor "));
   sendYesNo(robot_p->battery.monitored);
@@ -1182,9 +1182,9 @@ void RemoteControl::sendBatteryMenu(const boolean update)
              robot_p->battery.batSwitchOffIfBelow, "", 0.1, robot_p->battery.batFull,
              (robot_p->battery.batFull * 0.72));
   Bluetooth.print(F("|j04~Charge "));
-  Bluetooth.print(robot_p->battery.getChargeVoltage());
+  Bluetooth.print(battery_getChargeVoltage(&robot_p->battery));
   Bluetooth.print("V ");
-  Bluetooth.print(robot_p->battery.getChargeCurrent());
+  Bluetooth.print(battery_getChargeCurrent(&robot_p->battery));
   Bluetooth.print("A");
   sendSlider("j09", F("Calibrate batChgFactor"),
              robot_p->battery.batChgFactor, "", 0.01, 1.0);
@@ -2071,13 +2071,13 @@ void RemoteControl::run()
       nextPlotTime = curMillis + 60000;
       Bluetooth.print(curMillis / 60000);
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->battery.getVoltage());
+      Bluetooth.print(battery_getVoltage(&robot_p->battery));
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->battery.getChargeVoltage());
+      Bluetooth.print(battery_getChargeVoltage(&robot_p->battery));
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->battery.getChargeCurrent());
+      Bluetooth.print(battery_getChargeCurrent(&robot_p->battery));
       Bluetooth.print(",");
-      Bluetooth.println(robot_p->battery.getCapacity());
+      Bluetooth.println(battery_getCapacity(&robot_p->battery));
     }
   }
   else if (pfodState == PFOD_PLOT_ODO2D)
