@@ -736,7 +736,7 @@ void Robot::setMotorPWM(int pwm,
   if (odometer.use)
   {
     wheels.wheel[motor].motor.pwmCur = pwm;
-    if (abs(wheels.wheel[motor].encoder.getWheelRpmCurr()) == 0)
+    if (abs(encoder_getWheelRpmCurr(&wheels.wheel[motor].encoder)) == 0)
     {
       wheels.wheel[motor].motor.setZeroTimeout(
           (uint16_t)max(0, (int32_t)wheels.wheel[motor].motor.getZeroTimeout() -
@@ -944,7 +944,7 @@ void Robot::checkOdometerFaults()
     for (uint8_t i = LEFT; i <= RIGHT; i++)
     {
       if (wheels.wheel[i].motor.getPwmCur() > 100 &&
-          abs(wheels.wheel[i].encoder.getWheelRpmCurr()) == 0)
+          abs(encoder_getWheelRpmCurr(&wheels.wheel[i].encoder)) == 0)
       {
         err[i] = true;
       }
@@ -958,7 +958,7 @@ void Robot::checkOdometerFaults()
     for (uint8_t i = LEFT; i <= RIGHT; i++)
     {
       int16_t pwmCur = wheels.wheel[i].motor.getPwmCur();
-      int16_t wheelRpmCurr = wheels.wheel[i].encoder.getWheelRpmCurr();
+      int16_t wheelRpmCurr = encoder_getWheelRpmCurr(&wheels.wheel[i].encoder);
       if ((pwmCur > +100 && wheelRpmCurr < -3) ||
           (pwmCur < -100 && wheelRpmCurr > +3))
       {
@@ -972,7 +972,7 @@ void Robot::checkOdometerFaults()
     Console.print("Left odometer error: PWM=");
     Console.print(wheels.wheel[Wheel::LEFT].motor.getPwmCur());
     Console.print("\tRPM=");
-    Console.println(wheels.wheel[Wheel::LEFT].encoder.getWheelRpmCurr());
+    Console.println(encoder_getWheelRpmCurr(&wheels.wheel[Wheel::LEFT].encoder));
     incErrorCounter(ERR_ODOMETER_LEFT);
     setNextState(StateMachine::STATE_ERROR);
   }
@@ -982,7 +982,7 @@ void Robot::checkOdometerFaults()
     Console.print("Right odometer error: PWM=");
     Console.print(wheels.wheel[Wheel::RIGHT].motor.getPwmCur());
     Console.print("\tRPM=");
-    Console.println(wheels.wheel[Wheel::RIGHT].encoder.getWheelRpmCurr());
+    Console.println(encoder_getWheelRpmCurr(&wheels.wheel[Wheel::RIGHT].encoder));
     incErrorCounter(ERR_ODOMETER_RIGHT);
     setNextState(StateMachine::STATE_ERROR);
   }
@@ -1127,8 +1127,8 @@ void Robot::printInfo_perimeter(Stream &s)
 void Robot::printInfo_odometer(Stream &s)
 {
   Streamprint(s, "odo %4d %4d ",
-              odometer.encoder.left_p->getCounter(),
-              odometer.encoder.right_p->getCounter());
+              encoder_getCounter(odometer.encoder.left_p),
+              encoder_getCounter(odometer.encoder.right_p));
 }
 
 void Robot::printInfo_sensorValues(Stream &s)
@@ -1303,8 +1303,8 @@ void Robot::testOdometer()
   for (;;)
   {
     resetIdleTime();
-    int odoCountLeft = odometer.encoder.left_p->getCounter();
-    int odoCountRight = odometer.encoder.right_p->getCounter();
+    int odoCountLeft = encoder_getCounter(odometer.encoder.left_p);
+    int odoCountRight = encoder_getCounter(odometer.encoder.right_p);
     if (odoCountLeft != lastLeft || odoCountRight != lastRight)
     {
       Console.print(F("Press 'f' forward, 'r' reverse, 'z' reset  "));
@@ -1343,8 +1343,8 @@ void Robot::testOdometer()
 
       if (ch == 'z')
       {
-        odometer.encoder.left_p->clearCounter();
-        odometer.encoder.right_p->clearCounter();
+        encoder_clearCounter(odometer.encoder.left_p);
+        encoder_clearCounter(odometer.encoder.right_p);
       }
     }
   }
@@ -2631,8 +2631,8 @@ void Robot::checkIfStuck()
     if (stateMachine.isCurrentState(StateMachine::STATE_MANUAL) &&
         stateMachine.isCurrentState(StateMachine::STATE_REMOTE) &&
         gpsSpeed < stuckIfGpsSpeedBelow &&
-        odometer.encoder.left_p->getWheelRpmCurr() != 0 &&
-        odometer.encoder.right_p->getWheelRpmCurr() != 0 &&
+        encoder_getWheelRpmCurr(odometer.encoder.left_p) != 0 &&
+        encoder_getWheelRpmCurr(odometer.encoder.right_p) != 0 &&
         curMillis > (stateMachine.getStateStartTime() + gpsSpeedIgnoreTime))
     {
       robotIsStuckCounter++;

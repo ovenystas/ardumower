@@ -10,50 +10,52 @@
 
 #include <Arduino.h>
 
-class Encoder
+typedef struct
 {
-  public:
-    // Setup for one-way encoder (1-pin)
-    void setup(const uint8_t pin, const bool swapDir);
+  uint8_t pin;           // 1st encoder pin
+  uint8_t pin2;          // 2nd encoder pin
+  bool twoWay;           // using 2-pin encoder
+  bool swapDir;          // invert encoder direction?
+  bool curState;         // current state
+  bool curState2;        // current state on 2nd pin
+  bool lastState;        // last state
+  bool lastState2;       // last state on 2nd pin
+  int16_t counter;       // wheel counter
+  int16_t wheelRpmCurr;  // wheel rpm
+} Encoder;
 
-    // Setup for two-way encoder (2-pins)
-    void setup(const uint8_t pin, const uint8_t pin2, const bool swapDir);
+// Setup for one-way encoder (1-pin)
+void encoder_setup1pin(const uint8_t pin, const bool swapDir,
+    Encoder* encoder_p);
 
-    void read(void);
-    void setState(void);
+// Setup for two-way encoder (2-pins)
+void encoder_setup2pin(const uint8_t pin, const uint8_t pin2,
+    const bool swapDir,
+    Encoder* encoder_p);
 
-    int16_t getCounter(void) const
-    {
-      return counter;
-    }
+void encoder_read(Encoder* encoder_p);
+void encoder_setState(Encoder* encoder_p);
 
-    void clearCounter(void)
-    {
-      counter = 0;
-    }
+static inline int16_t encoder_getCounter(Encoder* encoder_p)
+{
+  return encoder_p->counter;
+}
 
-    int16_t getWheelRpmCurr() const
-    {
-      return wheelRpmCurr;
-    }
+static inline
+void encoder_clearCounter(Encoder* encoder_p)
+{
+  encoder_p->counter = 0;
+}
 
-    void setWheelRpmCurr(int16_t wheelRpmCurr)
-    {
-      this->wheelRpmCurr = wheelRpmCurr;
-    }
+static inline int16_t encoder_getWheelRpmCurr(Encoder* encoder_p)
+{
+  return encoder_p->wheelRpmCurr;
+}
 
-    bool twoWay { false };  // using 2-pin encoder
-    bool swapDir { false }; // invert encoder direction?
-
-  private:
-    uint8_t pin;
-    uint8_t pin2;
-    bool curState { LOW };   // current state
-    bool curState2 { LOW };  // current state on 2nd pin
-    bool lastState { LOW };  // last state
-    bool lastState2 { LOW }; // last state on 2nd pin
-    int16_t counter {};             // wheel counter
-    int16_t wheelRpmCurr {};      // wheel rpm
-};
+static inline
+void encoder_setWheelRpmCurr(int16_t wheelRpmCurr, Encoder* encoder_p)
+{
+  encoder_p->wheelRpmCurr = wheelRpmCurr;
+}
 
 #endif /* ENCODER_H */

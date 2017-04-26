@@ -7,32 +7,45 @@
 
 #include "Encoder.h"
 
-void Encoder::setup(const uint8_t pin, const uint8_t pin2, const bool swapDir)
+void setupDefaults(Encoder* encoder_p)
 {
-  this->twoWay = true;
-  this->pin = pin;
-  this->pin2 = pin2;
-  this->swapDir = swapDir;
-
-  pinMode(pin, INPUT_PULLUP);
-  pinMode(pin2, INPUT_PULLUP);
+  encoder_p->curState = LOW;
+  encoder_p->curState2 = LOW;
+  encoder_p->lastState = LOW;
+  encoder_p->lastState2 = LOW;
+  encoder_p->counter = 0;
+  encoder_p->wheelRpmCurr = 0;
 }
 
-void Encoder::setup(const uint8_t pin, const bool swapDir)
+void encoder_setup2pin(const uint8_t pin, const uint8_t pin2,
+    const bool swapDir,
+    Encoder* encoder_p)
 {
-  this->twoWay = false;
-  this->pin = pin;
-  this->swapDir = swapDir;
+  encoder_p->twoWay = true;
+  encoder_p->pin = pin;
+  encoder_p->pin2 = pin2;
+  encoder_p->swapDir = swapDir;
 
-  pinMode(pin, INPUT_PULLUP);
+  pinMode(encoder_p->pin, INPUT_PULLUP);
+  pinMode(encoder_p->pin2, INPUT_PULLUP);
 }
 
-void Encoder::read(void)
+void encoder_setup1pin(const uint8_t pin, const bool swapDir,
+    Encoder* encoder_p)
 {
-  curState = digitalRead(pin);
-  if (twoWay)
+  encoder_p->twoWay = false;
+  encoder_p->pin = pin;
+  encoder_p->swapDir = swapDir;
+
+  pinMode(encoder_p->pin, INPUT_PULLUP);
+}
+
+void encoder_read(Encoder* encoder_p)
+{
+  encoder_p->curState = digitalRead(encoder_p->pin);
+  if (encoder_p->twoWay)
   {
-    curState2 = digitalRead(pin2);
+    encoder_p->curState2 = digitalRead(encoder_p->pin2);
   }
 }
 
@@ -48,46 +61,46 @@ void Encoder::read(void)
 //       Otherwise :  step count reverse   (odometerLeft--)
 // odometerState:  1st odometer signal
 // odometerState2: 2nd odometer signal (optional two-wire encoders)
-void Encoder::setState(void)
+void encoder_setState(Encoder* encoder_p)
 {
-  int8_t step = swapDir ? -1 : 1;
+  int8_t step = encoder_p->swapDir ? -1 : 1;
 
-  if (curState != lastState)
+  if (encoder_p->curState != encoder_p->lastState)
   {
-    if (curState)
+    if (encoder_p->curState)
     { // pin1 makes LOW->HIGH transition
-      if (twoWay)
+      if (encoder_p->twoWay)
       {
         // pin2 = HIGH? => forward
-        if (curState2)
+        if (encoder_p->curState2)
         {
-          counter += step;
+          encoder_p->counter += step;
         }
         else
         {
-          counter -= step;
+          encoder_p->counter -= step;
         }
       }
       else
       {
-        if (wheelRpmCurr >= 0)
+        if (encoder_p->wheelRpmCurr >= 0)
         {
-          counter++;
+          encoder_p->counter++;
         }
         else
         {
-          counter--;
+          encoder_p->counter--;
         }
       }
     }
-    lastState = curState;
+    encoder_p->lastState = encoder_p->curState;
   }
 
-  if (twoWay)
+  if (encoder_p->twoWay)
   {
-    if (curState2 != lastState2)
+    if (encoder_p->curState2 != encoder_p->lastState2)
     {
-      lastState2 = curState2;
+      encoder_p->lastState2 = encoder_p->curState2;
     }
   }
 }

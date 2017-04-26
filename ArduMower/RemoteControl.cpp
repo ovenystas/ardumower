@@ -1297,13 +1297,13 @@ void RemoteControl::sendOdometerMenu(const boolean update)
   Bluetooth.print(F("|l00~Use "));
   sendYesNo(robot_p->odometer.use);
   Bluetooth.print(F("|l01~Value l, r "));
-  Bluetooth.print(robot_p->odometer.encoder.left_p->getCounter());
+  Bluetooth.print(encoder_getCounter(robot_p->odometer.encoder.left_p));
   Bluetooth.print(", ");
-  Bluetooth.println(robot_p->odometer.encoder.right_p->getCounter());
+  Bluetooth.println(encoder_getCounter(robot_p->odometer.encoder.right_p));
   Bluetooth.println(F("|l03~RPM Motor l, r "));
-  Bluetooth.print(robot_p->odometer.encoder.left_p->getWheelRpmCurr());
+  Bluetooth.print(encoder_getWheelRpmCurr(robot_p->odometer.encoder.left_p));
   Bluetooth.print(", ");
-  Bluetooth.println(robot_p->odometer.encoder.right_p->getWheelRpmCurr());
+  Bluetooth.println(encoder_getWheelRpmCurr(robot_p->odometer.encoder.right_p));
   sendSlider("l04", F("Ticks per one full revolution"),
              robot_p->odometer.ticksPerRevolution, "", 1, 2000);
   sendSlider("l01", F("Ticks per cm"),
@@ -2018,9 +2018,9 @@ void RemoteControl::run()
     Bluetooth.print(",");
     Bluetooth.print(robot_p->getPerimeterMag());
     Bluetooth.print(",");
-    Bluetooth.print(robot_p->odometer.encoder.left_p->getCounter());
+    Bluetooth.print(encoder_getCounter(robot_p->odometer.encoder.left_p));
     Bluetooth.print(",");
-    Bluetooth.print(robot_p->odometer.encoder.right_p->getCounter());
+    Bluetooth.print(encoder_getCounter(robot_p->odometer.encoder.right_p));
     Bluetooth.print(",");
     Bluetooth.print(robot_p->imu.getYawDeg());
     Bluetooth.print(",");
@@ -2260,9 +2260,9 @@ void RemoteControl::run()
       nextPlotTime = curMillis + 50;
       Bluetooth.print(elapsedSeconds);
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->odometer.encoder.left_p->getWheelRpmCurr());
+      Bluetooth.print(encoder_getWheelRpmCurr(robot_p->odometer.encoder.left_p));
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->odometer.encoder.right_p->getWheelRpmCurr());
+      Bluetooth.print(encoder_getWheelRpmCurr(robot_p->odometer.encoder.right_p));
       Bluetooth.print(",");
       //      Bluetooth.print(robot->motorLeftSpeedRpmSet);
       Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.pid.getSetpoint());

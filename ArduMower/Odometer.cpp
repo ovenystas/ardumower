@@ -38,11 +38,11 @@ void Odometer::loop(void)
 
 void Odometer::readAndSetState(void)
 {
-  encoder.left_p->read();
-  encoder.right_p->read();
+  encoder_read(encoder.left_p);
+  encoder_read(encoder.right_p);
 
-  encoder.left_p->setState();
-  encoder.right_p->setState();
+  encoder_setState(encoder.left_p);
+  encoder_setState(encoder.right_p);
 }
 
 // calculate map position by odometer sensors
@@ -50,8 +50,8 @@ void Odometer::calc(void)
 {
   unsigned long curMillis = millis();
 
-  int16_t odoLeft = encoder.left_p->getCounter();
-  int16_t odoRight = encoder.right_p->getCounter();
+  int16_t odoLeft = encoder_getCounter(encoder.left_p);
+  int16_t odoRight = encoder_getCounter(encoder.right_p);
 
   int16_t ticksLeft = odoLeft - lastOdoLeft;
   int16_t ticksRight = odoRight - lastOdoRight;
@@ -75,8 +75,8 @@ void Odometer::calc(void)
   float rpmLeft = revolutionLeft / deltaTime;
   float rpmRight = revolutionRight / deltaTime;
 
-  encoder.left_p->setWheelRpmCurr(round(rpmLeft));
-  encoder.right_p->setWheelRpmCurr(round(rpmRight));
+  encoder_setWheelRpmCurr(round(rpmLeft), encoder.left_p);
+  encoder_setWheelRpmCurr(round(rpmRight), encoder.right_p);
 
   lastWheelRpmTime = curMillis;
 
