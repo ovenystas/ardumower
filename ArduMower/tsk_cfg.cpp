@@ -28,6 +28,11 @@ void run_task_200ms(void)
   robot.tasks_200ms();
 }
 
+void run_task_250ms(void)
+{
+  robot.tasks_250ms();
+}
+
 void run_task_500ms(void)
 {
   robot.tasks_500ms();

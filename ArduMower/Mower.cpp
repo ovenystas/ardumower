@@ -222,12 +222,21 @@ void Mower::setup()
 
   // sonar
   sonars.use = true;
-  sonars.sonar[Sonars::LEFT].setup(PIN_SONAR_LEFT_TRIGGER, PIN_SONAR_LEFT_ECHO);
-  sonars.sonar[Sonars::RIGHT].setup(PIN_SONAR_RIGHT_TRIGGER, PIN_SONAR_RIGHT_ECHO);
-  sonars.sonar[Sonars::CENTER].setup(PIN_SONAR_CENTER_TRIGGER, PIN_SONAR_CENTER_ECHO);
-  sonars.sonar[Sonars::LEFT].use = false;
-  sonars.sonar[Sonars::RIGHT].use = false;
-  sonars.sonar[Sonars::CENTER].use = true;
+  sonar_setup(PIN_SONAR_LEFT_TRIGGER, PIN_SONAR_LEFT_ECHO,
+              SONAR_DEFAULT_MAX_ECHO_TIME,
+              SONAR_DEFAULT_MIN_ECHO_TIME,
+              &sonars.sonarArray_p[LEFT]);
+  sonar_setup(PIN_SONAR_RIGHT_TRIGGER, PIN_SONAR_RIGHT_ECHO,
+              SONAR_DEFAULT_MAX_ECHO_TIME,
+              SONAR_DEFAULT_MIN_ECHO_TIME,
+              &sonars.sonarArray_p[RIGHT]);
+  sonar_setup(PIN_SONAR_CENTER_TRIGGER, PIN_SONAR_CENTER_ECHO,
+              SONAR_DEFAULT_MAX_ECHO_TIME,
+              SONAR_DEFAULT_MIN_ECHO_TIME,
+              &sonars.sonarArray_p[CENTER]);
+  sonars.sonarArray_p[LEFT].use = false;
+  sonars.sonarArray_p[RIGHT].use = false;
+  sonars.sonarArray_p[CENTER].use = true;
 
   // rain
   rainSensor.use = false;

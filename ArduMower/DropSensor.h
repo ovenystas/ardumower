@@ -1,10 +1,3 @@
-/*
- * drop.h
- *
- *  Created on: Mar 23, 2016
- *      Author: ove
- */
-
 #ifndef DROP_SENSOR_H
 #define DROP_SENSOR_H
 
@@ -27,9 +20,8 @@ typedef struct
 {
   bool use;
   dropSensorContactE contactType; // contact 1=NC 0=NO against GND
-  uint8_t len;
   unsigned long lastRun;
-  unsigned int timeBetweenRuns;
+  uint8_t len;
   DropSensor* dropSensorArray_p;
 } DropSensors;
 
@@ -78,7 +70,6 @@ void dropSensors_setup(const uint8_t* pins,
   dropSensors_p->contactType = contactType;
   dropSensors_p->len = len;
   dropSensors_p->lastRun = 0;
-  dropSensors_p->timeBetweenRuns = 100;
   dropSensors_p->dropSensorArray_p = dropSensorArray_p;
   for (uint8_t i = 0; i < len; i++)
   {
@@ -95,6 +86,7 @@ uint8_t dropSensors_getContactType(const DropSensors* dropSensors_p)
 static inline
 void dropSensors_check(DropSensors* dropSensors_p)
 {
+  dropSensors_p->lastRun = millis();
   for (uint8_t i = 0; i < dropSensors_p->len; i++)
   {
     dropSensor_check(&dropSensors_p->dropSensorArray_p[i],
@@ -110,7 +102,5 @@ void dropSensors_clearDetected(DropSensors* dropSensors_p)
     dropSensor_clearDetected(&dropSensors_p->dropSensorArray_p[i]);
   }
 }
-
-bool dropSensors_isTimeToRun(DropSensors* dropSensors_p);
 
 #endif /* DROP_SENSOR_H */

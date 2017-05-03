@@ -802,18 +802,18 @@ void RemoteControl::sendSonarMenu(const boolean update)
   Bluetooth.print(F("|d00~Use "));
   sendYesNo(robot_p->sonars.use);
   Bluetooth.print(F("|d04~Use left "));
-  sendYesNo(robot_p->sonars.sonar[Sonars::LEFT].use);
+  sendYesNo(robot_p->sonars.sonarArray_p[LEFT].use);
   Bluetooth.print(F("|d05~Use center "));
-  sendYesNo(robot_p->sonars.sonar[Sonars::CENTER].use);
+  sendYesNo(robot_p->sonars.sonarArray_p[CENTER].use);
   Bluetooth.print(F("|d06~Use right "));
-  sendYesNo(robot_p->sonars.sonar[Sonars::RIGHT].use);
+  sendYesNo(robot_p->sonars.sonarArray_p[RIGHT].use);
   Bluetooth.print(F("|d01~Counter "));
-  Bluetooth.print(robot_p->sonars.getDistanceCounter());
+  Bluetooth.print(sonars_getDistanceCounter(&robot_p->sonars));
   Bluetooth.println(F("|d02~Value [cm] l, c, r"));
-  for (uint8_t i = 0; i < Sonars::END; i++)
+  for (uint8_t i = 0; i < SONARS_NUM; i++)
   {
-    Bluetooth.print(robot_p->sonars.sonar[i].getDistance_cm());
-    if (i < Sonars::END - 1)
+    Bluetooth.print(sonar_getDistance_cm(&robot_p->sonars.sonarArray_p[i]));
+    if (i < SONARS_NUM - 1)
     {
       Bluetooth.print(", ");
     }
@@ -834,15 +834,15 @@ void RemoteControl::processSonarMenu(const String pfodCmd)
   }
   else if (pfodCmd == "d04")
   {
-    TOGGLE(robot_p->sonars.sonar[Sonars::LEFT].use);
+    TOGGLE(robot_p->sonars.sonarArray_p[LEFT].use);
   }
   else if (pfodCmd == "d05")
   {
-    TOGGLE(robot_p->sonars.sonar[Sonars::CENTER].use);
+    TOGGLE(robot_p->sonars.sonarArray_p[CENTER].use);
   }
   else if (pfodCmd == "d06")
   {
-    TOGGLE(robot_p->sonars.sonar[Sonars::RIGHT].use);
+    TOGGLE(robot_p->sonars.sonarArray_p[RIGHT].use);
   }
   sendSonarMenu(true);
 }
@@ -2009,9 +2009,9 @@ void RemoteControl::run()
     Bluetooth.print(",");
     Bluetooth.print(robot_p->cutter.motor.getPowerMeas());
     Bluetooth.print(",");
-    for (uint8_t i = 0; i < Sonars::END; i++)
+    for (uint8_t i = 0; i < SONARS_NUM; i++)
     {
-      Bluetooth.print(robot_p->sonars.sonar[i].getDistance_us());
+      Bluetooth.print(sonar_getDistance_us(&robot_p->sonars.sonarArray_p[i]));
       Bluetooth.print(",");
     }
     Bluetooth.print(robot_p->perimeters.perimeter[Perimeter::LEFT].isInside());
@@ -2141,7 +2141,7 @@ void RemoteControl::run()
       Bluetooth.print(",");
       Bluetooth.print(bumper_getCounter(&robot_p->bumperArray[RIGHT]));
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->sonars.getDistanceCounter());
+      Bluetooth.print(sonars_getDistanceCounter(&robot_p->sonars));
       Bluetooth.print(",");
       Bluetooth.print(robot_p->getPerimeterCounter());
       Bluetooth.print(",");
@@ -2169,9 +2169,9 @@ void RemoteControl::run()
       Bluetooth.print(",");
       Bluetooth.print(robot_p->cutter.motor.getPowerMeas());
       Bluetooth.print(",");
-      for (uint8_t i = 0; i < Sonars::END; i++)
+      for (uint8_t i = 0; i < SONARS_NUM; i++)
       {
-        Bluetooth.print(robot_p->sonars.sonar[i].getDistance_cm());
+        Bluetooth.print(sonar_getDistance_cm(&robot_p->sonars.sonarArray_p[i]));
         Bluetooth.print(",");
       }
       Bluetooth.print(robot_p->perimeters.perimeter[Perimeter::LEFT].isInside());

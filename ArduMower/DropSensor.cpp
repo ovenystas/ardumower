@@ -23,15 +23,3 @@ void dropSensor_check(DropSensor* dropSensor_p, dropSensorContactE contactType)
     dropSensor_p->counter++;
   }
 }
-
-bool dropSensors_isTimeToRun(DropSensors* dropSensors_p)
-{
-  unsigned long curMillis = millis();
-  if (dropSensors_p->use &&
-      curMillis - dropSensors_p->lastRun >= dropSensors_p->timeBetweenRuns)
-  {
-    dropSensors_p->lastRun = curMillis;
-    return true;
-  }
-  return false;
-}

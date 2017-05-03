@@ -88,7 +88,8 @@ typedef enum errorE
 enum
 {
   LEFT,
-  RIGHT
+  RIGHT,
+  CENTER
 };
 
 enum
@@ -133,6 +134,7 @@ typedef struct statsT
 #define BUMPERS_NUM 2
 #define DROPSENSORS_NUM 2
 #define LAWNSENSORS_NUM 2
+#define SONARS_NUM 3
 
 class Robot
 {
@@ -224,7 +226,8 @@ class Robot
     RainSensor rainSensor;
 
     // --------- sonar ----------------------------------
-    // ultra sonic sensor distance-to-obstacle (cm)
+    // ultrasonic sensor distance-to-obstacle (cm)
+    Sonar sonarArray[SONARS_NUM];
     Sonars sonars;
 
     // --------- pfodApp ----------------------------------
@@ -263,6 +266,7 @@ class Robot
     virtual void tasks_50ms();
     virtual void tasks_100ms();
     virtual void tasks_200ms();
+    virtual void tasks_250ms();
     virtual void tasks_500ms();
     virtual void tasks_1000ms();
     virtual void tasks_2000ms();

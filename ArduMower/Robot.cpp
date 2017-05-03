@@ -191,9 +191,9 @@ void Robot::loadSaveUserSettings(const boolean readflag)
   eereadwrite(readflag, addr, wheels.wheel[Wheel::RIGHT].motor.swapDir);
   eereadwrite(readflag, addr, bumpers.use);
   eereadwrite(readflag, addr, sonars.use);
-  for (uint8_t i = 0; i < Sonars::END; i++)
+  for (uint8_t i = 0; i < SONARS_NUM; i++)
   {
-    eereadwrite(readflag, addr, sonars.sonar[i].use);
+    eereadwrite(readflag, addr, sonars.sonarArray_p[i].use);
   }
   eereadwrite(readflag, addr, sonars.triggerBelow);
   eereadwrite(readflag, addr, perimeters.use);
@@ -399,11 +399,11 @@ void Robot::printSettingSerial()
   Console.print(F("use : "));
   Console.println(sonars.use);
   Console.print(F("LEFT.use : "));
-  Console.println(sonars.sonar[Sonars::LEFT].use);
+  Console.println(sonars.sonarArray_p[SONAR_LEFT].use);
   Console.print(F("CENTER.use : "));
-  Console.println(sonars.sonar[Sonars::CENTER].use);
+  Console.println(sonars.sonarArray_p[SONAR_CENTER].use);
   Console.print(F("RIGHT.use : "));
-  Console.println(sonars.sonar[Sonars::RIGHT].use);
+  Console.println(sonars.sonarArray_p[SONAR_RIGHT].use);
   Console.print(F("triggerBelow : "));
   Console.println(sonars.triggerBelow);
 
@@ -1144,9 +1144,9 @@ void Robot::printInfo_sensorValues(Stream &s)
               dropSensor_isDetected(&dropSensorArray[LEFT]),
               dropSensor_isDetected(&dropSensorArray[RIGHT]));
   Streamprint(s, "son %4u %4u %4u ",
-              sonars.sonar[Sonars::LEFT].getDistance_us(),
-              sonars.sonar[Sonars::CENTER].getDistance_us(),
-              sonars.sonar[Sonars::RIGHT].getDistance_us());
+              sonar_getDistance_us(&sonars.sonarArray_p[LEFT]),
+              sonar_getDistance_us(&sonars.sonarArray_p[CENTER]),
+              sonar_getDistance_us(&sonars.sonarArray_p[RIGHT]));
   Streamprint(s, "yaw %3d ", (int)(imu.getYawDeg()));
   Streamprint(s, "pit %3d ", (int)(imu.getPitchDeg()));
   Streamprint(s, "rol %3d ", (int)(imu.getRollDeg()));
@@ -1176,7 +1176,7 @@ void Robot::printInfo_sensorCounters(Stream &s)
   Streamprint(s, "dro %4d %4d ",
               dropSensor_getCounter(&dropSensorArray[LEFT]),
               dropSensor_getCounter(&dropSensorArray[RIGHT]));
-  Streamprint(s, "son %3d ", sonars.getDistanceCounter());
+  Streamprint(s, "son %3d ", sonars_getDistanceCounter(&sonars));
   Streamprint(s, "yaw %3d ", (int)(imu.getYawDeg()));
   Streamprint(s, "pit %3d ", (int)(imu.getPitchDeg()));
   Streamprint(s, "rol %3d ", (int)(imu.getRollDeg()));
@@ -1760,16 +1760,6 @@ void Robot::readSensors()
         setNextState(StateMachine::STATE_ERROR);
       }
     }
-  }
-
-  if (sonars.isTimeToRun())
-  {
-    sonars.ping();
-  }
-
-  if (dropSensors_isTimeToRun(&dropSensors))
-  {
-    dropSensors_check(&dropSensors);
   }
 
   if (curMillis >= nextTimeRTC)
@@ -2505,11 +2495,6 @@ void Robot::checkRain()
 // check sonar
 void Robot::checkSonar()
 {
-  if (!sonars.use || !sonars.isTimeToCheck())
-  {
-    return;
-  }
-
   unsigned long curMillis = millis();
   if (mowPatternCurr == MOW_BIDIR && curMillis < (stateMachine.getStateStartTime() + 4000))
   {
@@ -2522,7 +2507,7 @@ void Robot::checkSonar()
   {
     if (sonars.obstacleTimeout == 0)
     {
-      if (sonars.isClose())
+      if (sonars_isClose(&sonars))
       {
         sonars.tempDistanceCounter++;
         if (sonars.tempDistanceCounter >= 5)
@@ -2558,24 +2543,24 @@ void Robot::checkSonar()
 
   uint16_t distanceUs;
 
-  distanceUs = sonars.sonar[Sonars::CENTER].getDistance_us();
+  distanceUs = sonar_getDistance_us(&sonars.sonarArray_p[CENTER]);
   if (distanceUs < sonars.triggerBelow)
   {
-    sonars.incDistanceCounter();
+    sonars_incDistanceCounter(&sonars);
     reverseOrChangeDirection(!rollDir); // toggle roll dir
   }
 
-  distanceUs = sonars.sonar[Sonars::RIGHT].getDistance_us();
+  distanceUs = sonar_getDistance_us(&sonars.sonarArray_p[RIGHT]);
   if (distanceUs < sonars.triggerBelow)
   {
-    sonars.incDistanceCounter();
+    sonars_incDistanceCounter(&sonars);
     reverseOrChangeDirection(LEFT);
   }
 
-  distanceUs = sonars.sonar[Sonars::LEFT].getDistance_us();
+  distanceUs = sonar_getDistance_us(&sonars.sonarArray_p[LEFT]);
   if (distanceUs < sonars.triggerBelow)
   {
-    sonars.incDistanceCounter();
+    sonars_incDistanceCounter(&sonars);
     reverseOrChangeDirection(RIGHT);
   }
 }
@@ -3132,12 +3117,28 @@ void Robot::tasks_100ms()
   {
     lawnSensors_read(&lawnSensors);
   }
+  if (dropSensors.use)
+  {
+    dropSensors_check(&dropSensors);
+  }
   battery_read(&battery);
 }
 
 void Robot::tasks_200ms()
 {
   rc.run();
+  if (sonars.use)
+  {
+    checkSonar();
+  }
+}
+
+void Robot::tasks_250ms()
+{
+  if (sonars.use)
+  {
+    sonars_ping(&sonars);
+  }
 }
 
 void Robot::tasks_500ms()
