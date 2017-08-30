@@ -77,18 +77,8 @@ Robot::Robot()
   perimeterTriggerTime = 0;
   perimeterOutRevTime = 0;
 
-  nextTimeInfo = 0;
-  nextTimeCheckTilt = 0;
-  nextTimePerimeter = 0;
-  nextTimeTimer = millis() + 60000;
-  nextTimeRTC = 0;
-  nextTimeGPS = 0;
-  nextTimeCheckIfStuck = 0;
-  nextTimePfodLoop = 0;
   nextTimeErrorCounterReset = 0;
   nextTimeErrorBeep = 0;
-
-  nextTimeRobotStats = 0;
 }
 
 const char *Robot::mowPatternName()
@@ -973,14 +963,11 @@ void Robot::checkOdometerFaults()
 // Cutter motor speed controller (slowly adjusts output speed to set speed)
 void Robot::cutterControl()
 {
-  if (cutter.motor.isTimeToControl())
+  if (cutter.isEnableOverriden())
   {
-    if (cutter.isEnableOverriden())
-    {
-      cutter.disable();
-    }
-    cutter.control();
+    cutter.disable();
   }
+  cutter.control();
 }
 
 void Robot::resetIdleTime()
@@ -1264,7 +1251,6 @@ void Robot::delayInfo(const int ms)
   unsigned long endtime = millis() + ms;
   while (millis() < endtime)
   {
-    readSensors();
     printInfo(Console);
     delay(1000);
   }
@@ -1739,36 +1725,27 @@ void Robot::readPerimeters()
   }
 }
 
-void Robot::readSensors()
+void Robot::readRtc()
 {
-// NOTE: This function should only read in sensors into variables.
-//       It should NOT change any state!
+  readSensor(SEN_RTC);
+  Console.print(F("RTC date received: "));
+  Console.println(date2str(datetime.date));
+}
 
-  unsigned long curMillis = millis();
-  if (curMillis >= nextTimeRTC)
+void Robot::readImu()
+{
+  if (imu.getErrorCounter() > 0)
   {
-    nextTimeRTC = curMillis + 60000;
-    readSensor(SEN_RTC);       // read RTC
-    Console.print(F("RTC date received: "));
-    Console.println(date2str(datetime.date));
+    incErrorCounter(ERR_IMU_COMM);
+    Console.println(F("IMU comm error"));
   }
 
-  if (imu.isTimeToRun())
+  if (!imu.isCalibrationAvailable())
   {
-    if (imu.getErrorCounter() > 0)
-    {
-      incErrorCounter(ERR_IMU_COMM);
-      Console.println(F("IMU comm error"));
-    }
-
-    if (!imu.isCalibrationAvailable())
-    {
-      Console.println(F("Error: Missing IMU calibration data"));
-      incErrorCounter(ERR_IMU_CALIB);
-      setNextState(StateMachine::STATE_ERROR);
-    }
+    Console.println(F("Error: Missing IMU calibration data"));
+    incErrorCounter(ERR_IMU_CALIB);
+    setNextState(StateMachine::STATE_ERROR);
   }
-
 }
 
 void Robot::setDefaults()
@@ -2149,28 +2126,8 @@ void Robot::checkRobotStats_battery()
   }
 }
 
-void Robot::checkRobotStats()
-{
-  unsigned long curMillis = millis();
-  if (curMillis < nextTimeRobotStats)
-  {
-    return;
-  }
-  nextTimeRobotStats = curMillis + 60000;
-
-  checkRobotStats_mowTime();
-  checkRobotStats_battery();
-}
-
 void Robot::checkTimer()
 {
-  unsigned long curMillis = millis();
-  if (curMillis < nextTimeTimer)
-  {
-    return;
-  }
-  nextTimeTimer = curMillis + 60000;
-
   // TODO: Should these inits only be done once?
   // Initialize the pseudo-random number generator for c++ rand()
   srand(time2minutes(datetime.time));
@@ -2551,23 +2508,17 @@ void Robot::checkSonar()
 // check IMU (tilt)
 void Robot::checkTilt()
 {
-  unsigned long curMillis = millis();
-  if (imu.use && curMillis >= nextTimeCheckTilt)
+  if (stateMachine.isCurrentState(StateMachine::STATE_OFF) &&
+      stateMachine.isCurrentState(StateMachine::STATE_ERROR) &&
+      stateMachine.isCurrentState(StateMachine::STATE_STATION))
   {
-    nextTimeCheckTilt = curMillis + 200; // 5Hz same as imu.nextTime
-
-    if (stateMachine.isCurrentState(StateMachine::STATE_OFF) &&
-        stateMachine.isCurrentState(StateMachine::STATE_ERROR) &&
-        stateMachine.isCurrentState(StateMachine::STATE_STATION))
+    int pitchAngle = (int)imu.getPitchDeg();
+    int rollAngle = (int)imu.getRollDeg();
+    if (abs(pitchAngle) > 40 || abs(rollAngle) > 40)
     {
-      int pitchAngle = (int)imu.getPitchDeg();
-      int rollAngle = (int)imu.getRollDeg();
-      if (abs(pitchAngle) > 40 || abs(rollAngle) > 40)
-      {
-        Console.println(F("Error: IMU tilt"));
-        incErrorCounter(ERR_IMU_TILT);
-        setNextState(StateMachine::STATE_ERROR);
-      }
+      Console.println(F("Error: IMU tilt"));
+      incErrorCounter(ERR_IMU_TILT);
+      setNextState(StateMachine::STATE_ERROR);
     }
   }
 }
@@ -2576,13 +2527,6 @@ void Robot::checkTilt()
 // TODO: Take HDOP into consideration if gpsSpeed is reliable
 void Robot::checkIfStuck()
 {
-  unsigned long curMillis = millis();
-  if (curMillis < nextTimeCheckIfStuck)
-  {
-    return;
-  }
-  nextTimeCheckIfStuck = curMillis + 300;
-
   if (gpsUse && gps.hdop() < 500)
   {
     float gpsSpeed = gps.f_speed_kmph();
@@ -2601,7 +2545,7 @@ void Robot::checkIfStuck()
         gpsSpeed < stuckIfGpsSpeedBelow &&
         encoder_getWheelRpmCurr(odometer.encoder.left_p) != 0 &&
         encoder_getWheelRpmCurr(odometer.encoder.right_p) != 0 &&
-        curMillis > (stateMachine.getStateStartTime() + gpsSpeedIgnoreTime))
+        millis() > (stateMachine.getStateStartTime() + gpsSpeedIgnoreTime))
     {
       robotIsStuckCounter++;
     }
@@ -2661,13 +2605,6 @@ void Robot::checkIfStuck()
 
 void Robot::processGPSData()
 {
-  unsigned long curMillis = millis();
-  if (curMillis < nextTimeGPS)
-  {
-    return;
-  }
-  nextTimeGPS = curMillis + 1000;
-
   float nlat;
   float nlon;
   unsigned long age;
@@ -2709,11 +2646,6 @@ void Robot::runStateMachine()
   {
     case StateMachine::STATE_ERROR:
       // fatal-error
-      if (curMillis >= nextTimeErrorBeep)
-      {
-        nextTimeErrorBeep = curMillis + 300;
-        beep(1, true);
-      }
       break;
 
     case StateMachine::STATE_OFF:
@@ -3026,25 +2958,11 @@ void Robot::tasks_continuous()
   {
     resetIdleTime();
   }
-  readSensors();
-  checkIfStuck();
-  checkRobotStats();
-  odometer.loop();
   checkOdometerFaults();
-  checkTilt();
-
-  wheels.control();
-  cutterControl();
 
   if (imu.use)
   {
     imu.update();
-  }
-
-  if (gpsUse)
-  {
-    gps.feed();
-    processGPSData();
   }
 
   runStateMachine();
@@ -3116,6 +3034,9 @@ void Robot::tasks_100ms()
     wheelControl_normal();
   }
 
+  wheels.control();
+  cutterControl();
+
   battery_read(&battery);
 }
 
@@ -3125,6 +3046,11 @@ void Robot::tasks_200ms()
   if (sonars.use)
   {
     checkSonar();
+  }
+  if (imu.use)
+  {
+    readImu();
+    checkTilt();
   }
 }
 
@@ -3136,24 +3062,44 @@ void Robot::tasks_250ms()
   }
 }
 
+void Robot::tasks_300ms()
+{
+  checkIfStuck();
+  if (odometer.use)
+  {
+    odometer.calc();
+  }
+  if (stateMachine.isCurrentState(StateMachine::STATE_ERROR))
+  {
+    beep(1, true);
+  }
+}
+
 void Robot::tasks_500ms()
 {
   measureCutterMotorRpm();
 }
 
-void Robot::tasks_1000ms()
+void Robot::tasks_1s()
 {
   checkBattery();
-  printInfo(Console);
   if (stateMachine.isCurrentState(StateMachine::STATE_REMOTE))
   {
     printRemote();
   }
+  if (gpsUse)
+  {
+    gps.feed();
+    processGPSData();
+  }
+
   loopsPerSec = loopsPerSecCounter;
   loopsPerSecCounter = 0;
+
+  printInfo(Console);
 }
 
-void Robot::tasks_2000ms()
+void Robot::tasks_2s()
 {
   if (lawnSensors.use)
   {
@@ -3161,10 +3107,18 @@ void Robot::tasks_2000ms()
   }
 }
 
-void Robot::tasks_5000ms()
+void Robot::tasks_5s()
 {
   if (rainSensor.use)
   {
     rainSensor_check(&rainSensor);
   }
+}
+
+void Robot::tasks_1m()
+{
+  checkTimer();
+  readRtc();
+  checkRobotStats_mowTime();
+  checkRobotStats_battery();
 }

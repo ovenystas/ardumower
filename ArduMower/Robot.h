@@ -267,10 +267,12 @@ class Robot
     virtual void tasks_100ms();
     virtual void tasks_200ms();
     virtual void tasks_250ms();
+    virtual void tasks_300ms();
     virtual void tasks_500ms();
-    virtual void tasks_1000ms();
-    virtual void tasks_2000ms();
-    virtual void tasks_5000ms();
+    virtual void tasks_1s();
+    virtual void tasks_2s();
+    virtual void tasks_5s();
+    virtual void tasks_1m();
 
     virtual void resetIdleTime();
 
@@ -378,8 +380,9 @@ class Robot
     virtual void printSettingSerial();
 
     // read sensors
-    virtual void readSensors();
     virtual void readPerimeters();
+    virtual void readRtc();
+    virtual void readImu();
     virtual void readCutterMotorCurrent();
     virtual void measureCutterMotorRpm();
     // read serial
@@ -404,7 +407,6 @@ class Robot
     virtual void checkTimeout();
     virtual void checkOdometerFaults();
     virtual void checkIfStuck();
-    virtual void checkRobotStats();
     virtual void checkRobotStats_mowTime();
     virtual void checkRobotStats_battery();
 
@@ -443,15 +445,12 @@ class Robot
     int idleTimeSec {};
 
     // --------- timer ------------------------------------
-    unsigned long nextTimeTimer;
 
     // -------- gps state ---------------------------------
     float gpsLat;
     float gpsLon;
     float gpsX;   // X position (m)
     float gpsY;   // Y position (m)
-    unsigned long nextTimeGPS;
-    unsigned long nextTimeCheckIfStuck;
     int robotIsStuckCounter;
 
     // -------- RC remote control state -------------------
@@ -467,11 +466,9 @@ class Robot
     boolean remoteSpeedLastState;
     boolean remoteMowLastState;
     boolean remoteSwitchLastState;
-    unsigned long nextTimeRTC;
 
     // ------- IMU state ----------------------------------
     byte imuRollDir;
-    unsigned long nextTimeCheckTilt; // check if
 
     // ------- perimeter state ----------------------------
     int perimeterMag;             // perimeter magnitude
@@ -479,10 +476,8 @@ class Robot
     unsigned long perimeterTriggerTime; // time to trigger perimeter transition (timeout)
     unsigned long perimeterLastTransitionTime;
     int perimeterCounter;         // counts perimeter transitions
-    unsigned long nextTimePerimeter {};
 
     // --------- pfodApp ----------------------------------
-    unsigned long nextTimePfodLoop;
 
     // --------- driving ----------------------------------
     int8_t speed {}; // Range -100..+100, - = reverse, + = forward
@@ -495,13 +490,11 @@ class Robot
     int loopsPerSec {};  // main loops per second
     int loopsPerSecCounter {};
     byte consoleMode { CONSOLE_SENSOR_COUNTERS };
-    unsigned long nextTimeInfo;
     bool rollDir;
     unsigned long nextTimeErrorCounterReset;
     unsigned long nextTimeErrorBeep;
 
     // ------------robot stats-----------------------------
-    unsigned long nextTimeRobotStats {};
     boolean statsMowTimeTotalStart { false };
     unsigned int statsMowTimeMinutesTripCounter {};
     float statsMowTimeHoursTotal {};

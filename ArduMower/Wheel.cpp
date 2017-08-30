@@ -37,11 +37,6 @@ bool Wheels::isTimeToRotationChange(void)
 
 void Wheels::control(void)
 {
-  if (!wheel[Wheel::LEFT].motor.isTimeToControl())
-  {
-    return;
-  }
-
   int8_t localSteer = 0;
 
   // If reversing, steer should also be reversed

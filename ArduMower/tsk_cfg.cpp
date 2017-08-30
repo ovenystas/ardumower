@@ -33,19 +33,34 @@ void run_task_250ms(void)
   robot.tasks_250ms();
 }
 
+void run_task_300ms(void)
+{
+  robot.tasks_300ms();
+}
+
 void run_task_500ms(void)
 {
   robot.tasks_500ms();
 }
 
-void run_task_1000ms(void)
+void run_task_1s(void)
 {
-  robot.tasks_1000ms();
+  robot.tasks_1s();
 }
 
-void run_task_2000ms(void)
+void run_task_2s(void)
 {
-  robot.tasks_2000ms();
+  robot.tasks_2s();
+}
+
+void run_task_5s(void)
+{
+  robot.tasks_5s();
+}
+
+void run_task_1m(void)
+{
+  robot.tasks_1m();
 }
 
 /**
@@ -55,13 +70,16 @@ void run_task_2000ms(void)
  */
 static TaskType Tasks[] =
 {
-  { 0              , 0, run_task_continuous },
-  { INTERVAL_50MS  , 0, run_task_50ms },
-  { INTERVAL_100MS , 0, run_task_100ms },
-  { INTERVAL_200MS , 0, run_task_200ms },
-  { INTERVAL_500MS , 0, run_task_500ms },
-  { INTERVAL_1000MS, 0, run_task_1000ms },
-  { INTERVAL_2000MS, 0, run_task_2000ms }
+  { 0,              0, run_task_continuous },
+  { INTERVAL_50MS,  0, run_task_50ms },
+  { INTERVAL_100MS, 0, run_task_100ms },
+  { INTERVAL_200MS, 0, run_task_200ms },
+  { INTERVAL_300MS, 0, run_task_300ms },
+  { INTERVAL_500MS, 0, run_task_500ms },
+  { INTERVAL_1S,    0, run_task_1s },
+  { INTERVAL_2S,    0, run_task_2s },
+  { INTERVAL_5S,    0, run_task_5s },
+  { INTERVAL_1M,    0, run_task_1m },
 };
 
 TaskType *Tsk_GetConfig(void)

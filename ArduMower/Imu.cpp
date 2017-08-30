@@ -879,25 +879,3 @@ void Imu::playCompletedSound(void)
   tone(pinBuzzer, 1320);
   delay(200);
 }
-
-bool Imu::isTimeToRun(void)
-{
-  unsigned long curMillis = millis();
-  if (use && curMillis >= nextTime)
-  {
-    nextTime = curMillis + timeBetweenRuns;
-    return true;
-  }
-  return false;
-}
-
-bool Imu::isTimeToControl(void)
-{
-  unsigned long curMillis = millis();
-  if (use && curMillis >= nextTimeControl)
-  {
-    nextTime = curMillis + timeBetweenControl;
-    return true;
-  }
-  return false;
-}

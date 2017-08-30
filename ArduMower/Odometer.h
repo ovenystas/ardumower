@@ -33,7 +33,7 @@ class Odometer
                Encoder* encoderLeft,
                Encoder* encoderRight,
                Imu* imu);
-    void loop(void);
+    void calc(void);
     void readAndSetState(void);
 
     float getX() const
@@ -54,17 +54,12 @@ class Odometer
     Imu* imu_p;
 
   private:
-    const int16_t TIME_BETWEEN_CALCS { 300 }; // (ms)
-
-    unsigned long nextTime {};          // when to trigger next time
     unsigned long lastWheelRpmTime {};  // last time it was updated
     int16_t lastOdoLeft {};
     int16_t lastOdoRight {};
     float theta {};                     // theta angle (radiant)
     float x {};                         // X map position (cm)
     float y {};                         // Y map position (cm)
-
-    void calc();
 };
 
 #endif /* ODOMETER_H */

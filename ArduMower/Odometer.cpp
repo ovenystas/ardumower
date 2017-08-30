@@ -24,18 +24,6 @@ void Odometer::setup(const int ticksPerRevolution,
   this->imu_p = imu_p;
 }
 
-void Odometer::loop(void)
-{
-  unsigned long curMillis = millis();
-  if (!use || curMillis < nextTime)
-  {
-    return;
-  }
-  nextTime = curMillis + TIME_BETWEEN_CALCS;
-
-  calc();
-}
-
 void Odometer::readAndSetState(void)
 {
   encoder_read(encoder.left_p);

@@ -93,8 +93,6 @@ class Imu
 
     boolean init(int aPinBuzzer);
     void update(void);
-    bool isTimeToRun(void);
-    bool isTimeToControl(void);
     int getCallCounter(void);
     int getErrorCounter(void);
     void deleteCalibrationData(void);
