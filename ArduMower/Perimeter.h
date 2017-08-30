@@ -40,98 +40,101 @@
 
 #include "Pid.h"
 
-class Perimeter
+typedef enum
 {
-  public:
-    enum perimeterE
-    {
-      LEFT,
-      //RIGHT,
-      END
-    };
+  PERIMETER_LEFT,
+  PERIMETER_RIGHT,
+  PERIMETER_END
+} perimeterE;
 
-    Perimeter()
-    {
-    }
-    ;
-    // set ADC pins
-    void setup(const uint8_t idxPin);
-    // get perimeter magnitude
-    int16_t calcMagnitude(void);
-
-    int16_t getMagnitude(void) const
-    {
-      return mag;
-    }
-
-    int16_t getSmoothMagnitude(void) const
-    {
-      return (int16_t)smoothMag;
-    }
-
-    // inside perimeter (true) or outside (false)?
-    // perimeter signal timed out? (e.g. due to broken wire)
-    boolean signalTimedOut(void);
-
-    float getFilterQuality(void) const
-    {
-      return filterQuality;
-    }
-
-    bool isInside(void) const
-    {
-      return inside;
-    }
-
-    void printInfo(Stream &s);
-
-    Pid pid;             // perimeter PID controller
-    unsigned int timedOutIfBelowSmag { 300 };
-    unsigned int timeOutSecIfNotInside { 8 };
-    // use differential perimeter signal as input for the matched filter?
-    bool useDifferentialPerimeterSignal { true };
-    // swap coil polarity?
-    bool swapCoilPolarity { false };
-
-  private:
-    uint32_t lastInsideTime {};
-    uint8_t idxPin {}; // channel for idx
-    int16_t mag {}; // perimeter magnitude per channel
-    float smoothMag {};
-    float filterQuality {};
-    int8_t signalMin { INT8_MAX };
-    int8_t signalMax { INT8_MIN };
-    int8_t signalAvg {};
-    int8_t signalCounter {};
-    uint8_t subSample {};bool inside { true };
-
-    int16_t sumMaxTmp {};
-    int16_t sumMinTmp {};
-
-    void calcStatistics(const int8_t* const samples_p);
-    void matchedFilter(void);
-    int16_t corrFilter(const int8_t* H_p,
-                       const uint8_t subsample,
-                       const uint8_t M,
-                       const uint8_t Hsum,
-                       const int8_t* ip_p,
-                       const uint8_t nPts,
-                       float &quality,
-                       bool print);
-};
-
-class Perimeters
+typedef struct
 {
-  public:
-    Perimeter perimeter[Perimeter::END];
-    bool use { false };
+  Pid pid;             // perimeter PID controller
+  unsigned int timedOutIfBelowSmag { 300 };
+  unsigned int timeOutSecIfNotInside { 8 };
+  // use differential perimeter signal as input for the matched filter?
+  bool useDifferentialPerimeterSignal { true };
+  // swap coil polarity?
+  bool swapCoilPolarity { false };
 
-    bool isTimeToControl(void);
-    void printInfo(Stream &s);
+  uint32_t lastInsideTime;
+  uint8_t idxPin; // channel for idx
+  int16_t mag; // perimeter magnitude per channel
+  float smoothMag;
+  float filterQuality;
+  int8_t signalMin { INT8_MAX };
+  int8_t signalMax { INT8_MIN };
+  int8_t signalAvg;
+  int8_t signalCounter;
+  uint8_t subSample;
+  bool inside { true };
 
-  private:
-    static const uint8_t timeBetweenControl { 100 };
-    uint32_t nextTimeControl {};
-};
+  int16_t sumMaxTmp;
+  int16_t sumMinTmp;
+} Perimeter;
 
-#endif
+typedef struct
+{
+  bool use { false };
+  Perimeter* perimeterArray_p;
+} Perimeters;
+
+// set ADC pins
+void perimeter_setup(const uint8_t idxPin, Perimeter* perimeter_p);
+
+// get perimeter magnitude
+int16_t perimeter_calcMagnitude(Perimeter* perimeter_p);
+
+static inline
+int16_t perimeter_getMagnitude(Perimeter* perimeter_p)
+{
+  return perimeter_p->mag;
+}
+
+static inline
+int16_t perimeter_getSmoothMagnitude(Perimeter* perimeter_p)
+{
+  return (int16_t)perimeter_p->smoothMag;
+}
+
+// inside perimeter (true) or outside (false)?
+// perimeter signal timed out? (e.g. due to broken wire)
+boolean perimeter_signalTimedOut(Perimeter* perimeter_p);
+
+static inline
+float perimeter_getFilterQuality(Perimeter* perimeter_p)
+{
+  return perimeter_p->filterQuality;
+}
+
+static inline
+bool perimeter_isInside(Perimeter* perimeter_p)
+{
+  return perimeter_p->inside;
+}
+
+void perimeter_printInfo(Stream &s, Perimeter* perimeter_p);
+
+void perimeter_calcStatistics(
+    const int8_t* const samples_p,
+    Perimeter* perimeter_p);
+
+void perimeter_matchedFilter(Perimeter* perimeter_p);
+
+int16_t perimeter_corrFilter(
+    const int8_t* H_p,
+    const uint8_t subsample,
+    const uint8_t M,
+    const uint8_t Hsum,
+    const int8_t* ip_p,
+    const uint8_t nPts,
+    float &quality,
+    bool print,
+    Perimeter* perimeter_p);
+
+
+
+
+void perimeters_printInfo(Stream &s, Perimeters* perimeters_p);
+
+#endif /* PERIMETER_H */

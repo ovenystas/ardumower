@@ -70,7 +70,7 @@ void battery_read(Battery* battery_p)
 
   // convert to double
   int16_t batADC = ADCMan.read(battery_p->pinVoltage);
-  double batvolt = (double)battery_p->batADC * battery_p->batFactor;
+  double batvolt = (double)batADC * battery_p->batFactor;
   int chgADC = ADCMan.read(battery_p->pinChargeVoltage);
   double chgvolt = (double)chgADC * battery_p->batChgFactor;
   double current = (double)ADCMan.read(battery_p->pinChargeCurrent);

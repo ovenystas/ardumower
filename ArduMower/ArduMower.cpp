@@ -54,7 +54,7 @@
 // Cooperative scheduler -------------------------------------------------------
 static unsigned long tick = 0;      // System tick
 static TaskType *Task_ptr;          // Task pointer
-static byte NumTasks = 0;        // Number of tasks
+static byte NumTasks = 0;           // Number of tasks
 //------------------------------------------------------------------------------
 
 void setup()

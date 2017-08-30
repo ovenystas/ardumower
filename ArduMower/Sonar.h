@@ -90,8 +90,6 @@ inline uint16_t sonar_pingInternal(Sonar* sonar_p);
 
 
 
-bool isTimeToCheck(Sonars* sonars_p);
-
 static inline
 void sonars_ping(Sonars* sonars_p)
 {
@@ -113,6 +111,6 @@ void sonars_incDistanceCounter(Sonars* sonars_p)
   ++sonars_p->distanceCounter;
 }
 
-bool sonars_isClose(Sonars* sonarsS_p);
+bool sonars_isClose(Sonars* sonars_p);
 
-#endif /* SONAR_H_ */
+#endif /* SONAR_H */

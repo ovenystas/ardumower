@@ -28,12 +28,10 @@
 
 #include "AdcManager.h"
 #include "drivers.h"
-
-//#define USE_DEVELOPER_TEST 1 // Uncomment for new perimeter signal test (developers)
-#define USE_BARKER_CODE 1    // Uncomment when using Barker code for perimeter signal
+#include "Config.h"
 
 // developer test to be activated in mower.cpp:
-#ifdef USE_DEVELOPER_TEST
+#if PERIMETER_USE_DEVELOPER_TEST
 // more motor driver friendly signal (receiver)
 const int8_t sigcode_norm[] =
 {
@@ -41,7 +39,7 @@ const int8_t sigcode_norm[] =
   -1, 1, 0, 0, 0, 1, -1, 0, 0, 0
 };
 #else
-#ifndef USE_BARKER_CODE
+#if !PERIMETER_USE_BARKER_CODE
 // http://grauonline.de/alexwww/ardumower/filter/filter.html
 // "pseudonoise4_pw" signal
 // if using reconstructed sender signal, use this
@@ -66,56 +64,58 @@ const uint8_t hSum_diff = 12;
 #endif
 #endif
 
-void Perimeter::setup(const uint8_t idxPin)
+void perimeter_setup(const uint8_t idxPin, Perimeter* perimeter_p)
 {
-  this->idxPin = idxPin;
+  perimeter_p->idxPin = idxPin;
 
-  pinMode(idxPin, INPUT);
+  pinMode(perimeter_p->idxPin, INPUT);
 
   switch (ADCMan.getSampleRate())
   {
     case SRATE_9615:
-      subSample = 1;
+      perimeter_p->subSample = 1;
       break;
     case SRATE_19231:
-      subSample = 2;
+      perimeter_p->subSample = 2;
       break;
     case SRATE_38462:
-      subSample = 4;
+      perimeter_p->subSample = 4;
       break;
   }
 
   // Use max. 255 samples and multiple of signal size
-  unsigned int adcSampleCount { sizeof(sigcode_norm) * subSample };
+  unsigned int adcSampleCount { sizeof(sigcode_norm) * perimeter_p->subSample };
   uint8_t samplecount = (255 / adcSampleCount) * adcSampleCount;
 
-  ADCMan.setCapture(idxPin, samplecount, true);
+  ADCMan.setCapture(perimeter_p->idxPin, samplecount, true);
 
   Console.print(F("matchSignal size="));
   Console.print(sizeof(sigcode_norm));
   Console.print(F(" subSample="));
-  Console.print(subSample);
+  Console.print(perimeter_p->subSample);
   Console.print(F(" samplecount="));
   Console.print(samplecount);
   Console.print(F(" capture size="));
-  Console.println(ADCMan.getCaptureSize(idxPin));
+  Console.println(ADCMan.getCaptureSize(perimeter_p->idxPin));
 }
 
-int16_t Perimeter::calcMagnitude(void)
+int16_t perimeter_calcMagnitude(Perimeter* perimeter_p)
 {
-  if (ADCMan.isCaptureComplete(idxPin))
+  if (ADCMan.isCaptureComplete(perimeter_p->idxPin))
   {
-    matchedFilter();
+    perimeter_matchedFilter(perimeter_p);
   }
-  return mag;
+  return perimeter_p->mag;
 }
 
-void Perimeter::calcStatistics(const int8_t* const samples_p)
+void perimeter_calcStatistics(
+    const int8_t* const samples_p,
+    Perimeter* perimeter_p)
 {
   int8_t vMin = INT8_MAX;
   int8_t vMax = INT8_MIN;
   int16_t sum = 0;
-  uint8_t numSamples = ADCMan.getCaptureSize(idxPin);
+  uint8_t numSamples = ADCMan.getCaptureSize(perimeter_p->idxPin);
   for (uint8_t i = 0; i < numSamples; i++)
   {
     const int8_t value = samples_p[i];
@@ -123,31 +123,31 @@ void Perimeter::calcStatistics(const int8_t* const samples_p)
     vMin = min(vMin, value);
     vMax = max(vMax, value);
   }
-  signalMin = vMin;
-  signalMax = vMax;
-  signalAvg = (int8_t)(sum / numSamples);
+  perimeter_p->signalMin = vMin;
+  perimeter_p->signalMax = vMax;
+  perimeter_p->signalAvg = (int8_t)(sum / numSamples);
 }
 
 // perimeter V2 uses a digital matched filter
-void Perimeter::matchedFilter(void)
+void perimeter_matchedFilter(Perimeter* perimeter_p)
 {
   static uint8_t callCounter = 0;
   static uint32_t callCounter2 = 0;
-  const uint8_t numSamples = ADCMan.getCaptureSize(idxPin);
-  const int8_t* const samples_p = ADCMan.getCapture(idxPin);
+  const uint8_t numSamples = ADCMan.getCaptureSize(perimeter_p->idxPin);
+  const int8_t* const samples_p = ADCMan.getCapture(perimeter_p->idxPin);
 
   // Calculate some statistics every 100 th's call
   if (callCounter == 100)
   {
     callCounter = 0;
-    calcStatistics(samples_p);
+    perimeter_calcStatistics(samples_p, perimeter_p);
   }
 
   // magnitude for tracking (fast but inaccurate)
-  const int8_t* sigcode_p {};
-  uint8_t sigcode_size {};
-  uint8_t hSum {};
-  if (useDifferentialPerimeterSignal)
+  const int8_t* sigcode_p;
+  uint8_t sigcode_size;
+  uint8_t hSum;
+  if (perimeter_p->useDifferentialPerimeterSignal)
   {
     sigcode_p = sigcode_diff;
     sigcode_size = sizeof(sigcode_diff);
@@ -165,49 +165,59 @@ void Perimeter::matchedFilter(void)
     callCounter2 = 0;
     //print = true;
   }
-  mag = corrFilter(sigcode_p, subSample / 2, sigcode_size, hSum, samples_p,
-                   numSamples - sigcode_size * subSample / 2, filterQuality, print);
-  if (swapCoilPolarity)
+  perimeter_p->mag =
+      perimeter_corrFilter(
+          sigcode_p,
+          perimeter_p->subSample / 2,
+          sigcode_size,
+          hSum,
+          samples_p,
+          numSamples - sigcode_size * perimeter_p->subSample / 2,
+          perimeter_p->filterQuality,
+          print,
+          perimeter_p);
+
+  if (perimeter_p->swapCoilPolarity)
   {
-    mag = -mag;
+    perimeter_p->mag = -perimeter_p->mag;
   }
 
   // smoothed magnitude used for signal-off detection
-  smoothMag = 0.99 * smoothMag + 0.01 * (float)abs(mag);
+  perimeter_p->smoothMag = 0.99 * perimeter_p->smoothMag + 0.01 * (float)abs(perimeter_p->mag);
 
   // perimeter inside/outside detection
-  if (mag > 0)
+  if (perimeter_p->mag > 0)
   {
-    signalCounter = min(signalCounter + 1, 3);
+    perimeter_p->signalCounter = min(perimeter_p->signalCounter + 1, 3);
   }
   else
   {
-    signalCounter = max(signalCounter - 1, -3);
+    perimeter_p->signalCounter = max(perimeter_p->signalCounter - 1, -3);
   }
 
-  if (signalCounter < 0)
+  if (perimeter_p->signalCounter < 0)
   {
-    inside = true;
-    lastInsideTime = millis();
+    perimeter_p->inside = true;
+    perimeter_p->lastInsideTime = millis();
   }
   else
   {
-    inside = false;
+    perimeter_p->inside = false;
   }
 
-  ADCMan.restart(idxPin);
+  ADCMan.restart(perimeter_p->idxPin);
   callCounter++;
   callCounter2++;
 }
 
-boolean Perimeter::signalTimedOut(void)
+boolean perimeter_signalTimedOut(Perimeter* perimeter_p)
 {
-  if ((uint16_t)smoothMag < timedOutIfBelowSmag)
+  if ((uint16_t)perimeter_p->smoothMag < perimeter_p->timedOutIfBelowSmag)
   {
     return true;
   }
 
-  if (millis() - lastInsideTime > timeOutSecIfNotInside * 1000)
+  if (millis() - perimeter_p->lastInsideTime > perimeter_p->timeOutSecIfNotInside * 1000)
   {
     return true;
   }
@@ -223,14 +233,16 @@ boolean Perimeter::signalTimedOut(void)
 // ip[] holds input data (length > nPts + M )
 // nPts is the length of the required output data
 
-int16_t Perimeter::corrFilter(const int8_t* H_p,
-                              const uint8_t subsample,
-                              const uint8_t M,
-                              const uint8_t Hsum,
-                              const int8_t* ip_p,
-                              const uint8_t nPts,
-                              float &quality,
-                              bool print)
+int16_t perimeter_corrFilter(
+    const int8_t* H_p,
+    const uint8_t subsample,
+    const uint8_t M,
+    const uint8_t Hsum,
+    const int8_t* ip_p,
+    const uint8_t nPts,
+    float &quality,
+    bool print,
+    Perimeter* perimeter_p)
 {
   if (print)
   {
@@ -296,8 +308,8 @@ int16_t Perimeter::corrFilter(const int8_t* H_p,
     }
     ip_p++;
   }
-  sumMaxTmp = sumMax;
-  sumMinTmp = sumMin;
+  perimeter_p->sumMaxTmp = sumMax;
+  perimeter_p->sumMinTmp = sumMin;
   if (print)
   {
     Console.print(F(" sumMax="));
@@ -344,35 +356,25 @@ int16_t Perimeter::corrFilter(const int8_t* H_p,
   }
 }
 
-void Perimeter::printInfo(Stream &s)
+void perimeter_printInfo(Stream &s, Perimeter* perimeter_p)
 {
   Streamprint(s, "sig min %-4d max %-4d avg %-4d",
-              signalMin, signalMax, signalAvg);
+              perimeter_p->signalMin, perimeter_p->signalMax, perimeter_p->signalAvg);
 
   Streamprint(s, " mag %-5d smag %-4d qty %-3d",
-              mag, (int16_t )smoothMag, (int8_t)(filterQuality * 100.0));
+              perimeter_p->mag, (int16_t )perimeter_p->smoothMag, (int8_t)(perimeter_p->filterQuality * 100.0));
 
   Streamprint(s, " (sum min %-6d max %-6d)",
-              sumMinTmp, sumMaxTmp);
+              perimeter_p->sumMinTmp, perimeter_p->sumMaxTmp);
 }
 
 //-----------------------------------------------------------------------------
 
-bool Perimeters::isTimeToControl(void)
-{
-  unsigned long curMillis = millis();
-  if (curMillis >= nextTimeControl)
-  {
-    nextTimeControl = curMillis + timeBetweenControl;
-    return true;
-  }
-  return false;
-}
-
-void Perimeters::printInfo(Stream &s)
+void perimeters_printInfo(Stream &s, Perimeters* perimeters_p)
 {
 //  Streamprint(s, "perL: ");
-  perimeter[Perimeter::LEFT].printInfo(s);
+  perimeter_printInfo(s, &perimeters_p->perimeterArray_p[PERIMETER_LEFT]);
 //  Streamprint(s, "perR: ");
-//  perimeter[Perimeter::RIGHT].printInfo(s);
+//  perimeter_printInfo(s, &perimeters_p->perimeterArray_p[PERIMETER_RIGHT]);
+
 }

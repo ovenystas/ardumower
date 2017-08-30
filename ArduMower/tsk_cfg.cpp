@@ -8,9 +8,9 @@
 #include "Mower.h"      // Where the tasks to run are
 #include "scheduler.h"  // For task interval definitions
 
-void run_task_continious(void)
+void run_task_continuous(void)
 {
-  robot.tasks_continious();
+  robot.tasks_continuous();
 }
 
 void run_task_50ms(void)
@@ -55,7 +55,7 @@ void run_task_2000ms(void)
  */
 static TaskType Tasks[] =
 {
-  { 0              , 0, run_task_continious },
+  { 0              , 0, run_task_continuous },
   { INTERVAL_50MS  , 0, run_task_50ms },
   { INTERVAL_100MS , 0, run_task_100ms },
   { INTERVAL_200MS , 0, run_task_200ms },

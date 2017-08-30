@@ -49,7 +49,7 @@
 #define PIN_RAIN 44                   // rain sensor
 
 #define PIN_REMOTE_MOW 53             // remote control mower motor
-#define PIN_REMOTE_STEER 6           // remote control steering
+#define PIN_REMOTE_STEER 6            // remote control steering
 #define PIN_REMOTE_SPEED 10           // remote control speed
 #define PIN_REMOTE_SWITCH 52          // remote control switch
 
@@ -77,8 +77,9 @@
 #define PFOD_BAUDRATE 19200           // pfod app serial output baud rate
 #define PFOD_BLUETOOTH_PIN_CODE 1234  // Bluetooth pin code
 
-//#define USE_DEVELOPER_TEST 1        // Uncomment for new perimeter signal test (developers)
-#define USE_BARKER_CODE 1             // Uncomment when using Barker code for perimeter signal
+// ------- perimeter ---------------------------------
+#define PERIMETER_USE_DEVELOPER_TEST 0        // New perimeter signal test (developers)
+#define PERIMETER_USE_BARKER_CODE 1           // Using Barker code for perimeter signal
 
 // ------- odometer ---------------------------------
 #define ODOMETER_TICKS_PER_REVOLUTION 1060  // encoder ticks per one full resolution
@@ -86,3 +87,4 @@
 #define ODOMETER_WHEELBASE_CM 36.0F         // wheel-to-wheel distance (cm)
 #define ODOMETER_SWAP_DIR_LEFT true         // inverse left encoder direction?
 #define ODOMETER_SWAP_DIR_RIGHT false       // inverse right encoder direction?
+

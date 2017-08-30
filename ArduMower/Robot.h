@@ -262,7 +262,7 @@ class Robot
     // robot setup
     virtual void setup();
 
-    virtual void tasks_continious();
+    virtual void tasks_continuous();
     virtual void tasks_50ms();
     virtual void tasks_100ms();
     virtual void tasks_200ms();
@@ -379,6 +379,7 @@ class Robot
 
     // read sensors
     virtual void readSensors();
+    virtual void readPerimeters();
     virtual void readCutterMotorCurrent();
     virtual void measureCutterMotorRpm();
     // read serial

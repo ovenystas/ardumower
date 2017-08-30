@@ -29,7 +29,7 @@ typedef struct
     float batChargingCurrentMax;        // Maximum current your charger can deliver
     float batFullCurrent;               // Current flowing when battery is fully charged
     float startChargingIfBelow;        // Start charging if battery Voltage is below
-    unsigned long chargingTimeout; // Cafety timer for charging (ms) 12600000 = 3.5hrs
+    unsigned long chargingTimeout; // Safety timer for charging (ms) 12600000 = 3.5hrs
     float chgSenseZero;                 // Charge current sense zero point //TODO: autocalibrate?
     float chgFactor;                     // Charge current conversion factor
     float chgSense;                   // Sensitivity of the charging current sensor (mV/A) (For ACS712 5A = 185)

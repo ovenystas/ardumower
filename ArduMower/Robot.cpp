@@ -198,23 +198,25 @@ void Robot::loadSaveUserSettings(const boolean readflag)
   eereadwrite(readflag, addr, sonars.triggerBelow);
   eereadwrite(readflag, addr, perimeters.use);
   eereadwrite(readflag, addr,
-              perimeters.perimeter[Perimeter::LEFT].timedOutIfBelowSmag);
+              perimeters.perimeterArray_p[PERIMETER_LEFT].timedOutIfBelowSmag);
   eereadwrite(readflag, addr, perimeterTriggerTimeout);
   eereadwrite(readflag, addr, perimeterOutRollTimeMax);
   eereadwrite(readflag, addr, perimeterOutRollTimeMin);
   eereadwrite(readflag, addr, perimeterOutRevTime);
   eereadwrite(readflag, addr, perimeterTrackRollTime);
   eereadwrite(readflag, addr, perimeterTrackRevTime);
-  eereadwrite(readflag, addr, perimeters.perimeter[Perimeter::LEFT].pid.settings.Kp);
-  eereadwrite(readflag, addr, perimeters.perimeter[Perimeter::LEFT].pid.settings.Ki);
-  eereadwrite(readflag, addr, perimeters.perimeter[Perimeter::LEFT].pid.settings.Kd);
-  eereadwrite(
-      readflag, addr,
-      perimeters.perimeter[Perimeter::LEFT].useDifferentialPerimeterSignal);
   eereadwrite(readflag, addr,
-              perimeters.perimeter[Perimeter::LEFT].swapCoilPolarity);
+              perimeters.perimeterArray_p[PERIMETER_LEFT].pid.settings.Kp);
   eereadwrite(readflag, addr,
-              perimeters.perimeter[Perimeter::LEFT].timeOutSecIfNotInside);
+              perimeters.perimeterArray_p[PERIMETER_LEFT].pid.settings.Ki);
+  eereadwrite(readflag, addr,
+              perimeters.perimeterArray_p[PERIMETER_LEFT].pid.settings.Kd);
+  eereadwrite(readflag, addr,
+              perimeters.perimeterArray_p[PERIMETER_LEFT].useDifferentialPerimeterSignal);
+  eereadwrite(readflag, addr,
+              perimeters.perimeterArray_p[PERIMETER_LEFT].swapCoilPolarity);
+  eereadwrite(readflag, addr,
+              perimeters.perimeterArray_p[PERIMETER_LEFT].timeOutSecIfNotInside);
   eereadwrite(readflag, addr, trackingBlockInnerWheelWhilePerimeterStruggling);
   eereadwrite(readflag, addr, lawnSensors.use);
   eereadwrite(readflag, addr, imu.use);
@@ -423,7 +425,7 @@ void Robot::printSettingSerial()
   Console.println(perimeterTrackRollTime);
   Console.print(F("trackRevTime : "));
   Console.println(perimeterTrackRevTime);
-  pidSettings = perimeters.perimeter[Perimeter::LEFT].pid.getSettings();
+  pidSettings = perimeters.perimeterArray_p[PERIMETER_LEFT].pid.getSettings();
   Console.print(F("pid.Kp : "));
   Console.println(pidSettings.Kp);
   Console.print(F("pid.Ki : "));
@@ -784,11 +786,6 @@ void Robot::setMotorPWMs(const int pwmLeft, int const pwmRight,
 // PID controller: roll robot to heading (requires IMU)
 void Robot::wheelControl_imuRoll()
 {
-  if (!imu.isTimeToControl())
-  {
-    return;
-  }
-
   // Control range corresponds to 80 % of maximum speed on the drive wheel
   Pid* pid_p = &imu.pid[Imu::ROLL];
   pid_p->setSetpoint(0);
@@ -816,11 +813,6 @@ void Robot::wheelControl_imuRoll()
 // PID controller: track perimeter
 void Robot::wheelControl_perimeter()
 {
-  if (!perimeters.isTimeToControl())
-  {
-    return;
-  }
-
   unsigned long curMillis = millis();
   if ((curMillis > stateMachine.getStateStartTime() + 5000) &&
       (curMillis > perimeterLastTransitionTime + trackingPerimeterTransitionTimeOut))
@@ -852,7 +844,7 @@ void Robot::wheelControl_perimeter()
   {
     // Normal perimeter tracking
 
-    Pid* pid_p = &perimeters.perimeter[Perimeter::LEFT].pid;
+    Pid* pid_p = &perimeters.perimeterArray_p[PERIMETER_LEFT].pid;
     pid_p->setSetpoint(0);
     pid_p->setYMin(-100);
     pid_p->setYMax(+100);
@@ -867,11 +859,6 @@ void Robot::wheelControl_perimeter()
 // PID controller: correct direction during normal driving (requires IMU)
 void Robot::wheelControl_imuDir()
 {
-  if (!imu.isTimeToControl())
-  {
-    return;
-  }
-
   // Control range corresponds to the steer range
   Pid* pid_p = &imu.pid[Imu::DIR];
   pid_p->setSetpoint(0);
@@ -898,11 +885,6 @@ void Robot::wheelControl_imuDir()
 
 void Robot::wheelControl_normal()
 {
-  if (!wheels.wheel[Wheel::LEFT].motor.isTimeToControl())
-  {
-    return;
-  }
-
   // Use wheel motor PID-regulator if we use odometer
   wheels.wheel[Wheel::LEFT].motor.regulate = odometer.use;
 
@@ -1118,10 +1100,10 @@ void Robot::printOdometer()
 
 void Robot::printInfo_perimeter(Stream &s)
 {
-  perimeters.perimeter[Perimeter::LEFT].printInfo(s);
+  perimeters_printInfo(s, &perimeters);
   Streamprint(s, "  in %-2d  cnt %-4d  on %-1d\r\n", perimeterInside,
               perimeterCounter,
-              !perimeters.perimeter[Perimeter::LEFT].signalTimedOut());
+              !perimeter_signalTimedOut(&perimeters.perimeterArray_p[PERIMETER_LEFT]));
 }
 
 void Robot::printInfo_odometer(Stream &s)
@@ -1699,69 +1681,70 @@ void Robot::measureCutterMotorRpm()
   }
 }
 
+void Robot::readPerimeters()
+{
+  unsigned long curMillis = millis();
+
+  perimeterMag = perimeter_calcMagnitude(&perimeters.perimeterArray_p[PERIMETER_LEFT]);
+  bool inside = perimeter_isInside(&perimeters.perimeterArray_p[PERIMETER_LEFT]);
+  if (inside != perimeterInside)
+  {
+    perimeterCounter++;
+    perimeterLastTransitionTime = curMillis;
+    perimeterInside = inside;
+  }
+
+  if (perimeterInside)
+  {
+    setActuator(ACT_LED, HIGH);
+  }
+  else
+  {
+    setActuator(ACT_LED, LOW);
+  }
+
+  if (!perimeterInside && perimeterTriggerTime == 0)
+  {
+    // set perimeter trigger time
+    // far away from perimeter?
+    if (curMillis > stateMachine.getStateStartTime() + 2000)
+    {
+      perimeterTriggerTime = curMillis + perimeterTriggerTimeout;
+    }
+    else
+    {
+      perimeterTriggerTime = curMillis;
+    }
+  }
+
+  if (perimeter_signalTimedOut(&perimeters.perimeterArray_p[PERIMETER_LEFT]))
+  {
+    if (!stateMachine.isCurrentState(StateMachine::STATE_OFF) &&
+        !stateMachine.isCurrentState(StateMachine::STATE_MANUAL) &&
+        !stateMachine.isCurrentState(StateMachine::STATE_STATION) &&
+        !stateMachine.isCurrentState(StateMachine::STATE_STATION_CHARGING) &&
+        !stateMachine.isCurrentState(StateMachine::STATE_STATION_CHECK) &&
+        !stateMachine.isCurrentState(StateMachine::STATE_STATION_REV) &&
+        !stateMachine.isCurrentState(StateMachine::STATE_STATION_ROLL) &&
+        !stateMachine.isCurrentState(StateMachine::STATE_STATION_FORW) &&
+        !stateMachine.isCurrentState(StateMachine::STATE_REMOTE) &&
+        !stateMachine.isCurrentState(StateMachine::STATE_PERI_OUT_FORW) &&
+        !stateMachine.isCurrentState(StateMachine::STATE_PERI_OUT_REV) &&
+        !stateMachine.isCurrentState(StateMachine::STATE_PERI_OUT_ROLL))
+    {
+      Console.println("Error: Perimeter too far away");
+      incErrorCounter(ERR_PERIMETER_TIMEOUT);
+      setNextState(StateMachine::STATE_ERROR);
+    }
+  }
+}
+
 void Robot::readSensors()
 {
 // NOTE: This function should only read in sensors into variables.
 //       It should NOT change any state!
 
   unsigned long curMillis = millis();
-  if (perimeters.use && curMillis >= nextTimePerimeter)
-  {
-    nextTimePerimeter = curMillis + 50;
-    perimeterMag = perimeters.perimeter[Perimeter::LEFT].calcMagnitude();
-    bool inside = perimeters.perimeter[Perimeter::LEFT].isInside();
-    if (inside != perimeterInside)
-    {
-      perimeterCounter++;
-      perimeterLastTransitionTime = millis();
-      perimeterInside = inside;
-    }
-
-    if (perimeterInside)
-    {
-      setActuator(ACT_LED, HIGH);
-    }
-    else
-    {
-      setActuator(ACT_LED, LOW);
-    }
-
-    if (!perimeterInside && perimeterTriggerTime == 0)
-    {
-      // set perimeter trigger time
-      // far away from perimeter?
-      if (curMillis > stateMachine.getStateStartTime() + 2000)
-      {
-        perimeterTriggerTime = curMillis + perimeterTriggerTimeout;
-      }
-      else
-      {
-        perimeterTriggerTime = curMillis;
-      }
-    }
-
-    if (perimeters.perimeter[Perimeter::LEFT].signalTimedOut())
-    {
-      if (!stateMachine.isCurrentState(StateMachine::STATE_OFF) &&
-          !stateMachine.isCurrentState(StateMachine::STATE_MANUAL) &&
-          !stateMachine.isCurrentState(StateMachine::STATE_STATION) &&
-          !stateMachine.isCurrentState(StateMachine::STATE_STATION_CHARGING) &&
-          !stateMachine.isCurrentState(StateMachine::STATE_STATION_CHECK) &&
-          !stateMachine.isCurrentState(StateMachine::STATE_STATION_REV) &&
-          !stateMachine.isCurrentState(StateMachine::STATE_STATION_ROLL) &&
-          !stateMachine.isCurrentState(StateMachine::STATE_STATION_FORW) &&
-          !stateMachine.isCurrentState(StateMachine::STATE_REMOTE) &&
-          !stateMachine.isCurrentState(StateMachine::STATE_PERI_OUT_FORW) &&
-          !stateMachine.isCurrentState(StateMachine::STATE_PERI_OUT_REV) &&
-          !stateMachine.isCurrentState(StateMachine::STATE_PERI_OUT_ROLL))
-      {
-        Console.println("Error: Perimeter too far away");
-        incErrorCounter(ERR_PERIMETER_TIMEOUT);
-        setNextState(StateMachine::STATE_ERROR);
-      }
-    }
-  }
-
   if (curMillis >= nextTimeRTC)
   {
     nextTimeRTC = curMillis + 60000;
@@ -2442,7 +2425,7 @@ void Robot::checkPerimeterFind()
 {
   if (stateMachine.isCurrentState(StateMachine::STATE_PERI_FIND))
   {
-    if (perimeters.perimeter[Perimeter::LEFT].isInside())
+    if (perimeter_isInside(&perimeters.perimeterArray_p[PERIMETER_LEFT]))
     {
       if (wheels.wheel[Wheel::LEFT].motor.rpmSet != wheels.wheel[Wheel::RIGHT].motor.rpmSet)
       {
@@ -2478,7 +2461,7 @@ void Robot::checkLawn()
 
 void Robot::checkRain()
 {
-  if (rainSensor.use && rainSensor_isRaining(&rainSensor))
+  if (rainSensor_isRaining(&rainSensor))
   {
     Console.println(F("RAIN"));
     if (perimeters.use)
@@ -2786,7 +2769,10 @@ void Robot::runStateMachine()
       }
       checkErrorCounter();
       checkTimer();
-      checkRain();
+      if (rainSensor.use)
+      {
+        checkRain();
+      }
       checkMotorPower();
       checkBumpers();
       checkDrop();
@@ -3032,7 +3018,7 @@ void Robot::runStateMachine()
   } // end switch
 }
 
-void Robot::tasks_continious()
+void Robot::tasks_continuous()
 {
   ADCMan.run();
   readSerial();
@@ -3069,26 +3055,6 @@ void Robot::tasks_continious()
 //    setNextState(StateMachine::STATE_REMOTE, 0);
 //  }
 
-  // decide which motor control to use
-  if ((mowPatternCurr == MOW_LANES && stateMachine.isCurrentState(StateMachine::STATE_ROLL)) ||
-      stateMachine.isCurrentState(StateMachine::STATE_ROLL_WAIT))
-  {
-    wheelControl_imuRoll();
-  }
-  else if (stateMachine.isCurrentState(StateMachine::STATE_PERI_TRACK))
-  {
-    wheelControl_perimeter();
-  }
-  else if (stateMachine.isCurrentState(StateMachine::STATE_FORWARD) &&
-           (imu.correctDir || mowPatternCurr == MOW_LANES))
-  {
-    wheelControl_imuDir();
-  }
-  else
-  {
-    wheelControl_normal();
-  }
-
   if (!stateMachine.isCurrentState(StateMachine::STATE_REMOTE))
   {
     // TODO: This feels dangerous!!!
@@ -3105,6 +3071,10 @@ void Robot::tasks_50ms()
 {
   checkButton();
   readCutterMotorCurrent();
+  if (perimeters.use)
+  {
+    readPerimeters();
+  }
 }
 
 void Robot::tasks_100ms()
@@ -3121,6 +3091,31 @@ void Robot::tasks_100ms()
   {
     dropSensors_check(&dropSensors);
   }
+
+  // Decide which motor control to use
+  if (imu.use &&
+      ((mowPatternCurr == MOW_LANES &&
+        stateMachine.isCurrentState(StateMachine::STATE_ROLL)) ||
+       stateMachine.isCurrentState(StateMachine::STATE_ROLL_WAIT)))
+  {
+    wheelControl_imuRoll();
+  }
+  else if (perimeters.use &&
+           stateMachine.isCurrentState(StateMachine::STATE_PERI_TRACK))
+  {
+    wheelControl_perimeter();
+  }
+  else if (imu.use &&
+           (stateMachine.isCurrentState(StateMachine::STATE_FORWARD) &&
+            (imu.correctDir || mowPatternCurr == MOW_LANES)))
+  {
+    wheelControl_imuDir();
+  }
+  else
+  {
+    wheelControl_normal();
+  }
+
   battery_read(&battery);
 }
 

@@ -49,7 +49,7 @@ Mower::Mower()
   perimeterOutRevTime = 2200;     // reverse time after perimeter out (ms)
   perimeterTrackRollTime = 1500;  // roll time during perimeter tracking
   perimeterTrackRevTime = 2200;   // reverse time during perimeter tracking
-  perimeters.perimeter[Perimeter::LEFT].pid.setup(51.0, 12.5, 0.8);  // perimeter PID controller
+  perimeters.perimeterArray_p[PERIMETER_LEFT].pid.setup(51.0, 12.5, 0.8);  // perimeter PID controller
   //perimeters.perimeter[Perimeter::RIGHT].pid.setup(51.0, 12.5, 0.8);  // perimeter PID controller
   trackingPerimeterTransitionTimeOut = 2000;
   trackingErrorTimeOut = 10000;
@@ -196,17 +196,25 @@ void Mower::setup()
   cutter.motor.pid.setup(0.005, 0.01, 0.01);  // Kp, Ki, Kd
 
   // lawn sensor
-  const uint8_t lawnSensorSendPins[LAWNSENSORS_NUM] = {
-      PIN_LAWN_FRONT_SEND, PIN_LAWN_BACK_SEND};
-  const uint8_t lawnSensorReceivePins[LAWNSENSORS_NUM] = {
-      PIN_LAWN_FRONT_RECV, PIN_LAWN_BACK_RECV};
+  const uint8_t lawnSensorSendPins[LAWNSENSORS_NUM] =
+  {
+      PIN_LAWN_FRONT_SEND, PIN_LAWN_BACK_SEND
+  };
+  const uint8_t lawnSensorReceivePins[LAWNSENSORS_NUM] =
+  {
+      PIN_LAWN_FRONT_RECV, PIN_LAWN_BACK_RECV
+  };
   lawnSensors_setup(lawnSensorSendPins, lawnSensorReceivePins, lawnSensorArray,
       &lawnSensors, LAWNSENSORS_NUM);
 
   // perimeter
   perimeters.use = false;
-  perimeters.perimeter[Perimeter::LEFT].setup(PIN_PERIMETER_LEFT);
-  //perimeters.perimeter[Perimeter::RIGHT].setup(PIN_PERIMETER_RIGHT);
+  perimeter_setup(
+      PIN_PERIMETER_LEFT,
+      &perimeters.perimeterArray_p[PERIMETER_LEFT]);
+  perimeter_setup(
+      PIN_PERIMETER_RIGHT,
+      &perimeters.perimeterArray_p[PERIMETER_RIGHT]);
 
   // button
   button_setup(PIN_BUTTON, &button);
@@ -216,27 +224,34 @@ void Mower::setup()
   bumpers_setup(bumperPins, bumperArray, &bumpers, BUMPERS_NUM);
 
   // drop sensor
-  const uint8_t dropSensorPins[DROPSENSORS_NUM] = {PIN_DROP_LEFT, PIN_DROP_RIGHT};
-  dropSensors_setup(dropSensorPins, DROPSENSOR_NO, dropSensorArray,
-                    &dropSensors, DROPSENSORS_NUM);
+  const uint8_t dropSensorPins[DROPSENSORS_NUM] =
+  {
+      PIN_DROP_LEFT, PIN_DROP_RIGHT
+  };
+  dropSensors_setup(
+      dropSensorPins, DROPSENSOR_NO, dropSensorArray,
+      &dropSensors, DROPSENSORS_NUM);
 
   // sonar
   sonars.use = true;
-  sonar_setup(PIN_SONAR_LEFT_TRIGGER, PIN_SONAR_LEFT_ECHO,
-              SONAR_DEFAULT_MAX_ECHO_TIME,
-              SONAR_DEFAULT_MIN_ECHO_TIME,
-              &sonars.sonarArray_p[LEFT]);
-  sonar_setup(PIN_SONAR_RIGHT_TRIGGER, PIN_SONAR_RIGHT_ECHO,
-              SONAR_DEFAULT_MAX_ECHO_TIME,
-              SONAR_DEFAULT_MIN_ECHO_TIME,
-              &sonars.sonarArray_p[RIGHT]);
-  sonar_setup(PIN_SONAR_CENTER_TRIGGER, PIN_SONAR_CENTER_ECHO,
-              SONAR_DEFAULT_MAX_ECHO_TIME,
-              SONAR_DEFAULT_MIN_ECHO_TIME,
-              &sonars.sonarArray_p[CENTER]);
-  sonars.sonarArray_p[LEFT].use = false;
-  sonars.sonarArray_p[RIGHT].use = false;
-  sonars.sonarArray_p[CENTER].use = true;
+  sonar_setup(
+      PIN_SONAR_LEFT_TRIGGER, PIN_SONAR_LEFT_ECHO,
+      SONAR_DEFAULT_MAX_ECHO_TIME,
+      SONAR_DEFAULT_MIN_ECHO_TIME,
+      &sonars.sonarArray_p[SONAR_LEFT]);
+  sonar_setup(
+      PIN_SONAR_RIGHT_TRIGGER, PIN_SONAR_RIGHT_ECHO,
+      SONAR_DEFAULT_MAX_ECHO_TIME,
+      SONAR_DEFAULT_MIN_ECHO_TIME,
+      &sonars.sonarArray_p[SONAR_RIGHT]);
+  sonar_setup(
+      PIN_SONAR_CENTER_TRIGGER, PIN_SONAR_CENTER_ECHO,
+      SONAR_DEFAULT_MAX_ECHO_TIME,
+      SONAR_DEFAULT_MIN_ECHO_TIME,
+      &sonars.sonarArray_p[SONAR_CENTER]);
+  sonars.sonarArray_p[SONAR_LEFT].use = false;
+  sonars.sonarArray_p[SONAR_RIGHT].use = false;
+  sonars.sonarArray_p[SONAR_CENTER].use = true;
 
   // rain
   rainSensor.use = false;
