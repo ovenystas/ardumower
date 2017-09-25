@@ -20,6 +20,7 @@
 							<tool id="io.sloeber.tool.sketch.compiler.cpp.1344828990" name="Arduino C++ Compiler" superClass="io.sloeber.tool.sketch.compiler.cpp">
 								<option id="io.sloeber.compiler.cpp.sketch.option.incpath.266818648" name="Include Paths (-I)" superClass="io.sloeber.compiler.cpp.sketch.option.incpath" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ArduMower/core/core}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ArduMower/core/variant}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ArduMower/libraries/EEPROM}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ArduMower/libraries/EEPROM/src}&quot;"/>
@@ -31,6 +32,7 @@
 							<tool id="io.sloeber.tool.compiler.c.1730815213" name="Arduino C Compiler" superClass="io.sloeber.tool.compiler.c">
 								<option id="io.sloeber.compiler.c.sketch.option.incpath.1459097878" name="Include Paths (-I)" superClass="io.sloeber.compiler.c.sketch.option.incpath" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ArduMower/core/core}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ArduMower/core/variant}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ArduMower/libraries/EEPROM}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/ArduMower/libraries/EEPROM/src}&quot;"/>
@@ -54,24 +56,6 @@
 							<tool id="io.sloeber.tool.combine.1060555050" name="Arduino combiner" superClass="io.sloeber.tool.combine"/>
 							<tool id="io.sloeber.tool.objcopy.eep.1002150638" name="Arduino tool objcopy command" superClass="io.sloeber.tool.objcopy.eep"/>
 							<tool id="io.sloeber.tool.size.816051614" name="Arduino tool Print Size" superClass="io.sloeber.tool.size"/>
-						</toolChain>
-					</folderInfo>
-					<folderInfo id="io.sloeber.core.toolChain.release.1156145717.730286298" name="/" resourcePath="libraries">
-						<toolChain id="io.sloeber.core.toolChain.release.1508605320" name="Arduino Toolchain( Sloeber edition)" superClass="io.sloeber.core.toolChain.release" unusedChildren="">
-							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="io.sloeber.targetplatform" name="Arduino Target" osList="all" superClass="io.sloeber.targetplatform"/>
-							<tool id="io.sloeber.tool.sketch.compiler.cpp.1845229971" name="Arduino C++ Compiler" superClass="io.sloeber.tool.sketch.compiler.cpp.1344828990">
-								<inputType id="io.sloeber.compiler.cpp.sketch.input.1258179227" name="CPP source files" superClass="io.sloeber.compiler.cpp.sketch.input"/>
-							</tool>
-							<tool id="io.sloeber.tool.compiler.c.477778238" name="Arduino C Compiler" superClass="io.sloeber.tool.compiler.c.1730815213">
-								<inputType id="io.sloeber.compiler.c.sketch.input.1611238417" name="C Source Files" superClass="io.sloeber.compiler.c.sketch.input"/>
-							</tool>
-							<tool id="io.sloeber.tool.sketch.compiler.s.1602006489" name="Arduino Assembler" superClass="io.sloeber.tool.sketch.compiler.s.1689044566">
-								<inputType id="io.sloeber.compiler.S.sketch.input.1968147307" name="Assembly source files" superClass="io.sloeber.compiler.S.sketch.input"/>
-							</tool>
-							<tool id="io.sloeber.tool.ar.831279657" name="Arduino archiver" superClass="io.sloeber.tool.ar.1163884093"/>
-							<tool id="io.sloeber.tool.combine.1993020788" name="Arduino combiner" superClass="io.sloeber.tool.combine.1060555050"/>
-							<tool id="io.sloeber.tool.objcopy.eep.1380772590" name="Arduino tool objcopy command" superClass="io.sloeber.tool.objcopy.eep.1002150638"/>
-							<tool id="io.sloeber.tool.size.1082090099" name="Arduino tool Print Size" superClass="io.sloeber.tool.size.816051614"/>
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
