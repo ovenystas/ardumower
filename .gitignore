@@ -3,8 +3,6 @@
 *.db
 *.bak
 /build/
-.cproject
-.project
 *.settings/
 Release
 libraries
