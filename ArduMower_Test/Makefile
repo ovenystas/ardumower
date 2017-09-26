@@ -21,14 +21,19 @@ CPP_PLATFORM = Gcc
 # so that memory leak detection does not conflict with stl.
 #CPPUTEST_MEMLEAK_DETECTOR_NEW_MACRO_FILE = -include ApplicationLib/ExamplesNewOverrides.h
 SRC_DIRS = \
-	src\
+	src \
+
+SRC_FILES = \
+	../ArduMower/Filter.cpp \
 
 TEST_SRC_DIRS = \
 	tests
 
-INCLUDE_DIRS =\
-  src\
-  $(CPPUTEST_HOME)/include\
+INCLUDE_DIRS = \
+  src \
+  mocks \
+  ../ArduMower/inc \
+  $(CPPUTEST_HOME)/include \
 
 include $(CPPUTEST_HOME)/build/MakefileWorker.mk
 

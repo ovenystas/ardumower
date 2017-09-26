@@ -3,7 +3,6 @@
 	<name>ArduMower_Test</name>
 	<comment></comment>
 	<projects>
-		<project>CppUTest</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
