@@ -26,8 +26,8 @@
 
 #include <Arduino.h>
 
-#define FILTER_EMA_I32_ALPHA(x) ( (uint16_t)(x * 65535) )
-#define FILTER_EMA_I16_ALPHA(x) ( (uint8_t)(x * 255) )
+#define FILTER_EMA_I32_ALPHA(x) ( (uint16_t)(x * UINT16_MAX) )
+#define FILTER_EMA_I16_ALPHA(x) ( (uint8_t)(x * UINT8_MAX) )
 
 typedef struct
 {
