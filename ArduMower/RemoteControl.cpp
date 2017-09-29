@@ -2265,18 +2265,18 @@ void RemoteControl::run()
       Bluetooth.print(encoder_getWheelRpmCurr(robot_p->odometer.encoder.right_p));
       Bluetooth.print(",");
       //      Bluetooth.print(robot->motorLeftSpeedRpmSet);
-      Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.pid.getSetpoint());
+      Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.pid.setPoint);
       Bluetooth.print(",");
       //      Bluetooth.print(robot->motorRightSpeedRpmSet);
-      Bluetooth.print(robot_p->wheels.wheel[Wheel::RIGHT].motor.pid.getSetpoint());
+      Bluetooth.print(robot_p->wheels.wheel[Wheel::RIGHT].motor.pid.setPoint);
       Bluetooth.print(",");
       Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.getPwmCur());
       Bluetooth.print(",");
       Bluetooth.print(robot_p->wheels.wheel[Wheel::RIGHT].motor.getPwmCur());
       Bluetooth.print(",");
-      Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.pid.getErrorOld());
+      Bluetooth.print(robot_p->wheels.wheel[Wheel::LEFT].motor.pid.errorOld);
       Bluetooth.print(",");
-      Bluetooth.println(robot_p->wheels.wheel[Wheel::RIGHT].motor.pid.getErrorOld());
+      Bluetooth.println(robot_p->wheels.wheel[Wheel::RIGHT].motor.pid.errorOld);
     }
   }
 }

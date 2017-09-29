@@ -30,82 +30,27 @@
 
 typedef struct Pid_settingsT
 {
-  float Kp {};         // proportional control
-  float Ki {};         // integral control
-  float Kd {};         // differential control
-} Pid_settingsT;
+  float Kp;         // proportional control
+  float Ki;         // integral control
+  float Kd;         // differential control
+} Pid_settings_t;
 
-class Pid
+typedef struct Pid
 {
-  public:
-    Pid(void) {};
-//    Pid(float Kp, float Ki, float Kd) :
-//        settings.Kp(Kp), settings.Ki(Ki), settings.Kd(Kd) {};
-    void setup(const float Kp, const float Ki, const float Kd);
-    void setup(const float Kp, const float Ki, const float Kd,
-               const float y_min, const float y_max, const float max_output);
-    float compute(float processValue);
+  Pid_settings_t settings;
+  float setPoint;
+  float yMin;
+  float yMax;
+  float maxOutput;
+  float errorOld;
+  float errorSum;
+  unsigned long lastControlTime;
+} Pid;
 
-    float getErrorOld() const
-    {
-      return errorOld;
-    }
+void pid_setup(float Kp, float Ki, float Kd,
+               float yMin, float yMax, float maxOutput,
+               Pid* pid_p);
 
-    float getSetpoint() const
-    {
-      return setPoint;
-    }
-
-    void setSetpoint(float setPoint)
-    {
-      this->setPoint = setPoint;
-    }
-
-    float getMaxOutput() const
-    {
-      return max_output;
-    }
-
-    void setMaxOutput(float maxOutput)
-    {
-      max_output = maxOutput;
-    }
-
-    float getYMax() const
-    {
-      return y_max;
-    }
-
-    void setYMax(float y_max)
-    {
-      this->y_max = y_max;
-    }
-
-    float getYMin() const
-    {
-      return y_min;
-    }
-
-    void setYMin(float y_min)
-    {
-      this->y_min = y_min;
-    }
-
-    Pid_settingsT settings;
-    Pid_settingsT getSettings() const
-    {
-      return settings;
-    }
-
-  private:
-    float setPoint {};   // set value
-    float y_min {};      // minimum control output
-    float y_max {};      // maximum control output
-    float max_output {}; // maximum output
-
-    float errorOld {};   // last error
-    float errorSum {};   // error sum
-    unsigned long lastControlTime {};
-};
+float pid_compute(float processValue, Pid* pid_p);
 
 #endif

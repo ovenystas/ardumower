@@ -30,58 +30,59 @@
 
 #include "Pid.h"
 
-void Pid::setup(const float Kp, const float Ki, const float Kd)
+void pid_setup(float Kp, float Ki, float Kd,
+               float yMin, float yMax,
+               float maxOutput, Pid* pid_p)
 {
-  this->settings.Kp = Kp;
-  this->settings.Ki = Ki;
-  this->settings.Kd = Kd;
+  pid_p->settings.Kp = Kp;
+  pid_p->settings.Ki = Ki;
+  pid_p->settings.Kd = Kd;
+  pid_p->yMin = yMin;
+  pid_p->yMax = yMax;
+  pid_p->maxOutput = maxOutput;
+  pid_p->errorOld = 0;
+  pid_p->errorSum = 0;
+  pid_p->setPoint = 0;
+  pid_p->lastControlTime = micros();
 }
 
-void Pid::setup(const float Kp, const float Ki, const float Kd,
-                const float y_min, const float y_max,
-                const float max_output)
-{
-  setup(Kp, Kd, Ki);
-  this->y_min = y_min;
-  this->y_max = y_max;
-  this->max_output = max_output;
-}
-
-float Pid::compute(float processValue)
+float pid_compute(float processValue, Pid* pid_p)
 {
   unsigned long now = micros();
 
-  float dt = ((now - lastControlTime) / 1000000.0);
-  lastControlTime = now;
+  float dt = ((float)(now - pid_p->lastControlTime) / 1000000.0f);
+  pid_p->lastControlTime = now;
   if (dt > 1.0)
   {
     dt = 1.0;   // should only happen for the very first call
   }
 
   // compute error
-  float error = setPoint - processValue;
+  float error = pid_p->setPoint - processValue;
 
   // integrate error
-  errorSum += error;
+  pid_p->errorSum += error;
 
   // anti wind-up
-  float iTerm = settings.Ki * dt * errorSum;
-  if (iTerm < -max_output)
+  float iTerm = pid_p->settings.Ki * dt * pid_p->errorSum;
+  if (iTerm < -pid_p->maxOutput)
   {
-    iTerm = -max_output;
-    errorSum = -max_output / dt / settings.Ki;
+    iTerm = -pid_p->maxOutput;
+    pid_p->errorSum = -pid_p->maxOutput / dt / pid_p->settings.Ki;
   }
-  if (iTerm > max_output)
+  if (iTerm > pid_p->maxOutput)
   {
-    iTerm = max_output;
-    errorSum = max_output / dt / settings.Ki;
+    iTerm = pid_p->maxOutput;
+    pid_p->errorSum = pid_p->maxOutput / dt / pid_p->settings.Ki;
   }
-  float out = settings.Kp * error + iTerm +
-      settings.Kd / dt * (error - errorOld);
-  errorOld = error;
+
+  float out = pid_p->settings.Kp * error + iTerm +
+      pid_p->settings.Kd / dt * (error - pid_p->errorOld);
+
+  pid_p->errorOld = error;
 
   // restrict output to min/max
-  out = constrain(out, y_min, y_max);
+  out = constrain(out, pid_p->yMin, pid_p->yMax);
 
   return out;
 }

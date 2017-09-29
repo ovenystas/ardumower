@@ -35,6 +35,7 @@
 
 #include <Arduino.h>
 #include "Mower.h"
+#include "Pid.h"
 
 Mower robot;
 
@@ -49,15 +50,18 @@ Mower::Mower()
   perimeterOutRevTime = 2200;     // reverse time after perimeter out (ms)
   perimeterTrackRollTime = 1500;  // roll time during perimeter tracking
   perimeterTrackRevTime = 2200;   // reverse time during perimeter tracking
-  perimeters.perimeterArray_p[PERIMETER_LEFT].pid.setup(51.0, 12.5, 0.8);  // perimeter PID controller
+  pid_setup(51.0, 12.5, 0.8, -100.0, 100.0, 100.0, &perimeters.perimeterArray_p[PERIMETER_LEFT].pid);  // perimeter PID controller
+  perimeters.perimeterArray_p[PERIMETER_LEFT].pid.setPoint = 0;
   //perimeters.perimeter[Perimeter::RIGHT].pid.setup(51.0, 12.5, 0.8);  // perimeter PID controller
   trackingPerimeterTransitionTimeOut = 2000;
   trackingErrorTimeOut = 10000;
   trackingBlockInnerWheelWhilePerimeterStruggling = true;
 
   // ------  IMU (compass/accel/gyro) ----------------------
-  imu.pid[Imu::DIR].setup(5.0, 1.0, 1.0);  // direction PID controller
-  imu.pid[Imu::ROLL].setup(0.8, 21, 0);    // roll PID controller
+  pid_setup(5.0, 1.0, 1.0, -100.0, 100.0, 100.0, &imu.pid[Imu::DIR]);  // direction PID controller
+  imu.pid[Imu::DIR].setPoint = 0;
+  pid_setup(0.8, 21, 0, -80.0, 80.0, 80.0, &imu.pid[Imu::ROLL]);    // roll PID controller
+  imu.pid[Imu::ROLL].setPoint = 0;
 
   // ------ model R/C ------------------------------------
   remoteUse = false; // use model remote control (R/C)?
@@ -153,7 +157,11 @@ void Mower::setup()
   wheels.wheel[Wheel::LEFT].motor.setChannel(0);
   wheels.wheel[Wheel::LEFT].motor.setup();
   // Normal control
-  wheels.wheel[Wheel::LEFT].motor.pid.setup(1.5, 0.29, 0.25);  // Kp, Ki, Kd
+  int16_t pwmMax = wheels.wheel[Wheel::LEFT].motor.pwmMax;
+  pid_setup(1.5, 0.29, 0.25, -pwmMax, pwmMax, pwmMax,
+      &wheels.wheel[Wheel::LEFT].motor.pid);  // Kp, Ki, Kd
+  wheels.wheel[Wheel::LEFT].motor.pid.setPoint =
+      wheels.wheel[Wheel::LEFT].motor.rpmSet;
   // Fast control
   //wheels.wheel[Wheel::LEFT].motor.pid.setup(1.76, 0.87, 0.4);  // Kp, Ki, Kd
   wheels.wheel[Wheel::LEFT].motor.powerIgnoreTime = 2000;  // time to ignore motor power (ms)
@@ -174,7 +182,11 @@ void Mower::setup()
   wheels.wheel[Wheel::RIGHT].motor.setChannel(1);
   wheels.wheel[Wheel::RIGHT].motor.setup();
   // Normal control
-  wheels.wheel[Wheel::RIGHT].motor.pid.setup(1.5, 0.29, 0.25);  // Kp, Ki, Kd
+  pwmMax = wheels.wheel[Wheel::RIGHT].motor.pwmMax;
+  pid_setup(1.5, 0.29, 0.25, -pwmMax, pwmMax, pwmMax,
+      &wheels.wheel[Wheel::RIGHT].motor.pid);  // Kp, Ki, Kd
+  wheels.wheel[Wheel::RIGHT].motor.pid.setPoint =
+      wheels.wheel[Wheel::RIGHT].motor.rpmSet;
   // Fast control
   //wheels.wheel[Wheel::RIGHT].motor.pid.setup(1.76, 0.87, 0.4);  // Kp, Ki, Kd
   wheels.wheel[Wheel::RIGHT].motor.powerIgnoreTime = 2000;  // time to ignore motor power (ms)
@@ -193,7 +205,9 @@ void Mower::setup()
                       0,          // Max RPM
                       3300);      // Set RPM
   cutter.motor.setScale(3.25839);
-  cutter.motor.pid.setup(0.005, 0.01, 0.01);  // Kp, Ki, Kd
+  pwmMax = cutter.motor.pwmMax;
+  pid_setup(0.005, 0.01, 0.01, 0.0, pwmMax, pwmMax, &cutter.motor.pid);  // Kp, Ki, Kd
+  cutter.motor.pid.setPoint = cutter.motor.rpmSet;
 
   // lawn sensor
   const uint8_t lawnSensorSendPins[LAWNSENSORS_NUM] =

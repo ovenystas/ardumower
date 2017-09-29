@@ -70,11 +70,7 @@ void MotorShield::control(void)
   if (regulate)
   {
     // Use PID regulator.
-    pid.setYMin(-pwmMax);
-    pid.setYMax(pwmMax);
-    pid.setMaxOutput(pwmMax);
-    pid.setSetpoint(rpmSet);
-    float y = pid.compute(rpmMeas);
+    float y = pid_compute(rpmMeas, &pid);
     pwmNew = (int)(round(y));
   }
   else

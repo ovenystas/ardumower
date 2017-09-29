@@ -15,6 +15,7 @@
 class MotorDrv: public Motor
 {
   public:
+    Pid pid;
     virtual ~MotorDrv() {};
     virtual void setup(void) = 0;
     virtual void setSpeed(void) = 0;

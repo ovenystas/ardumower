@@ -14,6 +14,9 @@ COMPONENT_NAME = ArduMower_Test
 CPPUTEST_HOME = C:/Users/oveny/git/cpputest
 
 CPPUTEST_USE_EXTENSIONS = Y
+CPPUTEST_USE_GCOV = Y
+CPPUTEST_USE_VPATH = Y
+
 CPP_PLATFORM = Gcc
 
 # This line is overriding the default new macros.  This is helpful
@@ -25,6 +28,7 @@ SRC_DIRS = \
 
 SRC_FILES = \
 	../ArduMower/Filter.cpp \
+	../ArduMower/Pid.cpp \
 
 TEST_SRC_DIRS = \
 	tests

@@ -42,7 +42,6 @@
 #include "LawnSensor.h"
 #include "Odometer.h"
 #include "Perimeter.h"
-#include "Pid.h"
 #include "RainSensor.h"
 #include "RemoteControl.h"
 #include "Sonar.h"

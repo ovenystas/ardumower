@@ -325,22 +325,21 @@ void Robot::printSettingSerial()
   Console.print(F("biDirSpeedRatio2 : "));
   Console.println(wheels.biDirSpeedRatio2);
 
-  Pid_settingsT pidSettings;
-  pidSettings = wheels.wheel[Wheel::LEFT].motor.pid.getSettings();
+  Pid_settingsT* pidSettings_p = &wheels.wheel[Wheel::LEFT].motor.pid.settings;
   Console.print(F("LEFT.pid.Kp : "));
-  Console.println(pidSettings.Kp);
+  Console.println(pidSettings_p->Kp);
   Console.print(F("LEFT.pid.Ki : "));
-  Console.println(pidSettings.Ki);
+  Console.println(pidSettings_p->Ki);
   Console.print(F("LEFT.pid.Kd : "));
-  Console.println(pidSettings.Kd);
+  Console.println(pidSettings_p->Kd);
 
-  pidSettings = wheels.wheel[Wheel::RIGHT].motor.pid.getSettings();
+  pidSettings_p = &wheels.wheel[Wheel::RIGHT].motor.pid.settings;
   Console.print(F("RIGHT.pid.Kp : "));
-  Console.println(pidSettings.Kp);
+  Console.println(pidSettings_p->Kp);
   Console.print(F("RIGHT.pid.Ki : "));
-  Console.println(pidSettings.Ki);
+  Console.println(pidSettings_p->Ki);
   Console.print(F("RIGHT.pid.Kd : "));
-  Console.println(pidSettings.Kd);
+  Console.println(pidSettings_p->Kd);
 
   Console.print(F("LEFT.swapDir : "));
   Console.println(wheels.wheel[Wheel::LEFT].motor.swapDir);
@@ -361,13 +360,13 @@ void Robot::printSettingSerial()
   Console.println(cutter.motor.rpmSet);
   Console.print(F("scale : "));
   Console.println(cutter.motor.getScale());
-  pidSettings = cutter.motor.pid.getSettings();
+  pidSettings_p = &cutter.motor.pid.settings;
   Console.print(F("pid.Kp : "));
-  Console.println(pidSettings.Kp);
+  Console.println(pidSettings_p->Kp);
   Console.print(F("pid.Ki : "));
-  Console.println(pidSettings.Ki);
+  Console.println(pidSettings_p->Ki);
   Console.print(F("pid.Kd : "));
-  Console.println(pidSettings.Kd);
+  Console.println(pidSettings_p->Kd);
 
   // ------ bumper ------------------------------------
   Console.println(F("== Bumpers =="));
@@ -415,13 +414,13 @@ void Robot::printSettingSerial()
   Console.println(perimeterTrackRollTime);
   Console.print(F("trackRevTime : "));
   Console.println(perimeterTrackRevTime);
-  pidSettings = perimeters.perimeterArray_p[PERIMETER_LEFT].pid.getSettings();
+  pidSettings_p = &perimeters.perimeterArray_p[PERIMETER_LEFT].pid.settings;
   Console.print(F("pid.Kp : "));
-  Console.println(pidSettings.Kp);
+  Console.println(pidSettings_p->Kp);
   Console.print(F("pid.Ki : "));
-  Console.println(pidSettings.Ki);
+  Console.println(pidSettings_p->Ki);
   Console.print(F("pid.Kd : "));
-  Console.println(pidSettings.Kd);
+  Console.println(pidSettings_p->Kd);
   Console.print(F("trackingPerimeterTransitionTimeOut : "));
   Console.println(trackingPerimeterTransitionTimeOut);
   Console.print(F("trackingErrorTimeOut : "));
@@ -440,20 +439,20 @@ void Robot::printSettingSerial()
   Console.println(imu.use);
   Console.print(F("correctDir : "));
   Console.println(imu.correctDir);
-  pidSettings = imu.pid[Imu::DIR].getSettings();
+  pidSettings_p = &imu.pid[Imu::DIR].settings;
   Console.print(F("pid[DIR].Kp : "));
-  Console.println(pidSettings.Kp);
+  Console.println(pidSettings_p->Kp);
   Console.print(F("pid[DIR].Ki : "));
-  Console.println(pidSettings.Ki);
+  Console.println(pidSettings_p->Ki);
   Console.print(F("pid[DIR].Kd : "));
-  Console.println(pidSettings.Kd);
-  pidSettings = imu.pid[Imu::ROLL].getSettings();
+  Console.println(pidSettings_p->Kd);
+  pidSettings_p = &imu.pid[Imu::ROLL].settings;
   Console.print(F("pid[ROLL].Kp : "));
-  Console.println(pidSettings.Kp);
+  Console.println(pidSettings_p->Kp);
   Console.print(F("pid[ROLL].Ki : "));
-  Console.println(pidSettings.Ki);
+  Console.println(pidSettings_p->Ki);
   Console.print(F("pid[ROLL].Kd : "));
-  Console.println(pidSettings.Kd);
+  Console.println(pidSettings_p->Kd);
 
   // ------ model R/C ------------------------------------
   Console.println(F("== R/C =="));
@@ -778,12 +777,8 @@ void Robot::wheelControl_imuRoll()
 {
   // Control range corresponds to 80 % of maximum speed on the drive wheel
   Pid* pid_p = &imu.pid[Imu::ROLL];
-  pid_p->setSetpoint(0);
-  pid_p->setYMin(-80);
-  pid_p->setYMax(+80);
-  pid_p->setMaxOutput(80);
   float processValue = -distancePI(imu.getYaw(), imuRollHeading) / PI * 180.0;
-  float y = pid_p->compute(processValue);
+  float y = pid_compute(processValue, pid_p);
 
   if ((stateMachine.isCurrentState(StateMachine::STATE_OFF) ||
        stateMachine.isCurrentState(StateMachine::STATE_STATION) ||
@@ -835,11 +830,7 @@ void Robot::wheelControl_perimeter()
     // Normal perimeter tracking
 
     Pid* pid_p = &perimeters.perimeterArray_p[PERIMETER_LEFT].pid;
-    pid_p->setSetpoint(0);
-    pid_p->setYMin(-100);
-    pid_p->setYMax(+100);
-    pid_p->setMaxOutput(100);
-    float y = pid_p->compute(sign(perimeterMag));
+    float y = pid_compute(sign(perimeterMag), pid_p);
 
     wheels.setSpeed(speed);
     wheels.setSteer(round(y));
@@ -851,12 +842,8 @@ void Robot::wheelControl_imuDir()
 {
   // Control range corresponds to the steer range
   Pid* pid_p = &imu.pid[Imu::DIR];
-  pid_p->setSetpoint(0);
-  pid_p->setYMin(-100);
-  pid_p->setYMax(+100);
-  pid_p->setMaxOutput(100);
   float processValue = -distancePI(imu.getYaw(), imuDriveHeading) / PI * 180.0;
-  float y = pid_p->compute(processValue);
+  float y = pid_compute(processValue, pid_p);
 
   if ((stateMachine.isCurrentState(StateMachine::STATE_OFF) ||
        stateMachine.isCurrentState(StateMachine::STATE_STATION) ||

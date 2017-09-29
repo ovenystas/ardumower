@@ -16,7 +16,6 @@
 class Motor
 {
   public:
-    Pid pid; //TODO: Move to MotorDrv
     float acceleration {};
     bool regulate { false };
     int16_t rpmMax {};

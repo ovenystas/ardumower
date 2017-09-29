@@ -188,7 +188,7 @@ void Imu::printPoint(const point_int_t point)
   Console.print(",");
   Console.print(point.y);
   Console.print(",");
-  Console.println(point.z);
+  Console.print(point.z);
 }
 void Imu::printPointln(const point_int_t point)
 {

@@ -8,6 +8,7 @@
 #include <Arduino.h>
 #include "MotorMosFet.h"
 #include "AdcManager.h"
+#include "Pid.h"
 
 //#define Console Serial
 
@@ -55,11 +56,7 @@ void MotorMosFet::control(void)
   if (regulate)
   {
     // Use PID regulator.
-    pid.setYMin(0);
-    pid.setYMax(pwmMax);
-    pid.setMaxOutput(pwmMax);
-    pid.setSetpoint(rpmSet);
-    float y = pid.compute(rpmMeas);
+    float y = pid_compute(rpmMeas, &pid);
     pwmNew = (int)round(y);
   }
   else
