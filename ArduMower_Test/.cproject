@@ -43,8 +43,9 @@
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.cygwin.base.1022894690" name="Cygwin C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.cygwin.base"/>
 						</toolChain>
 					</folderInfo>
+					<fileInfo id="cdt.managedbuild.toolchain.gnu.cygwin.base.875394961.1093232187" name="AllTests.cpp" rcbsApplicability="disable" resourcePath="tests/AllTests.cpp" toolsToInvoke=""/>
 					<sourceEntries>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="src" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

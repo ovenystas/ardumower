@@ -20,7 +20,6 @@ typedef struct
 
 void rainSensor_setup(const uint8_t pin, RainSensor* rainSensor_p);
 void rainSensor_check(RainSensor* rainSensor_p);
-void rainSensor_read(RainSensor* rainSensor_p);
 
 static inline
 bool rainSensor_isRaining(RainSensor* rainSensor_p)

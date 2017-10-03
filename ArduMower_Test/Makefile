@@ -29,6 +29,7 @@ SRC_DIRS = \
 SRC_FILES = \
 	../ArduMower/Filter.cpp \
 	../ArduMower/Pid.cpp \
+	../ArduMower/RainSensor.cpp \
 
 TEST_SRC_DIRS = \
 	tests
@@ -36,6 +37,7 @@ TEST_SRC_DIRS = \
 INCLUDE_DIRS = \
   src \
   mocks \
+  ../ArduMower \
   ../ArduMower/inc \
   $(CPPUTEST_HOME)/include \
 
