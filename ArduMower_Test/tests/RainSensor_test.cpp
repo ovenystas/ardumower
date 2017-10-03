@@ -1,26 +1,9 @@
 #include "RainSensor.h"
-#include "RainSensor.cpp"
 
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
 
 RainSensor rainSensor;
-
-// Mocked functions -----------------------------------------------------------
-
-void pinMode(uint8_t pin, uint8_t mode)
-{
-  mock().actualCall("pinMode")
-      .withIntParameter("pin", pin)
-      .withIntParameter("mode", mode);
-}
-
-int digitalRead(uint8_t pin)
-{
-  mock().actualCall("digitalRead")
-        .withIntParameter("pin", pin);
-  return mock().intReturnValue();
-}
 
 // RainSensorGroup ------------------------------------------------------------
 

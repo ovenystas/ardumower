@@ -5,14 +5,6 @@
 
 static Pid pid;
 
-// Mocked functions -----------------------------------------------------------
-
-unsigned long micros()
-{
-    mock().actualCall("micros");
-    return mock().unsignedLongIntReturnValue();
-}
-
 // PidPGroup ------------------------------------------------------------------
 
 TEST_GROUP(PidPGroup)
@@ -94,7 +86,7 @@ TEST_GROUP(PidPIGroup)
   void setup()
   {
     mock().expectOneCall("micros").andReturnValue(0ul);
-    pid_setup(1.0, 1.0, 0.0, -10.0, 10.0, 10.0, &pid);
+    pid_setup(1.0, 1.0, 0.0, -10.0, 10.0, 5.0, &pid);
     mock().checkExpectations();
   }
 
@@ -111,7 +103,7 @@ TEST(PidPIGroup, Setup)
   DOUBLES_EQUAL(0.0, pid.settings.Kd, 0.01);
   DOUBLES_EQUAL(-10.0, pid.yMin, 0.01);
   DOUBLES_EQUAL(10.0, pid.yMax, 0.01);
-  DOUBLES_EQUAL(10.0, pid.maxOutput, 0.01);
+  DOUBLES_EQUAL(5.0, pid.maxOutput, 0.01);
   DOUBLES_EQUAL(0.0, pid.errorOld, 0.01);
   DOUBLES_EQUAL(0.0, pid.errorSum, 0.01);
   DOUBLES_EQUAL(0.0, pid.setPoint, 0.01);
@@ -138,6 +130,46 @@ TEST(PidPIGroup, Compute_setPointStep)
 
   mock().expectOneCall("micros").andReturnValue(2000000ul);
   DOUBLES_EQUAL(3.0, pid_compute(0.0, &pid), 0.01);
+
+  mock().checkExpectations();
+}
+
+TEST(PidPIGroup, AntiWindUpMax)
+{
+  mock().expectOneCall("micros").andReturnValue(1000000ul);
+
+  pid.setPoint = 2.0;
+
+  DOUBLES_EQUAL(4.0, pid_compute(0.0, &pid), 0.01);
+
+  mock().expectOneCall("micros").andReturnValue(2000000ul);
+  DOUBLES_EQUAL(6.0, pid_compute(0.0, &pid), 0.01);
+
+  mock().expectOneCall("micros").andReturnValue(3000000ul);
+  DOUBLES_EQUAL(7.0, pid_compute(0.0, &pid), 0.01);
+
+  mock().expectOneCall("micros").andReturnValue(4000000ul);
+  DOUBLES_EQUAL(7.0, pid_compute(0.0, &pid), 0.01);
+
+  mock().checkExpectations();
+}
+
+TEST(PidPIGroup, AntiWindUpMin)
+{
+  mock().expectOneCall("micros").andReturnValue(1000000ul);
+
+  pid.setPoint = -2.0;
+
+  DOUBLES_EQUAL(-4.0, pid_compute(0.0, &pid), 0.01);
+
+  mock().expectOneCall("micros").andReturnValue(2000000ul);
+  DOUBLES_EQUAL(-6.0, pid_compute(0.0, &pid), 0.01);
+
+  mock().expectOneCall("micros").andReturnValue(3000000ul);
+  DOUBLES_EQUAL(-7.0, pid_compute(0.0, &pid), 0.01);
+
+  mock().expectOneCall("micros").andReturnValue(4000000ul);
+  DOUBLES_EQUAL(-7.0, pid_compute(0.0, &pid), 0.01);
 
   mock().checkExpectations();
 }

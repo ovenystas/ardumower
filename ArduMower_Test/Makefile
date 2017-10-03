@@ -34,6 +34,9 @@ SRC_FILES = \
 TEST_SRC_DIRS = \
 	tests
 
+MOCKS_SRC_DIRS = \
+	mocks \
+
 INCLUDE_DIRS = \
   src \
   mocks \
