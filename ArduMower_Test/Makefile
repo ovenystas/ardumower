@@ -30,6 +30,7 @@ SRC_FILES = \
 	../ArduMower/Filter.cpp \
 	../ArduMower/Pid.cpp \
 	../ArduMower/RainSensor.cpp \
+	../ArduMower/DropSensor.cpp \
 
 TEST_SRC_DIRS = \
 	tests
