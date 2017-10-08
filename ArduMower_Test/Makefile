@@ -11,7 +11,7 @@ endif
 
 #--- Inputs ----#
 COMPONENT_NAME = ArduMower_Test
-CPPUTEST_HOME = C:/Users/oveny/git/cpputest
+CPPUTEST_HOME = ../../cpputest
 
 CPPUTEST_USE_EXTENSIONS = Y
 CPPUTEST_USE_GCOV = Y
