@@ -1,3 +1,11 @@
 language: cpp
-compiler: gcc
+install:
+  - git clone https://github.com/cpputest/cpputest.git
+  - cd ../cpputest/cpputest_bild
+  - autoreconf .. - i
+  - cd ..
+  - ./configure
+  - make
+  - cd ../ardumower
+Compiler: gcc
 script: cd ArduMower_Test && make gcov
