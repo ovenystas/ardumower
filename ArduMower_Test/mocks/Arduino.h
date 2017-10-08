@@ -5,6 +5,8 @@
  *      Author: oveny
  */
 
+#include <stdint.h>
+
 #ifndef ARDUINO_H_
 #define ARDUINO_H_
 
