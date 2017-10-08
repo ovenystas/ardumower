@@ -1,7 +1,8 @@
 language: cpp
 install:
+  - cd ..
   - git clone https://github.com/cpputest/cpputest.git
-  - cd ../cpputest/cpputest_build
+  - cd cpputest/cpputest_build
   - autoreconf .. - i
   - cd ..
   - ./configure
