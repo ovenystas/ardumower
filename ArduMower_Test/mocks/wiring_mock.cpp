@@ -6,6 +6,7 @@
  */
 
 #include "CppUTestExt/MockSupport.h"
+#include <stdint.h>
 
 // Mocked functions -----------------------------------------------------------
 
