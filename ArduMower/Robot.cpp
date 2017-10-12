@@ -238,7 +238,6 @@ void Robot::loadSaveUserSettings(const boolean readflag)
   eereadwrite(readflag, addr, odometer.wheelBaseCm);
   eereadwrite(readflag, addr, odometer.encoder.left_p->swapDir);
   eereadwrite(readflag, addr, odometer.encoder.right_p->swapDir);
-  eereadwrite(readflag, addr, odometer.encoder.left_p->twoWay);
   eereadwrite(readflag, addr, button.use);
   eereadwrite(readflag, addr, userSwitch1);
   eereadwrite(readflag, addr, userSwitch2);
@@ -511,8 +510,6 @@ void Robot::printSettingSerial()
   Console.println(F("== Odometer =="));
   Console.print(F("use : "));
   Console.println(odometer.use);
-  Console.print(F("twoWay : "));
-  Console.println(odometer.encoder.left_p->twoWay);
   Console.print(F("ticksPerRevolution : "));
   Console.println(odometer.ticksPerRevolution);
   Console.print(F("ticksPerCm : "));

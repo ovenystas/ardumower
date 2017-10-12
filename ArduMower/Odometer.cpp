@@ -24,13 +24,10 @@ void Odometer::setup(const int ticksPerRevolution,
   this->imu_p = imu_p;
 }
 
-void Odometer::readAndSetState(void)
+void Odometer::read(void)
 {
   encoder_read(encoder.left_p);
   encoder_read(encoder.right_p);
-
-  encoder_setState(encoder.left_p);
-  encoder_setState(encoder.right_p);
 }
 
 // calculate map position by odometer sensors

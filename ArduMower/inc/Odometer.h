@@ -34,7 +34,7 @@ class Odometer
                Encoder* encoderRight,
                Imu* imu);
     void calc(void);
-    void readAndSetState(void);
+    void read(void);
 
     float getX() const
     {

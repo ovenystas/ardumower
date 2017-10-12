@@ -1310,8 +1310,6 @@ void RemoteControl::sendOdometerMenu(const boolean update)
              robot_p->odometer.ticksPerCm, "", 0.1, 30);
   sendSlider("l02", F("Wheel base cm"),
              robot_p->odometer.wheelBaseCm, "", 0.1, 50);
-  Bluetooth.print(F("|l08~Use two-way encoder "));
-  sendYesNo(robot_p->odometer.encoder.left_p->twoWay);  // TODO: Only checking sensing left here
   Bluetooth.print(F("|l05~Swap left direction "));
   sendYesNo(robot_p->odometer.encoder.left_p->swapDir);
   Bluetooth.print(F("|l06~Swap right direction "));
@@ -1344,12 +1342,6 @@ void RemoteControl::processOdometerMenu(const String pfodCmd)
   else if (pfodCmd.startsWith("l06"))
   {
     TOGGLE(robot_p->odometer.encoder.right_p->swapDir);
-  }
-  else if (pfodCmd.startsWith("l08"))
-  {
-    bool twoWay = robot_p->odometer.encoder.left_p->twoWay;
-    robot_p->odometer.encoder.left_p->twoWay = !twoWay;
-    robot_p->odometer.encoder.right_p->twoWay = !twoWay;
   }
   sendOdometerMenu(true);
 }
