@@ -27,11 +27,12 @@ SRC_DIRS = \
 	src \
 
 SRC_FILES = \
+	../ArduMower/Bumper.cpp \
+	../ArduMower/DropSensor.cpp \
+	../ArduMower/Encoder.cpp \
 	../ArduMower/Filter.cpp \
 	../ArduMower/Pid.cpp \
 	../ArduMower/RainSensor.cpp \
-	../ArduMower/DropSensor.cpp \
-	../ArduMower/Encoder.cpp \
 
 TEST_SRC_DIRS = \
 	tests
