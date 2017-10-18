@@ -15,6 +15,7 @@ TEST_GROUP(BumperGroup)
         .withIntParameter("pin", 1)
         .withIntParameter("mode", INPUT_PULLUP);
     bumper_setup(1, &bumper);
+    mock().checkExpectations();
   }
 
   void teardown()
@@ -39,6 +40,8 @@ TEST(BumperGroup, CheckOnceHigh)
   bumper_check(&bumper);
   CHECK_EQUAL(false, bumper_isHit(&bumper));
   CHECK_EQUAL(0, bumper_getCounter(&bumper));
+
+  mock().checkExpectations();
 }
 
 TEST(BumperGroup, CheckOnceLow)
@@ -50,6 +53,8 @@ TEST(BumperGroup, CheckOnceLow)
   bumper_check(&bumper);
   CHECK_EQUAL(true, bumper_isHit(&bumper));
   CHECK_EQUAL(1, bumper_getCounter(&bumper));
+
+  mock().checkExpectations();
 }
 
 TEST(BumperGroup, CheckTwiceHigh)
@@ -65,6 +70,8 @@ TEST(BumperGroup, CheckTwiceHigh)
   bumper_check(&bumper);
   CHECK_EQUAL(false, bumper_isHit(&bumper));
   CHECK_EQUAL(0, bumper_getCounter(&bumper));
+
+  mock().checkExpectations();
 }
 
 TEST(BumperGroup, CheckTwiceLow)
@@ -80,6 +87,8 @@ TEST(BumperGroup, CheckTwiceLow)
   bumper_check(&bumper);
   CHECK_EQUAL(true, bumper_isHit(&bumper));
   CHECK_EQUAL(2, bumper_getCounter(&bumper));
+
+  mock().checkExpectations();
 }
 
 TEST(BumperGroup, CheckTwiceSim)
@@ -99,12 +108,15 @@ TEST(BumperGroup, clearHit)
   bumper_simHit(&bumper);
   CHECK_EQUAL(true, bumper_isHit(&bumper));
   CHECK_EQUAL(2, bumper_getCounter(&bumper));
+
   bumper_clearHit(&bumper);
   CHECK_EQUAL(false, bumper_isHit(&bumper));
   CHECK_EQUAL(2, bumper_getCounter(&bumper));
+
   bumper_simHit(&bumper);
   CHECK_EQUAL(true, bumper_isHit(&bumper));
   CHECK_EQUAL(3, bumper_getCounter(&bumper));
+
   bumper_clearHit(&bumper);
   CHECK_EQUAL(false, bumper_isHit(&bumper));
   CHECK_EQUAL(3, bumper_getCounter(&bumper));
@@ -129,6 +141,8 @@ TEST_GROUP(BumperArrayGroup)
         .withIntParameter("mode", INPUT_PULLUP);
 
     bumpers_setup(bumperPins, bumperArray, &bumpers, BUMPERS_NUM);
+
+    mock().checkExpectations();
   }
 
   void teardown()
@@ -168,6 +182,8 @@ TEST(BumperArrayGroup, checkNoHit)
   CHECK_EQUAL(false, bumper_isHit(&bumpers.bumperArray_p[1]));
   CHECK_EQUAL(0, bumper_getCounter(&bumpers.bumperArray_p[0]));
   CHECK_EQUAL(0, bumper_getCounter(&bumpers.bumperArray_p[1]));
+
+  mock().checkExpectations();
 }
 
 TEST(BumperArrayGroup, checkOneHit)
@@ -186,6 +202,8 @@ TEST(BumperArrayGroup, checkOneHit)
   CHECK_EQUAL(true, bumper_isHit(&bumpers.bumperArray_p[1]));
   CHECK_EQUAL(0, bumper_getCounter(&bumpers.bumperArray_p[0]));
   CHECK_EQUAL(1, bumper_getCounter(&bumpers.bumperArray_p[1]));
+
+  mock().checkExpectations();
 }
 
 TEST(BumperArrayGroup, checkBothHit)
@@ -204,4 +222,6 @@ TEST(BumperArrayGroup, checkBothHit)
   CHECK_EQUAL(true, bumper_isHit(&bumpers.bumperArray_p[1]));
   CHECK_EQUAL(1, bumper_getCounter(&bumpers.bumperArray_p[0]));
   CHECK_EQUAL(1, bumper_getCounter(&bumpers.bumperArray_p[1]));
+
+  mock().checkExpectations();
 }

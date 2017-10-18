@@ -15,6 +15,8 @@ TEST_GROUP(EncoderGroup)
         .withIntParameter("pin", 1)
         .withIntParameter("mode", INPUT_PULLUP);
     encoder_setup(1, false, &encoder);
+
+    mock().checkExpectations();
   }
 
   void teardown()
@@ -52,6 +54,8 @@ TEST(EncoderGroup, readLowLow)
   CHECK_EQUAL(LOW, encoder.curState);
   CHECK_EQUAL(LOW, encoder.lastState);
   CHECK_EQUAL(0, encoder.counter);
+
+  mock().checkExpectations();
 }
 
 TEST(EncoderGroup, readLowHigh)
@@ -73,6 +77,8 @@ TEST(EncoderGroup, readLowHigh)
   CHECK_EQUAL(HIGH, encoder.curState);
   CHECK_EQUAL(HIGH, encoder.lastState);
   CHECK_EQUAL(1, encoder.counter);
+
+  mock().checkExpectations();
 }
 
 TEST(EncoderGroup, readHighLow)
@@ -94,6 +100,8 @@ TEST(EncoderGroup, readHighLow)
   CHECK_EQUAL(LOW, encoder.curState);
   CHECK_EQUAL(LOW, encoder.lastState);
   CHECK_EQUAL(2, encoder.counter);
+
+  mock().checkExpectations();
 }
 
 TEST(EncoderGroup, readHighHigh)
@@ -115,6 +123,8 @@ TEST(EncoderGroup, readHighHigh)
   CHECK_EQUAL(HIGH, encoder.curState);
   CHECK_EQUAL(HIGH, encoder.lastState);
   CHECK_EQUAL(1, encoder.counter);
+
+  mock().checkExpectations();
 }
 
 TEST(EncoderGroup, readHighLowSwapDir)
@@ -137,6 +147,8 @@ TEST(EncoderGroup, readHighLowSwapDir)
   CHECK_EQUAL(LOW, encoder.curState);
   CHECK_EQUAL(LOW, encoder.lastState);
   CHECK_EQUAL(-2, encoder.counter);
+
+  mock().checkExpectations();
 }
 
 TEST(EncoderGroup, readHighLowNegWheelRpm)
@@ -159,6 +171,8 @@ TEST(EncoderGroup, readHighLowNegWheelRpm)
   CHECK_EQUAL(LOW, encoder.curState);
   CHECK_EQUAL(LOW, encoder.lastState);
   CHECK_EQUAL(-2, encoder.counter);
+
+  mock().checkExpectations();
 }
 
 TEST(EncoderGroup, clearCounter)

@@ -28,6 +28,7 @@ SRC_DIRS = \
 
 SRC_FILES = \
 	../ArduMower/Bumper.cpp \
+	../ArduMower/Button.cpp \
 	../ArduMower/DropSensor.cpp \
 	../ArduMower/Encoder.cpp \
 	../ArduMower/Filter.cpp \

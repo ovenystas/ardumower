@@ -15,3 +15,9 @@ unsigned long micros()
     mock().actualCall("micros");
     return mock().unsignedLongIntReturnValue();
 }
+
+unsigned long millis()
+{
+    mock().actualCall("millis");
+    return mock().unsignedLongIntReturnValue();
+}

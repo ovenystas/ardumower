@@ -20,11 +20,14 @@ void button_setup(uint8_t pin, Button* button_p)
 
 bool button_isTimeToRun(Button* button_p)
 {
-  unsigned long curMillis = millis();
-  if (button_p->use && curMillis - button_p->lastRun >= TIME_BETWEEN_RUNS)
+  if (button_p->use)
   {
-    button_p->lastRun = curMillis;
-    return true;
+    unsigned long curMillis = millis();
+    if (curMillis - button_p->lastRun >= TIME_BETWEEN_RUNS)
+    {
+      button_p->lastRun = curMillis;
+      return true;
+    }
   }
   return false;
 }

@@ -15,6 +15,8 @@ TEST_GROUP(RainSensorGroup)
         .withIntParameter("pin", 1)
         .withIntParameter("mode", INPUT);
     rainSensor_setup(1, &rainSensor);
+
+    mock().checkExpectations();
   }
 
   void teardown()
@@ -40,6 +42,8 @@ TEST(RainSensorGroup, CheckOnceHigh)
   rainSensor_check(&rainSensor);
   CHECK_EQUAL(false, rainSensor_isRaining(&rainSensor));
   CHECK_EQUAL(0, rainSensor_getCounter(&rainSensor));
+
+  mock().checkExpectations();
 }
 
 TEST(RainSensorGroup, CheckOnceLow)
@@ -51,6 +55,8 @@ TEST(RainSensorGroup, CheckOnceLow)
   rainSensor_check(&rainSensor);
   CHECK_EQUAL(true, rainSensor_isRaining(&rainSensor));
   CHECK_EQUAL(1, rainSensor_getCounter(&rainSensor));
+
+  mock().checkExpectations();
 }
 
 TEST(RainSensorGroup, CheckTwiceHigh)
@@ -66,6 +72,8 @@ TEST(RainSensorGroup, CheckTwiceHigh)
   rainSensor_check(&rainSensor);
   CHECK_EQUAL(false, rainSensor_isRaining(&rainSensor));
   CHECK_EQUAL(0, rainSensor_getCounter(&rainSensor));
+
+  mock().checkExpectations();
 }
 
 TEST(RainSensorGroup, CheckTwiceLow)
@@ -81,6 +89,8 @@ TEST(RainSensorGroup, CheckTwiceLow)
   rainSensor_check(&rainSensor);
   CHECK_EQUAL(true, rainSensor_isRaining(&rainSensor));
   CHECK_EQUAL(2, rainSensor_getCounter(&rainSensor));
+
+  mock().checkExpectations();
 }
 
 TEST(RainSensorGroup, CheckLowHigh)
@@ -88,6 +98,7 @@ TEST(RainSensorGroup, CheckLowHigh)
   mock().expectOneCall("digitalRead")
       .withIntParameter("pin", 1)
       .andReturnValue(LOW);
+
   rainSensor_check(&rainSensor);
   CHECK_EQUAL(true, rainSensor_isRaining(&rainSensor));
   CHECK_EQUAL(1, rainSensor_getCounter(&rainSensor));
@@ -95,9 +106,12 @@ TEST(RainSensorGroup, CheckLowHigh)
   mock().expectOneCall("digitalRead")
       .withIntParameter("pin", 1)
       .andReturnValue(HIGH);
+
   rainSensor_check(&rainSensor);
   CHECK_EQUAL(false, rainSensor_isRaining(&rainSensor));
   CHECK_EQUAL(1, rainSensor_getCounter(&rainSensor));
+
+  mock().checkExpectations();
 }
 
 TEST(RainSensorGroup, CheckHighLow)
@@ -105,6 +119,7 @@ TEST(RainSensorGroup, CheckHighLow)
   mock().expectOneCall("digitalRead")
       .withIntParameter("pin", 1)
       .andReturnValue(HIGH);
+
   rainSensor_check(&rainSensor);
   CHECK_EQUAL(false, rainSensor_isRaining(&rainSensor));
   CHECK_EQUAL(0, rainSensor_getCounter(&rainSensor));
@@ -112,8 +127,11 @@ TEST(RainSensorGroup, CheckHighLow)
   mock().expectOneCall("digitalRead")
       .withIntParameter("pin", 1)
       .andReturnValue(LOW);
+
   rainSensor_check(&rainSensor);
   CHECK_EQUAL(true, rainSensor_isRaining(&rainSensor));
   CHECK_EQUAL(1, rainSensor_getCounter(&rainSensor));
+
+  mock().checkExpectations();
 }
 

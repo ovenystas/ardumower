@@ -15,6 +15,8 @@ TEST_GROUP(DropSensorGroup)
         .withIntParameter("pin", 1)
         .withIntParameter("mode", INPUT_PULLUP);
     dropSensor_setup(1, &dropSensor);
+
+    mock().checkExpectations();
   }
 
   void teardown()
@@ -39,6 +41,8 @@ TEST(DropSensorGroup, CheckOnceHighNo)
   dropSensor_check(&dropSensor, DROPSENSOR_NO);
   CHECK_EQUAL(false, dropSensor_isDetected(&dropSensor));
   CHECK_EQUAL(0, dropSensor_getCounter(&dropSensor));
+
+  mock().checkExpectations();
 }
 
 TEST(DropSensorGroup, CheckOnceLowNo)
@@ -50,6 +54,8 @@ TEST(DropSensorGroup, CheckOnceLowNo)
   dropSensor_check(&dropSensor, DROPSENSOR_NO);
   CHECK_EQUAL(true, dropSensor_isDetected(&dropSensor));
   CHECK_EQUAL(1, dropSensor_getCounter(&dropSensor));
+
+  mock().checkExpectations();
 }
 
 TEST(DropSensorGroup, CheckOnceHighNc)
@@ -61,6 +67,8 @@ TEST(DropSensorGroup, CheckOnceHighNc)
   dropSensor_check(&dropSensor, DROPSENSOR_NC);
   CHECK_EQUAL(true, dropSensor_isDetected(&dropSensor));
   CHECK_EQUAL(1, dropSensor_getCounter(&dropSensor));
+
+  mock().checkExpectations();
 }
 
 TEST(DropSensorGroup, CheckOnceLowNc)
@@ -72,6 +80,8 @@ TEST(DropSensorGroup, CheckOnceLowNc)
   dropSensor_check(&dropSensor, DROPSENSOR_NC);
   CHECK_EQUAL(false, dropSensor_isDetected(&dropSensor));
   CHECK_EQUAL(0, dropSensor_getCounter(&dropSensor));
+
+  mock().checkExpectations();
 }
 
 TEST(DropSensorGroup, CheckTwiceHighNo)
@@ -87,6 +97,8 @@ TEST(DropSensorGroup, CheckTwiceHighNo)
   dropSensor_check(&dropSensor, DROPSENSOR_NO);
   CHECK_EQUAL(false, dropSensor_isDetected(&dropSensor));
   CHECK_EQUAL(0, dropSensor_getCounter(&dropSensor));
+
+  mock().checkExpectations();
 }
 
 TEST(DropSensorGroup, CheckTwiceLowNo)
@@ -102,6 +114,8 @@ TEST(DropSensorGroup, CheckTwiceLowNo)
   dropSensor_check(&dropSensor, DROPSENSOR_NO);
   CHECK_EQUAL(true, dropSensor_isDetected(&dropSensor));
   CHECK_EQUAL(2, dropSensor_getCounter(&dropSensor));
+
+  mock().checkExpectations();
 }
 
 TEST(DropSensorGroup, CheckTwiceSim)
@@ -113,4 +127,6 @@ TEST(DropSensorGroup, CheckTwiceSim)
   dropSensor_simDetected(&dropSensor);
   CHECK_EQUAL(true, dropSensor_isDetected(&dropSensor));
   CHECK_EQUAL(2, dropSensor_getCounter(&dropSensor));
+
+  mock().checkExpectations();
 }
