@@ -23,3 +23,10 @@ int digitalRead(uint8_t pin)
         .withIntParameter("pin", pin);
   return mock().intReturnValue();
 }
+
+void digitalWrite(uint8_t pin, uint8_t val)
+{
+  mock().actualCall("digitalWrite")
+      .withIntParameter("pin", pin)
+      .withIntParameter("val", val);
+}

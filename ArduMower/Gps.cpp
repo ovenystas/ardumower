@@ -68,7 +68,7 @@ boolean Gps::feed()
 {
   while (Serial3.available())
   {
-    if (encode(Serial3.read()))
+    if (encode((char)Serial3.read()))
     {
       return true;
     }
@@ -86,7 +86,7 @@ bool Gps::encode(char c)
   switch (c)
   {
     case ',': // term terminators
-      _parity ^= c;
+      _parity ^= (byte)c;
     case '\r':
     case '\n':
     case '*':
@@ -107,6 +107,9 @@ bool Gps::encode(char c)
       _is_checksum_term = false;
       _gps_data_good = false;
       return valid_sentence;
+
+    default:
+      break;
   }
 
   // ordinary characters
@@ -116,7 +119,7 @@ bool Gps::encode(char c)
   }
   if (!_is_checksum_term)
   {
-    _parity ^= c;
+    _parity ^= (byte)c;
   }
 
   return valid_sentence;
@@ -220,7 +223,7 @@ bool Gps::term_complete()
   //Console.println("compl");
   if (_is_checksum_term)
   {
-    byte checksum = 16 * from_hex(_term[0]) + from_hex(_term[1]);
+    byte checksum = (byte)(16 * from_hex(_term[0]) + from_hex(_term[1]));
     //Console.print(checksum);
     //Console.print(",");
     //Console.println(_parity);
@@ -245,6 +248,7 @@ bool Gps::term_complete()
             _speed = _new_speed;
             _course = _new_course;
             break;
+
           case _GPS_SENTENCE_GPGGA:
             _altitude = _new_altitude;
             _time = _new_time;
@@ -252,6 +256,9 @@ bool Gps::term_complete()
             _longitude = _new_longitude;
             _numsats = _new_numsats;
             _hdop = _new_hdop;
+            break;
+
+          default:
             break;
         }
 
@@ -295,48 +302,63 @@ bool Gps::term_complete()
         _new_time = parse_decimal();
         _new_time_fix = millis();
         break;
+
       case COMBINE(_GPS_SENTENCE_GPRMC, 2): // GPRMC validity
         _gps_data_good = _term[0] == 'A';
         break;
+
       case COMBINE(_GPS_SENTENCE_GPRMC, 3): // Latitude
       case COMBINE(_GPS_SENTENCE_GPGGA, 2):
         _new_latitude = parse_degrees();
         _new_position_fix = millis();
         break;
+
       case COMBINE(_GPS_SENTENCE_GPRMC, 4): // N/S
       case COMBINE(_GPS_SENTENCE_GPGGA, 3):
         if (_term[0] == 'S')
           _new_latitude = -_new_latitude;
         break;
+
       case COMBINE(_GPS_SENTENCE_GPRMC, 5): // Longitude
       case COMBINE(_GPS_SENTENCE_GPGGA, 4):
         _new_longitude = parse_degrees();
         break;
+
       case COMBINE(_GPS_SENTENCE_GPRMC, 6): // E/W
       case COMBINE(_GPS_SENTENCE_GPGGA, 5):
         if (_term[0] == 'W')
           _new_longitude = -_new_longitude;
         break;
+
       case COMBINE(_GPS_SENTENCE_GPRMC, 7): // Speed (GPRMC)
         _new_speed = parse_decimal();
         break;
+
       case COMBINE(_GPS_SENTENCE_GPRMC, 8): // Course (GPRMC)
         _new_course = parse_decimal();
         break;
+
       case COMBINE(_GPS_SENTENCE_GPRMC, 9): // Date (GPRMC)
         _new_date = gpsatol(_term);
         break;
+
       case COMBINE(_GPS_SENTENCE_GPGGA, 6): // Fix data (GPGGA) ; 0=invalid, 1=GPS fix, 2=DGPS fix, 6=estimation
         _gps_data_good = _term[0] > '0';
         break;
+
       case COMBINE(_GPS_SENTENCE_GPGGA, 7): // NN-Satellites used (GPGGA): 00-12
         _new_numsats = (unsigned char)atoi(_term);
         break;
+
       case COMBINE(_GPS_SENTENCE_GPGGA, 8): // D.D - HDOP (GPGGA) - horizontal deviation
         _new_hdop = parse_decimal();
         break;
+
       case COMBINE(_GPS_SENTENCE_GPGGA, 9): // H.H - Altitude (GPGGA)
         _new_altitude = parse_decimal();
+        break;
+
+      default:
         break;
     }
   }
@@ -434,9 +456,8 @@ void Gps::get_position(long *latitude, long *longitude, unsigned long *fix_age)
   }
   if (fix_age)
   {
-    *fix_age =
-        _last_position_fix == GPS_INVALID_FIX_TIME ? GPS_INVALID_AGE :
-            millis() - _last_position_fix;
+    *fix_age = _last_position_fix == GPS_INVALID_FIX_TIME ?
+        (unsigned long)GPS_INVALID_AGE : millis() - _last_position_fix;
   }
 }
 
@@ -454,9 +475,8 @@ void Gps::get_datetime(unsigned long *date, unsigned long *time,
   }
   if (age)
   {
-    *age =
-        _last_time_fix == GPS_INVALID_FIX_TIME ? GPS_INVALID_AGE :
-            millis() - _last_time_fix;
+    *age = _last_time_fix == GPS_INVALID_FIX_TIME ?
+        (unsigned long)GPS_INVALID_AGE : millis() - _last_time_fix;
   }
 }
 
@@ -474,8 +494,8 @@ void Gps::f_get_position(float *latitude, float *longitude,
   }
   else
   {
-    *latitude = lat / 100000.0;
-    *longitude = lon / 100000.0;
+    *latitude = (float)lat / 100000.0f;
+    *longitude = (float)lon / 100000.0f;
   }
 }
 
@@ -487,32 +507,32 @@ void Gps::crack_datetime(int *year, byte *month, byte *day, byte *hour,
   get_datetime(&date, &time, age);
   if (year)
   {
-    *year = date % 100;
+    *year = (int)(date % 100);
     *year += *year > 80 ? 1900 : 2000;
   }
   if (month)
   {
-    *month = (date / 100) % 100;
+    *month = (byte)((date / 100) % 100);
   }
   if (day)
   {
-    *day = date / 10000;
+    *day = (byte)(date / 10000);
   }
   if (hour)
   {
-    *hour = time / 1000000;
+    *hour = (byte)(time / 1000000);
   }
   if (minute)
   {
-    *minute = (time / 10000) % 100;
+    *minute = (byte)((time / 10000) % 100);
   }
   if (second)
   {
-    *second = (time / 100) % 100;
+    *second = (byte)((time / 100) % 100);
   }
   if (hundredths)
   {
-    *hundredths = time % 100;
+    *hundredths = (byte)(time % 100);
   }
 }
 
@@ -524,41 +544,43 @@ float Gps::f_altitude()
   }
   else
   {
-    return _altitude / 100.0;
+    return (float)_altitude / 100.0f;
   }
 }
 
 float Gps::f_course()
 {
-  return _course == GPS_INVALID_ANGLE ? GPS_INVALID_F_ANGLE : _course / 100.0;
+  return _course == GPS_INVALID_ANGLE ?
+      GPS_INVALID_F_ANGLE : (float)_course / 100.0f;
 }
 
 float Gps::f_speed_knots()
 {
-  return _speed == GPS_INVALID_SPEED ? GPS_INVALID_F_SPEED : _speed / 100.0;
+  return _speed == GPS_INVALID_SPEED ?
+      GPS_INVALID_F_SPEED : (float)_speed / 100.0f;
 }
 
 float Gps::f_speed_mph()
 {
   float sk = f_speed_knots();
-  return sk == GPS_INVALID_F_SPEED ? GPS_INVALID_F_SPEED :
-  _GPS_MPH_PER_KNOT * f_speed_knots();
+  return sk == GPS_INVALID_F_SPEED ?
+      GPS_INVALID_F_SPEED : _GPS_MPH_PER_KNOT * f_speed_knots();
 }
 
 float Gps::f_speed_mps()
 {
   float sk = f_speed_knots();
-  return sk == GPS_INVALID_F_SPEED ? GPS_INVALID_F_SPEED :
-  _GPS_MPS_PER_KNOT * f_speed_knots();
+  return sk == GPS_INVALID_F_SPEED ?
+      GPS_INVALID_F_SPEED : _GPS_MPS_PER_KNOT * f_speed_knots();
 }
 
 float Gps::f_speed_kmph()
 {
   float sk = f_speed_knots();
-  return sk == GPS_INVALID_F_SPEED ? GPS_INVALID_F_SPEED :
-  _GPS_KMPH_PER_KNOT * f_speed_knots();
+  return sk == GPS_INVALID_F_SPEED ?
+      GPS_INVALID_F_SPEED : _GPS_KMPH_PER_KNOT * f_speed_knots();
 }
 
-const float Gps::GPS_INVALID_F_ANGLE = 1000.0;
-const float Gps::GPS_INVALID_F_ALTITUDE = 1000000.0;
-const float Gps::GPS_INVALID_F_SPEED = -1.0;
+const float Gps::GPS_INVALID_F_ANGLE = 1000.0f;
+const float Gps::GPS_INVALID_F_ALTITUDE = 1000000.0f;
+const float Gps::GPS_INVALID_F_SPEED = -1.0f;
