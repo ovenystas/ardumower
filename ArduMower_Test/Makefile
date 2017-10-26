@@ -32,6 +32,7 @@ SRC_FILES = \
 	../ArduMower/DropSensor.cpp \
 	../ArduMower/Encoder.cpp \
 	../ArduMower/Filter.cpp \
+	../ArduMower/LawnSensor.cpp \
 	../ArduMower/Pid.cpp \
 	../ArduMower/RainSensor.cpp \
 
