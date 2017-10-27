@@ -50,6 +50,8 @@ INCLUDE_DIRS = \
   ../ArduMower/inc \
   $(CPPUTEST_HOME)/include \
 
+CPPUTEST_CPPFLAGS += -std=gnu++11
+
 include $(CPPUTEST_HOME)/build/MakefileWorker.mk
 
 
