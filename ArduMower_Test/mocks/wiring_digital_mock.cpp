@@ -17,11 +17,11 @@ void pinMode(uint8_t pin, uint8_t mode)
       .withIntParameter("mode", mode);
 }
 
-int digitalRead(uint8_t pin)
+int16_t digitalRead(uint8_t pin)
 {
   mock().actualCall("digitalRead")
         .withIntParameter("pin", pin);
-  return mock().intReturnValue();
+  return (int16_t)mock().intReturnValue();
 }
 
 void digitalWrite(uint8_t pin, uint8_t val)

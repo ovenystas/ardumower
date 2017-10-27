@@ -34,7 +34,7 @@
 #define max(a,b) ((a)>(b)?(a):(b))
 #define abs(x) ((x)>0?(x):-(x))
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
-#define round(x)     ((x)>=0?(long)((x)+0.5):(long)((x)-0.5))
+#define round(x)     ((x)>=0?(int32_t)((x)+0.5):(int32_t)((x)-0.5))
 #define radians(deg) ((deg)*DEG_TO_RAD)
 #define degrees(rad) ((rad)*RAD_TO_DEG)
 #define sq(x) ((x)*(x))
@@ -47,7 +47,7 @@
 #define bitClear(value, bit) ((value) &= ~(1UL << (bit)))
 #define bitWrite(value, bit, bitvalue) (bitvalue ? bitSet(value, bit) : bitClear(value, bit))
 
-typedef unsigned int word;
+typedef uint16_t word; // 16 bit on ATMEGA, 32 bit on Due, Zero
 
 #define bit(b) (1UL << (b))
 
@@ -56,19 +56,24 @@ typedef uint8_t byte;
 
 void pinMode(uint8_t, uint8_t);
 void digitalWrite(uint8_t, uint8_t);
-int digitalRead(uint8_t);
-int analogRead(uint8_t);
+int16_t digitalRead(uint8_t);
+int16_t analogRead(uint8_t);
 void analogReference(uint8_t mode);
-void analogWrite(uint8_t, int);
+void analogWrite(uint8_t, int16_t);
 
-unsigned long millis(void);
-unsigned long micros(void);
-void delay(unsigned long);
-void delayMicroseconds(unsigned int us);
-unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout);
-unsigned long pulseInLong(uint8_t pin, uint8_t state, unsigned long timeout);
+uint32_t millis(void);
+uint32_t micros(void);
+void delay(uint32_t);
+void delayMicroseconds(uint16_t us);
+uint32_t pulseIn(uint8_t pin, uint8_t state, uint32_t timeout);
+uint32_t pulseInLong(uint8_t pin, uint8_t state, uint32_t timeout);
 
 void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t val);
 uint8_t shiftIn(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder);
+
+uint8_t digitalPinToBitMask(uint8_t pin);
+uint8_t digitalPinToPort(uint8_t pin);
+uint8_t* portOutputRegister(uint8_t pin);
+uint8_t* portInputRegister(uint8_t pin);
 
 #endif /* ARDUINO_H_ */

@@ -70,23 +70,23 @@ TEST(ButtonGroup, clearCounter)
 
 TEST(ButtonGroup, isTimeToRun)
 {
-  mock().expectOneCall("millis").andReturnValue(500ul);
+  mock().expectOneCall("millis").andReturnValue(500u);
   CHECK_EQUAL(false, button_isTimeToRun(&button));
   CHECK_EQUAL(0, button.lastRun);
 
-  mock().expectOneCall("millis").andReturnValue(999ul);
+  mock().expectOneCall("millis").andReturnValue(999u);
   CHECK_EQUAL(false, button_isTimeToRun(&button));
   CHECK_EQUAL(0, button.lastRun);
 
-  mock().expectOneCall("millis").andReturnValue(1000ul);
+  mock().expectOneCall("millis").andReturnValue(1000u);
   CHECK_EQUAL(true, button_isTimeToRun(&button));
   CHECK_EQUAL(1000, button.lastRun);
 
-  mock().expectOneCall("millis").andReturnValue(1001ul);
+  mock().expectOneCall("millis").andReturnValue(1001u);
   CHECK_EQUAL(false, button_isTimeToRun(&button));
   CHECK_EQUAL(1000, button.lastRun);
 
-  mock().expectOneCall("millis").andReturnValue(2000ul);
+  mock().expectOneCall("millis").andReturnValue(2000u);
   CHECK_EQUAL(true, button_isTimeToRun(&button));
   CHECK_EQUAL(2000, button.lastRun);
 

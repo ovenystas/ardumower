@@ -11,7 +11,7 @@ TEST_GROUP(PidPGroup)
 {
   void setup()
   {
-    mock().expectOneCall("micros").andReturnValue(0ul);
+    mock().expectOneCall("micros").andReturnValue(0u);
     pid_setup(1.0, 0.0, 0.0, -1.0, 1.0, 1.0, &pid);
     mock().checkExpectations();
   }
@@ -37,21 +37,21 @@ TEST(PidPGroup, Setup)
 
 TEST(PidPGroup, Compute_firstStepTooLarge)
 {
-  mock().expectOneCall("micros").andReturnValue(2000000ul);
+  mock().expectOneCall("micros").andReturnValue(2000000u);
   DOUBLES_EQUAL(-1.0, pid_compute(1.0, &pid), 0.01);
   mock().checkExpectations();
 }
 
 TEST(PidPGroup, Compute_pvStep)
 {
-  mock().expectOneCall("micros").andReturnValue(1000000ul);
+  mock().expectOneCall("micros").andReturnValue(1000000u);
   DOUBLES_EQUAL(-1.0, pid_compute(1.0, &pid), 0.01);
   mock().checkExpectations();
 }
 
 TEST(PidPGroup, Compute_setPointStep)
 {
-  mock().expectOneCall("micros").andReturnValue(1000000ul);
+  mock().expectOneCall("micros").andReturnValue(1000000u);
 
   pid.setPoint = 1.0;
 
@@ -61,7 +61,7 @@ TEST(PidPGroup, Compute_setPointStep)
 
 TEST(PidPGroup, Compute_yMinlimit)
 {
-  mock().expectOneCall("micros").andReturnValue(1000000ul);
+  mock().expectOneCall("micros").andReturnValue(1000000u);
 
   pid.setPoint = -2.0;
 
@@ -71,7 +71,7 @@ TEST(PidPGroup, Compute_yMinlimit)
 
 TEST(PidPGroup, Compute_yMaxlimit)
 {
-  mock().expectOneCall("micros").andReturnValue(1000000ul);
+  mock().expectOneCall("micros").andReturnValue(1000000u);
 
   pid.setPoint = 2.0;
 
@@ -85,7 +85,7 @@ TEST_GROUP(PidPIGroup)
 {
   void setup()
   {
-    mock().expectOneCall("micros").andReturnValue(0ul);
+    mock().expectOneCall("micros").andReturnValue(0u);
     pid_setup(1.0, 1.0, 0.0, -10.0, 10.0, 5.0, &pid);
     mock().checkExpectations();
   }
@@ -111,10 +111,10 @@ TEST(PidPIGroup, Setup)
 
 TEST(PidPIGroup, Compute_pvStep)
 {
-  mock().expectOneCall("micros").andReturnValue(1000000ul);
+  mock().expectOneCall("micros").andReturnValue(1000000u);
   DOUBLES_EQUAL(-2.0, pid_compute(1.0, &pid), 0.01);
 
-  mock().expectOneCall("micros").andReturnValue(2000000ul);
+  mock().expectOneCall("micros").andReturnValue(2000000u);
   DOUBLES_EQUAL(-3.0, pid_compute(1.0, &pid), 0.01);
 
   mock().checkExpectations();
@@ -122,13 +122,13 @@ TEST(PidPIGroup, Compute_pvStep)
 
 TEST(PidPIGroup, Compute_setPointStep)
 {
-  mock().expectOneCall("micros").andReturnValue(1000000ul);
+  mock().expectOneCall("micros").andReturnValue(1000000u);
 
   pid.setPoint = 1.0;
 
   DOUBLES_EQUAL(2.0, pid_compute(0.0, &pid), 0.01);
 
-  mock().expectOneCall("micros").andReturnValue(2000000ul);
+  mock().expectOneCall("micros").andReturnValue(2000000u);
   DOUBLES_EQUAL(3.0, pid_compute(0.0, &pid), 0.01);
 
   mock().checkExpectations();
@@ -136,19 +136,19 @@ TEST(PidPIGroup, Compute_setPointStep)
 
 TEST(PidPIGroup, AntiWindUpMax)
 {
-  mock().expectOneCall("micros").andReturnValue(1000000ul);
+  mock().expectOneCall("micros").andReturnValue(1000000u);
 
   pid.setPoint = 2.0;
 
   DOUBLES_EQUAL(4.0, pid_compute(0.0, &pid), 0.01);
 
-  mock().expectOneCall("micros").andReturnValue(2000000ul);
+  mock().expectOneCall("micros").andReturnValue(2000000u);
   DOUBLES_EQUAL(6.0, pid_compute(0.0, &pid), 0.01);
 
-  mock().expectOneCall("micros").andReturnValue(3000000ul);
+  mock().expectOneCall("micros").andReturnValue(3000000u);
   DOUBLES_EQUAL(7.0, pid_compute(0.0, &pid), 0.01);
 
-  mock().expectOneCall("micros").andReturnValue(4000000ul);
+  mock().expectOneCall("micros").andReturnValue(4000000u);
   DOUBLES_EQUAL(7.0, pid_compute(0.0, &pid), 0.01);
 
   mock().checkExpectations();
@@ -156,19 +156,19 @@ TEST(PidPIGroup, AntiWindUpMax)
 
 TEST(PidPIGroup, AntiWindUpMin)
 {
-  mock().expectOneCall("micros").andReturnValue(1000000ul);
+  mock().expectOneCall("micros").andReturnValue(1000000u);
 
   pid.setPoint = -2.0;
 
   DOUBLES_EQUAL(-4.0, pid_compute(0.0, &pid), 0.01);
 
-  mock().expectOneCall("micros").andReturnValue(2000000ul);
+  mock().expectOneCall("micros").andReturnValue(2000000u);
   DOUBLES_EQUAL(-6.0, pid_compute(0.0, &pid), 0.01);
 
-  mock().expectOneCall("micros").andReturnValue(3000000ul);
+  mock().expectOneCall("micros").andReturnValue(3000000u);
   DOUBLES_EQUAL(-7.0, pid_compute(0.0, &pid), 0.01);
 
-  mock().expectOneCall("micros").andReturnValue(4000000ul);
+  mock().expectOneCall("micros").andReturnValue(4000000u);
   DOUBLES_EQUAL(-7.0, pid_compute(0.0, &pid), 0.01);
 
   mock().checkExpectations();
@@ -180,7 +180,7 @@ TEST_GROUP(PidPIDGroup)
 {
   void setup()
   {
-    mock().expectOneCall("micros").andReturnValue(0ul);
+    mock().expectOneCall("micros").andReturnValue(0u);
     pid_setup(1.0, 1.0, 1.0, -10.0, 10.0, 10.0, &pid);
     mock().checkExpectations();
   }
@@ -206,10 +206,10 @@ TEST(PidPIDGroup, Setup)
 
 TEST(PidPIDGroup, Compute_pvStep)
 {
-  mock().expectOneCall("micros").andReturnValue(1000000ul);
+  mock().expectOneCall("micros").andReturnValue(1000000u);
   DOUBLES_EQUAL(-3.0, pid_compute(1.0, &pid), 0.01);
 
-  mock().expectOneCall("micros").andReturnValue(2000000ul);
+  mock().expectOneCall("micros").andReturnValue(2000000u);
   DOUBLES_EQUAL(-3.0, pid_compute(1.0, &pid), 0.01);
 
   mock().checkExpectations();
@@ -217,13 +217,13 @@ TEST(PidPIDGroup, Compute_pvStep)
 
 TEST(PidPIDGroup, Compute_setPointStep)
 {
-  mock().expectOneCall("micros").andReturnValue(1000000ul);
+  mock().expectOneCall("micros").andReturnValue(1000000u);
 
   pid.setPoint = 1.0;
 
   DOUBLES_EQUAL(3.0, pid_compute(0.0, &pid), 0.01);
 
-  mock().expectOneCall("micros").andReturnValue(2000000ul);
+  mock().expectOneCall("micros").andReturnValue(2000000u);
   DOUBLES_EQUAL(3.0, pid_compute(0.0, &pid), 0.01);
 
   mock().checkExpectations();

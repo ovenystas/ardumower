@@ -5,12 +5,11 @@
  *      Author: ove
  */
 
+#include <Arduino.h>
 #include "Sonar.h"
 
 #define MAX_SENSOR_DELAY 18000
 #define NO_ECHO 0
-
-#define Console Serial
 
 /**
  * Setup sonar.
@@ -44,7 +43,7 @@ inline bool sonar_pingTrigger(Sonar* sonar_p)
   delayMicroseconds(4);                        // Wait for pin to go low, testing shows it needs 4uS to work every time.
   *sonar_p->triggerOutputRegister_p |= sonar_p->triggerBitMask;  // Set trigger pin high, this tells the sensor to send out a ping.
   delayMicroseconds(10);                       // Wait long enough for the sensor to realize the trigger pin is high. Sensor specs say to wait 10uS.
-  *sonar_p->triggerOutputRegister_p &= ~sonar_p->triggerBitMask; // Set trigger pin back to low.
+  *sonar_p->triggerOutputRegister_p &= (uint8_t)~sonar_p->triggerBitMask; // Set trigger pin back to low.
 
   sonar_p->maxTime =  micros() + MAX_SENSOR_DELAY;                                // Set a timeout for the ping to trigger.
   while ((*sonar_p->echoInputRegister_p & sonar_p->echoBitMask) && micros() <= sonar_p->maxTime)
@@ -98,7 +97,7 @@ void sonar_ping(Sonar* sonar_p)
 
 bool sonars_isClose(Sonars* sonars_p)
 {
-  uint16_t closeLimit = sonars_p->triggerBelow * 2;
+  uint16_t closeLimit = (uint16_t)(sonars_p->triggerBelow * 2);
   for (uint8_t i = 0; i < SONAR_END; i++)
   {
     if (sonar_getDistance_us(&sonars_p->sonarArray_p[i]) < closeLimit)

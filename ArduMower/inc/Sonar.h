@@ -21,9 +21,9 @@
 #define SONAR_DEFAULT_MIN_ECHO_TIME 150   // 150 us / 58,8 = 2.5 cm
 
 // Conversion from uS to distance (round result to nearest cm or inch).
-#define US_ROUNDTRIP_INCH 146 // Microseconds (uS) it takes sound to travel round-trip 1 inch (2 inches total), uses integer to save compiled code space.
-#define US_ROUNDTRIP_CM 57    // Microseconds (uS) it takes sound to travel round-trip 1 cm (2 cm total), uses integer to save compiled code space.
-#define PING_CONVERT(us, conversionFactor) (max((us + conversionFactor / 2) / conversionFactor, (us ? 1 : 0)))
+#define US_ROUNDTRIP_INCH 146u // Microseconds (uS) it takes sound to travel round-trip 1 inch (2 inches total), uses integer to save compiled code space.
+#define US_ROUNDTRIP_CM 57u    // Microseconds (uS) it takes sound to travel round-trip 1 cm (2 cm total), uses integer to save compiled code space.
+#define PING_CONVERT(us, conversionFactor) (uint16_t)(max((us + conversionFactor / 2u) / conversionFactor, (us ? 1u : 0u)))
 
 typedef enum
 {
@@ -51,7 +51,7 @@ typedef struct
 typedef struct
 {
   bool use {false};
-  unsigned int triggerBelow {1050};  // trigger distance
+  uint16_t triggerBelow {1050};  // trigger distance
   uint8_t tempDistanceCounter;
   uint32_t obstacleTimeout;
   uint8_t len;

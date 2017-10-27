@@ -10,14 +10,20 @@
 
 // Mocked functions -----------------------------------------------------------
 
-unsigned long micros()
+uint32_t micros()
 {
-    mock().actualCall("micros");
-    return mock().unsignedLongIntReturnValue();
+  mock().actualCall("micros");
+  return mock().unsignedIntReturnValue();
 }
 
-unsigned long millis()
+uint32_t millis()
 {
-    mock().actualCall("millis");
-    return mock().unsignedLongIntReturnValue();
+  mock().actualCall("millis");
+  return mock().unsignedIntReturnValue();
+}
+
+void delayMicroseconds(uint16_t us)
+{
+  mock().actualCall("delayMicroseconds")
+      .withUnsignedIntParameter("us", us);
 }
