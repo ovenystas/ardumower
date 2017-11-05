@@ -1,4 +1,5 @@
 #include "Sonar.h"
+//#include "Sonar.cpp"
 
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
@@ -64,3 +65,50 @@ TEST(Sonar, Setup)
   CHECK_EQUAL((uint8_t*)0x10, sonar.triggerOutputRegister_p);
   CHECK_EQUAL((uint8_t*)0x20, sonar.echoInputRegister_p);
 }
+
+/*
+TEST(Sonar, pingTrigger)
+{
+  mock().expectOneCall("delayMicroseconds")
+      .withUnsignedIntParameter("us", 4);
+  mock().expectOneCall("delayMicroseconds")
+      .withUnsignedIntParameter("us", 10);
+  mock().expectOneCall("micros")
+      .andReturnValue(30000);
+  mock().expectOneCall("micros")
+      .andReturnValue(35000);
+
+  CHECK_EQUAL(false, sonar_pingTrigger(&sonar));
+
+  mock().checkExpectations();
+}
+*/
+
+/*
+TEST(Sonar, pingInternal)
+{
+  mock().expectOneCall("delayMicroseconds")
+      .withUnsignedIntParameter("us", 4);
+  mock().expectOneCall("delayMicroseconds")
+      .withUnsignedIntParameter("us", 10);
+  mock().expectOneCall("micros")
+      .andReturnValue(30000);
+  mock().expectOneCall("micros")
+      .andReturnValue(35000);
+  mock().expectOneCall("micros")
+      .andReturnValue(40000);
+
+  CHECK_EQUAL(2000, sonar_pingInternal(&sonar));
+
+  mock().checkExpectations();
+}
+*/
+
+TEST(Sonar, ping)
+{
+  sonar_ping(&sonar);
+  CHECK_EQUAL(0, sonar.distance_us);
+
+  mock().checkExpectations();
+}
+

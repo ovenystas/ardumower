@@ -1,4 +1,5 @@
 /*
+
  * Arduino.h
  *
  *  Created on: 26 sep. 2017
@@ -75,5 +76,7 @@ uint8_t digitalPinToBitMask(uint8_t pin);
 uint8_t digitalPinToPort(uint8_t pin);
 uint8_t* portOutputRegister(uint8_t pin);
 uint8_t* portInputRegister(uint8_t pin);
+
+#include "HardwareSerial.h"
 
 #endif /* ARDUINO_H_ */

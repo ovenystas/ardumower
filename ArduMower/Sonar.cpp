@@ -38,7 +38,7 @@ void sonar_setup(const uint8_t triggerPin, const uint8_t echoPin,
   sonar_p->echoInputRegister_p = portInputRegister(digitalPinToPort(echoPin));         // Get the input port register for the echo pin.
 }
 
-inline bool sonar_pingTrigger(Sonar* sonar_p)
+static inline bool sonar_pingTrigger(Sonar* sonar_p)
 {
   delayMicroseconds(4);                        // Wait for pin to go low, testing shows it needs 4uS to work every time.
   *sonar_p->triggerOutputRegister_p |= sonar_p->triggerBitMask;  // Set trigger pin high, this tells the sensor to send out a ping.
@@ -62,7 +62,7 @@ inline bool sonar_pingTrigger(Sonar* sonar_p)
   return true;                         // Ping started successfully.
 }
 
-inline uint16_t sonar_pingInternal(Sonar* sonar_p)
+static inline uint16_t sonar_pingInternal(Sonar* sonar_p)
 {
   if (!sonar_pingTrigger(sonar_p))  // Trigger a ping, if it returns false, return NO_ECHO to the calling function.
   {

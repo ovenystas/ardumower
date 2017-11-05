@@ -84,10 +84,6 @@ uint16_t sonar_getDistance_inch(Sonar* sonar_p)
   return PING_CONVERT(sonar_p->distance_us, US_ROUNDTRIP_INCH);
 }
 
-inline bool sonar_pingTrigger(Sonar* sonar_p);
-inline uint16_t sonar_pingInternal(Sonar* sonar_p);
-
-
 
 
 static inline

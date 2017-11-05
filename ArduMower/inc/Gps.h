@@ -66,7 +66,7 @@ class Gps
       return *this;
     }
 
-    // lat/long in hundred thousandths of a degree and age of fix in milliseconds
+    // lat/long in hundred thousands of a degree and age of fix in milliseconds
     void get_position(long *latitude, long *longitude,
                       unsigned long *fix_age = 0);
 
@@ -131,7 +131,9 @@ class Gps
   private:
     enum
     {
-      _GPS_SENTENCE_GPGGA, _GPS_SENTENCE_GPRMC, _GPS_SENTENCE_OTHER
+      _GPS_SENTENCE_GPGGA,
+      _GPS_SENTENCE_GPRMC,
+      _GPS_SENTENCE_OTHER
     };
 
     // properties
@@ -149,11 +151,13 @@ class Gps
     unsigned long _last_position_fix, _new_position_fix;
 
     // parsing state variables
-    byte _parity;bool _is_checksum_term;
+    byte _parity;
+    bool _is_checksum_term;
     char _term[15];
     byte _sentence_type;
     byte _term_number;
-    byte _term_offset;bool _gps_data_good;
+    byte _term_offset;
+    bool _gps_data_good;
 
 #ifndef _GPS_NO_STATS
     // statistics

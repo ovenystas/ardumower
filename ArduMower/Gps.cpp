@@ -30,15 +30,25 @@ Gps::Gps() :
     _time(GPS_INVALID_TIME),
     _new_time(GPS_INVALID_TIME),
     _date(GPS_INVALID_DATE),
+    _new_date(GPS_INVALID_DATE),
     _latitude(GPS_INVALID_ANGLE),
+    _new_latitude(GPS_INVALID_ANGLE),
     _longitude(GPS_INVALID_ANGLE),
+    _new_longitude(GPS_INVALID_ANGLE),
     _altitude(GPS_INVALID_ALTITUDE),
+    _new_altitude(GPS_INVALID_ALTITUDE),
     _speed(GPS_INVALID_SPEED),
+    _new_speed(GPS_INVALID_SPEED),
     _course(GPS_INVALID_ANGLE),
+    _new_course(GPS_INVALID_ANGLE),
     _hdop(GPS_INVALID_HDOP),
+    _new_hdop(GPS_INVALID_HDOP),
     _numsats(GPS_INVALID_SATELLITES),
+    _new_numsats(GPS_INVALID_SATELLITES),
     _last_time_fix(GPS_INVALID_FIX_TIME),
+    _new_time_fix(GPS_INVALID_FIX_TIME),
     _last_position_fix(GPS_INVALID_FIX_TIME),
+    _new_position_fix(GPS_INVALID_FIX_TIME),
     _parity(0),
     _is_checksum_term(false),
     _sentence_type(_GPS_SENTENCE_OTHER),
@@ -49,7 +59,8 @@ Gps::Gps() :
     ,
     _encoded_characters(0),
     _good_sentences(0),
-    _failed_checksum(0)
+    _failed_checksum(0),
+    _passed_checksum(0)
 #endif
 {
   _term[0] = '\0';

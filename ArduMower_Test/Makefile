@@ -6,7 +6,7 @@
 
 #Set this to @ to keep the makefile quiet
 ifndef SILENCE
-	SILENCE = #@
+	SILENCE = @
 endif
 
 #--- Inputs ----#
@@ -32,6 +32,7 @@ SRC_FILES = \
 	../ArduMower/DropSensor.cpp \
 	../ArduMower/Encoder.cpp \
 	../ArduMower/Filter.cpp \
+	../ArduMower/Gps.cpp \
 	../ArduMower/LawnSensor.cpp \
 	../ArduMower/Pid.cpp \
 	../ArduMower/RainSensor.cpp \
