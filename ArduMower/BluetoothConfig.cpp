@@ -97,7 +97,7 @@ void BluetoothConfig::writeReadBT(String s)
 
 void BluetoothConfig::setName(String name)
 {
-  boolean res = false;
+  bool res = false;
   Console.println();
   Console.print(F("setting name "));
   Console.print(name);
@@ -129,7 +129,7 @@ void BluetoothConfig::setName(String name)
 
 void BluetoothConfig::setPin(int pin)
 {
-  boolean res = false;
+  bool res = false;
   Console.println();
   Console.print(F("setting pin "));
   Console.print(pin);
@@ -166,7 +166,7 @@ void BluetoothConfig::setBaudrate(long rate)
   Console.print(rate);
   Console.println(F("..."));
   byte n = 4;
-  boolean res = false;
+  bool res = false;
   switch (btType)
   {
     case BT_LINVOR_HC06:
@@ -248,7 +248,7 @@ void BluetoothConfig::setBaudrate(long rate)
   }
 }
 
-boolean BluetoothConfig::detectBaudrate(boolean quickBaudScan)
+bool BluetoothConfig::detectBaudrate(bool quickBaudScan)
 {
   Console.println();
   Console.println(F("detecting baudrate..."));
@@ -341,7 +341,7 @@ void BluetoothConfig::detectModuleType()
 }
 
 void BluetoothConfig::setParams(String name, int pin, long baudrate,
-                                boolean quickBaudScan)
+    bool quickBaudScan)
 {
   //delay(2000);
   Console.println(F("HC-03/04/05/06/linvor/ModiaTek "

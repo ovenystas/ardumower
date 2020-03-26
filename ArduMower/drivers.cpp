@@ -233,7 +233,7 @@ int I2CreadFrom(const uint8_t device, const uint8_t address,
 // ---- sensor drivers --------------------------------------------------------------
 
 // DS1307 real time driver
-boolean readDS1307(datetime_t &dt)
+bool readDS1307(datetime_t& dt)
 {
   byte buf[8];
   if (I2CreadFrom(DS1307_ADDRESS, 0x00, 8, buf, 3) != 8)
@@ -281,7 +281,7 @@ boolean readDS1307(datetime_t &dt)
 }
 
 
-boolean setDS1307(const datetime_t &dt)
+bool setDS1307(const datetime_t& dt)
 {
   byte buf[7];
   if (I2CreadFrom(DS1307_ADDRESS, 0x00, 7, buf, 3) != 7)

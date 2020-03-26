@@ -37,12 +37,12 @@ Private-use only! (you need to ask for a commercial-use)
 
 class Mower: public Robot
 {
-  public:
-    Mower();
-    virtual void setup(void);
-    virtual void configureBluetooth(boolean quick);
-    virtual int readSensor(Robot::sensorE type);
-    virtual void setActuator(Robot::actuatorE type, int value);
+public:
+  Mower();
+  virtual void setup(void);
+  virtual void configureBluetooth(bool quick);
+  virtual int readSensor(Robot::sensorE type);
+  virtual void setActuator(Robot::actuatorE type, int value);
 };
 
 extern Mower robot;

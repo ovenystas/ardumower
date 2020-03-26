@@ -40,26 +40,26 @@
 
 class BluetoothConfig
 {
-  public:
-    BluetoothConfig();
-    void setParams(String name, int pin, long baudrate, boolean quickBaudScan);
+public:
+  BluetoothConfig();
+  void setParams(String name, int pin, long baudrate, bool quickBaudScan);
 
-  private:
-    void setConfigs(byte *config);
-    void writeBT(String s);
-    void readBT();
-    void writeReadBT(String s);
-    void setName(String name);
-    void setPin(int pin);
-    void setBaudrate(long rate);
-    boolean detectBaudrate(boolean quickBaudScan);
-    void detectModuleType();
-    byte btTestConfig[24];
-    byte btConfig;
-    char btType;
-    char btData;
-    String btResult;
-    long btRate;
+private:
+  void setConfigs(byte* config);
+  void writeBT(String s);
+  void readBT();
+  void writeReadBT(String s);
+  void setName(String name);
+  void setPin(int pin);
+  void setBaudrate(long rate);
+  bool detectBaudrate(bool quickBaudScan);
+  void detectModuleType();
+  byte btTestConfig[24];
+  byte btConfig;
+  char btType;
+  char btData;
+  String btResult;
+  long btRate;
 };
 
 #endif

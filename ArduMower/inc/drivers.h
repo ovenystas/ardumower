@@ -65,7 +65,7 @@ typedef struct datetime_t
 
 typedef struct ttimer_t
 {
-  boolean active;
+  bool active;
   timehm_t startTime;
   timehm_t stopTime;
   byte daysOfWeek;
@@ -105,7 +105,7 @@ template<class T> int eeread(int &ee, T& value)
   return i;
 }
 
-template<class T> int eereadwrite(boolean readflag, int &ee, T& value)
+template<class T> int eereadwrite(bool readflag, int& ee, T& value)
 {
   byte* p = (byte*) (void*) &value;
   unsigned int i;
@@ -152,8 +152,8 @@ double scalePI(const double v);
 double distancePI(const double x, const double w);
 
 // real time drivers
-boolean readDS1307(datetime_t &dt);
-boolean setDS1307(const datetime_t &dt);
+bool readDS1307(datetime_t& dt);
+bool setDS1307(const datetime_t& dt);
 
 // Returns the day of week (0=Sunday, 6=Saturday) for a given date
 int getDayOfWeek(int month, const int day, int year, const int CalendarSystem);

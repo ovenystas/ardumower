@@ -210,7 +210,7 @@ void perimeter_matchedFilter(Perimeter* perimeter_p)
   callCounter2++;
 }
 
-boolean perimeter_signalTimedOut(Perimeter* perimeter_p)
+bool perimeter_signalTimedOut(Perimeter* perimeter_p)
 {
   if ((uint16_t)perimeter_p->smoothMag < perimeter_p->timedOutIfBelowSmag)
   {

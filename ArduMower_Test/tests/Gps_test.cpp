@@ -5,7 +5,6 @@
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
 
-Gps gps;
 
 TEST_GROUP(Gps)
 {
@@ -21,13 +20,17 @@ TEST_GROUP(Gps)
 
 TEST(Gps, Init)
 {
+  Gps gps;
+
   gps.init();
 
   CHECK_EQUAL(9600, Serial3.getBaud());
 }
 
-TEST(Gps, cardinal)
+TEST(Gps, cardinal_middleInSector)
 {
+  Gps gps;
+
   STRCMP_EQUAL("N", gps.cardinal(0.0f));
   STRCMP_EQUAL("NNE", gps.cardinal(22.5f));
   STRCMP_EQUAL("NE", gps.cardinal(45.0f));
@@ -45,4 +48,53 @@ TEST(Gps, cardinal)
   STRCMP_EQUAL("NW", gps.cardinal(315.0f));
   STRCMP_EQUAL("NNW", gps.cardinal(337.5f));
   STRCMP_EQUAL("N", gps.cardinal(360.0f));
+}
+
+TEST(Gps, cardinal_borderOfSector)
+{
+  Gps gps;
+
+  STRCMP_EQUAL("SSE", gps.cardinal(180.0f - 11.25f - 0.001f));
+  STRCMP_EQUAL("S", gps.cardinal(180.0f - 11.25f + 0.001f));
+  STRCMP_EQUAL("S", gps.cardinal(180.0f + 11.25f - 0.001f));
+  STRCMP_EQUAL("SSW", gps.cardinal(180.0f + 11.25f + 0.001f));
+}
+
+struct gpsCoord
+{
+  float latitude;
+  float longitude;
+};
+
+gpsCoord home( { 57.769980f, 12.279648f });
+gpsCoord work( { 57.7087878f, 11.980496f });
+
+TEST(Gps, distance_between)
+{
+  Gps gps;
+
+  DOUBLES_EQUAL(0.0f, gps.distance_between(0.0f, 0.0f, 0.0f, 0.0f), 0.001f);
+  DOUBLES_EQUAL(0.0f, gps.distance_between(40.0f, 60.0f, 40.0f, 60.0f), 0.001f);
+  DOUBLES_EQUAL(19019.85f, gps.distance_between(
+      home.latitude, home.longitude, work.latitude, work.longitude), 0.1f);
+}
+
+TEST(Gps, course_to)
+{
+  Gps gps;
+
+  // North
+  DOUBLES_EQUAL(0.0f, gps.course_to(0.0f, 0.0f, 50.0f, 0.0f), 0.001f);
+  // South
+  DOUBLES_EQUAL(180.0f, gps.course_to(0.0f, 0.0f, -50.0f, 0.0f), 0.001f);
+  // East
+  DOUBLES_EQUAL(90.0f, gps.course_to(0.0f, 0.0f, 0.0f, 50.0f), 0.001f);
+  // West
+  DOUBLES_EQUAL(270.0f, gps.course_to(0.0f, 0.0f, 0.0f, -50.0f), 0.001f);
+  // home to work
+  DOUBLES_EQUAL(249.159, gps.course_to(
+      home.latitude, home.longitude, work.latitude, work.longitude), 0.1f);
+  // work to home
+  DOUBLES_EQUAL(68.90592, gps.course_to(
+      work.latitude, work.longitude, home.latitude, home.longitude), 0.1f);
 }

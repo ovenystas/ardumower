@@ -3,6 +3,7 @@
 	<name>ArduMower</name>
 	<comment></comment>
 	<projects>
+		<project>ArduMower_Test</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
@@ -10,25 +11,11 @@
 			<arguments>
 			</arguments>
 		</buildCommand>
-		<buildCommand>
-			<name>org.eclipse.cdt.managedbuilder.core.genmakebuilder</name>
-			<triggers>clean,full,incremental,</triggers>
-			<arguments>
-			</arguments>
-		</buildCommand>
-		<buildCommand>
-			<name>org.eclipse.cdt.managedbuilder.core.ScannerConfigBuilder</name>
-			<triggers>full,incremental,</triggers>
-			<arguments>
-			</arguments>
-		</buildCommand>
 	</buildSpec>
 	<natures>
 		<nature>org.eclipse.cdt.core.cnature</nature>
 		<nature>org.eclipse.cdt.core.ccnature</nature>
-		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
-		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
-		<nature>io.sloeber.arduinonature</nature>
+		<nature>org.eclipse.cdt.arduino.core.arduinoNature</nature>
 	</natures>
 	<linkedResources>
 		<link>
@@ -44,12 +31,12 @@
 		<link>
 			<name>libraries/EEPROM</name>
 			<type>2</type>
-			<locationURI>ECLIPSE_HOME/arduinoPlugin/packages/arduino/hardware/avr/1.6.20/libraries/EEPROM</locationURI>
+			<location>/home/ove/bin/arduino-1.8.12/hardware/arduino/avr/libraries/EEPROM</location>
 		</link>
 		<link>
 			<name>libraries/Wire</name>
 			<type>2</type>
-			<locationURI>ECLIPSE_HOME/arduinoPlugin/packages/arduino/hardware/avr/1.6.20/libraries/Wire</locationURI>
+			<location>/home/ove/bin/arduino-1.8.12/hardware/arduino/avr/libraries/Wire</location>
 		</link>
 	</linkedResources>
 </projectDescription>

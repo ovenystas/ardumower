@@ -99,7 +99,7 @@ int16_t perimeter_getSmoothMagnitude(Perimeter* perimeter_p)
 
 // inside perimeter (true) or outside (false)?
 // perimeter signal timed out? (e.g. due to broken wire)
-boolean perimeter_signalTimedOut(Perimeter* perimeter_p);
+bool perimeter_signalTimedOut(Perimeter* perimeter_p);
 
 static inline
 float perimeter_getFilterQuality(Perimeter* perimeter_p)

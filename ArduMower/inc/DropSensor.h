@@ -12,7 +12,7 @@ typedef enum
 typedef struct
 {
   uint8_t pin;
-  boolean detected;
+  bool detected;
   uint16_t counter;
 } DropSensor;
 

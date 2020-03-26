@@ -150,7 +150,7 @@ void Robot::saveErrorCounters()
   Console.println(addr);
 }
 
-void Robot::loadSaveUserSettings(const boolean readflag)
+void Robot::loadSaveUserSettings(const bool readflag)
 {
   int addr = ADDR_USER_SETTINGS + 1;
   eereadwrite(readflag, addr, developerActive);
@@ -638,10 +638,8 @@ int Robot::rcValue(const int ppmTime)
 // 1. save time (uS) and RC channel states (HI/LO)
 // 2. if new state is LO, evaluate ppm time for channel
 void Robot::setRemotePPMState(const unsigned long timeMicros,
-                              const boolean remoteSpeedState,
-                              const boolean remoteSteerState,
-                              const boolean remoteMowState,
-                              const boolean remoteSwitchState)
+    const bool remoteSpeedState, const bool remoteSteerState,
+    const bool remoteMowState, const bool remoteSwitchState)
 {
   if (remoteSpeedState != remoteSpeedLastState)
   {
@@ -699,7 +697,7 @@ void Robot::setRemotePPMState(const unsigned long timeMicros,
 //motor is LEFT or RIGHT (0 or 1)
 void Robot::setMotorPWM(int pwm,
                         const uint8_t motor,
-                        const boolean useAccel)
+                        const bool useAccel)
 {
   const uint16_t samplingTime = wheels.wheel[motor].motor.getSamplingTime();
 
@@ -758,7 +756,7 @@ void Robot::setMotorPWM(int pwm,
 // - optional: ensures that the motors (and gears) are not switched to 0%
 //   (or 100%) too fast (motorAccel)
 void Robot::setMotorPWMs(const int pwmLeft, int const pwmRight,
-                         const boolean useAccel)
+    const bool useAccel)
 {
 //  Console.print("setPwm: ");
 //  Console.print(pwmLeft);
@@ -2126,7 +2124,7 @@ void Robot::checkTimer()
     return;
   }
 
-  boolean stopTimerTriggered = true;
+  bool stopTimerTriggered = true;
   for (uint8_t i = 0; i < MAX_TIMERS; i++)
   {
     if (!timer[i].active)

@@ -267,7 +267,7 @@ void RemoteControl::processSlider(const String result, short &value,
   value = v;
 }
 
-void RemoteControl::sendMainMenu(const boolean update)
+void RemoteControl::sendMainMenu(const bool update)
 {
   if (update)
   {
@@ -284,7 +284,7 @@ void RemoteControl::sendMainMenu(const boolean update)
                       "|y9~ADC calibration}"));
 }
 
-void RemoteControl::sendADCMenu(const boolean update)
+void RemoteControl::sendADCMenu(const bool update)
 {
   if (update)
   {
@@ -314,7 +314,7 @@ void RemoteControl::sendADCMenu(const boolean update)
   Bluetooth.println("}");
 }
 
-void RemoteControl::sendPlotMenu(const boolean update)
+void RemoteControl::sendPlotMenu(const bool update)
 {
   if (update)
   {
@@ -329,7 +329,7 @@ void RemoteControl::sendPlotMenu(const boolean update)
                       "|y10~GPS2D}"));
 }
 
-void RemoteControl::sendSettingsMenu(const boolean update)
+void RemoteControl::sendSettingsMenu(const bool update)
 {
   if (update)
   {
@@ -346,7 +346,7 @@ void RemoteControl::sendSettingsMenu(const boolean update)
                       "|sx~Factory settings}"));
 }
 
-void RemoteControl::sendErrorMenu(const boolean update)
+void RemoteControl::sendErrorMenu(const bool update)
 {
   if (update)
   {
@@ -410,7 +410,7 @@ void RemoteControl::processErrorMenu(const String pfodCmd)
   sendErrorMenu(true);
 }
 
-void RemoteControl::sendMotorMenu(const boolean update)
+void RemoteControl::sendMotorMenu(const bool update)
 {
   if (update)
   {
@@ -622,7 +622,7 @@ void RemoteControl::processMotorMenu(const String pfodCmd)
   sendMotorMenu(true);
 }
 
-void RemoteControl::sendMowMenu(const boolean update)
+void RemoteControl::sendMowMenu(const bool update)
 {
   if (update)
   {
@@ -721,7 +721,7 @@ void RemoteControl::processMowMenu(const String pfodCmd)
   sendMowMenu(true);
 }
 
-void RemoteControl::sendBumperMenu(const boolean update)
+void RemoteControl::sendBumperMenu(const bool update)
 {
   if (update)
   {
@@ -744,7 +744,7 @@ void RemoteControl::sendBumperMenu(const boolean update)
   Bluetooth.println("}");
 }
 
-void RemoteControl::sendDropMenu(const boolean update)
+void RemoteControl::sendDropMenu(const bool update)
 {
   if (update)
   {
@@ -789,7 +789,7 @@ void RemoteControl::processDropMenu(const String pfodCmd)
   sendDropMenu(true);
 }
 
-void RemoteControl::sendSonarMenu(const boolean update)
+void RemoteControl::sendSonarMenu(const bool update)
 {
   if (update)
   {
@@ -847,7 +847,7 @@ void RemoteControl::processSonarMenu(const String pfodCmd)
   sendSonarMenu(true);
 }
 
-void RemoteControl::sendPerimeterMenu(const boolean update)
+void RemoteControl::sendPerimeterMenu(const bool update)
 {
   if (update)
   {
@@ -964,7 +964,7 @@ void RemoteControl::processPerimeterMenu(const String pfodCmd)
   sendPerimeterMenu(true);
 }
 
-void RemoteControl::sendLawnSensorMenu(const boolean update)
+void RemoteControl::sendLawnSensorMenu(const bool update)
 {
   if (update)
   {
@@ -994,7 +994,7 @@ void RemoteControl::processLawnSensorMenu(const String pfodCmd)
   sendLawnSensorMenu(true);
 }
 
-void RemoteControl::sendRainMenu(const boolean update)
+void RemoteControl::sendRainMenu(const bool update)
 {
   if (update)
   {
@@ -1022,7 +1022,7 @@ void RemoteControl::processRainMenu(const String pfodCmd)
   sendRainMenu(true);
 }
 
-void RemoteControl::sendGPSMenu(const boolean update)
+void RemoteControl::sendGPSMenu(const bool update)
 {
   if (update)
   {
@@ -1059,7 +1059,7 @@ void RemoteControl::processGPSMenu(const String pfodCmd)
   sendGPSMenu(true);
 }
 
-void RemoteControl::sendImuMenu(const boolean update)
+void RemoteControl::sendImuMenu(const bool update)
 {
   if (update)
   {
@@ -1127,7 +1127,7 @@ void RemoteControl::processImuMenu(const String pfodCmd)
   sendImuMenu(true);
 }
 
-void RemoteControl::sendRemoteMenu(const boolean update)
+void RemoteControl::sendRemoteMenu(const bool update)
 {
   if (update)
   {
@@ -1151,7 +1151,7 @@ void RemoteControl::processRemoteMenu(const String pfodCmd)
   sendRemoteMenu(true);
 }
 
-void RemoteControl::sendBatteryMenu(const boolean update)
+void RemoteControl::sendBatteryMenu(const bool update)
 {
   if (update)
   {
@@ -1245,7 +1245,7 @@ void RemoteControl::processBatteryMenu(const String pfodCmd)
   sendBatteryMenu(true);
 }
 
-void RemoteControl::sendStationMenu(const boolean update)
+void RemoteControl::sendStationMenu(const bool update)
 {
   if (update)
   {
@@ -1284,7 +1284,7 @@ void RemoteControl::processStationMenu(const String pfodCmd)
   sendStationMenu(true);
 }
 
-void RemoteControl::sendOdometerMenu(const boolean update)
+void RemoteControl::sendOdometerMenu(const bool update)
 {
   if (update)
   {
@@ -1346,7 +1346,7 @@ void RemoteControl::processOdometerMenu(const String pfodCmd)
   sendOdometerMenu(true);
 }
 
-void RemoteControl::sendDateTimeMenu(const boolean update)
+void RemoteControl::sendDateTimeMenu(const bool update)
 {
   if (update)
   {
@@ -1403,7 +1403,7 @@ void RemoteControl::processDateTimeMenu(const String pfodCmd)
 }
 
 void RemoteControl::sendTimerDetailMenu(const int timerIdx,
-                                        const boolean update)
+                                        const bool update)
 {
   if (update)
   {
@@ -1451,8 +1451,8 @@ void RemoteControl::sendTimerDetailMenu(const int timerIdx,
 void RemoteControl::processTimerDetailMenu(const String pfodCmd)
 {
   timehm_t time;
-  boolean checkStop = false;
-  boolean checkStart = false;
+  bool checkStop = false;
+  bool checkStart = false;
   int startmin;
   int stopmin;
   int timerIdx = pfodCmd[2] - '0';
@@ -1520,7 +1520,7 @@ void RemoteControl::processTimerDetailMenu(const String pfodCmd)
   sendTimerDetailMenu(timerIdx, true);
 }
 
-void RemoteControl::sendTimerMenu(const boolean update)
+void RemoteControl::sendTimerMenu(const bool update)
 {
   if (update)
   {
@@ -1559,7 +1559,7 @@ void RemoteControl::processTimerMenu(const String pfodCmd)
   }
 }
 
-void RemoteControl::sendFactorySettingsMenu(const boolean update)
+void RemoteControl::sendFactorySettingsMenu(const bool update)
 {
   if (update)
   {
@@ -1581,7 +1581,7 @@ void RemoteControl::processFactorySettingsMenu(const String pfodCmd)
   sendFactorySettingsMenu(true);
 }
 
-void RemoteControl::sendInfoMenu(const boolean update)
+void RemoteControl::sendInfoMenu(const bool update)
 {
   if (update)
   {
@@ -1627,7 +1627,7 @@ void RemoteControl::processInfoMenu(const String pfodCmd)
   sendInfoMenu(true);
 }
 
-void RemoteControl::sendCommandMenu(const boolean update)
+void RemoteControl::sendCommandMenu(const bool update)
 {
   if (update)
   {
@@ -1745,7 +1745,7 @@ void RemoteControl::processCommandMenu(const String pfodCmd)
   }
 }
 
-void RemoteControl::sendManualMenu(const boolean update)
+void RemoteControl::sendManualMenu(const bool update)
 {
   if (update)
   {
@@ -1772,7 +1772,7 @@ void RemoteControl::sendManualMenu(const boolean update)
   Bluetooth.println("}");
 }
 
-void RemoteControl::sendCompassMenu(const boolean update)
+void RemoteControl::sendCompassMenu(const bool update)
 {
   if (update)
   {

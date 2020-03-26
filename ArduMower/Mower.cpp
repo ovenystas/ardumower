@@ -92,10 +92,10 @@ Mower::Mower()
 ISR(PCINT0_vect)
 {
   unsigned long timeMicros = micros();
-  boolean remoteSpeedState = digitalRead(PIN_REMOTE_SPEED);
-  boolean remoteSteerState = digitalRead(PIN_REMOTE_STEER);
-  boolean remoteMowState = digitalRead(PIN_REMOTE_MOW);
-  boolean remoteSwitchState = digitalRead(PIN_REMOTE_SWITCH);
+  bool remoteSpeedState = digitalRead(PIN_REMOTE_SPEED);
+  bool remoteSteerState = digitalRead(PIN_REMOTE_STEER);
+  bool remoteMowState = digitalRead(PIN_REMOTE_MOW);
+  bool remoteSwitchState = digitalRead(PIN_REMOTE_SWITCH);
   robot.setRemotePPMState(timeMicros, remoteSpeedState, remoteSteerState,
                           remoteMowState, remoteSwitchState);
 }
@@ -392,7 +392,7 @@ void Mower::setActuator(Robot::actuatorE type, int value)
   }
 }
 
-void Mower::configureBluetooth(boolean quick)
+void Mower::configureBluetooth(bool quick)
 {
   BluetoothConfig bt;
   bt.setParams(name, PFOD_BLUETOOTH_PIN_CODE, PFOD_BAUDRATE, quick);

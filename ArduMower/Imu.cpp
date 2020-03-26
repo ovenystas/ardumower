@@ -333,7 +333,7 @@ void Imu::readAccelerometer()
 }
 
 // L3G4200D gyro sensor driver
-boolean Imu::initGyroscope()
+bool Imu::initGyroscope()
 {
   Console.println(F("initL3G4200D"));
   gyro.init(L3G::DEVICE_AUTO, L3G::SA0_AUTO);
@@ -473,7 +473,7 @@ void Imu::calibrateMagnetometerUpdate(void)
 
   readMagnetometer();
 
-  boolean newfound = false;
+  bool newfound = false;
 
   if (abs(accMag.m.x - magLast.x) < 10 &&
       abs(accMag.m.y - magLast.y) < 10 &&
@@ -537,10 +537,10 @@ void Imu::calibrateMagnetometerUpdate(void)
 }
 
 // calculate acceleration sensor offsets
-boolean Imu::calibrateAccelerometerNextAxis(void)
+bool Imu::calibrateAccelerometerNextAxis(void)
 {
   const uint8_t numberOfSamples = 32;
-  boolean complete = false;
+  bool complete = false;
   tone(pinBuzzer, 440);
 
   while (Console.available())
@@ -828,7 +828,7 @@ void Imu::printInfo(Stream &s)
               ypr.yaw >= 0.0 ? "+" : "-", abs((int)ypr.yaw), abs((int)(ypr.yaw * 100) - ((int)ypr.yaw * 100)));
 }
 
-boolean Imu::init(int aPinBuzzer)
+bool Imu::init(int aPinBuzzer)
 {
   pinBuzzer = aPinBuzzer;
   loadCalibrationData();
