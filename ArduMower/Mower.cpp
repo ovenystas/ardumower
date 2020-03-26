@@ -157,16 +157,16 @@ void Mower::setup()
   wheels.wheel[Wheel::LEFT].motor.setChannel(0);
   wheels.wheel[Wheel::LEFT].motor.setup();
   // Normal control
-  int16_t pwmMax = wheels.wheel[Wheel::LEFT].motor.pwmMax;
+  int16_t pwmMax = wheels.wheel[Wheel::LEFT].motor.m_pwmMax;
   pid_setup(1.5, 0.29, 0.25, -pwmMax, pwmMax, pwmMax,
-      &wheels.wheel[Wheel::LEFT].motor.pid);  // Kp, Ki, Kd
-  wheels.wheel[Wheel::LEFT].motor.pid.setPoint =
-      wheels.wheel[Wheel::LEFT].motor.rpmSet;
+      &wheels.wheel[Wheel::LEFT].motor.m_pid);  // Kp, Ki, Kd
+  wheels.wheel[Wheel::LEFT].motor.m_pid.setPoint =
+      wheels.wheel[Wheel::LEFT].motor.m_rpmSet;
   // Fast control
   //wheels.wheel[Wheel::LEFT].motor.pid.setup(1.76, 0.87, 0.4);  // Kp, Ki, Kd
-  wheels.wheel[Wheel::LEFT].motor.powerIgnoreTime = 2000;  // time to ignore motor power (ms)
-  wheels.wheel[Wheel::LEFT].motor.zeroSettleTime = 3000;   // how long (ms) to wait for motors to settle at zero speed
-  wheels.wheel[Wheel::LEFT].motor.swapDir = 0;  // inverse left motor direction?
+  wheels.wheel[Wheel::LEFT].motor.m_powerIgnoreTime = 2000;  // time to ignore motor power (ms)
+  wheels.wheel[Wheel::LEFT].motor.m_zeroSettleTime = 3000;   // how long (ms) to wait for motors to settle at zero speed
+  wheels.wheel[Wheel::LEFT].motor.m_swapDir = 0;  // inverse left motor direction?
   encoder_setup(
       PIN_ODOMETER_LEFT,
       ODOMETER_SWAP_DIR_LEFT,
@@ -183,16 +183,16 @@ void Mower::setup()
   wheels.wheel[Wheel::RIGHT].motor.setChannel(1);
   wheels.wheel[Wheel::RIGHT].motor.setup();
   // Normal control
-  pwmMax = wheels.wheel[Wheel::RIGHT].motor.pwmMax;
+  pwmMax = wheels.wheel[Wheel::RIGHT].motor.m_pwmMax;
   pid_setup(1.5, 0.29, 0.25, -pwmMax, pwmMax, pwmMax,
-      &wheels.wheel[Wheel::RIGHT].motor.pid);  // Kp, Ki, Kd
-  wheels.wheel[Wheel::RIGHT].motor.pid.setPoint =
-      wheels.wheel[Wheel::RIGHT].motor.rpmSet;
+      &wheels.wheel[Wheel::RIGHT].motor.m_pid);  // Kp, Ki, Kd
+  wheels.wheel[Wheel::RIGHT].motor.m_pid.setPoint =
+      wheels.wheel[Wheel::RIGHT].motor.m_rpmSet;
   // Fast control
   //wheels.wheel[Wheel::RIGHT].motor.pid.setup(1.76, 0.87, 0.4);  // Kp, Ki, Kd
-  wheels.wheel[Wheel::RIGHT].motor.powerIgnoreTime = 2000;  // time to ignore motor power (ms)
-  wheels.wheel[Wheel::RIGHT].motor.zeroSettleTime = 3000;   // how long (ms) to wait for motors to settle at zero speed
-  wheels.wheel[Wheel::RIGHT].motor.swapDir = 0; // inverse right motor direction?
+  wheels.wheel[Wheel::RIGHT].motor.m_powerIgnoreTime = 2000;  // time to ignore motor power (ms)
+  wheels.wheel[Wheel::RIGHT].motor.m_zeroSettleTime = 3000;   // how long (ms) to wait for motors to settle at zero speed
+  wheels.wheel[Wheel::RIGHT].motor.m_swapDir = 0; // inverse right motor direction?
   encoder_setup(
       PIN_ODOMETER_RIGHT,
       ODOMETER_SWAP_DIR_RIGHT,
@@ -206,9 +206,9 @@ void Mower::setup()
                       0,          // Max RPM
                       3300);      // Set RPM
   cutter.motor.setScale(3.25839);
-  pwmMax = cutter.motor.pwmMax;
-  pid_setup(0.005, 0.01, 0.01, 0.0, pwmMax, pwmMax, &cutter.motor.pid);  // Kp, Ki, Kd
-  cutter.motor.pid.setPoint = cutter.motor.rpmSet;
+  pwmMax = cutter.motor.m_pwmMax;
+  pid_setup(0.005, 0.01, 0.01, 0.0, pwmMax, pwmMax, &cutter.motor.m_pid);  // Kp, Ki, Kd
+  cutter.motor.m_pid.setPoint = cutter.motor.m_rpmSet;
 
   // lawn sensor
   const uint8_t lawnSensorSendPins[LAWNSENSORS_NUM] =

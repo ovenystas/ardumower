@@ -15,23 +15,23 @@ void Motor::config(const float acceleration, const int16_t pwmMax,
                    const int16_t powerMax, const bool regulate,
                    const int16_t rpmMax, const int16_t rpmSet)
 {
-  this->acceleration = acceleration;
-  this->pwmMax = pwmMax;
-  this->powerMax = powerMax;
-  this->regulate = regulate;
-  this->rpmMax = rpmMax;
-  this->rpmSet = rpmSet;
+  m_acceleration = acceleration;
+  m_pwmMax = pwmMax;
+  m_powerMax = powerMax;
+  m_regulate = regulate;
+  m_rpmMax = rpmMax;
+  m_rpmSet = rpmSet;
 }
 
 void Motor::setRpmState(void)
 {
   bool newRpmState = readRpmPin();
-  if (newRpmState != rpmLastState)
+  if (newRpmState != m_rpmLastState)
   {
-    rpmLastState = newRpmState;
-    if (rpmLastState)
+    m_rpmLastState = newRpmState;
+    if (m_rpmLastState)
     {
-      rpmCounter++;
+      m_rpmCounter++;
     }
   }
 }
@@ -39,8 +39,8 @@ void Motor::setRpmState(void)
 uint16_t Motor::getSamplingTime(void)
 {
   uint32_t curMillis = millis();
-  uint32_t samplingTime = curMillis - lastSetSpeedTime;
-  lastSetSpeedTime = curMillis;
+  uint32_t samplingTime = curMillis - m_lastSetSpeedTime;
+  m_lastSetSpeedTime = curMillis;
 
   if (samplingTime > 1000)
   {

@@ -16,16 +16,16 @@
 class Motor
 {
   public:
-    float acceleration {};
-    bool regulate { false };
-    int16_t rpmMax {};
-    int16_t rpmSet {};
-    int16_t pwmMax {};
-    int16_t pwmCur {};  // TODO: Move to private
-    int16_t powerMax {};
-    bool swapDir { false };
-    int16_t powerIgnoreTime {};
-    int16_t zeroSettleTime {};  // TODO: Make it configurable
+    float m_acceleration {};
+    bool m_regulate { false };
+    int16_t m_rpmMax {};
+    int16_t m_rpmSet {};
+    int16_t m_pwmMax {};
+    int16_t m_pwmCur {};  // TODO: Move to private
+    int16_t m_powerMax {};
+    bool m_swapDir { false };
+    int16_t m_powerIgnoreTime {};
+    int16_t m_zeroSettleTime {};  // TODO: Make it configurable
 
     void config(const float acceleration, const int16_t pwmMax,
                 const int16_t powerMax, const bool regulate,
@@ -33,7 +33,7 @@ class Motor
 
     bool readRpmPin(void)
     {
-      return digitalRead(pinRpm);
+      return digitalRead(m_pinRpm);
     }
 
     int16_t readSensePin(void);
@@ -43,118 +43,118 @@ class Motor
 
     bool isTimeToControl(void)
     {
-      return isTimeTo(&nextTimeControl, TIME_BETWEEN_CONTROL);
+      return isTimeTo(&m_nextTimeControl, TIME_BETWEEN_CONTROL);
     }
 
     bool isTimeToCheckPower(void)
     {
-      return isTimeTo(&nextTimeCheckPower, TIME_BETWEEN_CHECK_POWER);
+      return isTimeTo(&m_nextTimeCheckPower, TIME_BETWEEN_CHECK_POWER);
     }
 
     bool isTimeToReadCurrent(void)
     {
-      return isTimeTo(&nextTimeReadSensor, TIME_BETWEEN_READ_CURRENT);
+      return isTimeTo(&m_nextTimeReadSensor, TIME_BETWEEN_READ_CURRENT);
     }
 
     bool isWaitAfterStuckEnd(void)
     {
-      return (millis() >= lastTimeStucked + TIME_WAIT_AFTER_STUCK);
+      return (millis() >= m_lastTimeStucked + TIME_WAIT_AFTER_STUCK);
     }
 
     void gotStuck(void)
     {
-      lastTimeStucked = millis();
+      m_lastTimeStucked = millis();
     }
 
     int16_t getRpmMeas(void) const
     {
-      return rpmMeas;
+      return m_rpmMeas;
     }
 
     void setRpmMeas(int16_t rpmMeas)
     {
-      this->rpmMeas = rpmMeas;
+      this->m_rpmMeas = rpmMeas;
     }
 
     int16_t getPwmSet(void) const
     {
-      return pwmSet;
+      return m_pwmSet;
     }
 
     void setPwmSet(int16_t pwmSet)
     {
-      this->pwmSet = pwmSet;
+      this->m_pwmSet = pwmSet;
     }
 
     int16_t getPowerMeas(void) const
     {
-      return powerMeas;
+      return m_powerMeas;
     }
 
     uint16_t getOverloadCounter(void) const
     {
-      return overloadCounter;
+      return m_overloadCounter;
     }
 
     void incOverloadCounter(void)
     {
-      ++overloadCounter;
+      ++m_overloadCounter;
     }
 
     void clearOverloadCounter(void)
     {
-      overloadCounter = 0;
+      m_overloadCounter = 0;
     }
 
     int16_t getRpmCounter(void) const
     {
-      return rpmCounter;
+      return m_rpmCounter;
     }
 
     void clearRpmCounter(void)
     {
-      rpmCounter = 0;
+      m_rpmCounter = 0;
     }
 
     uint16_t getZeroTimeout(void) const
     {
-      return zeroTimeout;
+      return m_zeroTimeout;
     }
 
     void setZeroTimeout(uint16_t zeroTimeout)
     {
-      this->zeroTimeout = zeroTimeout;
+      this->m_zeroTimeout = zeroTimeout;
     }
 
     bool isOverpowered(void)
     {
-      return powerMeas > powerMax;
+      return m_powerMeas > m_powerMax;
     }
 
     void updateRpms(void);
 
     int16_t getRpmSet() const
     {
-      return rpmSet;
+      return m_rpmSet;
     }
     void setRpmSet(int16_t rpmSet)
     {
-      this->rpmSet = rpmSet;
+      this->m_rpmSet = rpmSet;
     }
 
     int16_t getPwmCur() const
     {
-      return pwmCur;
+      return m_pwmCur;
     }
     void setPwmCur(int16_t pwmCur)
     {
-      this->pwmCur = pwmCur;
+      this->m_pwmCur = pwmCur;
     }
 
   protected:
-    int16_t powerMeas {};
-    int16_t pwmSet {};
-    int16_t rpmMeas {};
+    int16_t m_powerMeas {};
+    int16_t m_pwmSet {};
+    int16_t m_rpmMeas {};
 
   private:
     static const uint16_t TIME_BETWEEN_RPM_MEAS { 500 };
@@ -167,22 +167,22 @@ class Motor
     static constexpr float RPM_DIVISOR_HALF { 1.5 };
     static constexpr float RPM_DIVISOR_SLOW { 2.0 };
 
-    uint8_t pinDir;
-    uint8_t pinPwm;
-    uint8_t pinSense;
-    uint8_t pinRpm;
-    uint8_t pinBrake;
-    uint16_t overloadCounter {};
-    uint32_t lastRpmTime {};
-    uint32_t nextTimeRpmMeas {};
-    uint32_t nextTimeControl {};
-    uint32_t nextTimeCheckPower {};
-    uint32_t nextTimeReadSensor {};
-    uint32_t lastTimeStucked {};
-    uint32_t lastSetSpeedTime {};
-    uint16_t rpmCounter {};
-    bool rpmLastState { false };
-    uint16_t zeroTimeout {};
+    uint8_t m_pinDir;
+    uint8_t m_pinPwm;
+    uint8_t m_pinSense;
+    uint8_t m_pinRpm;
+    uint8_t m_pinBrake;
+    uint16_t m_overloadCounter {};
+    uint32_t m_lastRpmTime {};
+    uint32_t m_nextTimeRpmMeas {};
+    uint32_t m_nextTimeControl {};
+    uint32_t m_nextTimeCheckPower {};
+    uint32_t m_nextTimeReadSensor {};
+    uint32_t m_lastTimeStucked {};
+    uint32_t m_lastSetSpeedTime {};
+    uint16_t m_rpmCounter {};
+    bool m_rpmLastState { false };
+    uint16_t m_zeroTimeout {};
 
     bool isTimeTo(uint32_t* nextTime_p, const uint16_t timeBetween);
 };

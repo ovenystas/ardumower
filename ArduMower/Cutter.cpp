@@ -10,7 +10,7 @@
 
 void Cutter::control(void)
 {
-  int16_t rpmMax = motor.rpmMax;
+  int16_t rpmMax = motor.m_rpmMax;
   int16_t rpmNew = rpmMax * speed / 100;
   rpmNew = constrain(rpmNew, 0, rpmMax);
   motor.setRpmSet(rpmNew);

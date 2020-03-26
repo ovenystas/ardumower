@@ -13,29 +13,29 @@
 
 void MotorShield::setup(void)
 {
-  pinMode(pinDir[channel], OUTPUT);
-  digitalWrite(pinDir[channel], LOW);
+  pinMode(pinDir[m_channel], OUTPUT);
+  digitalWrite(pinDir[m_channel], LOW);
 
-  pinMode(pinPwm[channel], OUTPUT);
-  digitalWrite(pinDir[channel], LOW);
+  pinMode(pinPwm[m_channel], OUTPUT);
+  digitalWrite(pinDir[m_channel], LOW);
 
-  pinMode(pinBrake[channel], OUTPUT);
-  digitalWrite(pinBrake[channel], LOW);
+  pinMode(pinBrake[m_channel], OUTPUT);
+  digitalWrite(pinBrake[m_channel], LOW);
 
-  pinMode(pinSense[channel], INPUT);
-  ADCMan.setCapture(pinSense[channel], 1, true);
+  pinMode(pinSense[m_channel], INPUT);
+  ADCMan.setCapture(pinSense[m_channel], 1, true);
 }
 
 void MotorShield::setSpeed(void)
 {
-  setSpeed(pwmCur);
+  setSpeed(m_pwmCur);
 }
 
 void MotorShield::setSpeed(const int16_t speed)
 {
-  int16_t tmpSpeed = swapDir ? -speed : speed;
-  digitalWrite(pinDir[channel], tmpSpeed < 0);
-  analogWrite(pinPwm[channel], constrain(abs(tmpSpeed), 0, pwmMax));
+  int16_t tmpSpeed = m_swapDir ? -speed : speed;
+  digitalWrite(pinDir[m_channel], tmpSpeed < 0);
+  analogWrite(pinPwm[m_channel], constrain(abs(tmpSpeed), 0, m_pwmMax));
 //  Console.print("MotorShield::setSpeed ch=");
 //  Console.print(channel);
 //  Console.print(" pinDir=");
@@ -50,14 +50,14 @@ void MotorShield::setSpeed(const int16_t speed)
 
 void MotorShield::setSpeed(const int16_t speed, const bool brake)
 {
-  digitalWrite(pinBrake[channel], brake && speed == 0);
+  digitalWrite(pinBrake[m_channel], brake && speed == 0);
   setSpeed(speed);
 }
 
 void MotorShield::readCurrent(void)
 {
-  int16_t newAdcValue = ADCMan.read(pinSense[channel]);
-  FilterEmaI16_addValue(newAdcValue, &filter);
+  int16_t newAdcValue = ADCMan.read(pinSense[m_channel]);
+  FilterEmaI16_addValue(newAdcValue, &m_filter);
 }
 
 // Sets motor PWM
@@ -67,31 +67,31 @@ void MotorShield::control(void)
 {
   int pwmNew;
 
-  if (regulate)
+  if (m_regulate)
   {
     // Use PID regulator.
-    float y = pid_compute(rpmMeas, &pid);
+    float y = pid_compute(m_rpmMeas, &m_pid);
     pwmNew = (int)(round(y));
   }
   else
   {
     // Direct control of PWM
-    pwmSet = map(rpmSet, -rpmMax, rpmMax, -pwmMax, pwmMax);
-    if (pwmSet <= pwmCur)
+    m_pwmSet = map(m_rpmSet, -m_rpmMax, m_rpmMax, -m_pwmMax, m_pwmMax);
+    if (m_pwmSet <= m_pwmCur)
     {
       // Ignore acceleration if speed is lowered (e.g. motor is shut down).
-      pwmNew = pwmSet;
+      pwmNew = m_pwmSet;
     }
     else
     {
       // Use acceleration when speed is increased
       // http://phrogz.net/js/framerate-independent-low-pass-filter.html
       // smoothed += elapsedTime * ( newValue - smoothed ) / smoothing;
-      int16_t addPwm = getSamplingTime() * (float)(pwmSet - pwmCur) / acceleration;
-      pwmNew = pwmCur + addPwm;
+      int16_t addPwm = getSamplingTime() * (float)(m_pwmSet - m_pwmCur) / m_acceleration;
+      pwmNew = m_pwmCur + addPwm;
     }
   }
 
-  pwmCur = constrain(pwmNew, -pwmMax, pwmMax);
+  m_pwmCur = constrain(pwmNew, -m_pwmMax, m_pwmMax);
   setSpeed();
 }
