@@ -8,4 +8,4 @@ install:
   - make
   - cd ../ardumower
 Compiler: gcc
-script: cd ArduMower_Test && make gcov
+script: cd ArduMower_Test && SILENCE=" " make gcov
