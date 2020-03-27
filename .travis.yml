@@ -7,6 +7,16 @@ install:
   - autoreconf . -i
   - ./configure
   - make -j
-  - cd ../ardumower
-Compiler: gcc
-script: cd ArduMower_Test && make -j gcov
+  - cd ..
+  - mkdir bin
+  - curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
+  - export PATH=$(pwd)/bin:$PATH
+  - arduino-cli config init
+  - arduino-cli core update-index
+  - arduino-cli core install arduino:avr
+  - cd ardumower
+jobs:
+  include:
+    - script: arduino-cli compile --fqbn arduino:avr:mega ArduMower
+    - Compiler: gcc
+      script: cd ArduMower_Test && make -j gcov
