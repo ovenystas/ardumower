@@ -1,5 +1,7 @@
-language: cpp
+os: linux
 dist: bionic
+language: cpp
+
 jobs:
   include:
     - install:
@@ -20,5 +22,5 @@ jobs:
         - ./configure
         - make -j
         - cd ../ardumower/ArduMower_Test
-      Compiler: gcc
+      compiler: gcc
       script: make -j gcov
