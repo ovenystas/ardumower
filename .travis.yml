@@ -1,11 +1,12 @@
 language: cpp
+dist: bionic
 install:
   - cd ..
   - git clone https://github.com/cpputest/cpputest.git
   - cd cpputest
   - autoreconf . -i
   - ./configure
-  - make
+  - make -j
   - cd ../ardumower
 Compiler: gcc
-script: cd ArduMower_Test && make gcov
+script: cd ArduMower_Test && make -j gcov
