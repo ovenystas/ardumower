@@ -1,22 +1,24 @@
 language: cpp
 dist: bionic
-install:
-  - cd ..
-  - git clone https://github.com/cpputest/cpputest.git
-  - cd cpputest
-  - autoreconf . -i
-  - ./configure
-  - make -j
-  - cd ..
-  - mkdir bin
-  - curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
-  - export PATH=$(pwd)/bin:$PATH
-  - arduino-cli config init
-  - arduino-cli core update-index
-  - arduino-cli core install arduino:avr
-  - cd ardumower
 jobs:
   include:
-    - script: arduino-cli compile --fqbn arduino:avr:mega ArduMower
-    - Compiler: gcc
-      script: cd ArduMower_Test && make -j gcov
+    - install:
+        - cd ..
+        - mkdir bin
+        - curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
+        - export PATH=$(pwd)/bin:$PATH
+        - arduino-cli config init
+        - arduino-cli core update-index
+        - arduino-cli core install arduino:avr
+        - cd ardumower
+      script: arduino-cli compile --fqbn arduino:avr:mega ArduMower
+    - install:
+        - cd ..
+        - git clone https://github.com/cpputest/cpputest.git
+        - cd cpputest
+        - autoreconf . -i
+        - ./configure
+        - make -j
+        - cd ../ardumower/ArduMower_Test
+      Compiler: gcc
+      script: make -j gcov
