@@ -39,7 +39,7 @@ SRC_FILES = \
 	../ArduMower/Sonar.cpp \
 
 TEST_SRC_DIRS = \
-	tests
+	tests \
 
 MOCKS_SRC_DIRS = \
 	mocks \
@@ -48,11 +48,11 @@ INCLUDE_DIRS = \
   src \
   mocks \
   ../ArduMower \
-  ../ArduMower/inc \
-  $(CPPUTEST_HOME)/include \
 
 CPPUTEST_CPPFLAGS += -std=gnu++11
+CPPFLAGS += -I$(CPPUTEST_HOME)/include
+CXXFLAGS += -include $(CPPUTEST_HOME)/include/CppUTest/MemoryLeakDetectorNewMacros.h
+CFLAGS += -include $(CPPUTEST_HOME)/include/CppUTest/MemoryLeakDetectorMallocMacros.h
+LD_LIBRARIES = -L$(CPPUTEST_HOME)/lib -lCppUTest -lCppUTestExt
 
 include $(CPPUTEST_HOME)/build/MakefileWorker.mk
-
-

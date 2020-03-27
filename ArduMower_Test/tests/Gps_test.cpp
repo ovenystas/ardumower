@@ -1,10 +1,10 @@
 #include "Gps.h"
-#include "Gps.cpp"
 
 #include <HardwareSerial.h>
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
 
+Gps gps;
 
 TEST_GROUP(Gps)
 {
@@ -20,8 +20,6 @@ TEST_GROUP(Gps)
 
 TEST(Gps, Init)
 {
-  Gps gps;
-
   gps.init();
 
   CHECK_EQUAL(9600, Serial3.getBaud());
@@ -29,8 +27,6 @@ TEST(Gps, Init)
 
 TEST(Gps, cardinal_middleInSector)
 {
-  Gps gps;
-
   STRCMP_EQUAL("N", gps.cardinal(0.0f));
   STRCMP_EQUAL("NNE", gps.cardinal(22.5f));
   STRCMP_EQUAL("NE", gps.cardinal(45.0f));
@@ -52,8 +48,6 @@ TEST(Gps, cardinal_middleInSector)
 
 TEST(Gps, cardinal_borderOfSector)
 {
-  Gps gps;
-
   STRCMP_EQUAL("SSE", gps.cardinal(180.0f - 11.25f - 0.001f));
   STRCMP_EQUAL("S", gps.cardinal(180.0f - 11.25f + 0.001f));
   STRCMP_EQUAL("S", gps.cardinal(180.0f + 11.25f - 0.001f));
@@ -71,8 +65,6 @@ gpsCoord work( { 57.7087878f, 11.980496f });
 
 TEST(Gps, distance_between)
 {
-  Gps gps;
-
   DOUBLES_EQUAL(0.0f, gps.distance_between(0.0f, 0.0f, 0.0f, 0.0f), 0.001f);
   DOUBLES_EQUAL(0.0f, gps.distance_between(40.0f, 60.0f, 40.0f, 60.0f), 0.001f);
   DOUBLES_EQUAL(19019.85f, gps.distance_between(
@@ -81,8 +73,6 @@ TEST(Gps, distance_between)
 
 TEST(Gps, course_to)
 {
-  Gps gps;
-
   // North
   DOUBLES_EQUAL(0.0f, gps.course_to(0.0f, 0.0f, 50.0f, 0.0f), 0.001f);
   // South
