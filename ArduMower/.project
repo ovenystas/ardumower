@@ -3,11 +3,11 @@
 	<name>ArduMower</name>
 	<comment></comment>
 	<projects>
-		<project>ArduMower_Test</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
-			<name>io.sloeber.core.inoToCpp</name>
+			<name>org.eclipse.cdt.core.cBuilder</name>
+			<triggers>clean,full,incremental,</triggers>
 			<arguments>
 			</arguments>
 		</buildCommand>
@@ -17,26 +17,4 @@
 		<nature>org.eclipse.cdt.core.ccnature</nature>
 		<nature>org.eclipse.cdt.arduino.core.arduinoNature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>core/core</name>
-			<type>2</type>
-			<locationURI>ECLIPSE_HOME/arduinoPlugin/packages/arduino/hardware/avr/1.6.20/cores/arduino</locationURI>
-		</link>
-		<link>
-			<name>core/variant</name>
-			<type>2</type>
-			<locationURI>ECLIPSE_HOME/arduinoPlugin/packages/arduino/hardware/avr/1.6.20/variants/mega</locationURI>
-		</link>
-		<link>
-			<name>libraries/EEPROM</name>
-			<type>2</type>
-			<location>/home/ove/bin/arduino-1.8.12/hardware/arduino/avr/libraries/EEPROM</location>
-		</link>
-		<link>
-			<name>libraries/Wire</name>
-			<type>2</type>
-			<location>/home/ove/bin/arduino-1.8.12/hardware/arduino/avr/libraries/Wire</location>
-		</link>
-	</linkedResources>
 </projectDescription>

@@ -2592,7 +2592,7 @@ void Robot::processGPSData()
   unsigned long age;
   gps.f_get_position(&nlat, &nlon, &age);
 
-  if (nlat == Gps::GPS_INVALID_F_ANGLE)
+  if (nlat == gps.GPS_INVALID_F_ANGLE)
   {
     return;
   }
