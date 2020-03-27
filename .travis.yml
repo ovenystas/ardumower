@@ -1,4 +1,5 @@
 language: cpp
+dist: bionic
 install:
   - cd ..
   - git clone https://github.com/cpputest/cpputest.git
@@ -8,4 +9,4 @@ install:
   - make -j
   - cd ../ardumower
 Compiler: gcc
-script: cd ArduMower_Test && SILENCE=" " make -j gcov
+script: cd ArduMower_Test && make -j gcov
