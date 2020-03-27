@@ -10,12 +10,12 @@ ifndef SILENCE
 endif
 
 #--- Inputs ----#
-COMPONENT_NAME = ArduMower_Test
+COMPONENT_NAME = ArduMower
 CPPUTEST_HOME = ../../cpputest
 
 CPPUTEST_USE_EXTENSIONS = Y
 CPPUTEST_USE_GCOV = Y
-CPPUTEST_USE_VPATH = Y
+CPPUTEST_USE_VPATH = N
 
 CPP_PLATFORM = Gcc
 
@@ -23,8 +23,9 @@ CPP_PLATFORM = Gcc
 # when using std library includes like <list> and other containers
 # so that memory leak detection does not conflict with stl.
 #CPPUTEST_MEMLEAK_DETECTOR_NEW_MACRO_FILE = -include ApplicationLib/ExamplesNewOverrides.h
-SRC_DIRS = \
-	src \
+
+#SRC_DIRS = \
+	../ArduMower \
 
 SRC_FILES = \
 	../ArduMower/Bumper.cpp \
@@ -45,14 +46,9 @@ MOCKS_SRC_DIRS = \
 	mocks \
 
 INCLUDE_DIRS = \
-  src \
-  mocks \
-  ../ArduMower \
+ 	../ArduMower \
+ 	$(CPPUTEST_HOME)/include \
 
-CPPUTEST_CPPFLAGS += -std=gnu++11
-CPPFLAGS += -I$(CPPUTEST_HOME)/include
-CXXFLAGS += -include $(CPPUTEST_HOME)/include/CppUTest/MemoryLeakDetectorNewMacros.h
-CFLAGS += -include $(CPPUTEST_HOME)/include/CppUTest/MemoryLeakDetectorMallocMacros.h
-LD_LIBRARIES = -L$(CPPUTEST_HOME)/lib -lCppUTest -lCppUTestExt
+CPPUTEST_CPPFLAGS += -std=gnu++11	# This is what Arduino 1.8.12 is using
 
 include $(CPPUTEST_HOME)/build/MakefileWorker.mk

@@ -5,7 +5,7 @@ install:
   - cd cpputest
   - autoreconf . -i
   - ./configure
-  - make
+  - make -j
   - cd ../ardumower
 Compiler: gcc
-script: cd ArduMower_Test && SILENCE=" " make gcov
+script: cd ArduMower_Test && SILENCE=" " make -j gcov
