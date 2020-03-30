@@ -238,7 +238,7 @@ void Robot::loadSaveUserSettings(const bool readflag)
   eereadwrite(readflag, addr, m_odometer.m_wheelBaseCm);
   eereadwrite(readflag, addr, m_odometer.m_encoder.left_p->swapDir);
   eereadwrite(readflag, addr, m_odometer.m_encoder.right_p->swapDir);
-  eereadwrite(readflag, addr, m_button.use);
+  eereadwrite(readflag, addr, m_button.m_use);
   eereadwrite(readflag, addr, m_userSwitch1);
   eereadwrite(readflag, addr, m_userSwitch2);
   eereadwrite(readflag, addr, m_userSwitch3);
@@ -533,7 +533,7 @@ void Robot::printSettingSerial()
   // ----- other -----------------------------------------
   Console.println(F("== Button =="));
   Console.print(F("use : "));
-  Console.println(m_button.use);
+  Console.println(m_button.isUsed());
 
   // ----- user-defined switch ---------------------------
   Console.println(F("== User switches =="));
@@ -1019,7 +1019,7 @@ void Robot::setup()
   loadRobotStats();
   setUserSwitches();
 
-  if (!m_button.use)
+  if (!m_button.isUsed())
   {
     // robot has no ON/OFF button => start immediately
     setNextState(StateMachine::STATE_FORWARD);
@@ -1542,16 +1542,16 @@ void Robot::readSerial()
 
 void Robot::checkButton()
 {
-  bool buttonPressed = button_isPressed(&m_button);
+  bool buttonPressed = m_button.isPressed();
 
-  if ((!buttonPressed && button_getCounter(&m_button) > 0) ||
-      (buttonPressed && button_isTimeToRun(&m_button)))
+  if ((!buttonPressed && m_button.getCounter() > 0) ||
+      (buttonPressed && m_button.isTimeToRun()))
   {
     if (buttonPressed)
     {
       Console.println(F("Button is pressed"));
       beep(1);
-      button_incCounter(&m_button);
+      m_button.incCounter();
       resetIdleTime();
     }
     else
@@ -1563,7 +1563,7 @@ void Robot::checkButton()
       }
       else
       {
-        switch (button_getCounter(&m_button))
+        switch (m_button.getCounter())
         {
           case 1:
             // start normal with random mowing
@@ -1609,7 +1609,7 @@ void Robot::checkButton()
         }
       }
 
-      button_clearCounter(&m_button);
+      m_button.clearCounter();
     }
   }
 }

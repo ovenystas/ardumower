@@ -231,7 +231,7 @@ void Mower::setup()
       &m_perimeters.perimeterArray_p[PERIMETER_RIGHT]);
 
   // button
-  button_setup(PIN_BUTTON, &m_button);
+  // Nothing to be done here
 
   // bumpers
   const uint8_t bumperPins[BUMPERS_NUM] = {PIN_BUMBER_LEFT, PIN_BUMBER_RIGHT};

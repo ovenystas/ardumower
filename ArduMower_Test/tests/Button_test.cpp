@@ -1,9 +1,11 @@
-#include "Button.h"
-
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
 
-Button button;
+// Get access to private class members in SUT
+#define private public
+#include "Button.h"
+
+Button* p_button = nullptr;
 
 // ButtonGroup ------------------------------------------------------------
 
@@ -14,22 +16,28 @@ TEST_GROUP(ButtonGroup)
     mock().expectOneCall("pinMode")
         .withIntParameter("pin", 1)
         .withIntParameter("mode", INPUT_PULLUP);
-    button_setup(1, &button);
+
+    p_button = new Button(1);
+
     mock().checkExpectations();
   }
 
   void teardown()
   {
+    if (p_button)
+    {
+      delete p_button;
+    }
     mock().clear();
   }
 };
 
-TEST(ButtonGroup, Setup)
+TEST(ButtonGroup, init)
 {
-  CHECK_EQUAL(true, button.use);
-  CHECK_EQUAL(1, button.pin);
-  CHECK_EQUAL(0, button.lastRun);
-  CHECK_EQUAL(0, button.counter);
+  CHECK_EQUAL(true, p_button->m_use);
+  CHECK_EQUAL(1, p_button->m_pin);
+  CHECK_EQUAL(0, p_button->m_lastRun);
+  CHECK_EQUAL(0, p_button->m_counter);
 }
 
 TEST(ButtonGroup, isPressed)
@@ -37,63 +45,55 @@ TEST(ButtonGroup, isPressed)
   mock().expectOneCall("digitalRead")
       .withIntParameter("pin", 1)
       .andReturnValue(HIGH);
-  CHECK_EQUAL(false, button_isPressed(&button));
+  CHECK_EQUAL(false, p_button->isPressed());
 
   mock().expectOneCall("digitalRead")
       .withIntParameter("pin", 1)
       .andReturnValue(LOW);
-  CHECK_EQUAL(true, button_isPressed(&button));
+  CHECK_EQUAL(true, p_button->isPressed());
+
   mock().checkExpectations();
 }
 
-TEST(ButtonGroup, getCounter)
+TEST(ButtonGroup, counter)
 {
-  CHECK_EQUAL(0, button_getCounter(&button));
-  button.counter = 255;
-  CHECK_EQUAL(255, button_getCounter(&button));
+  CHECK_EQUAL(0, p_button->getCounter());
+  p_button->incCounter();
+  CHECK_EQUAL(1, p_button->getCounter());
+  p_button->incCounter();
+  CHECK_EQUAL(2, p_button->getCounter());
+  p_button->clearCounter();
+  CHECK_EQUAL(0, p_button->getCounter());
 }
 
-TEST(ButtonGroup, incCounter)
+TEST(ButtonGroup, isTimeToRun_unused)
 {
-  CHECK_EQUAL(0, button.counter);
-  button_incCounter(&button);
-  CHECK_EQUAL(1, button.counter);
+  p_button->m_use = false;
+
+  mock().expectNoCall("millis");
+  CHECK_EQUAL(false, p_button->isTimeToRun());
+  CHECK_EQUAL(0, p_button->m_lastRun);
+
+  mock().checkExpectations();
 }
 
-TEST(ButtonGroup, clearCounter)
+TEST(ButtonGroup, isTimeToRun_used)
 {
-  button.counter = 255;
-  CHECK_EQUAL(255, button.counter);
-  button_clearCounter(&button);
-  CHECK_EQUAL(0, button.counter);
-}
-
-TEST(ButtonGroup, isTimeToRun)
-{
-  mock().expectOneCall("millis").andReturnValue(500u);
-  CHECK_EQUAL(false, button_isTimeToRun(&button));
-  CHECK_EQUAL(0, button.lastRun);
-
   mock().expectOneCall("millis").andReturnValue(999u);
-  CHECK_EQUAL(false, button_isTimeToRun(&button));
-  CHECK_EQUAL(0, button.lastRun);
+  CHECK_EQUAL(false, p_button->isTimeToRun());
+  CHECK_EQUAL(0, p_button->m_lastRun);
 
   mock().expectOneCall("millis").andReturnValue(1000u);
-  CHECK_EQUAL(true, button_isTimeToRun(&button));
-  CHECK_EQUAL(1000, button.lastRun);
+  CHECK_EQUAL(true, p_button->isTimeToRun());
+  CHECK_EQUAL(1000, p_button->m_lastRun);
 
-  mock().expectOneCall("millis").andReturnValue(1001u);
-  CHECK_EQUAL(false, button_isTimeToRun(&button));
-  CHECK_EQUAL(1000, button.lastRun);
+  mock().expectOneCall("millis").andReturnValue(1999u);
+  CHECK_EQUAL(false, p_button->isTimeToRun());
+  CHECK_EQUAL(1000, p_button->m_lastRun);
 
   mock().expectOneCall("millis").andReturnValue(2000u);
-  CHECK_EQUAL(true, button_isTimeToRun(&button));
-  CHECK_EQUAL(2000, button.lastRun);
-
-  button.use = false;
-
-  CHECK_EQUAL(false, button_isTimeToRun(&button));
-  CHECK_EQUAL(2000, button.lastRun);
+  CHECK_EQUAL(true, p_button->isTimeToRun());
+  CHECK_EQUAL(2000, p_button->m_lastRun);
 
   mock().checkExpectations();
 }

@@ -8,37 +8,27 @@
 
 #include <Arduino.h>
 
-typedef struct
+class Button
 {
-  bool use;
-  uint8_t pin;
-  uint8_t counter;
-  unsigned long lastRun;
-} Button;
+public:
+  Button(uint8_t pin) : m_pin{pin}
+  {
+    pinMode(m_pin, INPUT_PULLUP);
+  };
 
-void button_setup(uint8_t pin, Button* button_p);
-bool button_isTimeToRun(Button* button_p);
+  bool isTimeToRun();
 
-static inline
-bool button_isPressed(Button* button_p)
-{
-  return (digitalRead(button_p->pin) == LOW);
-}
+  bool isUsed() { return m_use; }
+  bool isPressed() { return (digitalRead(m_pin) == LOW); }
 
-static inline
-uint8_t button_getCounter(Button* button_p)
-{
-  return button_p->counter;
-}
+  uint8_t getCounter() { return m_counter; }
+  void incCounter() { m_counter++; }
+  void clearCounter() { m_counter = 0; }
 
-static inline
-void button_incCounter(Button* button_p)
-{
-  button_p->counter++;
-}
+  bool m_use = true;
 
-static inline
-void button_clearCounter(Button* button_p)
-{
-  button_p->counter = 0;
-}
+private:
+  uint8_t m_pin = 0;
+  uint8_t m_counter = 0;
+  unsigned long m_lastRun = 0;
+};

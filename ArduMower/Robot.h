@@ -28,6 +28,7 @@
 
 #include <EEPROM.h>
 
+#include "Config.h"
 #include "AdcManager.h"
 #include "Battery.h"
 #include "Bumper.h"
@@ -231,7 +232,7 @@ public:
   RemoteControl m_rc; // pfodApp
 
   // ----- other -----------------------------------------
-  Button m_button;
+  Button m_button { PIN_BUTTON };
 
   // ----- user-defined switch ---------------------------
   bool m_userSwitch1 { false }; // user-defined switch 1 (default value)
