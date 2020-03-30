@@ -370,7 +370,7 @@ void Robot::printSettingSerial()
   // ------ bumper ------------------------------------
   Console.println(F("== Bumpers =="));
   Console.print(F("use : "));
-  Console.println(m_bumpers.m_use);
+  Console.println(m_bumpers.isUsed());
 
   // ------ drop ------------------------------------
   Console.println(F("== Drop sensors =="));
@@ -2979,7 +2979,7 @@ void Robot::tasks_50ms()
 
 void Robot::tasks_100ms()
 {
-  if (m_bumpers.m_use)
+  if (m_bumpers.isUsed())
   {
     m_bumpers.check();
   }

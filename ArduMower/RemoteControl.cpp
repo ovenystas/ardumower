@@ -712,7 +712,7 @@ void RemoteControl::sendBumperMenu(const bool update)
     Bluetooth.print(F("{.Bumper`1000"));
   }
   Bluetooth.print(F("|b00~Use "));
-  sendYesNo(m_robot_p->m_bumpers.m_use);
+  sendYesNo(m_robot_p->m_bumpers.isUsed());
   Bluetooth.println(F("|b01~Counter l, r "));
   Bluetooth.print(m_robot_p->m_bumperArray[LEFT].getCounter());
   Bluetooth.print(", ");

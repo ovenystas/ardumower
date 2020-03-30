@@ -58,6 +58,8 @@ public:
   bool isAnyHit();
   void clearHit();
 
+  bool isUsed() { return m_use; }
+
   bool m_use { false };
 
 private:
