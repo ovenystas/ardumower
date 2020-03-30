@@ -5,7 +5,6 @@
  *      Author: ove
  */
 
-#include <Arduino.h>
 #include "MotorShield.h"
 #include "AdcManager.h"
 

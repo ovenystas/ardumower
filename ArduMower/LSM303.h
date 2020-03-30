@@ -1,5 +1,4 @@
-#ifndef LSM303_h
-#define LSM303_h
+#pragma once
 
 #include <Arduino.h> // for byte data type
 
@@ -178,23 +177,23 @@ class LSM303
       D_OUT_Z_H_M       = 0x0D
     };
 
-    vector<int16_t> a; // accelerometer readings
-    vector<int16_t> m; // magnetometer readings
-    vector<int16_t> m_max; // maximum magnetometer values, used for calibration
-    vector<int16_t> m_min; // minimum magnetometer values, used for calibration
+    vector<int16_t> m_acc; // accelerometer readings
+    vector<int16_t> m_mag; // magnetometer readings
+    vector<int16_t> m_mag_max; // maximum magnetometer values, used for calibration
+    vector<int16_t> m_mag_min; // minimum magnetometer values, used for calibration
 
-    byte last_status; // status of last I2C transmission
+    byte m_last_status; // status of last I2C transmission
 
     LSM303(void);
 
     bool init(deviceTypeE device = DEVICE_AUTO, sa0StateE sa0 = SA0_AUTO);
     deviceTypeE getDeviceType(void) const
     {
-      return deviceType;
+      return m_deviceType;
     }
     bool isInitialized(void)
     {
-      return (deviceType != DEVICE_AUTO);
+      return (m_deviceType != DEVICE_AUTO);
     }
 
     void enableDefault(void);
@@ -224,15 +223,15 @@ class LSM303
     static void vector_normalize(vector<float> *a);
 
   private:
-    deviceTypeE deviceType; // chip type (D, DLHC, DLM, or DLH)
-    byte acc_address;
-    byte mag_address;
+    deviceTypeE m_deviceType; // chip type (D, DLHC, DLM, or DLH)
+    byte m_acc_address;
+    byte m_mag_address;
 
-    static const int dummy_reg_count = 6;
-    regAddrE translated_regs[dummy_reg_count + 1]; // index 0 not used
+    static const int m_dummy_reg_count = 6;
+    regAddrE m_translated_regs[m_dummy_reg_count + 1]; // index 0 not used
 
-    unsigned int io_timeout;
-    bool did_timeout;
+    unsigned int m_io_timeout;
+    bool m_did_timeout;
 
     int testReg(byte address, regAddrE reg);
 };
@@ -252,19 +251,19 @@ and horizontal north is returned.
 */
 template <typename T> float LSM303::heading(vector<T> from)
 {
-    vector<int32_t> temp_m = {m.x, m.y, m.z};
+    vector<int32_t> temp_m = {m_mag.x, m_mag.y, m_mag.z};
 
     // subtract offset (average of min and max) from magnetometer readings
-    temp_m.x -= ((int32_t)m_min.x + m_max.x) / 2;
-    temp_m.y -= ((int32_t)m_min.y + m_max.y) / 2;
-    temp_m.z -= ((int32_t)m_min.z + m_max.z) / 2;
+    temp_m.x -= ((int32_t)m_mag_min.x + m_mag_max.x) / 2;
+    temp_m.y -= ((int32_t)m_mag_min.y + m_mag_max.y) / 2;
+    temp_m.z -= ((int32_t)m_mag_min.z + m_mag_max.z) / 2;
 
     // compute E and N
     vector<float> E;
     vector<float> N;
-    vector_cross(&temp_m, &a, &E);
+    vector_cross(&temp_m, &m_acc, &E);
     vector_normalize(&E);
-    vector_cross(&a, &E, &N);
+    vector_cross(&m_acc, &E, &N);
     vector_normalize(&N);
 
     // compute heading
@@ -284,8 +283,3 @@ template <typename Ta, typename Tb> float LSM303::vector_dot(const vector<Ta> *a
 {
   return (a->x * b->x) + (a->y * b->y) + (a->z * b->z);
 }
-
-#endif
-
-
-

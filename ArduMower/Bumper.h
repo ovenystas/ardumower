@@ -4,9 +4,7 @@
  *  Created on: Mar 23, 2016
  *      Author: ove
  */
-
-#ifndef BUMPER_H
-#define BUMPER_H
+#pragma once
 
 #include <Arduino.h>
 
@@ -83,5 +81,3 @@ void bumpers_clearHit(Bumpers* bumpers_p)
     bumper_clearHit(&bumpers_p->bumperArray_p[i]);
   }
 }
-
-#endif // BUMPER_H

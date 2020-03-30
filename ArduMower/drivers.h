@@ -23,8 +23,7 @@
  */
 
 // drivers (motor driver, sensor drivers, etc.)
-#ifndef DRIVERS_H
-#define DRIVERS_H
+#pragma once
 
 #include <Arduino.h>
 #include <EEPROM.h>
@@ -157,5 +156,3 @@ bool setDS1307(const datetime_t& dt);
 
 // Returns the day of week (0=Sunday, 6=Saturday) for a given date
 int getDayOfWeek(int month, const int day, int year, const int CalendarSystem);
-
-#endif

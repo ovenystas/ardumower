@@ -5,7 +5,6 @@
  *      Author: ove
  */
 
-#include <Arduino.h>
 #include "MotorMosFet.h"
 #include "AdcManager.h"
 #include "Pid.h"

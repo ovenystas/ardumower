@@ -5,7 +5,6 @@
  *      Author: ove
  */
 
-#include <Arduino.h>
 #include "Sonar.h"
 
 #define MAX_SENSOR_DELAY 18000

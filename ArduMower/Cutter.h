@@ -4,9 +4,7 @@
  *  Created on: Apr 12, 2016
  *      Author: ove
  */
-
-#ifndef CUTTER_H
-#define CUTTER_H
+#pragma once
 
 #include "Motor.h"
 #include "MotorMosFet.h"
@@ -14,66 +12,64 @@
 class Cutter
 {
   public:
-    MotorMosFet motor;
+    MotorMosFet m_motor;
 
     bool isEnabled() const
     {
-      return enabled;
+      return m_enabled;
     }
 
     bool isDisabled() const
     {
-      return !enabled;
+      return !m_enabled;
     }
 
     void enable()
     {
-      enabled = true;
+      m_enabled = true;
     }
 
     void disable()
     {
-      enabled = false;
-      motor.setRpmSet(0);
-      motor.setPwmSet(0);
+      m_enabled = false;
+      m_motor.setRpmSet(0);
+      m_motor.setPwmSet(0);
     }
 
     void toggleEnabled()
     {
-      enabled = !enabled;
+      m_enabled = !m_enabled;
     }
 
     bool isEnableOverriden() const
     {
-      return enableOverriden;
+      return m_enableOverriden;
     }
 
     void setEnableOverriden(bool enableOverriden)
     {
-      this->enableOverriden = enableOverriden;
+      this->m_enableOverriden = enableOverriden;
     }
 
     void toggleEnableOverriden()
     {
-      enableOverriden = !enableOverriden;
+      m_enableOverriden = !m_enableOverriden;
     }
 
     int8_t getSpeed() const
     {
-      return speed;
+      return m_speed;
     }
 
     void setSpeed(int8_t speed)
     {
-      this->speed = speed;
+      this->m_speed = speed;
     }
 
     void control(void);
 
   private:
-    bool enabled {false};
-    bool enableOverriden {false};
-    int8_t speed; // Range 0..100
+    bool m_enabled {false};
+    bool m_enableOverriden {false};
+    int8_t m_speed; // Range 0..100
 };
-
-#endif /* CUTTER_H */

@@ -21,12 +21,12 @@
 
 L3G::L3G(void)
 {
-  deviceType = DEVICE_AUTO;
+  m_deviceType = DEVICE_AUTO;
 
-  io_timeout = 0;  // 0 = no timeout
-  did_timeout = false;
-  last_status = 0;
-  address = 0;
+  m_io_timeout = 0;  // 0 = no timeout
+  m_did_timeout = false;
+  m_last_status = 0;
+  m_address = 0;
 }
 
 // Public Methods //////////////////////////////////////////////////////////////
@@ -34,8 +34,8 @@ L3G::L3G(void)
 // Did a timeout occur in read() since the last call to timeoutOccurred()?
 bool L3G::timeoutOccurred()
 {
-  bool tmp = did_timeout;
-  did_timeout = false;
+  bool tmp = m_did_timeout;
+  m_did_timeout = false;
   return tmp;
 }
 
@@ -97,18 +97,18 @@ bool L3G::init(deviceTypeE device, sa0StateE sa0)
     }
   }
 
-  deviceType = device;
+  m_deviceType = device;
 
   // set device address
   switch (device)
   {
     case DEVICE_D20H:
     case DEVICE_D20:
-      address = (sa0 == SA0_HIGH) ? D20_SA0_HIGH_ADDRESS : D20_SA0_LOW_ADDRESS;
+      m_address = (sa0 == SA0_HIGH) ? D20_SA0_HIGH_ADDRESS : D20_SA0_LOW_ADDRESS;
       break;
 
     case DEVICE_4200D:
-      address = (sa0 == SA0_HIGH) ? L3G4200D_SA0_HIGH_ADDRESS : L3G4200D_SA0_LOW_ADDRESS;
+      m_address = (sa0 == SA0_HIGH) ? L3G4200D_SA0_HIGH_ADDRESS : L3G4200D_SA0_LOW_ADDRESS;
       break;
 
     case DEVICE_AUTO:
@@ -129,7 +129,7 @@ the registers it writes to.
 */
 void L3G::enableDefault(void)
 {
-  if (deviceType == DEVICE_D20H)
+  if (m_deviceType == DEVICE_D20H)
   {
     // 0x00 = 0b00000000
     // Low_ODR = 0 (low speed ODR disabled)
@@ -151,10 +151,10 @@ void L3G::enableDefault(void)
 // Writes a gyro register
 void L3G::writeReg(const byte reg, const byte value)
 {
-  Wire.beginTransmission(address);
+  Wire.beginTransmission(m_address);
   Wire.write(reg);
   Wire.write(value);
-  last_status = Wire.endTransmission();
+  m_last_status = Wire.endTransmission();
 }
 
 // Reads a gyro register
@@ -162,10 +162,10 @@ byte L3G::readReg(const byte reg)
 {
   byte value;
 
-  Wire.beginTransmission(address);
+  Wire.beginTransmission(m_address);
   Wire.write(reg);
-  last_status = Wire.endTransmission(false);
-  Wire.requestFrom(address, (byte)1);
+  m_last_status = Wire.endTransmission(false);
+  Wire.requestFrom(m_address, (byte)1);
   value = Wire.read();
   Wire.endTransmission();
 
@@ -175,19 +175,19 @@ byte L3G::readReg(const byte reg)
 // Reads the 3 gyro channels and stores them in vector g
 void L3G::read()
 {
-  Wire.beginTransmission(address);
+  Wire.beginTransmission(m_address);
   // assert the MSB of the address to get the gyro
   // to do slave-transmit subaddress updating.
   Wire.write(OUT_X_L | (1 << 7));
   Wire.endTransmission();
-  Wire.requestFrom(address, (byte)6);
+  Wire.requestFrom(m_address, (byte)6);
 
   unsigned int millis_start = millis();
   while (Wire.available() < 6)
   {
-    if (io_timeout > 0 && ((unsigned int)millis() - millis_start) > io_timeout)
+    if (m_io_timeout > 0 && ((unsigned int)millis() - millis_start) > m_io_timeout)
     {
-      did_timeout = true;
+      m_did_timeout = true;
       return;
     }
   }
@@ -200,9 +200,9 @@ void L3G::read()
   uint8_t zhg = Wire.read();
 
   // combine high and low bytes
-  g.x = (int16_t)(xhg << 8 | xlg);
-  g.y = (int16_t)(yhg << 8 | ylg);
-  g.z = (int16_t)(zhg << 8 | zlg);
+  m_g.x = (int16_t)(xhg << 8 | xlg);
+  m_g.y = (int16_t)(yhg << 8 | ylg);
+  m_g.z = (int16_t)(zhg << 8 | zlg);
 }
 
 void L3G::vectorNormalize(vector<float> *a)

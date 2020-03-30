@@ -4,9 +4,7 @@
  *  Created on: Apr 4, 2016
  *      Author: ove
  */
-
-#ifndef ENCODER_H
-#define ENCODER_H
+#pragma once
 
 #include <Arduino.h>
 #include <util/atomic.h>
@@ -64,5 +62,3 @@ void encoder_setWheelRpmCurr(int16_t wheelRpmCurr, Encoder* encoder_p)
     encoder_p->wheelRpmCurr = wheelRpmCurr;
   }
 }
-
-#endif /* ENCODER_H */

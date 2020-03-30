@@ -8,10 +8,9 @@
 /**
  * Deek-Robot or Arduino, Motor Shield R3
  */
+#pragma once
 
-#ifndef MOTORSHIELD_H
-#define MOTORSHIELD_H
-
+#include <Arduino.h>
 #include "MotorDrv.h"
 
 class MotorShield: public MotorDrv
@@ -39,5 +38,3 @@ class MotorShield: public MotorDrv
     const uint8_t pinBrake[2] {PIN_BRAKEA, PIN_BRAKEB};
     const uint8_t pinSense[2] {PIN_SENSEA, PIN_SENSEB};
 };
-
-#endif /* MOTORSHIELD_H */

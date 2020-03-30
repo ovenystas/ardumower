@@ -4,9 +4,7 @@
  *  Created on: Apr 23, 2016
  *      Author: ove
  */
-
-#ifndef MOTORDRV_H
-#define MOTORDRV_H
+#pragma once
 
 #include <Arduino.h>
 #include "Motor.h"
@@ -62,5 +60,3 @@ class MotorDrv: public Motor
     uint8_t m_channel {};
     FilterEmaI16 m_filter;
 };
-
-#endif /* MOTORDRV_H */

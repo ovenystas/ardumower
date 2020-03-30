@@ -8,10 +8,9 @@
 /**
  * MosFet motor driver
  */
+#pragma once
 
-#ifndef MOTORMOSFET_H
-#define MOTORMOSFET_H
-
+#include <Arduino.h>
 #include "MotorDrv.h"
 
 class MotorMosFet: public MotorDrv
@@ -31,5 +30,3 @@ class MotorMosFet: public MotorDrv
     const uint8_t pinPwm {PIN_PWM};
     const uint8_t pinSense {PIN_SENSE};
 };
-
-#endif /* MOTORMOSFET_H */

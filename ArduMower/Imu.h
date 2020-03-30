@@ -29,9 +29,7 @@
  1. initialize IMU:                 IMU imu;  imu.init();
  2. read IMU (yaw/pitch/roll:       Serial.println( imu.ypr.yaw );
  */
-
-#ifndef IMU_H
-#define IMU_H
+#pragma once
 
 #include <Arduino.h>
 #include "Pid.h"
@@ -98,56 +96,57 @@ public:
   void deleteCalibrationData(void);
   bool isCalibrationAvailable(void) const
   {
-    return calibrationAvailable;
+    return m_calibrationAvailable;
   }
   void printInfo(Stream& s);
 
-  bool use { false };
-  bool correctDir { false };  // correct direction by magnetometer?
-  Pid pid[END];             // direction and roll PID controllers
+  bool m_use { false };
+  bool m_correctDir { false };  // correct direction by magnetometer?
+  Pid m_pid[END];             // direction and roll PID controllers
+
   float getYaw() const
   {
-    return ypr.yaw;
+    return m_ypr.yaw;
   }
   float getYawDeg()
   {
-    return degrees(ypr.yaw);
+    return degrees(m_ypr.yaw);
   }
 
   float getPitch() const
   {
-    return ypr.pitch;
+    return m_ypr.pitch;
   }
   float getPitchDeg()
   {
-    return degrees(ypr.pitch);
+    return degrees(m_ypr.pitch);
   }
 
   float getRoll() const
   {
-    return ypr.roll;
+    return m_ypr.roll;
   }
   float getRollDeg()
   {
-    return degrees(ypr.roll);
+    return degrees(m_ypr.roll);
   }
 
   // --------- gyro state -----------------------------
-  L3G gyro;
+  L3G m_gyro;
 
   // calibrate acceleration sensor
   bool calibrateAccelerometerNextAxis();
 
   // --------- accelerometer/magnetometer state -------
-  point_float_t accel { 0.0, 0.0, 0.0 };
-  point_float_t mag { 0.0, 0.0, 0.0 };
+  point_float_t m_acc { 0.0, 0.0, 0.0 };
+  point_float_t m_mag { 0.0, 0.0, 0.0 };
   bool getUseAccelCalibration(void) const
   {
-    return useAccelCalibration;
+    return m_useAccelCalibration;
   }
   void toggleUseAccelCalibration(void)
   {
-    useAccelCalibration = !useAccelCalibration;
+    m_useAccelCalibration = !m_useAccelCalibration;
   }
 
   // calibrate magnetometer sensor
@@ -196,53 +195,55 @@ private:
   float Kalman(const float newAngle, const float newRate, const int looptime,
       float x_angle);
 
-  unsigned long nextTime {};
-  unsigned long nextTimeControl {};
-  unsigned int timeBetweenRuns { 200 }; // 5 Hz
-  unsigned int timeBetweenControl { 100 }; // 10 Hz
+  unsigned long m_nextTime {};
+  unsigned long m_nextTimeControl {};
+  unsigned int m_timeBetweenRuns { 200 }; // 5 Hz
+  unsigned int m_timeBetweenControl { 100 }; // 10 Hz
 
-  bool foundNewMinMax { false };
-  int pinBuzzer {};
-  int callCounter {};
-  int errorCounter {};
-  bool hardwareInitialized { false };
-  bool calibrationAvailable { false };
-  byte state { IMU_RUN };
-  unsigned long lastAHRSTime {};
-  calibrationData_t calibrationData { { 0, 0, 0 }, { 1, 1, 1 }, { 0, 0, 0 }, {
-      1, 1, 1 } };
+  bool m_foundNewMinMax { false };
+  int m_pinBuzzer {};
+  int m_callCounter {};
+  int m_errorCounter {};
+  bool m_hardwareInitialized { false };
+  bool m_calibrationAvailable { false };
+  byte m_state { IMU_RUN };
+  unsigned long m_lastAHRSTime {};
+  calibrationData_t m_calibrationData
+  {
+    { 0, 0, 0 },
+    { 1, 1, 1 },
+    { 0, 0, 0 },
+    { 1, 1, 1 }
+  };
 
   // --------- acceleration state ---------------------
-  LSM303 accMag;
-  point_float_t accelMin { 0.0, 0.0, 0.0 };
-  point_float_t accelMax { 0.0, 0.0, 0.0 };
-  int calibAccelAxisCounter {};
-  bool useAccelCalibration { true };
+  LSM303 m_accMag;
+  point_float_t m_accMin { 0.0, 0.0, 0.0 };
+  point_float_t m_accMax { 0.0, 0.0, 0.0 };
+  int m_calibAccelAxisCounter {};
+  bool m_useAccelCalibration { true };
 
   // --------- gyro state -----------------------------
-  point_int_t gyroOffset { 0, 0, 0 }; // gyro calibration data
-  int gyroNoise {};          // gyro noise
-  bool useGyroCalibration { true }; // gyro calibration flag
-  ypr_t ypr { 0.0, 0.0, 0.0 };  // gyro yaw,pitch,roll
+  point_int_t m_gyroOffset { 0, 0, 0 }; // gyro calibration data
+  int m_gyroNoise {};          // gyro noise
+  bool m_useGyroCalibration { true }; // gyro calibration flag
+  ypr_t m_ypr { 0.0, 0.0, 0.0 };  // gyro yaw,pitch,roll
 
   // --------- magnetometer state --------------------------
-  point_int_t magLast { 0, 0, 0 };
-  point_int_t magMin { 0, 0, 0 }; // magnetometer sensor data (raw)
-  point_int_t magMax { 0, 0, 0 }; // magnetometer sensor data (raw)
-  bool useMagnetometerCalibration { true };
+  point_int_t m_magLast { 0, 0, 0 };
+  point_int_t m_magMin { 0, 0, 0 }; // magnetometer sensor data (raw)
+  point_int_t m_magMax { 0, 0, 0 }; // magnetometer sensor data (raw)
+  bool m_useMagnetometerCalibration { true };
 
-  float accelPitch {};
-  float accelRoll {};
-  float scaledPitch {};
-  float scaledRoll {};
-  float filtPitch {};
-  float filtRoll {};
-  float yaw {};
-  float scaledYaw {};
-  float scaled2Yaw {};
-  float filtYaw {};
-  point_float_t magTilt { 0.0, 0.0, 0.0 };
+  float m_accPitch {};
+  float m_accRoll {};
+  float m_scaledPitch {};
+  float m_scaledRoll {};
+  float m_filtPitch {};
+  float m_filtRoll {};
+  float m_yaw {};
+  float m_scaledYaw {};
+  float m_scaled2Yaw {};
+  float m_filtYaw {};
+  point_float_t m_magTilt { 0.0, 0.0, 0.0 };
 };
-
-#endif
-

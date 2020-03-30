@@ -1,8 +1,7 @@
 /*
  * Gyroscope
  */
-#ifndef L3G_h
-#define L3G_h
+#pragma once
 
 #include <Arduino.h> // for byte data type
 
@@ -88,16 +87,16 @@ class L3G
        LOW_ODR        = 0x39  // D20H
     };
 
-    vector<int16_t> g; // gyro angular velocity readings
+    vector<int16_t> m_g; // gyro angular velocity readings
 
-    byte last_status; // status of last I2C transmission
+    byte m_last_status; // status of last I2C transmission
 
     L3G(void);
 
     bool init(deviceTypeE device = DEVICE_AUTO, sa0StateE sa0 = SA0_AUTO);
     deviceTypeE getDeviceType(void) const
     {
-      return deviceType;
+      return m_deviceType;
     }
 
     void enableDefault(void);
@@ -109,12 +108,12 @@ class L3G
 
     unsigned int getTimeout(void) const
     {
-      return io_timeout;
+      return m_io_timeout;
     }
 
     void setTimeout(const unsigned int timeout)
     {
-      io_timeout = timeout;
+      m_io_timeout = timeout;
     }
 
     bool timeoutOccurred(void);
@@ -129,11 +128,11 @@ class L3G
     static void vectorNormalize(vector<float> *a);
 
   private:
-      deviceTypeE deviceType; // chip type (D20H, D20, or 4200D)
-      byte address;
+      deviceTypeE m_deviceType; // chip type (D20H, D20, or 4200D)
+      byte m_address;
 
-      unsigned int io_timeout;
-      bool did_timeout;
+      unsigned int m_io_timeout;
+      bool m_did_timeout;
 
       int testReg(const byte address, const regAddrE reg);
 };
@@ -151,8 +150,3 @@ template <typename Ta, typename Tb> float L3G::vectorDot(
 {
   return (a->x * b->x) + (a->y * b->y) + (a->z * b->z);
 }
-
-#endif
-
-
-

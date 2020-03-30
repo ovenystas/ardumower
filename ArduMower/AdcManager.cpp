@@ -22,7 +22,6 @@
  Private-use only! (you need to ask for a commercial-use)
  */
 
-#include <Arduino.h>
 #include <limits.h>
 
 #include "AdcManager.h"
@@ -59,14 +58,14 @@ void AdcManager::setCapture(const uint8_t pin,
   captureSize[ch] = samplecount;
   capture[ch] = new int8_t[samplecount];
   sample[ch] = new int16_t[samplecount];
-  this->autoCalibrate[ch] = autoCalibrate;
+  this->m_autoCalibrate[ch] = autoCalibrate;
   Console.print("ADC setCapture:");
   Console.print(" pin=");
   Console.print(pin);
   Console.print(" samplecount=");
   Console.print(samplecount);
   Console.print(" autoCalibrate=");
-  Console.print(this->autoCalibrate[ch]);
+  Console.print(this->m_autoCalibrate[ch]);
   Console.print(" ch=");
   Console.println(ch);
 }
@@ -79,14 +78,14 @@ void AdcManager::calibrate(void)
     AdcMax[ch] = -9999;
     AdcMin[ch] = 9999;
     zeroOffset[ch] = 0;
-    if (autoCalibrate[ch])
+    if (m_autoCalibrate[ch])
     {
       calibrateZeroOffset(ch);
     }
   }
   printCalibration();
   saveCalibration();
-  calibrationAvailable = true;
+  m_calibrationAvailable = true;
 }
 
 void AdcManager::calibrateZeroOffset(const uint8_t ch)
@@ -276,7 +275,7 @@ void AdcManager::run(void)
   {
     // Stop free running
     stopCapture();
-    capturedChannels++;
+    m_capturedChannels++;
   }
 
   // Find next channel for capturing
@@ -341,8 +340,8 @@ int16_t AdcManager::readMedian(const uint8_t pin)
 
 uint8_t AdcManager::getCapturedChannels(void)
 {
-  const uint8_t res = capturedChannels;
-  capturedChannels = 0;
+  const uint8_t res = m_capturedChannels;
+  m_capturedChannels = 0;
   return res;
 }
 
@@ -414,7 +413,7 @@ bool AdcManager::loadCalibration(void)
     Console.println(F("ADCMan Error: No calibration data"));
     return false;
   }
-  calibrationAvailable = true;
+  m_calibrationAvailable = true;
   Console.println(F("ADCMan: Found calibration data"));
   loadSaveCalibration(true);
   return true;

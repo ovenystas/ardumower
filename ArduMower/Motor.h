@@ -6,9 +6,7 @@
  */
 
 // TODO: Move functions from Robot.cpp to this class
-
-#ifndef MOTOR_H
-#define MOTOR_H
+#pragma once
 
 #include <Arduino.h>
 #include "Pid.h"
@@ -73,7 +71,7 @@ class Motor
 
     void setRpmMeas(int16_t rpmMeas)
     {
-      this->m_rpmMeas = rpmMeas;
+      m_rpmMeas = rpmMeas;
     }
 
     int16_t getPwmSet(void) const
@@ -83,7 +81,7 @@ class Motor
 
     void setPwmSet(int16_t pwmSet)
     {
-      this->m_pwmSet = pwmSet;
+      m_pwmSet = pwmSet;
     }
 
     int16_t getPowerMeas(void) const
@@ -123,7 +121,7 @@ class Motor
 
     void setZeroTimeout(uint16_t zeroTimeout)
     {
-      this->m_zeroTimeout = zeroTimeout;
+      m_zeroTimeout = zeroTimeout;
     }
 
     bool isOverpowered(void)
@@ -139,7 +137,7 @@ class Motor
     }
     void setRpmSet(int16_t rpmSet)
     {
-      this->m_rpmSet = rpmSet;
+      m_rpmSet = rpmSet;
     }
 
     int16_t getPwmCur() const
@@ -148,7 +146,7 @@ class Motor
     }
     void setPwmCur(int16_t pwmCur)
     {
-      this->m_pwmCur = pwmCur;
+      m_pwmCur = pwmCur;
     }
 
   protected:
@@ -186,5 +184,3 @@ class Motor
 
     bool isTimeTo(uint32_t* nextTime_p, const uint16_t timeBetween);
 };
-
-#endif /* MOTOR_H */

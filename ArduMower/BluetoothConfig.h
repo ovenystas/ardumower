@@ -21,9 +21,7 @@
  Private-use only! (you need to ask for a commercial-use)
 
  */
-
-#ifndef BLUETOOTH_CONFIG_H
-#define BLUETOOTH_CONFIG_H
+#pragma once
 
 #include <Arduino.h>
 
@@ -54,13 +52,11 @@ private:
   void setBaudrate(long rate);
   bool detectBaudrate(bool quickBaudScan);
   void detectModuleType();
-  byte btTestConfig[24];
-  byte btConfig;
-  char btType;
-  char btData;
-  String btResult;
-  long btRate;
+
+  byte m_btTestConfig[24];
+  byte m_btConfig;
+  char m_btType;
+  char m_btData;
+  String m_btResult;
+  long m_btRate;
 };
-
-#endif
-

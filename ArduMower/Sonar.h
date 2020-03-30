@@ -12,8 +12,7 @@
  *   Trigger Input Pulse width: 10uS
  *   Dimension: 45mm x 20mm x 15mm
  */
-#ifndef SONAR_H
-#define SONAR_H
+#pragma once
 
 #include <Arduino.h>
 
@@ -108,5 +107,3 @@ void sonars_incDistanceCounter(Sonars* sonars_p)
 }
 
 bool sonars_isClose(Sonars* sonars_p);
-
-#endif /* SONAR_H */

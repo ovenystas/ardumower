@@ -1,3 +1,4 @@
+#pragma once
 
 // ------ pins---------------------------------------
 //#define PIN_MOTOR_ENABLE  37          // EN motors enable

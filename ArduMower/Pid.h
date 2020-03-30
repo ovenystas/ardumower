@@ -20,9 +20,9 @@
 
  Private-use only! (you need to ask for a commercial-use)
  */
+#pragma once
 
-#ifndef PID_H
-#define PID_H
+#include <Arduino.h>
 
 /*
  digital PID controller
@@ -52,5 +52,3 @@ void pid_setup(float Kp, float Ki, float Kd,
                Pid* pid_p);
 
 float pid_compute(float processValue, Pid* pid_p);
-
-#endif

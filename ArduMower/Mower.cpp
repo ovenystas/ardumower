@@ -33,7 +33,6 @@
 
 #include "Config.h"
 
-#include <Arduino.h>
 #include "Mower.h"
 #include "Pid.h"
 
@@ -41,49 +40,49 @@ Mower robot;
 
 Mower::Mower()
 {
-  name = "Ardumower";
+  m_name = "Ardumower";
 
   // ------ perimeter ---------------------------------
-  perimeterTriggerTimeout = 0;    // perimeter trigger timeout when escaping from inside (ms)
-  perimeterOutRollTimeMax = 2000; // roll time max after perimeter out (ms)
-  perimeterOutRollTimeMin = 750;  // roll time min after perimeter out (ms)
-  perimeterOutRevTime = 2200;     // reverse time after perimeter out (ms)
-  perimeterTrackRollTime = 1500;  // roll time during perimeter tracking
-  perimeterTrackRevTime = 2200;   // reverse time during perimeter tracking
-  pid_setup(51.0, 12.5, 0.8, -100.0, 100.0, 100.0, &perimeters.perimeterArray_p[PERIMETER_LEFT].pid);  // perimeter PID controller
-  perimeters.perimeterArray_p[PERIMETER_LEFT].pid.setPoint = 0;
+  m_perimeterTriggerTimeout = 0;    // perimeter trigger timeout when escaping from inside (ms)
+  m_perimeterOutRollTimeMax = 2000; // roll time max after perimeter out (ms)
+  m_perimeterOutRollTimeMin = 750;  // roll time min after perimeter out (ms)
+  m_perimeterOutRevTime = 2200;     // reverse time after perimeter out (ms)
+  m_perimeterTrackRollTime = 1500;  // roll time during perimeter tracking
+  m_perimeterTrackRevTime = 2200;   // reverse time during perimeter tracking
+  pid_setup(51.0, 12.5, 0.8, -100.0, 100.0, 100.0, &m_perimeters.perimeterArray_p[PERIMETER_LEFT].pid);  // perimeter PID controller
+  m_perimeters.perimeterArray_p[PERIMETER_LEFT].pid.setPoint = 0;
   //perimeters.perimeter[Perimeter::RIGHT].pid.setup(51.0, 12.5, 0.8);  // perimeter PID controller
-  trackingPerimeterTransitionTimeOut = 2000;
-  trackingErrorTimeOut = 10000;
-  trackingBlockInnerWheelWhilePerimeterStruggling = true;
+  m_trackingPerimeterTransitionTimeOut = 2000;
+  m_trackingErrorTimeOut = 10000;
+  m_trackingBlockInnerWheelWhilePerimeterStruggling = true;
 
   // ------  IMU (compass/accel/gyro) ----------------------
-  pid_setup(5.0, 1.0, 1.0, -100.0, 100.0, 100.0, &imu.pid[Imu::DIR]);  // direction PID controller
-  imu.pid[Imu::DIR].setPoint = 0;
-  pid_setup(0.8, 21, 0, -80.0, 80.0, 80.0, &imu.pid[Imu::ROLL]);    // roll PID controller
-  imu.pid[Imu::ROLL].setPoint = 0;
+  pid_setup(5.0, 1.0, 1.0, -100.0, 100.0, 100.0, &m_imu.m_pid[Imu::DIR]);  // direction PID controller
+  m_imu.m_pid[Imu::DIR].setPoint = 0;
+  pid_setup(0.8, 21, 0, -80.0, 80.0, 80.0, &m_imu.m_pid[Imu::ROLL]);    // roll PID controller
+  m_imu.m_pid[Imu::ROLL].setPoint = 0;
 
   // ------ model R/C ------------------------------------
-  remoteUse = false; // use model remote control (R/C)?
+  m_remoteUse = false; // use model remote control (R/C)?
 
   // ------  charging station ---------------------------
-  stationRevTime = 1800;   // charge station reverse time (ms)
-  stationRollTime = 1000;  // charge station roll time (ms)
-  stationForwTime = 1500;  // charge station forward time (ms)
-  stationCheckTime = 1700; // charge station reverse check time (ms)
+  m_stationRevTime = 1800;   // charge station reverse time (ms)
+  m_stationRollTime = 1000;  // charge station roll time (ms)
+  m_stationForwTime = 1500;  // charge station forward time (ms)
+  m_stationCheckTime = 1700; // charge station reverse check time (ms)
 
   // ----- GPS -------------------------------------------
-  gpsUse = false;                   // use GPS?
-  stuckIfGpsSpeedBelow = 0.2; // if Gps speed is below given value the mower is stuck
-  gpsSpeedIgnoreTime = 5000;    // how long gpsSpeed is ignored when robot switches into a new STATE (in ms)
+  m_gpsUse = false;                   // use GPS?
+  m_stuckIfGpsSpeedBelow = 0.2; // if Gps speed is below given value the mower is stuck
+  m_gpsSpeedIgnoreTime = 5000;    // how long gpsSpeed is ignored when robot switches into a new STATE (in ms)
 
   // ----- user-defined switch ---------------------------
-  userSwitch1 = false; // user-defined switch 1 (default value)
-  userSwitch2 = false; // user-defined switch 2 (default value)
-  userSwitch3 = false; // user-defined switch 3 (default value)
+  m_userSwitch1 = false; // user-defined switch 1 (default value)
+  m_userSwitch2 = false; // user-defined switch 2 (default value)
+  m_userSwitch3 = false; // user-defined switch 3 (default value)
 
   // ----- timer -----------------------------------------
-  timerUse = false; // use RTC and timer?
+  m_timerUse = false; // use RTC and timer?
 
   // -----------configuration end-------------------------------------
 }
@@ -109,10 +108,10 @@ ISR(PCINT0_vect)
 // http://www.nongnu.org/avr-libc/user-manual/group__avr__interrupts.html
 ISR(PCINT2_vect, ISR_NOBLOCK)
 {
-  robot.odometer.read();
+  robot.m_odometer.read();
 
   // TODO: Move this elsewhere
-  robot.cutter.motor.setRpmState();
+  robot.m_cutter.m_motor.setRpmState();
 }
 
 
@@ -125,7 +124,7 @@ void Mower::setup()
   Wire.begin();
   Console.begin(BAUDRATE);
   Console.println("SETUP");
-  rc.initSerial(PFOD_BAUDRATE);
+  m_rc.initSerial(PFOD_BAUDRATE);
 
   // LED
   pinMode(PIN_LED, OUTPUT);
@@ -136,79 +135,79 @@ void Mower::setup()
 
   // Battery
   battery_setup(PIN_BATTERY_VOLTAGE, PIN_CHARGE_VOLTAGE, PIN_CHARGE_CURRENT,
-                PIN_CHARGE_RELAY, PIN_BATTERY_SWITCH, &battery);
+                PIN_CHARGE_RELAY, PIN_BATTERY_SWITCH, &m_battery);
 
   // ------- wheel motors -----------------------------
-  wheels.rollTimeMax = 1500;      // max. roll time (ms)
-  wheels.rollTimeMin = 750;       // min. roll time (ms) should be smaller than motorRollTimeMax
-  wheels.reverseTime = 1200;      // max. reverse time (ms)
-  wheels.forwardTimeMax = 80000;  // max. forward time (ms) / timeout
-  wheels.biDirSpeedRatio1 = 0.3;  // bidir mow pattern speed ratio 1
-  wheels.biDirSpeedRatio2 = 0.92; // bidir mow pattern speed ratio 2
+  m_wheels.m_rollTimeMax = 1500;      // max. roll time (ms)
+  m_wheels.m_rollTimeMin = 750;       // min. roll time (ms) should be smaller than motorRollTimeMax
+  m_wheels.m_reverseTime = 1200;      // max. reverse time (ms)
+  m_wheels.m_forwardTimeMax = 80000;  // max. forward time (ms) / timeout
+  m_wheels.m_biDirSpeedRatio1 = 0.3;  // bidir mow pattern speed ratio 1
+  m_wheels.m_biDirSpeedRatio2 = 0.92; // bidir mow pattern speed ratio 2
 
   // left wheel motor
-  wheels.wheel[Wheel::LEFT].motor.config(1000.0,   // Acceleration
+  m_wheels.m_wheel[Wheel::LEFT].m_motor.config(1000.0,   // Acceleration
                                          255,      // Max PWM
                                          75,       // Max Power
                                          false,    // Regulate
                                          100,      // Max RPM
                                          0.0);     // Set RPM
-  wheels.wheel[Wheel::LEFT].motor.setScale(3.25839);
-  wheels.wheel[Wheel::LEFT].motor.setChannel(0);
-  wheels.wheel[Wheel::LEFT].motor.setup();
+  m_wheels.m_wheel[Wheel::LEFT].m_motor.setScale(3.25839);
+  m_wheels.m_wheel[Wheel::LEFT].m_motor.setChannel(0);
+  m_wheels.m_wheel[Wheel::LEFT].m_motor.setup();
   // Normal control
-  int16_t pwmMax = wheels.wheel[Wheel::LEFT].motor.m_pwmMax;
+  int16_t pwmMax = m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pwmMax;
   pid_setup(1.5, 0.29, 0.25, -pwmMax, pwmMax, pwmMax,
-      &wheels.wheel[Wheel::LEFT].motor.m_pid);  // Kp, Ki, Kd
-  wheels.wheel[Wheel::LEFT].motor.m_pid.setPoint =
-      wheels.wheel[Wheel::LEFT].motor.m_rpmSet;
+      &m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pid);  // Kp, Ki, Kd
+  m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pid.setPoint =
+      m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet;
   // Fast control
   //wheels.wheel[Wheel::LEFT].motor.pid.setup(1.76, 0.87, 0.4);  // Kp, Ki, Kd
-  wheels.wheel[Wheel::LEFT].motor.m_powerIgnoreTime = 2000;  // time to ignore motor power (ms)
-  wheels.wheel[Wheel::LEFT].motor.m_zeroSettleTime = 3000;   // how long (ms) to wait for motors to settle at zero speed
-  wheels.wheel[Wheel::LEFT].motor.m_swapDir = 0;  // inverse left motor direction?
+  m_wheels.m_wheel[Wheel::LEFT].m_motor.m_powerIgnoreTime = 2000;  // time to ignore motor power (ms)
+  m_wheels.m_wheel[Wheel::LEFT].m_motor.m_zeroSettleTime = 3000;   // how long (ms) to wait for motors to settle at zero speed
+  m_wheels.m_wheel[Wheel::LEFT].m_motor.m_swapDir = 0;  // inverse left motor direction?
   encoder_setup(
       PIN_ODOMETER_LEFT,
       ODOMETER_SWAP_DIR_LEFT,
-      &wheels.wheel[Wheel::LEFT].encoder);
+      &m_wheels.m_wheel[Wheel::LEFT].m_encoder);
 
   // right wheel motor
-  wheels.wheel[Wheel::RIGHT].motor.config(1000.0,   // Acceleration
+  m_wheels.m_wheel[Wheel::RIGHT].m_motor.config(1000.0,   // Acceleration
                                           255,      // Max PWM
                                           75,       // Max Power
                                           false,    // Regulate
                                           100,      // Max RPM
                                           0.0);     // Set RPM
-  wheels.wheel[Wheel::RIGHT].motor.setScale(3.25839);
-  wheels.wheel[Wheel::RIGHT].motor.setChannel(1);
-  wheels.wheel[Wheel::RIGHT].motor.setup();
+  m_wheels.m_wheel[Wheel::RIGHT].m_motor.setScale(3.25839);
+  m_wheels.m_wheel[Wheel::RIGHT].m_motor.setChannel(1);
+  m_wheels.m_wheel[Wheel::RIGHT].m_motor.setup();
   // Normal control
-  pwmMax = wheels.wheel[Wheel::RIGHT].motor.m_pwmMax;
+  pwmMax = m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pwmMax;
   pid_setup(1.5, 0.29, 0.25, -pwmMax, pwmMax, pwmMax,
-      &wheels.wheel[Wheel::RIGHT].motor.m_pid);  // Kp, Ki, Kd
-  wheels.wheel[Wheel::RIGHT].motor.m_pid.setPoint =
-      wheels.wheel[Wheel::RIGHT].motor.m_rpmSet;
+      &m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pid);  // Kp, Ki, Kd
+  m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pid.setPoint =
+      m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmSet;
   // Fast control
   //wheels.wheel[Wheel::RIGHT].motor.pid.setup(1.76, 0.87, 0.4);  // Kp, Ki, Kd
-  wheels.wheel[Wheel::RIGHT].motor.m_powerIgnoreTime = 2000;  // time to ignore motor power (ms)
-  wheels.wheel[Wheel::RIGHT].motor.m_zeroSettleTime = 3000;   // how long (ms) to wait for motors to settle at zero speed
-  wheels.wheel[Wheel::RIGHT].motor.m_swapDir = 0; // inverse right motor direction?
+  m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_powerIgnoreTime = 2000;  // time to ignore motor power (ms)
+  m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_zeroSettleTime = 3000;   // how long (ms) to wait for motors to settle at zero speed
+  m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_swapDir = 0; // inverse right motor direction?
   encoder_setup(
       PIN_ODOMETER_RIGHT,
       ODOMETER_SWAP_DIR_RIGHT,
-      &wheels.wheel[Wheel::RIGHT].encoder);
+      &m_wheels.m_wheel[Wheel::RIGHT].m_encoder);
 
   // mower motor
-  cutter.motor.config(2000.0,     // Acceleration
+  m_cutter.m_motor.config(2000.0,     // Acceleration
                       255,        // Max PWM
                       75,         // Max Power
                       false,      // Modulation
                       0,          // Max RPM
                       3300);      // Set RPM
-  cutter.motor.setScale(3.25839);
-  pwmMax = cutter.motor.m_pwmMax;
-  pid_setup(0.005, 0.01, 0.01, 0.0, pwmMax, pwmMax, &cutter.motor.m_pid);  // Kp, Ki, Kd
-  cutter.motor.m_pid.setPoint = cutter.motor.m_rpmSet;
+  m_cutter.m_motor.setScale(3.25839);
+  pwmMax = m_cutter.m_motor.m_pwmMax;
+  pid_setup(0.005, 0.01, 0.01, 0.0, pwmMax, pwmMax, &m_cutter.m_motor.m_pid);  // Kp, Ki, Kd
+  m_cutter.m_motor.m_pid.setPoint = m_cutter.m_motor.m_rpmSet;
 
   // lawn sensor
   const uint8_t lawnSensorSendPins[LAWNSENSORS_NUM] =
@@ -219,24 +218,24 @@ void Mower::setup()
   {
       PIN_LAWN_FRONT_RECV, PIN_LAWN_BACK_RECV
   };
-  lawnSensors_setup(lawnSensorSendPins, lawnSensorReceivePins, lawnSensorArray,
-      &lawnSensors, LAWNSENSORS_NUM);
+  lawnSensors_setup(lawnSensorSendPins, lawnSensorReceivePins, m_lawnSensorArray,
+      &m_lawnSensors, LAWNSENSORS_NUM);
 
   // perimeter
-  perimeters.use = false;
+  m_perimeters.use = false;
   perimeter_setup(
       PIN_PERIMETER_LEFT,
-      &perimeters.perimeterArray_p[PERIMETER_LEFT]);
+      &m_perimeters.perimeterArray_p[PERIMETER_LEFT]);
   perimeter_setup(
       PIN_PERIMETER_RIGHT,
-      &perimeters.perimeterArray_p[PERIMETER_RIGHT]);
+      &m_perimeters.perimeterArray_p[PERIMETER_RIGHT]);
 
   // button
-  button_setup(PIN_BUTTON, &button);
+  button_setup(PIN_BUTTON, &m_button);
 
   // bumpers
   const uint8_t bumperPins[BUMPERS_NUM] = {PIN_BUMBER_LEFT, PIN_BUMBER_RIGHT};
-  bumpers_setup(bumperPins, bumperArray, &bumpers, BUMPERS_NUM);
+  bumpers_setup(bumperPins, m_bumperArray, &m_bumpers, BUMPERS_NUM);
 
   // drop sensor
   const uint8_t dropSensorPins[DROPSENSORS_NUM] =
@@ -244,33 +243,33 @@ void Mower::setup()
       PIN_DROP_LEFT, PIN_DROP_RIGHT
   };
   dropSensors_setup(
-      dropSensorPins, DROPSENSOR_NO, dropSensorArray,
-      &dropSensors, DROPSENSORS_NUM);
+      dropSensorPins, DROPSENSOR_NO, m_dropSensorArray,
+      &m_dropSensors, DROPSENSORS_NUM);
 
   // sonar
-  sonars.use = true;
+  m_sonars.use = true;
   sonar_setup(
       PIN_SONAR_LEFT_TRIGGER, PIN_SONAR_LEFT_ECHO,
       SONAR_DEFAULT_MAX_ECHO_TIME,
       SONAR_DEFAULT_MIN_ECHO_TIME,
-      &sonars.sonarArray_p[SONAR_LEFT]);
+      &m_sonars.sonarArray_p[SONAR_LEFT]);
   sonar_setup(
       PIN_SONAR_RIGHT_TRIGGER, PIN_SONAR_RIGHT_ECHO,
       SONAR_DEFAULT_MAX_ECHO_TIME,
       SONAR_DEFAULT_MIN_ECHO_TIME,
-      &sonars.sonarArray_p[SONAR_RIGHT]);
+      &m_sonars.sonarArray_p[SONAR_RIGHT]);
   sonar_setup(
       PIN_SONAR_CENTER_TRIGGER, PIN_SONAR_CENTER_ECHO,
       SONAR_DEFAULT_MAX_ECHO_TIME,
       SONAR_DEFAULT_MIN_ECHO_TIME,
-      &sonars.sonarArray_p[SONAR_CENTER]);
-  sonars.sonarArray_p[SONAR_LEFT].use = false;
-  sonars.sonarArray_p[SONAR_RIGHT].use = false;
-  sonars.sonarArray_p[SONAR_CENTER].use = true;
+      &m_sonars.sonarArray_p[SONAR_CENTER]);
+  m_sonars.sonarArray_p[SONAR_LEFT].use = false;
+  m_sonars.sonarArray_p[SONAR_RIGHT].use = false;
+  m_sonars.sonarArray_p[SONAR_CENTER].use = true;
 
   // rain
-  rainSensor.use = false;
-  rainSensor_setup(PIN_RAIN, &rainSensor);
+  m_rainSensor.use = false;
+  rainSensor_setup(PIN_RAIN, &m_rainSensor);
 
   // R/C
   pinMode(PIN_REMOTE_MOW, INPUT);
@@ -279,12 +278,12 @@ void Mower::setup()
   pinMode(PIN_REMOTE_SWITCH, INPUT);
 
   // odometer
-  odometer.setup(ODOMETER_TICKS_PER_REVOLUTION,
+  m_odometer.setup(ODOMETER_TICKS_PER_REVOLUTION,
                  ODOMETER_TICKS_PER_CM,
                  ODOMETER_WHEELBASE_CM,
-                 &wheels.wheel[Wheel::LEFT].encoder,
-                 &wheels.wheel[Wheel::RIGHT].encoder,
-                 &imu);
+                 &m_wheels.m_wheel[Wheel::LEFT].m_encoder,
+                 &m_wheels.m_wheel[Wheel::RIGHT].m_encoder,
+                 &m_imu);
 
   // user switches
   pinMode(PIN_USER_SWITCH_1, OUTPUT);
@@ -323,8 +322,8 @@ void Mower::setup()
   // ADC
   ADCMan.init();
 
-  imu.init(PIN_BUZZER);
-  gps.init();
+  m_imu.init(PIN_BUZZER);
+  m_gps.init();
 
   Robot::setup();
 }
@@ -335,7 +334,7 @@ int Mower::readSensor(Robot::sensorE type)
   {
 // rtc--------------------------------------------------------------------------
     case SEN_RTC:
-      if (!readDS1307(datetime))
+      if (!readDS1307(m_datetime))
       {
         Console.println("RTC data error!");
         //addErrorCounter(ERR_RTC_DATA);
@@ -378,7 +377,7 @@ void Mower::setActuator(Robot::actuatorE type, int value)
       break;
 
     case ACT_RTC:
-      if (!setDS1307(datetime))
+      if (!setDS1307(m_datetime))
       {
         Console.println("RTC comm error!");
         incErrorCounter(ERR_RTC_COMM);
@@ -395,5 +394,5 @@ void Mower::setActuator(Robot::actuatorE type, int value)
 void Mower::configureBluetooth(bool quick)
 {
   BluetoothConfig bt;
-  bt.setParams(name, PFOD_BLUETOOTH_PIN_CODE, PFOD_BAUDRATE, quick);
+  bt.setParams(m_name, PFOD_BLUETOOTH_PIN_CODE, PFOD_BAUDRATE, quick);
 }

@@ -6,7 +6,6 @@
  */
 
 #include "MotorDrv.h"
-#include <Arduino.h>
 
 int16_t MotorDrv::getAverageCurrent(void)
 {

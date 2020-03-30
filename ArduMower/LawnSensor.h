@@ -4,9 +4,7 @@
  *  Created on: Apr 3, 2016
  *      Author: ove
  */
-
-#ifndef LAWNSENSOR_H
-#define LAWNSENSOR_H
+#pragma once
 
 #include <Arduino.h>
 
@@ -40,8 +38,6 @@ float lawnSensor_getValue(LawnSensor* lawnSensor_p)
 }
 
 uint16_t lawnSensor_measureLawnCapacity(LawnSensor* lawnSensor_p);
-
-
 
 static inline
 void lawnSensors_setup(const uint8_t* sendPins, const uint8_t* receivePins,
@@ -94,5 +90,3 @@ uint16_t lawnSensors_getCounter(LawnSensors* lawnSensors_p)
 }
 
 void lawnSensors_check(LawnSensors* lawnSensors_p);
-
-#endif /* LAWNSENSOR_H */

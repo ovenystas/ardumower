@@ -1,5 +1,4 @@
-#ifndef DROP_SENSOR_H
-#define DROP_SENSOR_H
+#pragma once
 
 #include <Arduino.h>
 
@@ -102,5 +101,3 @@ void dropSensors_clearDetected(DropSensors* dropSensors_p)
     dropSensor_clearDetected(&dropSensors_p->dropSensorArray_p[i]);
   }
 }
-
-#endif /* DROP_SENSOR_H */

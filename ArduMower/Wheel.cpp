@@ -15,21 +15,21 @@ enum dirE
 
 void Wheel::control(int8_t speed)
 {
-  int16_t rpmCurr = encoder_getWheelRpmCurr(&encoder);
-  motor.setRpmMeas(rpmCurr);
+  int16_t rpmCurr = encoder_getWheelRpmCurr(&m_encoder);
+  m_motor.setRpmMeas(rpmCurr);
 
-  int16_t rpmNew = (motor.m_rpmMax * speed) / 100;
-  motor.setRpmSet(rpmNew);
+  int16_t rpmNew = (m_motor.m_rpmMax * speed) / 100;
+  m_motor.setRpmSet(rpmNew);
 
-  motor.control();
+  m_motor.control();
 }
 
 bool Wheels::isTimeToRotationChange(void)
 {
   unsigned long curMillis = millis();
-  if (curMillis >= nextTimeRotationChange)
+  if (curMillis >= m_nextTimeRotationChange)
   {
-    nextTimeRotationChange = curMillis + TIME_BETWEEN_ROTATION_CHANGE;
+    m_nextTimeRotationChange = curMillis + TIME_BETWEEN_ROTATION_CHANGE;
     return true;
   }
   return false;
@@ -40,21 +40,21 @@ void Wheels::control(void)
   int8_t localSteer = 0;
 
   // If reversing, steer should also be reversed
-  if (speed < 0)
+  if (m_speed < 0)
   {
-    localSteer = -steer;
+    localSteer = -m_steer;
   }
   else
   {
-    localSteer = steer;
+    localSteer = m_steer;
   }
 
-  int16_t leftSpeed  = (int16_t)speed - localSteer;
-  int16_t rightSpeed = (int16_t)speed + localSteer;
+  int16_t leftSpeed  = (int16_t)m_speed - localSteer;
+  int16_t rightSpeed = (int16_t)m_speed + localSteer;
 
   leftSpeed  = constrain(leftSpeed,  -100, 100);
   rightSpeed = constrain(rightSpeed, -100, 100);
 
-  wheel[Wheel::LEFT].control((int8_t)leftSpeed);
-  wheel[Wheel::RIGHT].control((int8_t)rightSpeed);
+  m_wheel[Wheel::LEFT].control((int8_t)leftSpeed);
+  m_wheel[Wheel::RIGHT].control((int8_t)rightSpeed);
 }

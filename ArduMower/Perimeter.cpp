@@ -23,7 +23,6 @@
 
 #include "Perimeter.h"
 
-#include <Arduino.h>
 #include <limits.h>
 
 #include "AdcManager.h"

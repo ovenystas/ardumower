@@ -20,9 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Private-use only! (you need to ask for a commercial-use)
 */
-
-#ifndef MOWER_H
-#define MOWER_H
+#pragma once
 
 #include <Arduino.h>
 
@@ -46,5 +44,3 @@ public:
 };
 
 extern Mower robot;
-
-#endif

@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include "Arduino.h"
+#include <Arduino.h>
 
 #define _GPS_MPH_PER_KNOT 1.15077945f
 #define _GPS_MPS_PER_KNOT 0.51444444f

@@ -1,8 +1,7 @@
 /** \file Scheduler.h
  * \brief This module contains definitions for a task scheduler.
  */
-#ifndef SCHEDULER_H_
-#define SCHEDULER_H_
+#pragma once
 
 // Includes
 #include <Arduino.h>
@@ -27,9 +26,7 @@
  */
 typedef struct
 {
-  unsigned int interval;    // Defines how often a task will run
-  unsigned long lastTick;    // Stores the last tick task was ran
-  void (*func)(void);   // Function pointer to the task
+  unsigned int interval;   // Defines how often a task will run
+  unsigned long lastTick;  // Stores the last tick task was ran
+  void (*func)(void);      // Function pointer to the task
 } TaskType;
-
-#endif // SCHEDULER_H_

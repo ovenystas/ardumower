@@ -4,10 +4,9 @@
  *  Created on: Apr 4, 2016
  *      Author: ove
  */
+#pragma once
 
-#ifndef ODOMETER_H
-#define ODOMETER_H
-
+#include <Arduino.h>
 #include "Encoder.h"
 #include "Imu.h"
 
@@ -38,28 +37,26 @@ class Odometer
 
     float getX() const
     {
-      return x;
+      return m_x;
     }
 
     float getY() const
     {
-      return y;
+      return m_y;
     }
 
-    bool use { false };      // Use this odometer or not
-    int ticksPerRevolution;  // encoder ticks per one full resolution
-    float ticksPerCm;        // encoder ticks per cm
-    float wheelBaseCm;       // wheel-to-wheel distance (cm)
-    encoderS encoder;
-    Imu* imu_p;
+    bool m_use { false };      // Use this odometer or not
+    int m_ticksPerRevolution;  // encoder ticks per one full resolution
+    float m_ticksPerCm;        // encoder ticks per cm
+    float m_wheelBaseCm;       // wheel-to-wheel distance (cm)
+    encoderS m_encoder;
+    Imu* m_imu_p;
 
   private:
-    unsigned long lastWheelRpmTime {};  // last time it was updated
-    int16_t lastOdoLeft {};
-    int16_t lastOdoRight {};
-    float theta {};                     // theta angle (radiant)
-    float x {};                         // X map position (cm)
-    float y {};                         // Y map position (cm)
+    unsigned long m_lastWheelRpmTime {};  // last time it was updated
+    int16_t m_lastOdoLeft {};
+    int16_t m_lastOdoRight {};
+    float m_theta {};                     // theta angle (radiant)
+    float m_x {};                         // X map position (cm)
+    float m_y {};                         // Y map position (cm)
 };
-
-#endif /* ODOMETER_H */

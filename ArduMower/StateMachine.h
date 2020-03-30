@@ -4,9 +4,9 @@
  *  Created on: Sep 3, 2016
  *      Author: ove
  */
+#pragma once
 
-#ifndef STATEMACHINE_H_
-#define STATEMACHINE_H_
+#include <Arduino.h>
 
 class StateMachine
 {
@@ -43,31 +43,31 @@ class StateMachine
 
     unsigned long getStateStartTime() const
     {
-      return stateStartTime;
+      return m_stateStartTime;
     }
 
     bool isCurrentState(stateE state);
 
     stateE getCurrentState() const
     {
-      return stateCurr;
+      return m_stateCurr;
     }
 
     unsigned long getEndTime() const
     {
-      return stateEndTime;
+      return m_stateEndTime;
     }
 
     void setEndTime(unsigned long endTime)
     {
-      this->stateEndTime = endTime;
+      m_stateEndTime = endTime;
     }
 
     void changeState();
 
     void setNextState(stateE state)
     {
-      this->stateNext = state;
+      m_stateNext = state;
     }
 
     unsigned long getStateTime();
@@ -83,13 +83,10 @@ class StateMachine
       "POUTREV", "POUTROLL"
     };
 
-    stateE stateCurr { STATE_OFF };
-    stateE stateLast { STATE_OFF };
-    stateE stateNext { STATE_OFF };
-    unsigned long stateTime {};
-    unsigned long stateStartTime;
-    unsigned long stateEndTime;
-
+    stateE m_stateCurr { STATE_OFF };
+    stateE m_stateLast { STATE_OFF };
+    stateE m_stateNext { STATE_OFF };
+    unsigned long m_stateTime {};
+    unsigned long m_stateStartTime;
+    unsigned long m_stateEndTime;
 };
-
-#endif /* STATEMACHINE_H_ */

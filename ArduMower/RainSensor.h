@@ -4,9 +4,7 @@
  *  Created on: Apr 7, 2016
  *      Author: ove
  */
-
-#ifndef RAINSENSOR_H
-#define RAINSENSOR_H
+#pragma once
 
 #include <Arduino.h>
 
@@ -32,5 +30,3 @@ uint16_t rainSensor_getCounter(RainSensor* rainSensor_p)
 {
   return rainSensor_p->counter;
 }
-
-#endif /* RAINSENSOR_H */

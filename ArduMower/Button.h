@@ -4,9 +4,7 @@
  *  Created on: Mar 10, 2016
  *      Author: ove
  */
-
-#ifndef BUTTON_H
-#define BUTTON_H
+#pragma once
 
 #include <Arduino.h>
 
@@ -44,5 +42,3 @@ void button_clearCounter(Button* button_p)
 {
   button_p->counter = 0;
 }
-
-#endif /* BUTTON_H */

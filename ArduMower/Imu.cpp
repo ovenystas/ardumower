@@ -21,7 +21,6 @@
  Private-use only! (you need to ask for a magmercial-use)
  */
 
-#include <Arduino.h>
 #include <Wire.h>
 #include "drivers.h"
 #include "Imu.h"
@@ -147,24 +146,24 @@ void Imu::loadCalibrationData(void)
     Console.println(F("IMU error: no calib data"));
     return;
   }
-  calibrationAvailable = true;
+  m_calibrationAvailable = true;
   Console.println(F("IMU: Found calibration data"));
-  EEPROM.get(ADDR + 1, calibrationData);
+  EEPROM.get(ADDR + 1, m_calibrationData);
 }
 
 void Imu::saveCalibrationData(void)
 {
-  EEPROM.put(ADDR + 1, calibrationData);
+  EEPROM.put(ADDR + 1, m_calibrationData);
 }
 
 void Imu::deleteCalibrationData(void)
 {
   EEPROM.write(ADDR, 0); // clear magic
-  calibrationData.accelOffset = {0.0, 0.0, 0.0};
-  calibrationData.accelScale = {1.0, 1.0, 1.0};
-  calibrationData.magnetometerOffset = {0, 0, 0};
-  calibrationData.magnetometerScale = {1, 1, 1};
-  calibrationAvailable = false;
+  m_calibrationData.accelOffset = {0.0, 0.0, 0.0};
+  m_calibrationData.accelScale = {1.0, 1.0, 1.0};
+  m_calibrationData.magnetometerOffset = {0, 0, 0};
+  m_calibrationData.magnetometerScale = {1, 1, 1};
+  m_calibrationAvailable = false;
   Console.println(F("IMU calibration deleted"));
 }
 
@@ -200,13 +199,13 @@ void Imu::printCalibrationData(void)
 {
   Console.println(F("--------"));
   Console.print(F("accOffset="));
-  printPointln(calibrationData.accelOffset);
+  printPointln(m_calibrationData.accelOffset);
   Console.print(F("accScale="));
-  printPointln(calibrationData.accelScale);
+  printPointln(m_calibrationData.accelScale);
   Console.print(F("magOffset="));
-  printPointln(calibrationData.magnetometerOffset);
+  printPointln(m_calibrationData.magnetometerOffset);
   Console.print(F("magScale="));
-  printPointln(calibrationData.magnetometerScale);
+  printPointln(m_calibrationData.magnetometerScale);
   Console.println(F("--------"));
 }
 
@@ -215,8 +214,8 @@ void Imu::calibrateGyro(void)
 {
   const uint8_t numberOfSamples = 32;
   Console.println(F("---calibGyro---"));
-  useGyroCalibration = false;
-  gyroOffset = { 0, 0, 0 };
+  m_useGyroCalibration = false;
+  m_gyroOffset = { 0, 0, 0 };
   point_int_t offset;
   for (;;)
   {
@@ -229,13 +228,13 @@ void Imu::calibrateGyro(void)
     {
       readGyroscope();
 
-      zmin = min(zmin, gyro.g.z);
-      zmax = max(zmax, gyro.g.z);
+      zmin = min(zmin, m_gyro.m_g.z);
+      zmax = max(zmax, m_gyro.m_g.z);
 
-      offset.x += gyro.g.x;
-      offset.y += gyro.g.y;
-      offset.z += gyro.g.z;
-      noise += sq(gyro.g.z - gyroOffset.z); // noise is computed with last offset calculation
+      offset.x += m_gyro.m_g.x;
+      offset.y += m_gyro.m_g.y;
+      offset.z += m_gyro.m_g.z;
+      noise += sq(m_gyro.m_g.z - m_gyroOffset.z); // noise is computed with last offset calculation
 
       delay(10);
     }
@@ -252,35 +251,35 @@ void Imu::calibrateGyro(void)
     Console.print(F(" Offset="));
     Console.print(offset.z);
     Console.print(F(" noise="));
-    Console.println(gyroNoise);
+    Console.println(m_gyroNoise);
 
     if (noise < 20)
     {
       // optimum found
-      gyroOffset = offset;
-      gyroNoise = noise;
+      m_gyroOffset = offset;
+      m_gyroNoise = noise;
       break;
     }
   }
-  useGyroCalibration = true;
+  m_useGyroCalibration = true;
 
   Console.print(F("Offset="));
-  printPointln(gyroOffset);
+  printPointln(m_gyroOffset);
   Console.println(F("------------"));
 }
 
 void Imu::initAccelerometer()
 {
   Console.println(F("init Accelerometer/Magnetometer"));
-  accMag.init();
+  m_accMag.init();
   Console.print(F("deviceType="));
-  Console.print(accMag.getDeviceType());
+  Console.print(m_accMag.getDeviceType());
 
   uint8_t devId;
   int retry = 0;
   for (;;)
   {
-    devId = accMag.readReg(LSM303::WHO_AM_I_M);
+    devId = m_accMag.readReg(LSM303::WHO_AM_I_M);
     Console.print(F(" devId="));
     Console.println(devId);
     if (devId != LSM303::DEV_ID_LSM303DLM)
@@ -289,7 +288,7 @@ void Imu::initAccelerometer()
       retry++;
       if (retry > 2)
       {
-        errorCounter++;
+        m_errorCounter++;
         return;
       }
       delay(1000);
@@ -300,35 +299,35 @@ void Imu::initAccelerometer()
     }
   }
 
-  accMag.enableDefault();
-  switch (accMag.getDeviceType())
+  m_accMag.enableDefault();
+  switch (m_accMag.getDeviceType())
   {
     case LSM303::DEVICE_D:
-      accMag.writeReg(LSM303::CTRL2, 0x18); // 8 g full scale: AFS = 011
+      m_accMag.writeReg(LSM303::CTRL2, 0x18); // 8 g full scale: AFS = 011
       break;
     case LSM303::DEVICE_DLHC:
-      accMag.writeReg(LSM303::CTRL_REG4_A, 0x28); // 8 g full scale: FS = 10; high resolution output mode
+      m_accMag.writeReg(LSM303::CTRL_REG4_A, 0x28); // 8 g full scale: FS = 10; high resolution output mode
       break;
     default: // DLM, DLH
-      accMag.writeReg(LSM303::CTRL_REG4_A, 0x30); // 8 g full scale: FS = 11
+      m_accMag.writeReg(LSM303::CTRL_REG4_A, 0x30); // 8 g full scale: FS = 11
   }
 }
 
 void Imu::readAccelerometer()
 {
-  accMag.readAcc();
+  m_accMag.readAcc();
 
-  if (useAccelCalibration)
+  if (m_useAccelCalibration)
   {
-    accel.x = ((float)accMag.a.x - calibrationData.accelOffset.x) / calibrationData.accelScale.x;
-    accel.y = ((float)accMag.a.y - calibrationData.accelOffset.y) / calibrationData.accelScale.y;
-    accel.z = ((float)accMag.a.z - calibrationData.accelOffset.z) / calibrationData.accelScale.z;
+    m_acc.x = ((float)m_accMag.m_acc.x - m_calibrationData.accelOffset.x) / m_calibrationData.accelScale.x;
+    m_acc.y = ((float)m_accMag.m_acc.y - m_calibrationData.accelOffset.y) / m_calibrationData.accelScale.y;
+    m_acc.z = ((float)m_accMag.m_acc.z - m_calibrationData.accelOffset.z) / m_calibrationData.accelScale.z;
   }
   else
   {
-    accel.x = (float)accMag.a.x;
-    accel.y = (float)accMag.a.y;
-    accel.z = (float)accMag.a.z;
+    m_acc.x = (float)m_accMag.m_acc.x;
+    m_acc.y = (float)m_accMag.m_acc.y;
+    m_acc.z = (float)m_accMag.m_acc.z;
   }
 }
 
@@ -336,15 +335,15 @@ void Imu::readAccelerometer()
 bool Imu::initGyroscope()
 {
   Console.println(F("initL3G4200D"));
-  gyro.init(L3G::DEVICE_AUTO, L3G::SA0_AUTO);
+  m_gyro.init(L3G::DEVICE_AUTO, L3G::SA0_AUTO);
   Console.print(F("deviceType="));
-  Console.print(gyro.getDeviceType());
+  Console.print(m_gyro.getDeviceType());
 
   uint8_t devId;
   int retry = 0;
   for (;;)
   {
-    devId = gyro.readReg(L3G::WHO_AM_I);
+    devId = m_gyro.readReg(L3G::WHO_AM_I);
     Console.print(F(" devId="));
     Console.println(devId);
     if (devId != L3G::DEV_ID_4200D)
@@ -353,7 +352,7 @@ bool Imu::initGyroscope()
       retry++;
       if (retry > 2)
       {
-        errorCounter++;
+        m_errorCounter++;
         return false;
       }
       delay(1000);
@@ -364,7 +363,7 @@ bool Imu::initGyroscope()
     }
   }
 
-  gyro.enableDefault();
+  m_gyro.enableDefault();
 
   delay(250);
   //calibGyro();
@@ -373,14 +372,14 @@ bool Imu::initGyroscope()
 
 void Imu::readGyroscope(void)
 {
-  gyro.read();
+  m_gyro.read();
 
-  if (useGyroCalibration)
+  if (m_useGyroCalibration)
   {
     // Compensate for offset
-    gyro.g.x -= gyroOffset.x;
-    gyro.g.y -= gyroOffset.y;
-    gyro.g.z -= gyroOffset.z;
+    m_gyro.m_g.x -= m_gyroOffset.x;
+    m_gyro.m_g.y -= m_gyroOffset.y;
+    m_gyro.m_g.z -= m_gyroOffset.z;
   }
 }
 
@@ -388,7 +387,7 @@ void Imu::readGyroscope(void)
 void Imu::initMagnetometer()
 {
   // Init is handled by initAccelerometer since it is the same device
-  if (!accMag.isInitialized())
+  if (!m_accMag.isInitialized())
   {
     initAccelerometer();
   }
@@ -396,22 +395,22 @@ void Imu::initMagnetometer()
 
 void Imu::readMagnetometer()
 {
-  accMag.readMag();
+  m_accMag.readMag();
 
-  if (useMagnetometerCalibration)
+  if (m_useMagnetometerCalibration)
   {
-    mag.x = (float)(accMag.a.x - calibrationData.magnetometerOffset.x) /
-            (float)calibrationData.magnetometerScale.x;
-    mag.y = (float)(accMag.a.y - calibrationData.magnetometerOffset.y) /
-            (float)calibrationData.magnetometerScale.y;
-    mag.z = (float)(accMag.a.z - calibrationData.magnetometerOffset.z) /
-            (float)calibrationData.magnetometerScale.z;
+    m_mag.x = (float)(m_accMag.m_acc.x - m_calibrationData.magnetometerOffset.x) /
+            (float)m_calibrationData.magnetometerScale.x;
+    m_mag.y = (float)(m_accMag.m_acc.y - m_calibrationData.magnetometerOffset.y) /
+            (float)m_calibrationData.magnetometerScale.y;
+    m_mag.z = (float)(m_accMag.m_acc.z - m_calibrationData.magnetometerOffset.z) /
+            (float)m_calibrationData.magnetometerScale.z;
   }
   else
   {
-    mag.x = accMag.a.x;
-    mag.y = accMag.a.y;
-    mag.z = accMag.a.z;
+    m_mag.x = m_accMag.m_acc.x;
+    m_mag.y = m_accMag.m_acc.y;
+    m_mag.z = m_accMag.m_acc.z;
   }
 }
 
@@ -422,52 +421,52 @@ void Imu::calibrateMagnetometerStartStop(void)
     Console.read();
   }
 
-  if (state == IMU_RUN)
+  if (m_state == IMU_RUN)
   {
     // start
     Console.println(F("Magnetometer calibration..."));
     Console.println(F("Rotate sensor 360 degree around all three axis"));
-    foundNewMinMax = false;
-    useMagnetometerCalibration = false;
-    state = IMU_CAL_COM;
-    magMin = { INT16_MAX, INT16_MAX, INT16_MAX };
-    magMax = { INT16_MIN, INT16_MIN, INT16_MIN };
+    m_foundNewMinMax = false;
+    m_useMagnetometerCalibration = false;
+    m_state = IMU_CAL_COM;
+    m_magMin = { INT16_MAX, INT16_MAX, INT16_MAX };
+    m_magMax = { INT16_MIN, INT16_MIN, INT16_MIN };
   }
   else
   {
     // stop
     Console.println(F("Magnetometer calibration completed"));
-    calibrationAvailable = true;
+    m_calibrationAvailable = true;
 
     point_int_t range;
-    range.x = magMax.x - magMin.x;
-    range.y = magMax.y - magMin.y;
-    range.z = magMax.z - magMin.z;
+    range.x = m_magMax.x - m_magMin.x;
+    range.y = m_magMax.y - m_magMin.y;
+    range.z = m_magMax.z - m_magMin.z;
 
-    calibrationData.magnetometerScale.x = roundDivision(range.x, 2);
-    calibrationData.magnetometerScale.y = roundDivision(range.y, 2);
-    calibrationData.magnetometerScale.z = roundDivision(range.z, 2);
+    m_calibrationData.magnetometerScale.x = roundDivision(range.x, 2);
+    m_calibrationData.magnetometerScale.y = roundDivision(range.y, 2);
+    m_calibrationData.magnetometerScale.z = roundDivision(range.z, 2);
 
-    calibrationData.magnetometerOffset.x = calibrationData.magnetometerScale.x + magMin.x;
-    calibrationData.magnetometerOffset.y = calibrationData.magnetometerScale.y + magMin.y;
-    calibrationData.magnetometerOffset.z = calibrationData.magnetometerScale.z + magMin.z;
+    m_calibrationData.magnetometerOffset.x = m_calibrationData.magnetometerScale.x + m_magMin.x;
+    m_calibrationData.magnetometerOffset.y = m_calibrationData.magnetometerScale.y + m_magMin.y;
+    m_calibrationData.magnetometerOffset.z = m_calibrationData.magnetometerScale.z + m_magMin.z;
 
     saveCalibrationData();
     printCalibrationData();
-    useMagnetometerCalibration = true;
-    state = IMU_RUN;
+    m_useMagnetometerCalibration = true;
+    m_state = IMU_RUN;
 
     playCompletedSound();
-    noTone(pinBuzzer);
+    noTone(m_pinBuzzer);
     delay(500);
   }
 }
 
 void Imu::calibrateMagnetometerUpdate(void)
 {
-  magLast.x = accMag.m.x;
-  magLast.y = accMag.m.y;
-  magLast.z = accMag.m.z;
+  m_magLast.x = m_accMag.m_mag.x;
+  m_magLast.y = m_accMag.m_mag.y;
+  m_magLast.z = m_accMag.m_mag.z;
 
   delay(20);
 
@@ -475,63 +474,63 @@ void Imu::calibrateMagnetometerUpdate(void)
 
   bool newfound = false;
 
-  if (abs(accMag.m.x - magLast.x) < 10 &&
-      abs(accMag.m.y - magLast.y) < 10 &&
-      abs(accMag.m.z - magLast.z) < 10)
+  if (abs(m_accMag.m_mag.x - m_magLast.x) < 10 &&
+      abs(m_accMag.m_mag.y - m_magLast.y) < 10 &&
+      abs(m_accMag.m_mag.z - m_magLast.z) < 10)
   {
-    if (accMag.m.x < magMin.x)
+    if (m_accMag.m_mag.x < m_magMin.x)
     {
-      magMin.x = accMag.m.x;
+      m_magMin.x = m_accMag.m_mag.x;
       newfound = true;
     }
-    if (accMag.m.y < magMin.y)
+    if (m_accMag.m_mag.y < m_magMin.y)
     {
-      magMin.y = accMag.m.y;
+      m_magMin.y = m_accMag.m_mag.y;
       newfound = true;
     }
-    if (accMag.m.z < magMin.z)
+    if (m_accMag.m_mag.z < m_magMin.z)
     {
-      magMin.z = accMag.m.z;
+      m_magMin.z = m_accMag.m_mag.z;
       newfound = true;
     }
 
-    if (accMag.m.x > magMax.x)
+    if (m_accMag.m_mag.x > m_magMax.x)
     {
-      magMax.x = accMag.m.x;
+      m_magMax.x = m_accMag.m_mag.x;
       newfound = true;
     }
-    if (accMag.m.y > magMax.y)
+    if (m_accMag.m_mag.y > m_magMax.y)
     {
-      magMax.y = accMag.m.y;
+      m_magMax.y = m_accMag.m_mag.y;
       newfound = true;
     }
-    if (accMag.m.z > magMax.z)
+    if (m_accMag.m_mag.z > m_magMax.z)
     {
-      magMax.z = accMag.m.z;
+      m_magMax.z = m_accMag.m_mag.z;
       newfound = true;
     }
 
     if (newfound)
     {
-      foundNewMinMax = true;
-      tone(pinBuzzer, 440);
+      m_foundNewMinMax = true;
+      tone(m_pinBuzzer, 440);
 
       Console.print("x:");
-      Console.print(magMin.x);
+      Console.print(m_magMin.x);
       Console.print(",");
-      Console.print(magMax.x);
+      Console.print(m_magMax.x);
       Console.print("  y:");
-      Console.print(magMin.y);
+      Console.print(m_magMin.y);
       Console.print(",");
-      Console.print(magMax.y);
+      Console.print(m_magMax.y);
       Console.print("  z:");
-      Console.print(magMin.z);
+      Console.print(m_magMin.z);
       Console.print(",");
-      Console.println(magMax.z);
+      Console.println(m_magMax.z);
     }
     else
     {
-      noTone(pinBuzzer);
+      noTone(m_pinBuzzer);
     }
   }
 }
@@ -541,26 +540,26 @@ bool Imu::calibrateAccelerometerNextAxis(void)
 {
   const uint8_t numberOfSamples = 32;
   bool complete = false;
-  tone(pinBuzzer, 440);
+  tone(m_pinBuzzer, 440);
 
   while (Console.available())
   {
     Console.read();
   }
 
-  useAccelCalibration = false;
+  m_useAccelCalibration = false;
 
-  if (calibAccelAxisCounter >= 6)
+  if (m_calibAccelAxisCounter >= 6)
   {
-    calibAccelAxisCounter = 0;
+    m_calibAccelAxisCounter = 0;
   }
 
-  if (calibAccelAxisCounter == 0)
+  if (m_calibAccelAxisCounter == 0)
   {
     // restart
     Console.println(F("Accelerometer calibration start..."));
-    accelMin = { 9999, 9999, 9999 };
-    accelMax = { -9999, -9999, -9999 };
+    m_accMin = { 9999, 9999, 9999 };
+    m_accMax = { -9999, -9999, -9999 };
   }
 
   // Get sample values from accelerometer
@@ -569,15 +568,15 @@ bool Imu::calibrateAccelerometerNextAxis(void)
   {
     readAccelerometer();
 
-    acc.x += accMag.a.x;
-    acc.y += accMag.a.y;
-    acc.z += accMag.a.z;
+    acc.x += m_accMag.m_acc.x;
+    acc.y += m_accMag.m_acc.y;
+    acc.z += m_accMag.m_acc.z;
 
-    Console.print(accMag.a.x);
+    Console.print(m_accMag.m_acc.x);
     Console.print(",");
-    Console.print(accMag.a.y);
+    Console.print(m_accMag.m_acc.y);
     Console.print(",");
-    Console.println(accMag.a.z);
+    Console.println(m_accMag.m_acc.z);
 
     delay(10);
   }
@@ -589,58 +588,58 @@ bool Imu::calibrateAccelerometerNextAxis(void)
   average.z = (float)acc.z / numberOfSamples;
 
   // Update min & max values
-  accelMin.x = min(accelMin.x, average.x);
-  accelMax.x = max(accelMax.x, average.x);
+  m_accMin.x = min(m_accMin.x, average.x);
+  m_accMax.x = max(m_accMax.x, average.x);
 
   Console.print(" x: min=");
-  Console.print(accelMin.x);
+  Console.print(m_accMin.x);
   Console.print(" avg=");
   Console.print(average.x);
   Console.print(" max=");
-  Console.println(accelMax.x);
+  Console.println(m_accMax.x);
 
-  accelMin.y = min(accelMin.y, average.y);
-  accelMax.y = max(accelMax.y, average.y);
+  m_accMin.y = min(m_accMin.y, average.y);
+  m_accMax.y = max(m_accMax.y, average.y);
 
   Console.print(" y: min=");
-  Console.print(accelMin.y);
+  Console.print(m_accMin.y);
   Console.print(" avg=");
   Console.print(average.y);
   Console.print(" max=");
-  Console.println(accelMax.y);
+  Console.println(m_accMax.y);
 
-  accelMin.z = min(accelMin.z, average.z);
-  accelMax.z = max(accelMax.z, average.z);
+  m_accMin.z = min(m_accMin.z, average.z);
+  m_accMax.z = max(m_accMax.z, average.z);
 
   Console.print(" z: min=");
-  Console.print(accelMin.z);
+  Console.print(m_accMin.z);
   Console.print(" avg=");
   Console.print(average.z);
   Console.print(" max=");
-  Console.println(accelMax.z);
+  Console.println(m_accMax.z);
 
-  calibAccelAxisCounter++;
-  useAccelCalibration = true;
+  m_calibAccelAxisCounter++;
+  m_useAccelCalibration = true;
 
   Console.print("side ");
-  Console.print(calibAccelAxisCounter);
+  Console.print(m_calibAccelAxisCounter);
   Console.println(" of 6 completed");
 
-  if (calibAccelAxisCounter == 6)
+  if (m_calibAccelAxisCounter == 6)
   {
     // all axis complete
     point_float_t range;
-    range.x = accelMax.x - accelMin.x;
-    range.y = accelMax.y - accelMin.y;
-    range.z = accelMax.z - accelMin.z;
+    range.x = m_accMax.x - m_accMin.x;
+    range.y = m_accMax.y - m_accMin.y;
+    range.z = m_accMax.z - m_accMin.z;
 
-    calibrationData.accelScale.x = range.x / 2;
-    calibrationData.accelScale.y = range.y / 2;
-    calibrationData.accelScale.z = range.z / 2;
+    m_calibrationData.accelScale.x = range.x / 2;
+    m_calibrationData.accelScale.y = range.y / 2;
+    m_calibrationData.accelScale.z = range.z / 2;
 
-    calibrationData.accelOffset.x = calibrationData.accelScale.x + accelMin.x;
-    calibrationData.accelOffset.y = calibrationData.accelScale.y + accelMin.y;
-    calibrationData.accelOffset.z = calibrationData.accelScale.z + accelMin.z;
+    m_calibrationData.accelOffset.x = m_calibrationData.accelScale.x + m_accMin.x;
+    m_calibrationData.accelOffset.y = m_calibrationData.accelScale.y + m_accMin.y;
+    m_calibrationData.accelOffset.z = m_calibrationData.accelScale.z + m_accMin.z;
 
     printCalibrationData();
     saveCalibrationData();
@@ -650,7 +649,7 @@ bool Imu::calibrateAccelerometerNextAxis(void)
 
     playCompletedSound();
   }
-  noTone(pinBuzzer);
+  noTone(m_pinBuzzer);
   delay(500);
 
   return complete;
@@ -751,45 +750,45 @@ void Imu::update(void)
 {
   read();
   unsigned long curMillis = millis();
-  int looptime = (curMillis - lastAHRSTime);
-  lastAHRSTime = curMillis;
+  int looptime = (curMillis - m_lastAHRSTime);
+  m_lastAHRSTime = curMillis;
 
-  if (state == IMU_RUN)
+  if (m_state == IMU_RUN)
   {
     // ------ roll, pitch --------------
-    accelPitch = atan2(accel.x, sqrt(sq(accel.y) + sq(accel.z)));
-    accelRoll = atan2(accel.y, accel.z);
-    scaledPitch = scalePIangles(accelPitch, ypr.pitch);
-    scaledRoll = scalePIangles(accelRoll, ypr.roll);
+    m_accPitch = atan2(m_acc.x, sqrt(sq(m_acc.y) + sq(m_acc.z)));
+    m_accRoll = atan2(m_acc.y, m_acc.z);
+    m_scaledPitch = scalePIangles(m_accPitch, m_ypr.pitch);
+    m_scaledRoll = scalePIangles(m_accRoll, m_ypr.roll);
 
     // complementary filter
-    filtPitch = Kalman(scaledPitch, gyro.g.x, looptime, ypr.pitch);
-    filtRoll = Kalman(scaledRoll, gyro.g.y, looptime, ypr.roll);
+    m_filtPitch = Kalman(m_scaledPitch, m_gyro.m_g.x, looptime, m_ypr.pitch);
+    m_filtRoll = Kalman(m_scaledRoll, m_gyro.m_g.y, looptime, m_ypr.roll);
 
-    ypr.pitch = scalePI(filtPitch);
-    ypr.roll = scalePI(filtRoll);
+    m_ypr.pitch = scalePI(m_filtPitch);
+    m_ypr.roll = scalePI(m_filtRoll);
 
     // ------ yaw --------------
     // tilt-compensated yaw
-    magTilt.x = mag.x * cos(ypr.pitch) + mag.z * sin(ypr.pitch);
+    m_magTilt.x = m_mag.x * cos(m_ypr.pitch) + m_mag.z * sin(m_ypr.pitch);
 
-    magTilt.y = mag.x * sin(ypr.roll) * sin(ypr.pitch) +
-                mag.y * cos(ypr.roll) -
-                mag.z * sin(ypr.roll) * cos(ypr.pitch);
+    m_magTilt.y = m_mag.x * sin(m_ypr.roll) * sin(m_ypr.pitch) +
+                m_mag.y * cos(m_ypr.roll) -
+                m_mag.z * sin(m_ypr.roll) * cos(m_ypr.pitch);
 
-    magTilt.z = -mag.x * cos(ypr.roll) * sin(ypr.pitch) +
-                 mag.y * sin(ypr.roll) +
-                 mag.z * cos(ypr.roll) * cos(ypr.pitch);
+    m_magTilt.z = -m_mag.x * cos(m_ypr.roll) * sin(m_ypr.pitch) +
+                 m_mag.y * sin(m_ypr.roll) +
+                 m_mag.z * cos(m_ypr.roll) * cos(m_ypr.pitch);
 
-    yaw = atan2(magTilt.y, magTilt.x);
-    scaledYaw = scalePI(yaw);
-    scaled2Yaw = scalePIangles(scaledYaw, ypr.yaw);
+    m_yaw = atan2(m_magTilt.y, m_magTilt.x);
+    m_scaledYaw = scalePI(m_yaw);
+    m_scaled2Yaw = scalePIangles(m_scaledYaw, m_ypr.yaw);
 
     // Complementary filter
-    filtYaw = Complementary2(scaled2Yaw, -gyro.g.z, looptime, ypr.yaw);
-    ypr.yaw = scalePI(filtYaw);
+    m_filtYaw = Complementary2(m_scaled2Yaw, -m_gyro.m_g.z, looptime, m_ypr.yaw);
+    m_ypr.yaw = scalePI(m_filtYaw);
   }
-  else if (state == IMU_CAL_COM)
+  else if (m_state == IMU_CAL_COM)
   {
     calibrateMagnetometerUpdate();
   }
@@ -798,39 +797,39 @@ void Imu::update(void)
 void Imu::printInfo(Stream &s)
 {
   Streamprint(s, "imu a=%s%2d.%02d %s%2d.%02d %s%2d.%02d",
-              accel.x >= 0.0 ? "+" : "-", abs((int)accel.x), abs((int)(accel.x * 100) - ((int)accel.x * 100)),
-              accel.y >= 0.0 ? "+" : "-", abs((int)accel.y), abs((int)(accel.y * 100) - ((int)accel.y * 100)),
-              accel.z >= 0.0 ? "+" : "-", abs((int)accel.z), abs((int)(accel.z * 100) - ((int)accel.z * 100)));
+              m_acc.x >= 0.0 ? "+" : "-", abs((int)m_acc.x), abs((int)(m_acc.x * 100) - ((int)m_acc.x * 100)),
+              m_acc.y >= 0.0 ? "+" : "-", abs((int)m_acc.y), abs((int)(m_acc.y * 100) - ((int)m_acc.y * 100)),
+              m_acc.z >= 0.0 ? "+" : "-", abs((int)m_acc.z), abs((int)(m_acc.z * 100) - ((int)m_acc.z * 100)));
   Streamprint(s, " m=%s%2d.%02d %s%2d.%02d %s%2d.%02d",
-              mag.x >= 0.0 ? "+" : "-", abs((int)mag.x), abs((int)(mag.x * 100) - ((int)mag.x * 100)),
-              mag.y >= 0.0 ? "+" : "-", abs((int)mag.y), abs((int)(mag.y * 100) - ((int)mag.y * 100)),
-              mag.z >= 0.0 ? "+" : "-", abs((int)mag.z), abs((int)(mag.z * 100) - ((int)mag.z * 100)));
-  Streamprint(s, " g=%4d %4d %4d", gyro.g.x, gyro.g.y, gyro.g.z);
+              m_mag.x >= 0.0 ? "+" : "-", abs((int)m_mag.x), abs((int)(m_mag.x * 100) - ((int)m_mag.x * 100)),
+              m_mag.y >= 0.0 ? "+" : "-", abs((int)m_mag.y), abs((int)(m_mag.y * 100) - ((int)m_mag.y * 100)),
+              m_mag.z >= 0.0 ? "+" : "-", abs((int)m_mag.z), abs((int)(m_mag.z * 100) - ((int)m_mag.z * 100)));
+  Streamprint(s, " g=%4d %4d %4d", m_gyro.m_g.x, m_gyro.m_g.y, m_gyro.m_g.z);
   Streamprint(s, " P=%s%2d.%02d %s%2d.%02d %s%2d.%02d %s%2d.%02d",
-              accelPitch >= 0.0 ? "+" : "-", abs((int)accelPitch), abs((int)(accelPitch * 100) - ((int)accelPitch * 100)),
-              scaledPitch >= 0.0 ? "+" : "-", abs((int)scaledPitch), abs((int)(scaledPitch * 100) - ((int)scaledPitch * 100)),
-              filtPitch >= 0.0 ? "+" : "-", abs((int)filtPitch), abs((int)(filtPitch * 100) - ((int)filtPitch * 100)),
-              ypr.pitch >= 0.0 ? "+" : "-", abs((int)ypr.pitch), abs((int)(ypr.pitch * 100) - ((int)ypr.pitch * 100)));
+              m_accPitch >= 0.0 ? "+" : "-", abs((int)m_accPitch), abs((int)(m_accPitch * 100) - ((int)m_accPitch * 100)),
+              m_scaledPitch >= 0.0 ? "+" : "-", abs((int)m_scaledPitch), abs((int)(m_scaledPitch * 100) - ((int)m_scaledPitch * 100)),
+              m_filtPitch >= 0.0 ? "+" : "-", abs((int)m_filtPitch), abs((int)(m_filtPitch * 100) - ((int)m_filtPitch * 100)),
+              m_ypr.pitch >= 0.0 ? "+" : "-", abs((int)m_ypr.pitch), abs((int)(m_ypr.pitch * 100) - ((int)m_ypr.pitch * 100)));
   Streamprint(s, " R=%s%2d.%02d %s%2d.%02d %s%2d.%02d %s%2d.%02d",
-              accelRoll >= 0.0 ? "+" : "-", abs((int)accelRoll), abs((int)(accelRoll * 100) - ((int)accelRoll * 100)),
-              scaledRoll >= 0.0 ? "+" : "-", abs((int)scaledRoll), abs((int)(scaledRoll * 100) - ((int)scaledRoll * 100)),
-              filtRoll >= 0.0 ? "+" : "-", abs((int)filtRoll), abs((int)(filtRoll * 100) - ((int)filtRoll * 100)),
-              ypr.roll >= 0.0 ? "+" : "-", abs((int)ypr.roll), abs((int)(ypr.roll * 100) - ((int)ypr.roll * 100)));
+              m_accRoll >= 0.0 ? "+" : "-", abs((int)m_accRoll), abs((int)(m_accRoll * 100) - ((int)m_accRoll * 100)),
+              m_scaledRoll >= 0.0 ? "+" : "-", abs((int)m_scaledRoll), abs((int)(m_scaledRoll * 100) - ((int)m_scaledRoll * 100)),
+              m_filtRoll >= 0.0 ? "+" : "-", abs((int)m_filtRoll), abs((int)(m_filtRoll * 100) - ((int)m_filtRoll * 100)),
+              m_ypr.roll >= 0.0 ? "+" : "-", abs((int)m_ypr.roll), abs((int)(m_ypr.roll * 100) - ((int)m_ypr.roll * 100)));
   Streamprint(s, " T=%s%2d.%02d %s%2d.%02d %s%2d.%02d",
-              magTilt.x >= 0.0 ? "+" : "-", abs((int)magTilt.x), abs((int)(magTilt.x * 100) - ((int)magTilt.x * 100)),
-              magTilt.y >= 0.0 ? "+" : "-", abs((int)magTilt.y), abs((int)(magTilt.y * 100) - ((int)magTilt.y * 100)),
-              magTilt.z >= 0.0 ? "+" : "-", abs((int)magTilt.z), abs((int)(magTilt.z * 100) - ((int)magTilt.z * 100)));
+              m_magTilt.x >= 0.0 ? "+" : "-", abs((int)m_magTilt.x), abs((int)(m_magTilt.x * 100) - ((int)m_magTilt.x * 100)),
+              m_magTilt.y >= 0.0 ? "+" : "-", abs((int)m_magTilt.y), abs((int)(m_magTilt.y * 100) - ((int)m_magTilt.y * 100)),
+              m_magTilt.z >= 0.0 ? "+" : "-", abs((int)m_magTilt.z), abs((int)(m_magTilt.z * 100) - ((int)m_magTilt.z * 100)));
   Streamprint(s, " Y=%s%2d.%02d %s%2d.%02d %s%2d.%02d\r\n",
-              yaw >= 0.0 ? "+" : "-", abs((int)yaw), abs((int)(yaw * 100) - ((int)yaw * 100)),
-              scaledYaw >= 0.0 ? "+" : "-", abs((int)scaledYaw), abs((int)(scaledYaw * 100) - ((int)scaledYaw * 100)),
-              scaled2Yaw >= 0.0 ? "+" : "-", abs((int)scaled2Yaw), abs((int)(scaled2Yaw * 100) - ((int)scaled2Yaw * 100)),
-              filtYaw >= 0.0 ? "+" : "-", abs((int)filtYaw), abs((int)(filtYaw * 100) - ((int)filtYaw * 100)),
-              ypr.yaw >= 0.0 ? "+" : "-", abs((int)ypr.yaw), abs((int)(ypr.yaw * 100) - ((int)ypr.yaw * 100)));
+              m_yaw >= 0.0 ? "+" : "-", abs((int)m_yaw), abs((int)(m_yaw * 100) - ((int)m_yaw * 100)),
+              m_scaledYaw >= 0.0 ? "+" : "-", abs((int)m_scaledYaw), abs((int)(m_scaledYaw * 100) - ((int)m_scaledYaw * 100)),
+              m_scaled2Yaw >= 0.0 ? "+" : "-", abs((int)m_scaled2Yaw), abs((int)(m_scaled2Yaw * 100) - ((int)m_scaled2Yaw * 100)),
+              m_filtYaw >= 0.0 ? "+" : "-", abs((int)m_filtYaw), abs((int)(m_filtYaw * 100) - ((int)m_filtYaw * 100)),
+              m_ypr.yaw >= 0.0 ? "+" : "-", abs((int)m_ypr.yaw), abs((int)(m_ypr.yaw * 100) - ((int)m_ypr.yaw * 100)));
 }
 
 bool Imu::init(int aPinBuzzer)
 {
-  pinBuzzer = aPinBuzzer;
+  m_pinBuzzer = aPinBuzzer;
   loadCalibrationData();
   printCalibrationData();
   if (!initGyroscope())
@@ -839,32 +838,32 @@ bool Imu::init(int aPinBuzzer)
   }
   initAccelerometer();
   initMagnetometer();
-  hardwareInitialized = true;
+  m_hardwareInitialized = true;
   return true;
 }
 
 int Imu::getCallCounter(void)
 {
-  int res = callCounter;
-  callCounter = 0;
+  int res = m_callCounter;
+  m_callCounter = 0;
   return res;
 }
 
 int Imu::getErrorCounter(void)
 {
-  int res = errorCounter;
-  errorCounter = 0;
+  int res = m_errorCounter;
+  m_errorCounter = 0;
   return res;
 }
 
 void Imu::read(void)
 {
-  if (!hardwareInitialized)
+  if (!m_hardwareInitialized)
   {
-    errorCounter++;
+    m_errorCounter++;
     return;
   }
-  callCounter++;
+  m_callCounter++;
   readGyroscope();
   readAccelerometer();
   readMagnetometer();
@@ -872,10 +871,10 @@ void Imu::read(void)
 
 void Imu::playCompletedSound(void)
 {
-  tone(pinBuzzer, 600);
+  tone(m_pinBuzzer, 600);
   delay(200);
-  tone(pinBuzzer, 880);
+  tone(m_pinBuzzer, 880);
   delay(200);
-  tone(pinBuzzer, 1320);
+  tone(m_pinBuzzer, 1320);
   delay(200);
 }

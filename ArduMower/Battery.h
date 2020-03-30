@@ -4,11 +4,9 @@
  *  Created on: Aug 24, 2016
  *      Author: ove
  */
+#pragma once
 
-#ifndef BATTERY_H_
-#define BATTERY_H_
-
-#include "Arduino.h"
+#include <Arduino.h>
 
 typedef struct
 {
@@ -116,5 +114,3 @@ void battery_setBatterySwitch(bool state, Battery* battery_p)
 {
   digitalWrite(battery_p->pinBatterySwitch, state);
 }
-
-#endif /* BATTERY_H_ */

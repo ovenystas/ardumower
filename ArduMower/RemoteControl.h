@@ -31,8 +31,7 @@
 //     remote.readSerial();
 //     remote.run();
 //  }
-#ifndef PFOD_H
-#define PFOD_H
+#pragma once
 
 #include <Arduino.h>
 
@@ -68,14 +67,15 @@ public:
   void run();
 
 private:
-  Robot* robot_p;
-  bool pfodCmdComplete;
-  String pfodCmd;
-  byte pfodState;
-  int testmode;
-  unsigned long nextPlotTime;
-  int8_t perimeterCapture[32];
-  int perimeterCaptureIdx { 0 };
+  Robot* m_robot_p;
+  bool m_pfodCmdComplete;
+  String m_pfodCmd;
+  byte m_pfodState;
+  int m_testmode;
+  unsigned long m_nextPlotTime;
+  int8_t m_perimeterCapture[32];
+  int m_perimeterCaptureIdx { 0 };
+
   float stringToFloat(const String& s);
   void parsePfodCmd();
 
@@ -166,5 +166,3 @@ private:
   void sendTimerMenu(const bool update);
   void processTimerMenu(const String pfodCmd);
 };
-
-#endif

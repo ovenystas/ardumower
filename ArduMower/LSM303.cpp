@@ -27,17 +27,17 @@ LSM303::LSM303(void)
   for your particular unit. The Heading example demonstrates how to
   adjust these values in your own sketch.
   */
-  m_min = { INT16_MIN, INT16_MIN, INT16_MIN };
-  m_max = { INT16_MAX, INT16_MAX, INT16_MAX };
+  m_mag_min = { INT16_MIN, INT16_MIN, INT16_MIN };
+  m_mag_max = { INT16_MAX, INT16_MAX, INT16_MAX };
 
-  deviceType = DEVICE_AUTO;
+  m_deviceType = DEVICE_AUTO;
 
-  io_timeout = 0;  // 0 = no timeout
-  did_timeout = false;
+  m_io_timeout = 0;  // 0 = no timeout
+  m_did_timeout = false;
 
-  acc_address = 0;
-  mag_address = 0;
-  last_status = 0;
+  m_acc_address = 0;
+  m_mag_address = 0;
+  m_last_status = 0;
 }
 
 // Public Methods //////////////////////////////////////////////////////////////
@@ -45,19 +45,19 @@ LSM303::LSM303(void)
 // Did a timeout occur in readAcc(), readMag(), or read() since the last call to timeoutOccurred()?
 bool LSM303::timeoutOccurred()
 {
-  bool tmp = did_timeout;
-  did_timeout = false;
+  bool tmp = m_did_timeout;
+  m_did_timeout = false;
   return tmp;
 }
 
 void LSM303::setTimeout(unsigned int timeout)
 {
-  io_timeout = timeout;
+  m_io_timeout = timeout;
 }
 
 unsigned int LSM303::getTimeout()
 {
-  return io_timeout;
+  return m_io_timeout;
 }
 
 bool LSM303::init(deviceTypeE device, sa0StateE sa0)
@@ -124,52 +124,52 @@ bool LSM303::init(deviceTypeE device, sa0StateE sa0)
     }
   }
 
-  deviceType = device;
+  m_deviceType = device;
 
   // set device addresses and translated register addresses
   switch (device)
   {
     case DEVICE_D:
-      acc_address = mag_address = (sa0 == SA0_HIGH) ? D_SA0_HIGH_ADDRESS : D_SA0_LOW_ADDRESS;
-      translated_regs[-OUT_X_L_M] = D_OUT_X_L_M;
-      translated_regs[-OUT_X_H_M] = D_OUT_X_H_M;
-      translated_regs[-OUT_Y_L_M] = D_OUT_Y_L_M;
-      translated_regs[-OUT_Y_H_M] = D_OUT_Y_H_M;
-      translated_regs[-OUT_Z_L_M] = D_OUT_Z_L_M;
-      translated_regs[-OUT_Z_H_M] = D_OUT_Z_H_M;
+      m_acc_address = m_mag_address = (sa0 == SA0_HIGH) ? D_SA0_HIGH_ADDRESS : D_SA0_LOW_ADDRESS;
+      m_translated_regs[-OUT_X_L_M] = D_OUT_X_L_M;
+      m_translated_regs[-OUT_X_H_M] = D_OUT_X_H_M;
+      m_translated_regs[-OUT_Y_L_M] = D_OUT_Y_L_M;
+      m_translated_regs[-OUT_Y_H_M] = D_OUT_Y_H_M;
+      m_translated_regs[-OUT_Z_L_M] = D_OUT_Z_L_M;
+      m_translated_regs[-OUT_Z_H_M] = D_OUT_Z_H_M;
       break;
 
     case DEVICE_DLHC:
-      acc_address = DLHC_DLM_DLH_ACC_SA0_HIGH_ADDRESS; // DLHC doesn't have configurable SA0 but uses same acc address as DLM/DLH with SA0 high
-      mag_address = DLHC_DLM_DLH_MAG_ADDRESS;
-      translated_regs[-OUT_X_H_M] = DLHC_OUT_X_H_M;
-      translated_regs[-OUT_X_L_M] = DLHC_OUT_X_L_M;
-      translated_regs[-OUT_Y_H_M] = DLHC_OUT_Y_H_M;
-      translated_regs[-OUT_Y_L_M] = DLHC_OUT_Y_L_M;
-      translated_regs[-OUT_Z_H_M] = DLHC_OUT_Z_H_M;
-      translated_regs[-OUT_Z_L_M] = DLHC_OUT_Z_L_M;
+      m_acc_address = DLHC_DLM_DLH_ACC_SA0_HIGH_ADDRESS; // DLHC doesn't have configurable SA0 but uses same acc address as DLM/DLH with SA0 high
+      m_mag_address = DLHC_DLM_DLH_MAG_ADDRESS;
+      m_translated_regs[-OUT_X_H_M] = DLHC_OUT_X_H_M;
+      m_translated_regs[-OUT_X_L_M] = DLHC_OUT_X_L_M;
+      m_translated_regs[-OUT_Y_H_M] = DLHC_OUT_Y_H_M;
+      m_translated_regs[-OUT_Y_L_M] = DLHC_OUT_Y_L_M;
+      m_translated_regs[-OUT_Z_H_M] = DLHC_OUT_Z_H_M;
+      m_translated_regs[-OUT_Z_L_M] = DLHC_OUT_Z_L_M;
       break;
 
     case DEVICE_DLM:
-      acc_address = (sa0 == SA0_HIGH) ? DLHC_DLM_DLH_ACC_SA0_HIGH_ADDRESS : DLM_DLH_ACC_SA0_LOW_ADDRESS;
-      mag_address = DLHC_DLM_DLH_MAG_ADDRESS;
-      translated_regs[-OUT_X_H_M] = DLM_OUT_X_H_M;
-      translated_regs[-OUT_X_L_M] = DLM_OUT_X_L_M;
-      translated_regs[-OUT_Y_H_M] = DLM_OUT_Y_H_M;
-      translated_regs[-OUT_Y_L_M] = DLM_OUT_Y_L_M;
-      translated_regs[-OUT_Z_H_M] = DLM_OUT_Z_H_M;
-      translated_regs[-OUT_Z_L_M] = DLM_OUT_Z_L_M;
+      m_acc_address = (sa0 == SA0_HIGH) ? DLHC_DLM_DLH_ACC_SA0_HIGH_ADDRESS : DLM_DLH_ACC_SA0_LOW_ADDRESS;
+      m_mag_address = DLHC_DLM_DLH_MAG_ADDRESS;
+      m_translated_regs[-OUT_X_H_M] = DLM_OUT_X_H_M;
+      m_translated_regs[-OUT_X_L_M] = DLM_OUT_X_L_M;
+      m_translated_regs[-OUT_Y_H_M] = DLM_OUT_Y_H_M;
+      m_translated_regs[-OUT_Y_L_M] = DLM_OUT_Y_L_M;
+      m_translated_regs[-OUT_Z_H_M] = DLM_OUT_Z_H_M;
+      m_translated_regs[-OUT_Z_L_M] = DLM_OUT_Z_L_M;
       break;
 
     case DEVICE_DLH:
-      acc_address = (sa0 == SA0_HIGH) ? DLHC_DLM_DLH_ACC_SA0_HIGH_ADDRESS : DLM_DLH_ACC_SA0_LOW_ADDRESS;
-      mag_address = DLHC_DLM_DLH_MAG_ADDRESS;
-      translated_regs[-OUT_X_H_M] = DLH_OUT_X_H_M;
-      translated_regs[-OUT_X_L_M] = DLH_OUT_X_L_M;
-      translated_regs[-OUT_Y_H_M] = DLH_OUT_Y_H_M;
-      translated_regs[-OUT_Y_L_M] = DLH_OUT_Y_L_M;
-      translated_regs[-OUT_Z_H_M] = DLH_OUT_Z_H_M;
-      translated_regs[-OUT_Z_L_M] = DLH_OUT_Z_L_M;
+      m_acc_address = (sa0 == SA0_HIGH) ? DLHC_DLM_DLH_ACC_SA0_HIGH_ADDRESS : DLM_DLH_ACC_SA0_LOW_ADDRESS;
+      m_mag_address = DLHC_DLM_DLH_MAG_ADDRESS;
+      m_translated_regs[-OUT_X_H_M] = DLH_OUT_X_H_M;
+      m_translated_regs[-OUT_X_L_M] = DLH_OUT_X_L_M;
+      m_translated_regs[-OUT_Y_H_M] = DLH_OUT_Y_H_M;
+      m_translated_regs[-OUT_Y_L_M] = DLH_OUT_Y_L_M;
+      m_translated_regs[-OUT_Z_H_M] = DLH_OUT_Z_H_M;
+      m_translated_regs[-OUT_Z_L_M] = DLH_OUT_Z_L_M;
       break;
 
     case DEVICE_AUTO:
@@ -195,7 +195,7 @@ the registers it writes to.
 void LSM303::enableDefault(void)
 {
 
-  if (deviceType == DEVICE_D)
+  if (m_deviceType == DEVICE_D)
   {
     // Accelerometer
 
@@ -225,7 +225,7 @@ void LSM303::enableDefault(void)
   {
     // Accelerometer
 
-    if (deviceType == DEVICE_DLHC)
+    if (m_deviceType == DEVICE_DLHC)
     {
       // 0x08 = 0b00001000
       // FS = 00 (+/- 2 g full scale); HR = 1 (high resolution enable)
@@ -265,10 +265,10 @@ void LSM303::enableDefault(void)
 // Writes an accelerometer register
 void LSM303::writeAccReg(byte reg, byte value)
 {
-  Wire.beginTransmission(acc_address);
+  Wire.beginTransmission(m_acc_address);
   Wire.write(reg);
   Wire.write(value);
-  last_status = Wire.endTransmission();
+  m_last_status = Wire.endTransmission();
 }
 
 // Reads an accelerometer register
@@ -276,10 +276,10 @@ byte LSM303::readAccReg(byte reg)
 {
   byte value;
 
-  Wire.beginTransmission(acc_address);
+  Wire.beginTransmission(m_acc_address);
   Wire.write(reg);
-  last_status = Wire.endTransmission();
-  Wire.requestFrom(acc_address, (byte)1);
+  m_last_status = Wire.endTransmission();
+  Wire.requestFrom(m_acc_address, (byte)1);
   value = Wire.read();
   Wire.endTransmission();
 
@@ -289,10 +289,10 @@ byte LSM303::readAccReg(byte reg)
 // Writes a magnetometer register
 void LSM303::writeMagReg(byte reg, byte value)
 {
-  Wire.beginTransmission(mag_address);
+  Wire.beginTransmission(m_mag_address);
   Wire.write(reg);
   Wire.write(value);
-  last_status = Wire.endTransmission();
+  m_last_status = Wire.endTransmission();
 }
 
 // Reads a magnetometer register
@@ -303,13 +303,13 @@ byte LSM303::readMagReg(int reg)
   // if dummy register address (magnetometer Y/Z), look up actual translated address (based on device type)
   if (reg < 0)
   {
-    reg = translated_regs[-reg];
+    reg = m_translated_regs[-reg];
   }
 
-  Wire.beginTransmission(mag_address);
+  Wire.beginTransmission(m_mag_address);
   Wire.write(reg);
-  last_status = Wire.endTransmission();
-  Wire.requestFrom(mag_address, (byte)1);
+  m_last_status = Wire.endTransmission();
+  Wire.requestFrom(m_mag_address, (byte)1);
   value = Wire.read();
   Wire.endTransmission();
 
@@ -319,7 +319,7 @@ byte LSM303::readMagReg(int reg)
 void LSM303::writeReg(byte reg, byte value)
 {
   // mag address == acc_address for LSM303D, so it doesn't really matter which one we use.
-  if (deviceType == DEVICE_D || reg < CTRL_REG1_A)
+  if (m_deviceType == DEVICE_D || reg < CTRL_REG1_A)
   {
     writeMagReg(reg, value);
   }
@@ -335,7 +335,7 @@ byte LSM303::readReg(int reg)
 {
   // mag address == acc_address for LSM303D, so it doesn't really matter which one we use.
   // Use readMagReg so it can translate OUT_[XYZ]_[HL]_M
-  if (deviceType == DEVICE_D || reg < CTRL_REG1_A)
+  if (m_deviceType == DEVICE_D || reg < CTRL_REG1_A)
   {
     return readMagReg(reg);
   }
@@ -348,18 +348,18 @@ byte LSM303::readReg(int reg)
 // Reads the 3 accelerometer channels and stores them in vector a
 void LSM303::readAcc(void)
 {
-  Wire.beginTransmission(acc_address);
+  Wire.beginTransmission(m_acc_address);
   // assert the MSB of the address to get the accelerometer
   // to do slave-transmit subaddress updating.
   Wire.write(OUT_X_L_A | (1 << 7));
-  last_status = Wire.endTransmission();
-  Wire.requestFrom(acc_address, (byte)6);
+  m_last_status = Wire.endTransmission();
+  Wire.requestFrom(m_acc_address, (byte)6);
 
   unsigned int millis_start = millis();
   while (Wire.available() < 6) {
-    if (io_timeout > 0 && ((unsigned int)millis() - millis_start) > io_timeout)
+    if (m_io_timeout > 0 && ((unsigned int)millis() - millis_start) > m_io_timeout)
     {
-      did_timeout = true;
+      m_did_timeout = true;
       return;
     }
   }
@@ -375,33 +375,33 @@ void LSM303::readAcc(void)
   // This no longer drops the lowest 4 bits of the readings from the DLH/DLM/DLHC, which are always 0
   // (12-bit resolution, left-aligned). The D has 16-bit resolution
   // Ove: Changed to drop lowest 4 bits again
-  a.x = (int16_t)(xha << 8 | xla) >> 4;
-  a.y = (int16_t)(yha << 8 | yla) >> 4;
-  a.z = (int16_t)(zha << 8 | zla) >> 4;
+  m_acc.x = (int16_t)(xha << 8 | xla) >> 4;
+  m_acc.y = (int16_t)(yha << 8 | yla) >> 4;
+  m_acc.z = (int16_t)(zha << 8 | zla) >> 4;
 }
 
 // Reads the 3 magnetometer channels and stores them in vector m
 void LSM303::readMag(void)
 {
-  Wire.beginTransmission(mag_address);
+  Wire.beginTransmission(m_mag_address);
   // If LSM303D, assert MSB to enable subaddress updating
   // OUT_X_L_M comes first on D, OUT_X_H_M on others
-  Wire.write((deviceType == DEVICE_D) ? translated_regs[-OUT_X_L_M] | (1 << 7) : translated_regs[-OUT_X_H_M]);
-  last_status = Wire.endTransmission();
-  Wire.requestFrom(mag_address, (byte)6);
+  Wire.write((m_deviceType == DEVICE_D) ? m_translated_regs[-OUT_X_L_M] | (1 << 7) : m_translated_regs[-OUT_X_H_M]);
+  m_last_status = Wire.endTransmission();
+  Wire.requestFrom(m_mag_address, (byte)6);
 
   unsigned int millis_start = millis();
   while (Wire.available() < 6) {
-    if (io_timeout > 0 && ((unsigned int)millis() - millis_start) > io_timeout)
+    if (m_io_timeout > 0 && ((unsigned int)millis() - millis_start) > m_io_timeout)
     {
-      did_timeout = true;
+      m_did_timeout = true;
       return;
     }
   }
 
   byte xlm, xhm, ylm, yhm, zlm, zhm;
 
-  if (deviceType == DEVICE_D)
+  if (m_deviceType == DEVICE_D)
   {
     // D: X_L, X_H, Y_L, Y_H, Z_L, Z_H
     xlm = Wire.read();
@@ -417,7 +417,7 @@ void LSM303::readMag(void)
     xhm = Wire.read();
     xlm = Wire.read();
 
-    if (deviceType == DEVICE_DLH)
+    if (m_deviceType == DEVICE_DLH)
     {
       // DLH: ...Y_H, Y_L, Z_H, Z_L
       yhm = Wire.read();
@@ -436,9 +436,9 @@ void LSM303::readMag(void)
   }
 
   // combine high and low bytes
-  m.x = (int16_t)(xhm << 8 | xlm);
-  m.y = (int16_t)(yhm << 8 | ylm);
-  m.z = (int16_t)(zhm << 8 | zlm);
+  m_mag.x = (int16_t)(xhm << 8 | xlm);
+  m_mag.y = (int16_t)(yhm << 8 | ylm);
+  m_mag.z = (int16_t)(zhm << 8 | zlm);
 }
 
 // Reads all 6 channels of the LSM303 and stores them in the object variables
@@ -459,7 +459,7 @@ the Pololu LSM303DLHC, LSM303DLM, and LSM303DLH carriers.
 */
 float LSM303::heading(void)
 {
-  if (deviceType == DEVICE_D)
+  if (m_deviceType == DEVICE_D)
   {
     return heading(vector<int>{1, 0, 0});
   }

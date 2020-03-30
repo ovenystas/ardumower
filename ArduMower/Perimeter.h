@@ -32,9 +32,7 @@
  2. set perimeter pins:    perimeter.setup(PIN_PERIMETER);
  3. read perimeter:        int16_t value = Perimeter.calcMagnitude();
  */
-
-#ifndef PERIMETER_H
-#define PERIMETER_H
+#pragma once
 
 #include <Arduino.h>
 
@@ -132,9 +130,4 @@ int16_t perimeter_corrFilter(
     bool print,
     Perimeter* perimeter_p);
 
-
-
-
 void perimeters_printInfo(Stream &s, Perimeters* perimeters_p);
-
-#endif /* PERIMETER_H */

@@ -6,38 +6,37 @@
  */
 
 #include "StateMachine.h"
-#include <Arduino.h>
 
 constexpr const char* const StateMachine::stateNames[];
 
 const char* StateMachine::getCurrentStateName()
 {
-  return stateNames[stateCurr];
+  return stateNames[m_stateCurr];
 }
 
 bool StateMachine::isCurrentState(stateE state)
 {
-  return stateCurr == state;
+  return m_stateCurr == state;
 }
 
 void StateMachine::init()
 {
-  stateStartTime = millis();
+  m_stateStartTime = millis();
 }
 
 void StateMachine::changeState()
 {
-  stateStartTime = millis();
-  stateLast = stateCurr;
-  stateCurr = stateNext;
+  m_stateStartTime = millis();
+  m_stateLast = m_stateCurr;
+  m_stateCurr = m_stateNext;
 }
 
 unsigned long StateMachine::getStateTime()
 {
-  return millis() - stateStartTime;
+  return millis() - m_stateStartTime;
 }
 
 bool StateMachine::isStateEndTimeReached()
 {
-  return millis() >= stateEndTime;
+  return millis() >= m_stateEndTime;
 }

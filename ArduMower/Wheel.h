@@ -4,9 +4,7 @@
  *  Created on: Apr 12, 2016
  *      Author: ove
  */
-
-#ifndef WHEEL_H
-#define WHEEL_H
+#pragma once
 
 #include "Motor.h"
 #include "MotorShield.h"
@@ -22,8 +20,8 @@ class Wheel
       END
     } wheelE;
 
-    MotorShield motor;
-    Encoder encoder;
+    MotorShield m_motor;
+    Encoder m_encoder;
 
     void control(int8_t speed);
 };
@@ -31,44 +29,42 @@ class Wheel
 class Wheels
 {
   public:
-    Wheel wheel[Wheel::END];
-    int rollTimeMax {};         // max. roll time (ms)
-    int rollTimeMin {};         // min. roll time (ms)
-    int reverseTime {};         // max. reverse time (ms)
-    unsigned long forwardTimeMax {};     // max. forward time (ms) / timeout
-    float biDirSpeedRatio1 {};  // bidir mow pattern speed ratio 1
-    float biDirSpeedRatio2 {};  // bidir mow pattern speed ratio 2
-    Wheel::wheelE rotateDir {Wheel::LEFT};
+    Wheel m_wheel[Wheel::END];
+    int m_rollTimeMax {};         // max. roll time (ms)
+    int m_rollTimeMin {};         // min. roll time (ms)
+    int m_reverseTime {};         // max. reverse time (ms)
+    unsigned long m_forwardTimeMax {};     // max. forward time (ms) / timeout
+    float m_biDirSpeedRatio1 {};  // bidir mow pattern speed ratio 1
+    float m_biDirSpeedRatio2 {};  // bidir mow pattern speed ratio 2
+    Wheel::wheelE m_rotateDir {Wheel::LEFT};
 
     bool isTimeToRotationChange(void);
     void control(void);
 
     int8_t getSpeed() const
     {
-      return speed;
+      return m_speed;
     }
 
     void setSpeed(int8_t speed)
     {
-      this->speed = speed;
+      m_speed = speed;
     }
 
     int8_t getSteer() const
     {
-      return steer;
+      return m_steer;
     }
 
     void setSteer(int8_t steer)
     {
-      this->steer = steer;
+      m_steer = steer;
     }
 
   private:
-    static const uint16_t TIME_BETWEEN_ROTATION_CHANGE {60000};
+    const uint16_t TIME_BETWEEN_ROTATION_CHANGE {60000};
 
-    unsigned long nextTimeRotationChange {};
-    int8_t speed {}; // Range -100..+100, - = reverse, + = forward
-    int8_t steer {}; // Range -100..+100, - = left, + = right
+    unsigned long m_nextTimeRotationChange {};
+    int8_t m_speed {}; // Range -100..+100, - = reverse, + = forward
+    int8_t m_steer {}; // Range -100..+100, - = left, + = right
 };
-
-#endif /* WHEEL_H */

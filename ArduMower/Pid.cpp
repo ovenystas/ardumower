@@ -26,8 +26,6 @@
  2. Set I =0.6 * P and D = 0.125 * P
 */
 
-#include <Arduino.h>
-
 #include "Pid.h"
 
 void pid_setup(float Kp, float Ki, float Kd,

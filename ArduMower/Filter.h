@@ -20,9 +20,7 @@
  * Alpha values close to zero represent heavy averaging while an alpha value of
  * one has no averaging.
  */
-
-#ifndef FILTER_H
-#define FILTER_H
+#pragma once
 
 #include <Arduino.h>
 
@@ -82,5 +80,3 @@ int16_t FilterEmaI16_getAverage(const FilterEmaI16* filter_p)
 {
   return filter_p->average;
 }
-
-#endif /* FILTER_H */

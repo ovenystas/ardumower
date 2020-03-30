@@ -44,9 +44,7 @@
  }
  }
  */
-
-#ifndef ADC_MANAGER_H
-#define ADC_MANAGER_H
+#pragma once
 
 #include <Arduino.h>
 
@@ -101,7 +99,7 @@ class AdcManager
     // calibration data available?
     bool calibrationDataAvail(void)
     {
-      return calibrationAvailable;
+      return m_calibrationAvailable;
     }
 
     // get the manager running, starts sampling next pin
@@ -121,9 +119,9 @@ class AdcManager
     static const uint8_t MAGIC {1};
     static const uint8_t SAMPLE_RATE {SRATE_38462};
 
-    bool calibrationAvailable {false};
-    bool autoCalibrate[CHANNELS] {false};   // do auto-calibrate? (ADC0-ADC15)
-    uint8_t capturedChannels {};
+    bool m_calibrationAvailable {false};
+    bool m_autoCalibrate[CHANNELS] {false};   // do auto-calibrate? (ADC0-ADC15)
+    uint8_t m_capturedChannels {};
 
     void startADC(void);
     void calibrateZeroOffset(uint8_t ch);
@@ -137,5 +135,3 @@ class AdcManager
 };
 
 extern AdcManager ADCMan;
-
-#endif
