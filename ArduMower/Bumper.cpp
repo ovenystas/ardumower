@@ -16,6 +16,12 @@ void Bumper::check()
   }
 }
 
+void Bumper::simHit()
+{
+  m_hit = true;
+  m_counter++;
+}
+
 void Bumpers::setup(const uint8_t* pins, Bumper* bumperArray_p, uint8_t len)
 {
   m_use = false;
@@ -27,7 +33,7 @@ void Bumpers::setup(const uint8_t* pins, Bumper* bumperArray_p, uint8_t len)
   }
 }
 
-void Bumpers::check()
+void Bumpers::check() const
 {
   for (uint8_t i = 0; i < m_len; i++)
   {
@@ -35,7 +41,7 @@ void Bumpers::check()
   }
 }
 
-void Bumpers::clearHit()
+void Bumpers::clearHit() const
 {
   for (uint8_t i = 0; i < m_len; i++)
   {
@@ -43,7 +49,7 @@ void Bumpers::clearHit()
   }
 }
 
-bool Bumpers::isAnyHit()
+bool Bumpers::isAnyHit() const
 {
   for (uint8_t i = 0; i < m_len; i++)
   {

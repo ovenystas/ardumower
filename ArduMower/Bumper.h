@@ -27,15 +27,22 @@ public:
 
   void check();
 
-  void simHit()
+  void simHit();
+
+  void clearHit()
   {
-    m_hit = true;
-    m_counter++;
+    m_hit = false;
   }
 
-  void clearHit() { m_hit = false; }
-  bool isHit() { return m_hit; }
-  uint16_t getCounter() { return m_counter; }
+  bool isHit() const
+  {
+    return m_hit;
+  }
+
+  uint16_t getCounter() const
+  {
+    return m_counter;
+  }
 
 private:
   uint8_t m_pin { 0 };
@@ -54,11 +61,14 @@ public:
 
   void setup(const uint8_t* pins, Bumper* bumperArray_p, uint8_t len);
 
-  void check();
-  bool isAnyHit();
-  void clearHit();
+  void check() const;
+  bool isAnyHit() const;
+  void clearHit() const;
 
-  bool isUsed() { return m_use; }
+  bool isUsed() const
+  {
+    return m_use;
+  }
 
   bool m_use { false };
 

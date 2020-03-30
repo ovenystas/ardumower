@@ -18,12 +18,30 @@ public:
 
   bool isTimeToRun();
 
-  bool isUsed() { return m_use; }
-  bool isPressed() { return (digitalRead(m_pin) == LOW); }
+  bool isUsed() const
+  {
+    return m_use;
+  }
 
-  uint8_t getCounter() { return m_counter; }
-  void incCounter() { m_counter++; }
-  void clearCounter() { m_counter = 0; }
+  bool isPressed() const
+  {
+    return (digitalRead(m_pin) == LOW);
+  }
+
+  uint8_t getCounter() const
+  {
+    return m_counter;
+  }
+
+  void incCounter()
+  {
+    m_counter++;
+  }
+
+  void clearCounter()
+  {
+    m_counter = 0;
+  }
 
   bool m_use = true;
 
