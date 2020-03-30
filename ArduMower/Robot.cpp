@@ -179,7 +179,7 @@ void Robot::loadSaveUserSettings(const bool readflag)
   eereadwrite(readflag, addr, m_wheels.m_biDirSpeedRatio2);
   eereadwrite(readflag, addr, m_wheels.m_wheel[Wheel::LEFT].m_motor.m_swapDir);
   eereadwrite(readflag, addr, m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_swapDir);
-  eereadwrite(readflag, addr, m_bumpers.use);
+  eereadwrite(readflag, addr, m_bumpers.m_use);
   eereadwrite(readflag, addr, m_sonars.use);
   for (uint8_t i = 0; i < SONARS_NUM; i++)
   {
@@ -370,7 +370,7 @@ void Robot::printSettingSerial()
   // ------ bumper ------------------------------------
   Console.println(F("== Bumpers =="));
   Console.print(F("use : "));
-  Console.println(m_bumpers.use);
+  Console.println(m_bumpers.m_use);
 
   // ------ drop ------------------------------------
   Console.println(F("== Drop sensors =="));
@@ -1089,8 +1089,8 @@ void Robot::printInfo_sensorValues(Stream &s)
               m_wheels.m_wheel[Wheel::RIGHT].m_motor.getPowerMeas(),
               m_cutter.m_motor.getPowerMeas());
   Streamprint(s, "bum %4d %4d ",
-              bumper_isHit(&m_bumperArray[LEFT]),
-              bumper_isHit(&m_bumperArray[RIGHT]));
+              m_bumperArray[LEFT].isHit(),
+              m_bumperArray[RIGHT].isHit());
   Streamprint(s, "dro %4d %4d ",
               dropSensor_isDetected(&m_dropSensorArray[LEFT]),
               dropSensor_isDetected(&m_dropSensorArray[RIGHT]));
@@ -1122,8 +1122,8 @@ void Robot::printInfo_sensorCounters(Stream &s)
               m_wheels.m_wheel[Wheel::RIGHT].m_motor.getOverloadCounter(),
               m_cutter.m_motor.getOverloadCounter());
   Streamprint(s, "bum %4d %4d ",
-              bumper_getCounter(&m_bumperArray[LEFT]),
-              bumper_getCounter(&m_bumperArray[RIGHT]));
+              m_bumperArray[LEFT].getCounter(),
+              m_bumperArray[RIGHT].getCounter());
   Streamprint(s, "dro %4d %4d ",
               dropSensor_getCounter(&m_dropSensorArray[LEFT]),
               dropSensor_getCounter(&m_dropSensorArray[RIGHT]));
@@ -1469,11 +1469,11 @@ void Robot::readSerial()
         break;
 
       case 'l': // simulate left bumper
-        bumper_simHit(&m_bumperArray[LEFT]);
+        m_bumperArray[LEFT].simHit();
         break;
 
       case 'r': // simulate right bumper
-        bumper_simHit(&m_bumperArray[RIGHT]);
+        m_bumperArray[RIGHT].simHit();
         break;
 
       case 'j': // simulate left drop
@@ -2263,11 +2263,11 @@ void Robot::checkBumpers()
     return;
   }
 
-  if (bumper_isHit(&m_bumperArray[LEFT]))
+  if (m_bumperArray[LEFT].isHit())
   {
     reverseOrChangeDirection(RIGHT);
   }
-  if (bumper_isHit(&m_bumperArray[RIGHT]))
+  if (m_bumperArray[RIGHT].isHit())
   {
     reverseOrChangeDirection(LEFT);
   }
@@ -2305,9 +2305,9 @@ void Robot::checkDrop()
 //   111|R
 void Robot::checkBumpersPerimeter()
 {
-  if (bumpers_isAnyHit(&m_bumpers))
+  if (m_bumpers.isAnyHit())
   {
-    if (bumper_isHit(&m_bumperArray[LEFT]) ||
+    if (m_bumperArray[LEFT].isHit() ||
         m_stateMachine.isCurrentState(StateMachine::STATE_PERI_TRACK))
     {
       setNextState(StateMachine::STATE_PERI_REV, RIGHT);
@@ -2961,7 +2961,7 @@ void Robot::tasks_continuous()
     m_cutter.m_motor.setPwmSet(m_cutter.m_motor.m_pwmMax);
   }
 
-  bumpers_clearHit(&m_bumpers);
+  m_bumpers.clearHit();
   dropSensors_clearDetected(&m_dropSensors);
 
   m_loopsPerSecCounter++;
@@ -2979,9 +2979,9 @@ void Robot::tasks_50ms()
 
 void Robot::tasks_100ms()
 {
-  if (m_bumpers.use)
+  if (m_bumpers.m_use)
   {
-    bumpers_check(&m_bumpers);
+    m_bumpers.check();
   }
   if (m_lawnSensors.use)
   {

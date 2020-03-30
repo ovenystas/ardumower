@@ -8,76 +8,59 @@
 
 #include <Arduino.h>
 
-typedef struct
+class Bumper
 {
-  uint8_t pin;
-  bool hit;
-  uint16_t counter;
-} Bumper;
-
-typedef struct
-{
-  bool use;
-  uint8_t len;
-  Bumper* bumperArray_p;
-} Bumpers;
-
-void bumper_setup(const uint8_t pin, Bumper* bumper_p);
-void bumper_check(Bumper* bumper_p);
-bool bumpers_isAnyHit(const Bumpers* bumpers_p);
-
-static inline
-void bumper_simHit(Bumper* bumper_p)
-{
-  bumper_p->hit = true;
-  bumper_p->counter++;
-}
-
-static inline
-void bumper_clearHit(Bumper* bumper_p)
-{
-  bumper_p->hit = false;
-}
-
-static inline
-bool bumper_isHit(const Bumper* bumper_p)
-{
-  return bumper_p->hit;
-}
-
-static inline
-uint16_t bumper_getCounter(const Bumper* bumper_p)
-{
-  return bumper_p->counter;
-}
-
-static inline
-void bumpers_setup(const uint8_t* pins, Bumper* bumperArray_p,
-                   Bumpers* bumpers_p, const uint8_t len)
-{
-  bumpers_p->use = false;
-  bumpers_p->len = len;
-  bumpers_p->bumperArray_p = bumperArray_p;
-  for (uint8_t i = 0; i < len; i++)
+public:
+  Bumper() = default;
+  Bumper(uint8_t pin)
   {
-    bumper_setup(pins[i], &bumperArray_p[i]);
+    setup(pin);
   }
-}
 
-static inline
-void bumpers_check(Bumpers* bumpers_p)
-{
-  for (uint8_t i = 0; i < bumpers_p->len; i++)
+  void setup(uint8_t pin)
   {
-    bumper_check(&bumpers_p->bumperArray_p[i]);
+    m_pin = pin;
+    m_hit = false;
+    m_counter = 0;
+    pinMode(m_pin, INPUT_PULLUP);
   }
-}
 
-static inline
-void bumpers_clearHit(Bumpers* bumpers_p)
-{
-  for (uint8_t i = 0; i < bumpers_p->len; i++)
+  void check();
+
+  void simHit()
   {
-    bumper_clearHit(&bumpers_p->bumperArray_p[i]);
+    m_hit = true;
+    m_counter++;
   }
-}
+
+  void clearHit() { m_hit = false; }
+  bool isHit() { return m_hit; }
+  uint16_t getCounter() { return m_counter; }
+
+private:
+  uint8_t m_pin { 0 };
+  bool m_hit { false };
+  uint16_t m_counter { 0 };
+};
+
+class Bumpers
+{
+public:
+  Bumpers() = default;
+  Bumpers(const uint8_t* pins, Bumper* bumperArray_p, uint8_t len)
+  {
+    setup(pins, bumperArray_p, len);
+  }
+
+  void setup(const uint8_t* pins, Bumper* bumperArray_p, uint8_t len);
+
+  void check();
+  bool isAnyHit();
+  void clearHit();
+
+  bool m_use { false };
+
+private:
+  uint8_t m_len { 0 };
+  Bumper* m_bumperArray_p { nullptr };
+};

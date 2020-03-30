@@ -25,5 +25,5 @@ uint32_t millis()
 void delayMicroseconds(uint16_t us)
 {
   mock().actualCall("delayMicroseconds")
-      .withUnsignedIntParameter("us", us);
+      .withParameter("us", us);
 }

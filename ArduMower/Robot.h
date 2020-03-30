@@ -191,8 +191,9 @@ public:
 
   // --------- bumper state ---------------------------
   // bumper state (true = pressed)
+  const uint8_t bumperPins[BUMPERS_NUM] = {PIN_BUMBER_LEFT, PIN_BUMBER_RIGHT};
   Bumper m_bumperArray[BUMPERS_NUM];
-  Bumpers m_bumpers;
+  Bumpers m_bumpers { bumperPins, m_bumperArray, BUMPERS_NUM };
 
   // --------- drop state ---------------------------
   DropSensor m_dropSensorArray[DROPSENSORS_NUM];

@@ -234,8 +234,7 @@ void Mower::setup()
   // Nothing to be done here
 
   // bumpers
-  const uint8_t bumperPins[BUMPERS_NUM] = {PIN_BUMBER_LEFT, PIN_BUMBER_RIGHT};
-  bumpers_setup(bumperPins, m_bumperArray, &m_bumpers, BUMPERS_NUM);
+  // Nothing to be done here
 
   // drop sensor
   const uint8_t dropSensorPins[DROPSENSORS_NUM] =

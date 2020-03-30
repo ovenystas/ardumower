@@ -5,17 +5,17 @@
 #define private public
 #include "Button.h"
 
-Button* p_button = nullptr;
+// Button ------------------------------------------------------------
 
-// ButtonGroup ------------------------------------------------------------
-
-TEST_GROUP(ButtonGroup)
+TEST_GROUP(Button)
 {
+  Button* p_button = nullptr;
+
   void setup()
   {
     mock().expectOneCall("pinMode")
-        .withIntParameter("pin", 1)
-        .withIntParameter("mode", INPUT_PULLUP);
+        .withParameter("pin", 1)
+        .withParameter("mode", INPUT_PULLUP);
 
     p_button = new Button(1);
 
@@ -32,7 +32,7 @@ TEST_GROUP(ButtonGroup)
   }
 };
 
-TEST(ButtonGroup, init)
+TEST(Button, init)
 {
   CHECK_EQUAL(true, p_button->m_use);
   CHECK_EQUAL(1, p_button->m_pin);
@@ -40,22 +40,22 @@ TEST(ButtonGroup, init)
   CHECK_EQUAL(0, p_button->m_counter);
 }
 
-TEST(ButtonGroup, isPressed)
+TEST(Button, isPressed)
 {
   mock().expectOneCall("digitalRead")
-      .withIntParameter("pin", 1)
+      .withParameter("pin", 1)
       .andReturnValue(HIGH);
   CHECK_EQUAL(false, p_button->isPressed());
 
   mock().expectOneCall("digitalRead")
-      .withIntParameter("pin", 1)
+      .withParameter("pin", 1)
       .andReturnValue(LOW);
   CHECK_EQUAL(true, p_button->isPressed());
 
   mock().checkExpectations();
 }
 
-TEST(ButtonGroup, counter)
+TEST(Button, counter)
 {
   CHECK_EQUAL(0, p_button->getCounter());
   p_button->incCounter();
@@ -66,7 +66,7 @@ TEST(ButtonGroup, counter)
   CHECK_EQUAL(0, p_button->getCounter());
 }
 
-TEST(ButtonGroup, isTimeToRun_unused)
+TEST(Button, isTimeToRun_unused)
 {
   p_button->m_use = false;
 
@@ -77,7 +77,7 @@ TEST(ButtonGroup, isTimeToRun_unused)
   mock().checkExpectations();
 }
 
-TEST(ButtonGroup, isTimeToRun_used)
+TEST(Button, isTimeToRun_used)
 {
   mock().expectOneCall("millis").andReturnValue(999u);
   CHECK_EQUAL(false, p_button->isTimeToRun());

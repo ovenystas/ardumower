@@ -7,28 +7,47 @@
 
 #include "Bumper.h"
 
-void bumper_setup(const uint8_t pin, Bumper* bumper_p)
+void Bumper::check()
 {
-  bumper_p->pin = pin;
-  bumper_p->hit = false;
-  bumper_p->counter = 0;
-  pinMode(bumper_p->pin, INPUT_PULLUP);
-}
-
-void bumper_check(Bumper* bumper_p)
-{
-  if (digitalRead(bumper_p->pin) == LOW)
+  if (digitalRead(m_pin) == LOW)
   {
-    bumper_p->hit = true;
-    bumper_p->counter++;
+    m_hit = true;
+    m_counter++;
   }
 }
 
-bool bumpers_isAnyHit(const Bumpers* bumpers_p)
+void Bumpers::setup(const uint8_t* pins, Bumper* bumperArray_p, uint8_t len)
 {
-  for (uint8_t i = 0; i < bumpers_p->len; i++)
+  m_use = false;
+  m_len = len;
+  m_bumperArray_p = bumperArray_p;
+  for (uint8_t i = 0; i < len; i++)
   {
-    if (bumper_isHit(&bumpers_p->bumperArray_p[i]))
+    m_bumperArray_p[i].setup(pins[i]);
+  }
+}
+
+void Bumpers::check()
+{
+  for (uint8_t i = 0; i < m_len; i++)
+  {
+    m_bumperArray_p[i].check();
+  }
+}
+
+void Bumpers::clearHit()
+{
+  for (uint8_t i = 0; i < m_len; i++)
+  {
+    m_bumperArray_p[i].clearHit();
+  }
+}
+
+bool Bumpers::isAnyHit()
+{
+  for (uint8_t i = 0; i < m_len; i++)
+  {
+    if (m_bumperArray_p[i].isHit())
     {
       return true;
     }
