@@ -236,8 +236,8 @@ void Robot::loadSaveUserSettings(const bool readflag)
   eereadwrite(readflag, addr, m_odometer.m_ticksPerRevolution);
   eereadwrite(readflag, addr, m_odometer.m_ticksPerCm);
   eereadwrite(readflag, addr, m_odometer.m_wheelBaseCm);
-  eereadwrite(readflag, addr, m_odometer.m_encoder.left_p->swapDir);
-  eereadwrite(readflag, addr, m_odometer.m_encoder.right_p->swapDir);
+  eereadwrite(readflag, addr, m_odometer.m_encoder.left_p->m_swapDir);
+  eereadwrite(readflag, addr, m_odometer.m_encoder.right_p->m_swapDir);
   eereadwrite(readflag, addr, m_button.m_use);
   eereadwrite(readflag, addr, m_userSwitch1);
   eereadwrite(readflag, addr, m_userSwitch2);
@@ -517,9 +517,9 @@ void Robot::printSettingSerial()
   Console.print(F("wheelBaseCm : "));
   Console.println(m_odometer.m_wheelBaseCm);
   Console.print(F("LEFT.swapDir : "));
-  Console.println(m_odometer.m_encoder.left_p->swapDir);
+  Console.println(m_odometer.m_encoder.left_p->m_swapDir);
   Console.print(F("RIGHT.swapDir : "));
-  Console.println(m_odometer.m_encoder.right_p->swapDir);
+  Console.println(m_odometer.m_encoder.right_p->m_swapDir);
 
   // ----- GPS -------------------------------------------
   Console.println(F("== GPS =="));
@@ -722,7 +722,7 @@ void Robot::setMotorPWM(int pwm,
   if (m_odometer.m_use)
   {
     m_wheels.m_wheel[motor].m_motor.m_pwmCur = pwm;
-    if (abs(encoder_getWheelRpmCurr(&m_wheels.m_wheel[motor].m_encoder)) == 0)
+    if (abs(m_wheels.m_wheel[motor].m_encoder.getWheelRpmCurr()) == 0)
     {
       m_wheels.m_wheel[motor].m_motor.setZeroTimeout(
           (uint16_t)max(0, (int32_t)m_wheels.m_wheel[motor].m_motor.getZeroTimeout() -
@@ -898,7 +898,7 @@ void Robot::checkOdometerFaults()
     for (uint8_t i = LEFT; i <= RIGHT; i++)
     {
       if (m_wheels.m_wheel[i].m_motor.getPwmCur() > 100 &&
-          abs(encoder_getWheelRpmCurr(&m_wheels.m_wheel[i].m_encoder)) == 0)
+          abs(m_wheels.m_wheel[i].m_encoder.getWheelRpmCurr()) == 0)
       {
         err[i] = true;
       }
@@ -912,7 +912,7 @@ void Robot::checkOdometerFaults()
     for (uint8_t i = LEFT; i <= RIGHT; i++)
     {
       int16_t pwmCur = m_wheels.m_wheel[i].m_motor.getPwmCur();
-      int16_t wheelRpmCurr = encoder_getWheelRpmCurr(&m_wheels.m_wheel[i].m_encoder);
+      int16_t wheelRpmCurr = m_wheels.m_wheel[i].m_encoder.getWheelRpmCurr();
       if ((pwmCur > +100 && wheelRpmCurr < -3) ||
           (pwmCur < -100 && wheelRpmCurr > +3))
       {
@@ -926,7 +926,7 @@ void Robot::checkOdometerFaults()
     Console.print("Left odometer error: PWM=");
     Console.print(m_wheels.m_wheel[Wheel::LEFT].m_motor.getPwmCur());
     Console.print("\tRPM=");
-    Console.println(encoder_getWheelRpmCurr(&m_wheels.m_wheel[Wheel::LEFT].m_encoder));
+    Console.println(m_wheels.m_wheel[Wheel::LEFT].m_encoder.getWheelRpmCurr());
     incErrorCounter(ERR_ODOMETER_LEFT);
     setNextState(StateMachine::STATE_ERROR);
   }
@@ -936,7 +936,7 @@ void Robot::checkOdometerFaults()
     Console.print("Right odometer error: PWM=");
     Console.print(m_wheels.m_wheel[Wheel::RIGHT].m_motor.getPwmCur());
     Console.print("\tRPM=");
-    Console.println(encoder_getWheelRpmCurr(&m_wheels.m_wheel[Wheel::RIGHT].m_encoder));
+    Console.println(m_wheels.m_wheel[Wheel::RIGHT].m_encoder.getWheelRpmCurr());
     incErrorCounter(ERR_ODOMETER_RIGHT);
     setNextState(StateMachine::STATE_ERROR);
   }
@@ -1078,8 +1078,8 @@ void Robot::printInfo_perimeter(Stream &s)
 void Robot::printInfo_odometer(Stream &s)
 {
   Streamprint(s, "odo %4d %4d ",
-              encoder_getCounter(m_odometer.m_encoder.left_p),
-              encoder_getCounter(m_odometer.m_encoder.right_p));
+      m_odometer.m_encoder.left_p->getCounter(),
+      m_odometer.m_encoder.right_p->getCounter());
 }
 
 void Robot::printInfo_sensorValues(Stream &s)
@@ -1253,8 +1253,8 @@ void Robot::testOdometer()
   for (;;)
   {
     resetIdleTime();
-    int odoCountLeft = encoder_getCounter(m_odometer.m_encoder.left_p);
-    int odoCountRight = encoder_getCounter(m_odometer.m_encoder.right_p);
+    int odoCountLeft = m_odometer.m_encoder.left_p->getCounter();
+    int odoCountRight = m_odometer.m_encoder.right_p->getCounter();
     if (odoCountLeft != lastLeft || odoCountRight != lastRight)
     {
       Console.print(F("Press 'f' forward, 'r' reverse, 'z' reset  "));
@@ -1293,8 +1293,8 @@ void Robot::testOdometer()
 
       if (ch == 'z')
       {
-        encoder_clearCounter(m_odometer.m_encoder.left_p);
-        encoder_clearCounter(m_odometer.m_encoder.right_p);
+        m_odometer.m_encoder.left_p->clearCounter();
+        m_odometer.m_encoder.right_p->clearCounter();
       }
     }
   }
@@ -2525,8 +2525,8 @@ void Robot::checkIfStuck()
     if (m_stateMachine.isCurrentState(StateMachine::STATE_MANUAL) &&
         m_stateMachine.isCurrentState(StateMachine::STATE_REMOTE) &&
         gpsSpeed < m_stuckIfGpsSpeedBelow &&
-        encoder_getWheelRpmCurr(m_odometer.m_encoder.left_p) != 0 &&
-        encoder_getWheelRpmCurr(m_odometer.m_encoder.right_p) != 0 &&
+        m_odometer.m_encoder.left_p->getWheelRpmCurr() != 0 &&
+        m_odometer.m_encoder.right_p->getWheelRpmCurr() != 0 &&
         millis() > (m_stateMachine.getStateStartTime() + m_gpsSpeedIgnoreTime))
     {
       m_robotIsStuckCounter++;

@@ -166,10 +166,8 @@ void Mower::setup()
   m_wheels.m_wheel[Wheel::LEFT].m_motor.m_powerIgnoreTime = 2000;  // time to ignore motor power (ms)
   m_wheels.m_wheel[Wheel::LEFT].m_motor.m_zeroSettleTime = 3000;   // how long (ms) to wait for motors to settle at zero speed
   m_wheels.m_wheel[Wheel::LEFT].m_motor.m_swapDir = 0;  // inverse left motor direction?
-  encoder_setup(
-      PIN_ODOMETER_LEFT,
-      ODOMETER_SWAP_DIR_LEFT,
-      &m_wheels.m_wheel[Wheel::LEFT].m_encoder);
+  m_wheels.m_wheel[Wheel::LEFT].m_encoder.setup(
+      PIN_ODOMETER_LEFT, ODOMETER_SWAP_DIR_LEFT);
 
   // right wheel motor
   m_wheels.m_wheel[Wheel::RIGHT].m_motor.config(1000.0,   // Acceleration
@@ -192,10 +190,8 @@ void Mower::setup()
   m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_powerIgnoreTime = 2000;  // time to ignore motor power (ms)
   m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_zeroSettleTime = 3000;   // how long (ms) to wait for motors to settle at zero speed
   m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_swapDir = 0; // inverse right motor direction?
-  encoder_setup(
-      PIN_ODOMETER_RIGHT,
-      ODOMETER_SWAP_DIR_RIGHT,
-      &m_wheels.m_wheel[Wheel::RIGHT].m_encoder);
+  m_wheels.m_wheel[Wheel::RIGHT].m_encoder.setup(
+      PIN_ODOMETER_RIGHT, ODOMETER_SWAP_DIR_RIGHT);
 
   // mower motor
   m_cutter.m_motor.config(2000.0,     // Acceleration

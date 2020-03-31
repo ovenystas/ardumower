@@ -9,56 +9,32 @@
 #include <Arduino.h>
 #include <util/atomic.h>
 
-typedef struct
+class Encoder
 {
-  uint8_t pin;           // encoder pin
-  bool swapDir;          // invert encoder direction?
-  bool curState;         // current state
-  bool lastState;        // last state
-  int16_t counter;       // wheel counter
-  int16_t wheelRpmCurr;  // wheel rpm
-} Encoder;
-
-void encoder_setup(const uint8_t pin, const bool swapDir, Encoder* encoder_p);
-
-void encoder_read(Encoder* encoder_p);
-
-static inline
-int16_t encoder_getCounter(Encoder* encoder_p)
-{
-  int16_t counter;
-  ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+public:
+  Encoder() = default;
+  Encoder(uint8_t pin, bool swapDir)
   {
-    counter = encoder_p->counter;
+    setup(pin, swapDir);
   }
-  return counter;
-}
 
-static inline
-void encoder_clearCounter(Encoder* encoder_p)
-{
-  ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-  {
-    encoder_p->counter = 0;
-  }
-}
+  void setup(uint8_t pin, bool swapDir);
 
-static inline
-int16_t encoder_getWheelRpmCurr(Encoder* encoder_p)
-{
-  int16_t rpm;
-  ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-  {
-    rpm = encoder_p->wheelRpmCurr;
-  }
-  return rpm;
-}
+  void read();
 
-static inline
-void encoder_setWheelRpmCurr(int16_t wheelRpmCurr, Encoder* encoder_p)
-{
-  ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-  {
-    encoder_p->wheelRpmCurr = wheelRpmCurr;
-  }
-}
+  int16_t getCounter();
+  void clearCounter();
+
+  int16_t getWheelRpmCurr();
+  void setWheelRpmCurr(int16_t wheelRpmCurr);
+
+public:
+  bool m_swapDir { false };  // invert encoder direction?
+
+private:
+  uint8_t m_pin {};           // encoder pin
+  bool m_curState { false };  // current state
+  bool m_lastState { false }; // last state
+  int16_t m_counter {};       // wheel counter
+  int16_t m_wheelRpmCurr {};  // wheel rpm
+};

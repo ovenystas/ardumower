@@ -11,6 +11,7 @@
 class Button
 {
 public:
+  Button() = default;
   Button(uint8_t pin) : m_pin{pin}
   {
     pinMode(m_pin, INPUT_PULLUP);
@@ -46,7 +47,7 @@ public:
   bool m_use = true;
 
 private:
-  uint8_t m_pin = 0;
-  uint8_t m_counter = 0;
-  unsigned long m_lastRun = 0;
+  uint8_t m_pin {};
+  uint8_t m_counter {};
+  unsigned long m_lastRun {};
 };

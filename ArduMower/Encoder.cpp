@@ -12,34 +12,70 @@
 
 // Public functions -----------------------------------------------------------
 
-void encoder_setup(uint8_t pin, bool swapDir, Encoder* encoder_p)
+void Encoder::setup(uint8_t pin, bool swapDir)
 {
-  encoder_p->curState = LOW;
-  encoder_p->lastState = LOW;
-  encoder_p->counter = 0;
-  encoder_p->wheelRpmCurr = 0;
-  encoder_p->pin = pin;
-  encoder_p->swapDir = swapDir;
+  m_curState = LOW;
+  m_lastState = LOW;
+  m_counter = 0;
+  m_wheelRpmCurr = 0;
+  m_pin = pin;
+  m_swapDir = swapDir;
 
-  pinMode(encoder_p->pin, INPUT_PULLUP);
+  pinMode(m_pin, INPUT_PULLUP);
 }
 
-void encoder_read(Encoder* encoder_p)
+void Encoder::read()
 {
-  encoder_p->curState = digitalRead(encoder_p->pin);
+  m_curState = digitalRead(m_pin);
 
-  int16_t step = encoder_p->swapDir ? -1 : 1;
-  if (encoder_p->curState != encoder_p->lastState)
+  int16_t step = m_swapDir ? -1 : 1;
+  if (m_curState != m_lastState)
   {
-    if (encoder_p->wheelRpmCurr >= 0)
+    if (m_wheelRpmCurr >= 0)
     {
-      encoder_p->counter = (int16_t)(encoder_p->counter + step);
+      m_counter = (int16_t)(m_counter + step);
     }
     else
     {
-      encoder_p->counter = (int16_t)(encoder_p->counter - step);
+      m_counter = (int16_t)(m_counter - step);
     }
-    encoder_p->lastState = encoder_p->curState;
+    m_lastState = m_curState;
+  }
+}
+
+int16_t Encoder::getCounter()
+{
+  int16_t counter;
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+  {
+    counter = m_counter;
+  }
+  return counter;
+}
+
+void Encoder::clearCounter()
+{
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+  {
+    m_counter = 0;
+  }
+}
+
+int16_t Encoder::getWheelRpmCurr()
+{
+  int16_t rpm;
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+  {
+    rpm = m_wheelRpmCurr;
+  }
+  return rpm;
+}
+
+void Encoder::setWheelRpmCurr(int16_t wheelRpmCurr)
+{
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+  {
+    m_wheelRpmCurr = wheelRpmCurr;
   }
 }
 

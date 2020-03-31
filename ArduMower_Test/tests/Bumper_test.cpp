@@ -29,9 +29,9 @@ TEST(BumperInit, defaultInit)
 {
   p_bumper = new Bumper();
 
-  CHECK_EQUAL(0, p_bumper->m_pin);
-  CHECK_EQUAL(false, p_bumper->m_hit);
-  CHECK_EQUAL(0, p_bumper->m_counter);
+  UNSIGNED_LONGS_EQUAL(0, p_bumper->m_pin);
+  CHECK(!p_bumper->m_hit);
+  UNSIGNED_LONGS_EQUAL(0, p_bumper->m_counter);
 }
 
 TEST(BumperInit, defaultInit_setup)

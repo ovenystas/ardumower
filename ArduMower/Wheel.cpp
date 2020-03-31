@@ -15,7 +15,7 @@ enum dirE
 
 void Wheel::control(int8_t speed)
 {
-  int16_t rpmCurr = encoder_getWheelRpmCurr(&m_encoder);
+  int16_t rpmCurr = m_encoder.getWheelRpmCurr();
   m_motor.setRpmMeas(rpmCurr);
 
   int16_t rpmNew = (m_motor.m_rpmMax * speed) / 100;
