@@ -155,6 +155,8 @@ public:
     ACT_BATTERY_SW,
   } actuatorE;
 
+  enum class BeepType { LONG, SHORT };
+
   String m_name;
   bool m_developerActive;
 
@@ -317,7 +319,7 @@ public:
   virtual void deleteRobotStats();
 
   // other
-  virtual void beep(const uint8_t numberOfBeeps, const bool shortbeep = false);
+  virtual void beep(const uint8_t numberOfBeeps, BeepType beepType);
   virtual void printInfo(Stream& s);
   virtual void printInfo_perimeter(Stream& s);
   virtual void printInfo_odometer(Stream& s);
