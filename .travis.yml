@@ -13,7 +13,13 @@ jobs:
         - arduino-cli core update-index
         - arduino-cli core install arduino:avr
         - cd ardumower
-      script: arduino-cli compile --fqbn arduino:avr:mega ArduMower
+      script:
+        - >
+          arduino-cli compile
+          --fqbn arduino:avr:mega
+          --warnings all
+          --build-properties compiler.cpp.extra_flags=-Werror,compiler.c.extra_flags=-Werror
+          ArduMower
     - install:
         - cd ..
         - git clone https://github.com/cpputest/cpputest.git
@@ -22,5 +28,4 @@ jobs:
         - ./configure
         - make -j
         - cd ../ardumower/ArduMower_Test
-      compiler: gcc
       script: make -j gcov
