@@ -482,8 +482,6 @@ void Robot::printSettingSerial()
   Console.println(m_battery.m_startChargingIfBelow);
   Console.print(F("chargingTimeout : "));
   Console.println(m_battery.m_chargingTimeout);
-  Console.print(F("chgSelection : "));
-  Console.println(m_battery.m_chgSelection);
   Console.print(F("chgSenseZero : "));
   Console.println(m_battery.m_chgSenseZero);
   Console.print(F("chgFactor : "));

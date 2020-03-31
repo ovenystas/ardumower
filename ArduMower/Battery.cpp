@@ -48,10 +48,7 @@ void Battery::setup(uint8_t pinVoltage, uint8_t pinChargeVoltage,
   m_chgFactor = 39;                     // Charge current conversion factor
   m_chgSense = 185.0f;                  // Sensitivity of the charging current sensor (mV/A) (For ACS712 5A = 185)
   m_chgChange = 0;                      // Reading reversal from - to + 1 or 0
-  // sensor output console      (chgSelection = 0)
-  // settings for ACS712 5A     (chgSelection = 1 / chgSenseZero ~ 511 / chgFactor = 39 / chgSense = 185.0 / chgChange = 0 oder 1 (je nach Stromrichtung) / chgNull = 2)
-  // settings for INA169 board  (chgSelection = 2)
-  m_chgSelection = 2;                   // Sensor selection
+  // settings for ACS712 5A     (chgSenseZero ~ 511 / chgFactor = 39 / chgSense = 185.0 / chgChange = 0 oder 1 (je nach Stromrichtung) / chgNull = 2)
   m_chgNull = 2;                        // Zero crossing charge current sensor
 }
 
@@ -102,48 +99,23 @@ void Battery::read()
 //      chgCurrent = (1.0 - accel) * chgCurrent + accel * current;
 //    }
 
-  // Sensor Wert Ausgabe auf Seriellen Monitor oder HandyApp
-  if (m_chgSelection == 0)
-  {
-    m_chgCurrent = current;
-  }
-
   // Berechnung für Ladestromsensor ACS712 5A
-  if (m_chgSelection == 1)
+  float chgAMP = current;              //Sensorwert übergabe vom Ladestrompin
+  float vcc = 3.30f / m_chgSenseZero * 1023.0f; // Versorgungsspannung ermitteln!  chgSenseZero=511  ->Die Genauigkeit kann erhöt werden wenn der 3.3V Pin an ein Analogen Pin eingelesen wird. Dann ist vcc = (float) 3.30 / analogRead(X) * 1023.0;
+  float asensor = chgAMP * vcc / 1023.0f;              // Messwert auslesen
+  asensor = asensor - (vcc / (float)m_chgNull); // Nulldurchgang (vcc/2) abziehen
+  m_chgSense = m_chgSense - ((5.00f - vcc) * m_chgFactor); // Korrekturfactor für Vcc!  chgFactor=39
+  float amp = asensor / m_chgSense * 1000;               // Ampere berechnen
+  if (m_chgChange == 1)
   {
-    float chgAMP = current;              //Sensorwert übergabe vom Ladestrompin
-    float vcc = 3.30f / m_chgSenseZero * 1023.0f; // Versorgungsspannung ermitteln!  chgSenseZero=511  ->Die Genauigkeit kann erhöt werden wenn der 3.3V Pin an ein Analogen Pin eingelesen wird. Dann ist vcc = (float) 3.30 / analogRead(X) * 1023.0;
-    float asensor = chgAMP * vcc / 1023.0f;              // Messwert auslesen
-    asensor = asensor - (vcc / (float)m_chgNull); // Nulldurchgang (vcc/2) abziehen
-    m_chgSense = m_chgSense - ((5.00f - vcc) * m_chgFactor); // Korrekturfactor für Vcc!  chgFactor=39
-    float amp = asensor / m_chgSense * 1000;               // Ampere berechnen
-    if (m_chgChange == 1)
-    {
-      amp = -amp;                 //Lade Strom Messwertumkehr von - nach +
-    }
-    if (amp < 0.0)
-    {
-      m_chgCurrent = 0.0;
-    }
-    else
-    {
-      m_chgCurrent = amp; // Messwertrückgabe in chgCurrent   (Wenn Messwert kleiner als 0 dann Messwert =0 anssonsten messwertau8sgabe in Ampere)
-    }
+    amp = -amp;                 //Lade Strom Messwertumkehr von - nach +
   }
-
-  // Berechnung für Ladestromsensor INA169 board
-  if (m_chgSelection == 2)
+  if (amp < 0.0)
   {
-    float chgAMP = current;
-    float asensor = (chgAMP * 5) / 1023; // umrechnen von messwert in Spannung (5V Reference)
-    float amp = asensor / (10 * 0.1f); // Ampere berechnen RL = 10k    Is = (Vout x 1k) / (RS x RL)
-    if (amp < 0.0)
-    {
-      m_chgCurrent = 0.0;
-    }
-    else
-    {
-      m_chgCurrent = amp; // Messwertrückgabe in chgCurrent   (Wenn Messwert kleiner als 0 dann Messwert =0 ansonsten Messwertaußsgabe in Ampere)
-    }
+    m_chgCurrent = 0.0;
+  }
+  else
+  {
+    m_chgCurrent = amp; // Messwertrückgabe in chgCurrent   (Wenn Messwert kleiner als 0 dann Messwert =0 anssonsten messwertau8sgabe in Ampere)
   }
 }

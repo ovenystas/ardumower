@@ -78,5 +78,6 @@ uint8_t* portOutputRegister(uint8_t pin);
 uint8_t* portInputRegister(uint8_t pin);
 
 #include "HardwareSerial.h"
+#include "pins_arduino.h"
 
 #endif /* ARDUINO_H_ */

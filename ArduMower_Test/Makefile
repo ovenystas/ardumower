@@ -28,6 +28,7 @@ CPP_PLATFORM = Gcc
 	../ArduMower \
 
 SRC_FILES = \
+	../ArduMower/Battery.cpp \
 	../ArduMower/Bumper.cpp \
 	../ArduMower/Button.cpp \
 	../ArduMower/DropSensor.cpp \

@@ -87,7 +87,7 @@ class AdcManager
     int16_t readMedian(const byte pin);
     bool isCaptureComplete(const uint8_t pin)
     {
-      return isCaptureCompleteCh(pin - A0);
+      return isCaptureCompleteCh((uint8_t)(pin - A0));
     }
 
     // statistics only
