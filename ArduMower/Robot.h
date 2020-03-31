@@ -241,7 +241,14 @@ public:
   bool m_userSwitch3 { false }; // user-defined switch 3 (default value)
 
   // --------- charging -------------------------------
-  Battery m_battery;
+  Battery m_battery
+  {
+    PIN_BATTERY_VOLTAGE,
+    PIN_CHARGE_VOLTAGE,
+    PIN_CHARGE_CURRENT,
+    PIN_CHARGE_RELAY,
+    PIN_BATTERY_SWITCH
+  };
 
   int m_stationRevTime {};    // charge station reverse time (ms)
   int m_stationRollTime {};    // charge station roll time (ms)

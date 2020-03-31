@@ -134,8 +134,7 @@ void Mower::setup()
   digitalWrite(PIN_BUZZER, 0);
 
   // Battery
-  battery_setup(PIN_BATTERY_VOLTAGE, PIN_CHARGE_VOLTAGE, PIN_CHARGE_CURRENT,
-                PIN_CHARGE_RELAY, PIN_BATTERY_SWITCH, &m_battery);
+  // Nothing to be done here
 
   // ------- wheel motors -----------------------------
   m_wheels.m_rollTimeMax = 1500;      // max. roll time (ms)

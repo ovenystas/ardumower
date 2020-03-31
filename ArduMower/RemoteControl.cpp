@@ -1142,39 +1142,39 @@ void RemoteControl::sendBatteryMenu(const bool update)
     Bluetooth.print(F("{.Battery`1000"));
   }
   Bluetooth.print(F("|j00~Battery "));
-  Bluetooth.print(battery_getVoltage(&m_robot_p->m_battery));
+  Bluetooth.print(m_robot_p->m_battery.getVoltage());
   Bluetooth.print(" V");
   Bluetooth.print(F("|j01~Monitor "));
-  sendYesNo(m_robot_p->m_battery.monitored);
+  sendYesNo(m_robot_p->m_battery.isMonitored());
   if (m_robot_p->m_developerActive)
   {
-    sendSlider("j05", F("Calibrate batFactor "), m_robot_p->m_battery.batFactor, "",
+    sendSlider("j05", F("Calibrate batFactor "), m_robot_p->m_battery.m_batFactor, "",
                0.01, 1.0);
   }
   //Console.print("batFactor=");
   //Console.println(robot->batFactor);
   sendSlider("j02", F("Go home if below Volt"),
-             m_robot_p->m_battery.batGoHomeIfBelow, "", 0.1, m_robot_p->m_battery.batFull,
-             (m_robot_p->m_battery.batFull * 0.72)); // for Sony Konion cells 4.2V * 0,72= 3.024V which is pretty safe to use
+             m_robot_p->m_battery.m_batGoHomeIfBelow, "", 0.1, m_robot_p->m_battery.m_batFull,
+             (m_robot_p->m_battery.m_batFull * 0.72)); // for Sony Konion cells 4.2V * 0,72= 3.024V which is pretty safe to use
   sendSlider("j12", F("Switch off if idle minutes"),
-             m_robot_p->m_battery.batSwitchOffIfIdle, "", 1, 300, 1);
+             m_robot_p->m_battery.m_batSwitchOffIfIdle, "", 1, 300, 1);
   sendSlider("j03", F("Switch off if below Volt"),
-             m_robot_p->m_battery.batSwitchOffIfBelow, "", 0.1, m_robot_p->m_battery.batFull,
-             (m_robot_p->m_battery.batFull * 0.72));
+             m_robot_p->m_battery.m_batSwitchOffIfBelow, "", 0.1, m_robot_p->m_battery.m_batFull,
+             (m_robot_p->m_battery.m_batFull * 0.72));
   Bluetooth.print(F("|j04~Charge "));
-  Bluetooth.print(battery_getChargeVoltage(&m_robot_p->m_battery));
+  Bluetooth.print(m_robot_p->m_battery.getChargeVoltage());
   Bluetooth.print("V ");
-  Bluetooth.print(battery_getChargeCurrent(&m_robot_p->m_battery));
+  Bluetooth.print(m_robot_p->m_battery.getChargeCurrent());
   Bluetooth.print("A");
   sendSlider("j09", F("Calibrate batChgFactor"),
-             m_robot_p->m_battery.batChgFactor, "", 0.01, 1.0);
+             m_robot_p->m_battery.m_batChgFactor, "", 0.01, 1.0);
   sendSlider("j06", F("Charge sense zero"),
-             m_robot_p->m_battery.chgSenseZero, "", 1, 600, 400);
-  sendSlider("j08", F("Charge factor"), m_robot_p->m_battery.chgFactor, "", 0.01, 80);
+             m_robot_p->m_battery.m_chgSenseZero, "", 1, 600, 400);
+  sendSlider("j08", F("Charge factor"), m_robot_p->m_battery.m_chgFactor, "", 0.01, 80);
   sendSlider("j10", F("charging starts if Voltage is below"),
-             m_robot_p->m_battery.startChargingIfBelow, "", 0.1, m_robot_p->m_battery.batFull);
+             m_robot_p->m_battery.m_startChargingIfBelow, "", 0.1, m_robot_p->m_battery.m_batFull);
   sendSlider("j11", F("Battery is fully charged if current is below"),
-             m_robot_p->m_battery.batFullCurrent, "", 0.1, m_robot_p->m_battery.batChargingCurrentMax);
+             m_robot_p->m_battery.m_batFullCurrent, "", 0.1, m_robot_p->m_battery.m_batChargingCurrentMax);
   Bluetooth.println("}");
 }
 
@@ -1182,45 +1182,45 @@ void RemoteControl::processBatteryMenu(const String pfodCmd)
 {
   if (pfodCmd == "j01")
   {
-    TOGGLE(m_robot_p->m_battery.monitored);
+    TOGGLE(m_robot_p->m_battery.m_monitored);
   }
   else if (pfodCmd.startsWith("j02"))
   {
-    processSlider(pfodCmd, m_robot_p->m_battery.batGoHomeIfBelow, 0.1);
+    processSlider(pfodCmd, m_robot_p->m_battery.m_batGoHomeIfBelow, 0.1);
     //Console.print("gohomeifbelow=");
     //Console.println(robot->batGoHomeIfBelow);
   }
   else if (pfodCmd.startsWith("j03"))
   {
-    processSlider(pfodCmd, m_robot_p->m_battery.batSwitchOffIfBelow, 0.1);
+    processSlider(pfodCmd, m_robot_p->m_battery.m_batSwitchOffIfBelow, 0.1);
   }
   else if (pfodCmd.startsWith("j05"))
   {
-    processSlider(pfodCmd, m_robot_p->m_battery.batFactor, 0.01);
+    processSlider(pfodCmd, m_robot_p->m_battery.m_batFactor, 0.01);
   }
   else if (pfodCmd.startsWith("j06"))
   {
-    processSlider(pfodCmd, m_robot_p->m_battery.chgSenseZero, 1);
+    processSlider(pfodCmd, m_robot_p->m_battery.m_chgSenseZero, 1);
   }
   else if (pfodCmd.startsWith("j08"))
   {
-    processSlider(pfodCmd, m_robot_p->m_battery.chgFactor, 0.01);
+    processSlider(pfodCmd, m_robot_p->m_battery.m_chgFactor, 0.01);
   }
   else if (pfodCmd.startsWith("j09"))
   {
-    processSlider(pfodCmd, m_robot_p->m_battery.batChgFactor, 0.01);
+    processSlider(pfodCmd, m_robot_p->m_battery.m_batChgFactor, 0.01);
   }
   else if (pfodCmd.startsWith("j10"))
   {
-    processSlider(pfodCmd, m_robot_p->m_battery.startChargingIfBelow, 0.1);
+    processSlider(pfodCmd, m_robot_p->m_battery.m_startChargingIfBelow, 0.1);
   }
   else if (pfodCmd.startsWith("j11"))
   {
-    processSlider(pfodCmd, m_robot_p->m_battery.batFullCurrent, 0.1);
+    processSlider(pfodCmd, m_robot_p->m_battery.m_batFullCurrent, 0.1);
   }
   else if (pfodCmd.startsWith("j12"))
   {
-    processSlider(pfodCmd, m_robot_p->m_battery.batSwitchOffIfIdle, 1);
+    processSlider(pfodCmd, m_robot_p->m_battery.m_batSwitchOffIfIdle, 1);
   }
   sendBatteryMenu(true);
 }
@@ -2043,13 +2043,13 @@ void RemoteControl::run()
       m_nextPlotTime = curMillis + 60000;
       Bluetooth.print(curMillis / 60000);
       Bluetooth.print(",");
-      Bluetooth.print(battery_getVoltage(&m_robot_p->m_battery));
+      Bluetooth.print(m_robot_p->m_battery.getVoltage());
       Bluetooth.print(",");
-      Bluetooth.print(battery_getChargeVoltage(&m_robot_p->m_battery));
+      Bluetooth.print(m_robot_p->m_battery.getChargeVoltage());
       Bluetooth.print(",");
-      Bluetooth.print(battery_getChargeCurrent(&m_robot_p->m_battery));
+      Bluetooth.print(m_robot_p->m_battery.getChargeCurrent());
       Bluetooth.print(",");
-      Bluetooth.println(battery_getCapacity(&m_robot_p->m_battery));
+      Bluetooth.println(m_robot_p->m_battery.getCapacity());
     }
   }
   else if (m_pfodState == PFOD_PLOT_ODO2D)
