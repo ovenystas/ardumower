@@ -77,26 +77,24 @@ public:
 
 public:
   // --------- configuration ---------------------------------
-  bool m_monitored { false };                // Monitor battery and charge voltage?
-  float m_batGoHomeIfBelow {};            // Drive home voltage (Volt)
-  float m_batSwitchOffIfBelow {};         // Switch off if below voltage (Volt)
-  int m_batSwitchOffIfIdle {};               // Switch off battery if idle for x minutes
-  float m_batFactor {};                  // Battery conversion factor
-  float m_batChgFactor {};               // Battery conversion factor
-  float m_batFull {};                     // Battery reference Voltage (fully charged)
-  float m_batChargingCurrentMax {};        // Maximum current your charger can deliver
-  float m_batFullCurrent {};               // Current flowing when battery is fully charged
-  float m_startChargingIfBelow {};        // Start charging if battery Voltage is below
-  float m_chgSenseZero {};                 // Charge current sense zero point //TODO: autocalibrate?
-  float m_chgFactor {};                     // Charge current conversion factor
-  unsigned long m_chargingTimeout {}; // Safety timer for charging (ms) 12600000 = 3.5hrs
-  float m_chgSense {};                   // Sensitivity of the charging current sensor (mV/A) (For ACS712 5A = 185)
-  byte m_chgChange {};                       // Reading reversal from - to + 1 or 0
-  // sensor output console      (chgSelection = 0)
-  // settings for ACS712 5A     (chgSelection = 1 / chgSenseZero ~ 511 / chgFactor = 39 / chgSense = 185.0 / chgChange = 0 oder 1 (je nach Stromrichtung) / chgNull = 2)
-  // settings for INA169 board  (chgSelection = 2)
-  byte m_chgSelection {};                    // Senor selection
-  int m_chgNull {};                          // Zero crossing charge current sensor
+  bool m_monitored { false };                   // Monitor battery and charge voltage?
+  float m_batGoHomeIfBelow { 11.8f };           // Drive home voltage (Volt)
+  float m_batSwitchOffIfBelow { 10.8f };        // Switch off if below voltage (Volt)
+  int m_batSwitchOffIfIdle { 1 };               // Switch off battery if idle for x minutes
+  float m_batFactor { 0.495f };                 // Battery conversion factor
+  float m_batChgFactor { 0.495f };              // Battery conversion factor
+  float m_batFull { 14.7f };                    // Battery reference Voltage (fully charged)
+  float m_batChargingCurrentMax { 1.6f };       // Maximum current the charger can deliver
+  float m_batFullCurrent { 0.3f };              // Current flowing when battery is fully charged
+  float m_startChargingIfBelow { 13.5f };       // Start charging if battery Voltage is below
+  float m_chgSenseZero { 511 };                 // Charge current sense zero point //TODO: autocalibrate?
+  float m_chgFactor { 39 };                     // Charge current conversion factor
+  unsigned long m_chargingTimeout { 12600000 }; // Safety timer for charging (ms) 12600000 = 3.5hrs
+  float m_chgSense { 185.0f };                  // Sensitivity of the charging current sensor (mV/A) (For ACS712 5A = 185)
+  byte m_chgChange { 0 };                       // Reading reversal from - to + 1 or 0
+  int m_chgNull { 2 };                          // Zero crossing charge current sensor
+
+  // settings for ACS712 5A     (chgSenseZero ~ 511 / chgFactor = 39 / chgSense = 185.0 / chgChange = 0 oder 1 (je nach Stromrichtung) / chgNull = 2)
 
 private:
     // --------- pins ---------------------------------
