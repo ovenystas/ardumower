@@ -73,13 +73,9 @@ TEST_GROUP(Bumper)
 
   void setup()
   {
-    mock().expectOneCall("pinMode")
-        .withParameter("pin", 1)
-        .withParameter("mode", INPUT_PULLUP);
-
+    mock().disable();
     bumper_p = new Bumper(1);
-
-    mock().checkExpectations();
+    mock().enable();
   }
 
   void teardown()

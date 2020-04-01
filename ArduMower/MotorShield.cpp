@@ -69,7 +69,7 @@ void MotorShield::control(void)
   if (m_regulate)
   {
     // Use PID regulator.
-    float y = pid_compute(m_rpmMeas, &m_pid);
+    float y = m_pid.compute(m_rpmMeas);
     pwmNew = (int)(round(y));
   }
   else

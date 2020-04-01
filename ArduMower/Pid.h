@@ -28,27 +28,58 @@
  digital PID controller
  */
 
-typedef struct Pid_settingsT
+struct Pid_settingsT
 {
   float Kp;         // proportional control
   float Ki;         // integral control
   float Kd;         // differential control
-} Pid_settings_t;
+};
 
-typedef struct Pid
+class Pid
 {
-  Pid_settings_t settings;
-  float setPoint;
-  float yMin;
-  float yMax;
-  float maxOutput;
-  float errorOld;
-  float errorSum;
-  unsigned long lastControlTime;
-} Pid;
+public:
+  Pid() = default;
+  Pid(float Kp, float Ki, float Kd, float yMin, float yMax, float maxOutput)
+  {
+    setup(Kp, Ki, Kd, yMin, yMax, maxOutput);
+  }
+  void setup(float Kp, float Ki, float Kd, float yMin, float yMax,
+      float maxOutput);
 
-void pid_setup(float Kp, float Ki, float Kd,
-               float yMin, float yMax, float maxOutput,
-               Pid* pid_p);
+  float compute(float processValue);
 
-float pid_compute(float processValue, Pid* pid_p);
+  float getSetPoint()
+  {
+    return m_setPoint;
+  }
+
+  void setSetPoint(float setPoint)
+  {
+    m_setPoint = setPoint;
+  }
+
+  Pid_settingsT* getSettings()
+  {
+    return &m_settings;
+  }
+
+  void setSettings(Pid_settingsT* settings_p)
+  {
+    m_settings = *settings_p;
+  }
+
+  float getErrorOld()
+  {
+    return m_errorOld;
+  }
+
+private:
+  Pid_settingsT m_settings {};
+  float m_setPoint {};
+  float m_yMin {};
+  float m_yMax {};
+  float m_maxOutput {};
+  float m_errorOld {};
+  float m_errorSum {};
+  unsigned long m_lastControlTime {};
+};

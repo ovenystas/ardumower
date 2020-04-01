@@ -148,9 +148,10 @@ void RemoteControl::sendPIDSlider(const String cmd, const String title,
                                   const Pid &pid, const double scale,
                                   const float maxvalue)
 {
-  sendSlider(cmd + "p", title + " P", pid.settings.Kp, "", scale, maxvalue);
-  sendSlider(cmd + "i", title + " I", pid.settings.Ki, "", scale, maxvalue);
-  sendSlider(cmd + "d", title + " D", pid.settings.Kd, "", scale, maxvalue);
+  Pid_settingsT pidSettings = *pid.getSettings();
+  sendSlider(cmd + "p", title + " P", pidSettings.Kp, "", scale, maxvalue);
+  sendSlider(cmd + "i", title + " I", pidSettings.Ki, "", scale, maxvalue);
+  sendSlider(cmd + "d", title + " D", pidSettings.Kd, "", scale, maxvalue);
 }
 
 void RemoteControl::processPIDSlider(const String result, const String cmd,
@@ -163,29 +164,31 @@ void RemoteControl::processPIDSlider(const String result, const String cmd,
   String s = result.substring(idx + 1);
   //Console.println(tmp);
   float v = stringToFloat(s);
+
+  Pid_settingsT pidSettings = *pid.getSettings();
+  float* ptr = nullptr;
+
   if (m_pfodCmd.startsWith(cmd + "p"))
   {
-    pid.settings.Kp = v * scale;
-    if (pid.settings.Kp < scale)
-    {
-      pid.settings.Kp = 0.0;
-    }
+    ptr = &pidSettings.Kp;
   }
   else if (m_pfodCmd.startsWith(cmd + "i"))
   {
-    pid.settings.Ki = v * scale;
-    if (pid.settings.Ki < scale)
-    {
-      pid.settings.Ki = 0.0;
-    }
+    ptr = &pidSettings.Ki;
   }
   else if (m_pfodCmd.startsWith(cmd + "d"))
   {
-    pid.settings.Kd = v * scale;
-    if (pid.settings.Kd < scale)
+    ptr = &pidSettings.Kd;
+  }
+
+  if (ptr)
+  {
+    *ptr = v * scale;
+    if (*ptr < scale)
     {
-      pid.settings.Kd = 0.0;
+      *ptr = 0.0;
     }
+    pid.setSettings(&pidSettings);
   }
 }
 
@@ -2237,18 +2240,18 @@ void RemoteControl::run()
       Bluetooth.print(m_robot_p->m_odometer.m_encoder.right_p->getWheelRpmCurr());
       Bluetooth.print(",");
       //      Bluetooth.print(robot->motorLeftSpeedRpmSet);
-      Bluetooth.print(m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pid.setPoint);
+      Bluetooth.print(m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pid.getSetPoint());
       Bluetooth.print(",");
       //      Bluetooth.print(robot->motorRightSpeedRpmSet);
-      Bluetooth.print(m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pid.setPoint);
+      Bluetooth.print(m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pid.getSetPoint());
       Bluetooth.print(",");
       Bluetooth.print(m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.getPwmCur());
       Bluetooth.print(",");
       Bluetooth.print(m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor.getPwmCur());
       Bluetooth.print(",");
-      Bluetooth.print(m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pid.errorOld);
+      Bluetooth.print(m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pid.getErrorOld());
       Bluetooth.print(",");
-      Bluetooth.println(m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pid.errorOld);
+      Bluetooth.println(m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pid.getErrorOld());
     }
   }
 }

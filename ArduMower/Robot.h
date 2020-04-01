@@ -379,7 +379,8 @@ protected:
   virtual int rcValue(const int ppmTime);
   virtual void loadErrorCounters();
   virtual void saveErrorCounters();
-  virtual void loadSaveUserSettings(const bool readflag);
+  virtual void loadSaveUserSettings(bool readflag);
+  virtual void loadSavePidSettings(bool readflag, int& addr, Pid& pid);
   virtual void loadUserSettings();
   virtual void checkErrorCounter();
   virtual void printSettingSerial();
