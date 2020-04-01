@@ -233,9 +233,8 @@ void Mower::setup()
   {
       PIN_DROP_LEFT, PIN_DROP_RIGHT
   };
-  dropSensors_setup(
-      dropSensorPins, DROPSENSOR_NO, m_dropSensorArray,
-      &m_dropSensors, DROPSENSORS_NUM);
+  m_dropSensors.setup(dropSensorPins,
+      DropSensor_Contact::NO, m_dropSensorArray, DROPSENSORS_NUM);
 
   // sonar
   m_sonars.use = true;
