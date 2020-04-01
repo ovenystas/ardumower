@@ -1,4 +1,5 @@
 # Ardumower
+[![Build Status](https://travis-ci.org/ovenystas/ardumower.svg?branch=master)](https://travis-ci.org/ovenystas/ardumower)
 
 ## Download
 https://github.com/Ardumower/ardumower/releases
