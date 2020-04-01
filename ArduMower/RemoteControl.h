@@ -84,7 +84,7 @@ private:
   void sendOnOff(const bool value);
 
   // PID slider
-  void sendPIDSlider(const String cmd, const String title, const Pid& pid,
+  void sendPIDSlider(const String cmd, const String title, Pid& pid,
       const double scale, const float maxvalue);
   void processPIDSlider(const String result, const String cmd, Pid& pid,
       const double scale, const float maxvalue);

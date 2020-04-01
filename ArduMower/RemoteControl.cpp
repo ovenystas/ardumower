@@ -145,17 +145,17 @@ void RemoteControl::sendSlider(const String cmd, const String title,
 }
 
 void RemoteControl::sendPIDSlider(const String cmd, const String title,
-                                  const Pid &pid, const double scale,
+                                  Pid& pid, const double scale,
                                   const float maxvalue)
 {
-  Pid_settingsT pidSettings = *pid.getSettings();
-  sendSlider(cmd + "p", title + " P", pidSettings.Kp, "", scale, maxvalue);
-  sendSlider(cmd + "i", title + " I", pidSettings.Ki, "", scale, maxvalue);
-  sendSlider(cmd + "d", title + " D", pidSettings.Kd, "", scale, maxvalue);
+  const Pid_settingsT* pidSettings_p = pid.getSettings();
+  sendSlider(cmd + "p", title + " P", pidSettings_p->Kp, "", scale, maxvalue);
+  sendSlider(cmd + "i", title + " I", pidSettings_p->Ki, "", scale, maxvalue);
+  sendSlider(cmd + "d", title + " D", pidSettings_p->Kd, "", scale, maxvalue);
 }
 
 void RemoteControl::processPIDSlider(const String result, const String cmd,
-                                     Pid &pid, const double scale,
+                                     Pid& pid, const double scale,
                                      const float maxvalue)
 {
   (void)maxvalue; //FIXME: Warning unused parameter
@@ -165,20 +165,20 @@ void RemoteControl::processPIDSlider(const String result, const String cmd,
   //Console.println(tmp);
   float v = stringToFloat(s);
 
-  Pid_settingsT pidSettings = *pid.getSettings();
+  Pid_settingsT* pidSettings_p = pid.getSettings();
   float* ptr = nullptr;
 
   if (m_pfodCmd.startsWith(cmd + "p"))
   {
-    ptr = &pidSettings.Kp;
+    ptr = &pidSettings_p->Kp;
   }
   else if (m_pfodCmd.startsWith(cmd + "i"))
   {
-    ptr = &pidSettings.Ki;
+    ptr = &pidSettings_p->Ki;
   }
   else if (m_pfodCmd.startsWith(cmd + "d"))
   {
-    ptr = &pidSettings.Kd;
+    ptr = &pidSettings_p->Kd;
   }
 
   if (ptr)
@@ -188,7 +188,6 @@ void RemoteControl::processPIDSlider(const String result, const String cmd,
     {
       *ptr = 0.0;
     }
-    pid.setSettings(&pidSettings);
   }
 }
 
