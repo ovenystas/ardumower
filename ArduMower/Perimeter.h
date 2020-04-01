@@ -35,7 +35,6 @@
 #pragma once
 
 #include <Arduino.h>
-
 #include "Pid.h"
 
 typedef enum
@@ -45,89 +44,101 @@ typedef enum
   PERIMETER_END
 } perimeterE;
 
-typedef struct
+class Perimeter
 {
-  Pid pid;             // perimeter PID controller
-  unsigned int timedOutIfBelowSmag { 300 };
-  unsigned int timeOutSecIfNotInside { 8 };
+public:
+  Perimeter() = default;
+  Perimeter(uint8_t idxPin)
+  {
+    setup(idxPin);
+  }
+
+  // set ADC pins
+  void setup(const uint8_t idxPin);
+
+  // get perimeter magnitude
+  int16_t calcMagnitude();
+
+  int16_t getMagnitude()
+  {
+    return m_mag;
+  }
+
+  int16_t getSmoothMagnitude()
+  {
+    return (int16_t)m_smoothMag;
+  }
+
+  // inside perimeter (true) or outside (false)?
+  // perimeter signal timed out? (e.g. due to broken wire)
+  bool signalTimedOut();
+
+  float getFilterQuality()
+  {
+    return m_filterQuality;
+  }
+
+  bool isInside()
+  {
+    return m_inside;
+  }
+
+  void printInfo(Stream &s);
+
+  void calcStatistics(const int8_t* samples_p);
+
+  void matchedFilter();
+
+  int16_t corrFilter(
+      const int8_t* H_p,
+      const uint8_t subsample,
+      const uint8_t M,
+      const uint8_t Hsum,
+      const int8_t* ip_p,
+      const uint8_t nPts,
+      float &quality,
+      bool print);
+
+public:
+  Pid m_pid;             // perimeter PID controller
+
+  unsigned int m_timedOutIfBelowSmag { 300 };
+  unsigned int m_timeOutSecIfNotInside { 8 };
   // use differential perimeter signal as input for the matched filter?
-  bool useDifferentialPerimeterSignal { true };
+  bool m_useDifferentialPerimeterSignal { true };
   // swap coil polarity?
-  bool swapCoilPolarity { false };
+  bool m_swapCoilPolarity { false };
 
-  uint32_t lastInsideTime;
-  uint8_t idxPin; // channel for idx
-  int16_t mag; // perimeter magnitude per channel
-  float smoothMag;
-  float filterQuality;
-  int8_t signalMin { INT8_MAX };
-  int8_t signalMax { INT8_MIN };
-  int8_t signalAvg;
-  int8_t signalCounter;
-  uint8_t subSample;
-  bool inside { true };
+private:
+  uint32_t m_lastInsideTime {};
+  uint8_t m_idxPin {}; // channel for idx
+  int16_t m_mag {}; // perimeter magnitude per channel
+  float m_smoothMag {};
+  float m_filterQuality {};
+  int8_t m_signalMin { INT8_MAX };
+  int8_t m_signalMax { INT8_MIN };
+  int8_t m_signalAvg {};
+  int8_t m_signalCounter {};
+  uint8_t m_subSample {};
+  bool m_inside { true };
 
-  int16_t sumMaxTmp;
-  int16_t sumMinTmp;
-} Perimeter;
+  int16_t m_sumMaxTmp {};
+  int16_t m_sumMinTmp {};
+};
 
-typedef struct
+class Perimeters
 {
-  bool use { false };
-  Perimeter* perimeterArray_p;
-} Perimeters;
+public:
+  bool isUsed()
+  {
+    return m_use;
+  }
 
-// set ADC pins
-void perimeter_setup(const uint8_t idxPin, Perimeter* perimeter_p);
+  void printInfo(Stream &s);
 
-// get perimeter magnitude
-int16_t perimeter_calcMagnitude(Perimeter* perimeter_p);
+public:
+  Perimeter* m_perimeterArray_p;
+  bool m_use { false };
 
-static inline
-int16_t perimeter_getMagnitude(Perimeter* perimeter_p)
-{
-  return perimeter_p->mag;
-}
-
-static inline
-int16_t perimeter_getSmoothMagnitude(Perimeter* perimeter_p)
-{
-  return (int16_t)perimeter_p->smoothMag;
-}
-
-// inside perimeter (true) or outside (false)?
-// perimeter signal timed out? (e.g. due to broken wire)
-bool perimeter_signalTimedOut(Perimeter* perimeter_p);
-
-static inline
-float perimeter_getFilterQuality(Perimeter* perimeter_p)
-{
-  return perimeter_p->filterQuality;
-}
-
-static inline
-bool perimeter_isInside(Perimeter* perimeter_p)
-{
-  return perimeter_p->inside;
-}
-
-void perimeter_printInfo(Stream &s, Perimeter* perimeter_p);
-
-void perimeter_calcStatistics(
-    const int8_t* const samples_p,
-    Perimeter* perimeter_p);
-
-void perimeter_matchedFilter(Perimeter* perimeter_p);
-
-int16_t perimeter_corrFilter(
-    const int8_t* H_p,
-    const uint8_t subsample,
-    const uint8_t M,
-    const uint8_t Hsum,
-    const int8_t* ip_p,
-    const uint8_t nPts,
-    float &quality,
-    bool print,
-    Perimeter* perimeter_p);
-
-void perimeters_printInfo(Stream &s, Perimeters* perimeters_p);
+private:
+};

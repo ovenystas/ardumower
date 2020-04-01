@@ -49,8 +49,8 @@ Mower::Mower()
   m_perimeterOutRevTime = 2200;     // reverse time after perimeter out (ms)
   m_perimeterTrackRollTime = 1500;  // roll time during perimeter tracking
   m_perimeterTrackRevTime = 2200;   // reverse time during perimeter tracking
-  pid_setup(51.0, 12.5, 0.8, -100.0, 100.0, 100.0, &m_perimeters.perimeterArray_p[PERIMETER_LEFT].pid);  // perimeter PID controller
-  m_perimeters.perimeterArray_p[PERIMETER_LEFT].pid.setPoint = 0;
+  pid_setup(51.0, 12.5, 0.8, -100.0, 100.0, 100.0, &m_perimeters.m_perimeterArray_p[PERIMETER_LEFT].m_pid);  // perimeter PID controller
+  m_perimeters.m_perimeterArray_p[PERIMETER_LEFT].m_pid.setPoint = 0;
   //perimeters.perimeter[Perimeter::RIGHT].pid.setup(51.0, 12.5, 0.8);  // perimeter PID controller
   m_trackingPerimeterTransitionTimeOut = 2000;
   m_trackingErrorTimeOut = 10000;
@@ -217,13 +217,8 @@ void Mower::setup()
       &m_lawnSensors, LAWNSENSORS_NUM);
 
   // perimeter
-  m_perimeters.use = false;
-  perimeter_setup(
-      PIN_PERIMETER_LEFT,
-      &m_perimeters.perimeterArray_p[PERIMETER_LEFT]);
-  perimeter_setup(
-      PIN_PERIMETER_RIGHT,
-      &m_perimeters.perimeterArray_p[PERIMETER_RIGHT]);
+  m_perimeters.m_perimeterArray_p[PERIMETER_LEFT].setup(PIN_PERIMETER_LEFT);
+  m_perimeters.m_perimeterArray_p[PERIMETER_RIGHT].setup(PIN_PERIMETER_RIGHT);
 
   // button
   // Nothing to be done here
