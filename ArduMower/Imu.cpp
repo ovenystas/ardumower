@@ -25,6 +25,7 @@
 #include "drivers.h"
 #include "Imu.h"
 #include "L3G.h"
+#include "Buzzer.h"
 
 #define ADDR 600
 #define MAGIC 6
@@ -457,7 +458,6 @@ void Imu::calibrateMagnetometerStartStop(void)
     m_state = IMU_RUN;
 
     playCompletedSound();
-    noTone(m_pinBuzzer);
     delay(500);
   }
 }
@@ -513,7 +513,7 @@ void Imu::calibrateMagnetometerUpdate(void)
     if (newfound)
     {
       m_foundNewMinMax = true;
-      tone(m_pinBuzzer, 440);
+      m_buzzer_p->beep(440);
 
       Console.print("x:");
       Console.print(m_magMin.x);
@@ -530,7 +530,7 @@ void Imu::calibrateMagnetometerUpdate(void)
     }
     else
     {
-      noTone(m_pinBuzzer);
+      m_buzzer_p->beepStop();
     }
   }
 }
@@ -540,7 +540,7 @@ bool Imu::calibrateAccelerometerNextAxis(void)
 {
   const uint8_t numberOfSamples = 32;
   bool complete = false;
-  tone(m_pinBuzzer, 440);
+  m_buzzer_p->beep(440);
 
   while (Console.available())
   {
@@ -649,7 +649,6 @@ bool Imu::calibrateAccelerometerNextAxis(void)
 
     playCompletedSound();
   }
-  noTone(m_pinBuzzer);
   delay(500);
 
   return complete;
@@ -827,9 +826,9 @@ void Imu::printInfo(Stream &s)
               m_ypr.yaw >= 0.0 ? "+" : "-", abs((int)m_ypr.yaw), abs((int)(m_ypr.yaw * 100) - ((int)m_ypr.yaw * 100)));
 }
 
-bool Imu::init(int aPinBuzzer)
+bool Imu::init(Buzzer* buzzer_p)
 {
-  m_pinBuzzer = aPinBuzzer;
+  m_buzzer_p = buzzer_p;
   loadCalibrationData();
   printCalibrationData();
   if (!initGyroscope())
@@ -871,10 +870,11 @@ void Imu::read(void)
 
 void Imu::playCompletedSound(void)
 {
-  tone(m_pinBuzzer, 600);
-  delay(200);
-  tone(m_pinBuzzer, 880);
-  delay(200);
-  tone(m_pinBuzzer, 1320);
-  delay(200);
+  BeepData data[] =
+  {
+      { 600, 200 },
+      { 880, 200 },
+      { 1320, 200 },
+  };
+  m_buzzer_p->beep(data, sizeof(data) / sizeof(data[0]));
 }

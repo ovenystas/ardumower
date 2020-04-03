@@ -33,6 +33,7 @@
 #include "Battery.h"
 #include "Bumper.h"
 #include "Button.h"
+#include "Buzzer.h"
 #include "Cutter.h"
 #include "drivers.h"
 #include "DropSensor.h"
@@ -146,7 +147,6 @@ public:
   // actuators
   typedef enum actuatorE
   {
-    ACT_BUZZER,
     ACT_LED,
     ACT_USER_SW1,
     ACT_USER_SW2,
@@ -154,8 +154,6 @@ public:
     ACT_RTC,
     ACT_BATTERY_SW,
   } actuatorE;
-
-  enum class BeepType { LONG, SHORT };
 
   String m_name;
   bool m_developerActive;
@@ -193,13 +191,16 @@ public:
 
   // --------- bumper state ---------------------------
   // bumper state (true = pressed)
-  const uint8_t bumperPins[BUMPERS_NUM] = {PIN_BUMBER_LEFT, PIN_BUMBER_RIGHT};
+  const uint8_t bumperPins[BUMPERS_NUM] = { PIN_BUMBER_LEFT, PIN_BUMBER_RIGHT };
   Bumper m_bumperArray[BUMPERS_NUM];
   Bumpers m_bumpers { bumperPins, m_bumperArray, BUMPERS_NUM };
 
   // --------- drop state ---------------------------
   DropSensor m_dropSensorArray[DROPSENSORS_NUM];
   DropSensors m_dropSensors;
+
+  // --------- Buzzer ---------------------------
+  Buzzer m_buzzer { PIN_BUZZER , true };
 
   // ------- IMU state --------------------------------
   Imu m_imu;
@@ -319,7 +320,6 @@ public:
   virtual void deleteRobotStats();
 
   // other
-  virtual void beep(const uint8_t numberOfBeeps, BeepType beepType);
   virtual void printInfo(Stream& s);
   virtual void printInfo_perimeter(Stream& s);
   virtual void printInfo_odometer(Stream& s);

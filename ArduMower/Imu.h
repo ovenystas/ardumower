@@ -35,6 +35,7 @@
 #include "Pid.h"
 #include "L3G.h"
 #include "LSM303.h"
+#include "Buzzer.h"
 
 // IMU state
 enum
@@ -89,7 +90,7 @@ public:
     END
   };
 
-  bool init(int aPinBuzzer);
+  bool init(Buzzer* buzzer_p);
   void update(void);
   int getCallCounter(void);
   int getErrorCounter(void);
@@ -201,7 +202,7 @@ private:
   unsigned int m_timeBetweenControl { 100 }; // 10 Hz
 
   bool m_foundNewMinMax { false };
-  int m_pinBuzzer {};
+  Buzzer* m_buzzer_p;
   int m_callCounter {};
   int m_errorCounter {};
   bool m_hardwareInitialized { false };

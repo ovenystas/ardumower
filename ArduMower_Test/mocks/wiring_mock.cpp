@@ -27,3 +27,9 @@ void delayMicroseconds(uint16_t us)
   mock().actualCall("delayMicroseconds")
       .withParameter("us", us);
 }
+
+void delay(uint32_t ms)
+{
+  mock().actualCall("delay")
+      .withParameter("ms", ms);
+}

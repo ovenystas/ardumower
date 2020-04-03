@@ -130,10 +130,6 @@ void Mower::setup()
   // LED
   pinMode(PIN_LED, OUTPUT);
 
-  // Buzzer
-  pinMode(PIN_BUZZER, OUTPUT);
-  digitalWrite(PIN_BUZZER, 0);
-
   // Battery
   // Nothing to be done here
 
@@ -312,7 +308,7 @@ void Mower::setup()
   // ADC
   ADCMan.init();
 
-  m_imu.init(PIN_BUZZER);
+  m_imu.init(&m_buzzer);
   m_gps.init();
 
   Robot::setup();
@@ -339,17 +335,6 @@ void Mower::setActuator(Robot::actuatorE type, int value)
 {
   switch (type)
   {
-    case ACT_BUZZER:
-      if (value)
-      {
-        tone(PIN_BUZZER, value);
-      }
-      else
-      {
-        noTone(PIN_BUZZER);
-      }
-      break;
-
     case ACT_LED:
       digitalWrite(PIN_LED, value);
       break;

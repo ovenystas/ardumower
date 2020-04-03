@@ -17,4 +17,17 @@
 		<nature>org.eclipse.cdt.core.ccnature</nature>
 		<nature>org.eclipse.cdt.arduino.core.arduinoNature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>arduino_core</name>
+			<type>2</type>
+			<location>/home/ove/.arduinocdt/packages/arduino/hardware/avr/1.8.2/cores/arduino</location>
+		</link>
+	</linkedResources>
+	<variableList>
+		<variable>
+			<name>USER_HOME</name>
+			<value>file:/home/ove</value>
+		</variable>
+	</variableList>
 </projectDescription>

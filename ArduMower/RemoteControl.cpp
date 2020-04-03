@@ -2397,7 +2397,7 @@ void RemoteControl::parsePfodCmd()
   {
     // ADC calibration
     ADCMan.calibrate();
-    m_robot_p->beep(2, Robot::BeepType::LONG);
+    m_robot_p->m_buzzer.beepLong(2);
   }
   else if (m_pfodCmd == "y11")
   {

@@ -969,31 +969,6 @@ void Robot::resetIdleTime()
   m_idleTimeSec = 0;
 }
 
-void Robot::beep(const uint8_t numberOfBeeps, BeepType beepType)
-{
-  uint16_t delayTime1;
-  uint16_t delayTime2;
-
-  if (beepType == BeepType::SHORT)
-  {
-    delayTime1 = 50;
-    delayTime2 = 250;
-  }
-  else
-  {
-    delayTime1 = 500;
-    delayTime2 = 500;
-  }
-
-  for (uint8_t i = 0; i < numberOfBeeps; i++)
-  {
-    setActuator(ACT_BUZZER, 4200);
-    delay(delayTime1);
-    setActuator(ACT_BUZZER, 0);
-    delay(delayTime2);
-  }
-}
-
 void Robot::setUserSwitches()
 {
   setActuator(ACT_USER_SW1, m_userSwitch1);
@@ -1033,7 +1008,7 @@ void Robot::setup()
 
   delay(2000);
   m_stateMachine.init();
-  beep(1, Robot::BeepType::LONG);
+  m_buzzer.beepLong(1);
 
   Console.println(F("START"));
   Console.print(F("Ardumower "));
@@ -1556,7 +1531,7 @@ void Robot::checkButton()
     if (buttonPressed)
     {
       Console.println(F("Button is pressed"));
-      beep(1, Robot::BeepType::LONG);
+      m_buzzer.beepLong(1);
       m_button.incCounter();
       resetIdleTime();
     }
@@ -1926,7 +1901,7 @@ void Robot::setNextState(StateMachine::stateE stateNew, bool dir)
     m_speed = 50;
     m_steer = 0;
     m_battery.setChargeRelay(OFF);
-    //beep(6, Robot::BeepType::LONG);
+    //m_buzzer.beepLong(6);
   }
   else if (stateNew != StateMachine::STATE_REMOTE)
   {
@@ -1954,7 +1929,7 @@ void Robot::checkBattery()
     {
       Console.println(F("Triggered batSwitchOffIfBelow"));
       incErrorCounter(ERR_BATTERY);
-      beep(2, Robot::BeepType::SHORT);
+      m_buzzer.beepShort(2);
       setNextState(StateMachine::STATE_OFF);
     }
     else if (m_battery.getVoltage() < m_battery.m_batGoHomeIfBelow &&
@@ -1968,7 +1943,7 @@ void Robot::checkBattery()
              m_perimeters.m_use)
     {
       Console.println(F("Triggered batGoHomeIfBelow"));
-      beep(2, Robot::BeepType::SHORT);
+      m_buzzer.beepShort(2);
       setNextState(StateMachine::STATE_PERI_FIND);
     }
   }
@@ -1984,7 +1959,7 @@ void Robot::checkBattery()
       if (m_idleTimeSec > m_battery.m_batSwitchOffIfIdle * 60)
       {
         Console.println(F("Triggered batSwitchOffIfIdle"));
-        beep(1, Robot::BeepType::SHORT);
+        m_buzzer.beepShort(1);
         saveErrorCounters();
         saveRobotStats();
         m_idleTimeSec = BATTERY_SW_OFF; // flag to remember that battery is switched off
@@ -2229,7 +2204,7 @@ void Robot::checkWheelMotorPower(Wheel::wheelE side)
 
   if (m_wheels.m_wheel[side].m_motor.isOverpowered() && hasPassedPowerIgnoreTime)
   {
-    //beep(1, Robot::BeepType::LONG);
+    //m_buzzer.beepLong(1);
     m_wheels.m_wheel[side].m_motor.incOverloadCounter();
     setMotorPWMs(0, 0);
     // TODO: wheels.stop();
@@ -2642,7 +2617,7 @@ void Robot::runStateMachine()
       {
         if (m_battery.getChargeVoltage() > 5.0 && m_battery.getVoltage() > 8)
         {
-          beep(2, Robot::BeepType::SHORT);
+          m_buzzer.beepShort(2);
           setNextState(StateMachine::STATE_STATION);
         }
       }
@@ -3059,7 +3034,7 @@ void Robot::tasks_300ms()
   }
   if (m_stateMachine.isCurrentState(StateMachine::STATE_ERROR))
   {
-    beep(1, Robot::BeepType::SHORT);
+    m_buzzer.beepShort(1);
   }
 }
 
