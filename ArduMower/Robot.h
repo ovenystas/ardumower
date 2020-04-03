@@ -40,6 +40,7 @@
 #include "Gps.h"
 #include "Imu.h"
 #include "LawnSensor.h"
+#include "Led.h"
 #include "Odometer.h"
 #include "Perimeter.h"
 #include "RainSensor.h"
@@ -120,7 +121,7 @@ enum consoleE
 
 #define BATTERY_SW_OFF -1
 
-typedef struct statsT
+struct Stats
 {
   unsigned long mowTimeMinutesTotal {};
   unsigned int mowTimeMinutesTrip {};
@@ -128,7 +129,7 @@ typedef struct statsT
   float batteryChargingCapacityTrip {};
   float batteryChargingCapacityTotal {};
   float batteryChargingCapacityAverage {};
-} statsT;
+};
 
 #define BUMPERS_NUM 2
 #define DROPSENSORS_NUM 2
@@ -147,7 +148,6 @@ public:
   // actuators
   typedef enum actuatorE
   {
-    ACT_LED,
     ACT_USER_SW1,
     ACT_USER_SW2,
     ACT_USER_SW3,
@@ -201,6 +201,9 @@ public:
 
   // --------- Buzzer ---------------------------
   Buzzer m_buzzer { PIN_BUZZER , true };
+
+  // --------- Led's ---------------------------
+  Led m_ledPerimeter { PIN_LED_PERIMETER };
 
   // ------- IMU state --------------------------------
   Imu m_imu;
@@ -262,7 +265,7 @@ public:
   byte m_errorCounterMax[ERR_ENUM_COUNT] {};
 
   // ------------robot stats---------------------------
-  statsT m_stats {};
+  Stats m_stats {};
 
   // --------------------------------------------------
   Robot();

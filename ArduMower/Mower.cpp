@@ -127,12 +127,6 @@ void Mower::setup()
   Console.println("SETUP");
   m_rc.initSerial(PFOD_BAUDRATE);
 
-  // LED
-  pinMode(PIN_LED, OUTPUT);
-
-  // Battery
-  // Nothing to be done here
-
   // ------- wheel motors -----------------------------
   m_wheels.m_rollTimeMax = 1500;      // max. roll time (ms)
   m_wheels.m_rollTimeMin = 750;       // min. roll time (ms) should be smaller than motorRollTimeMax
@@ -335,10 +329,6 @@ void Mower::setActuator(Robot::actuatorE type, int value)
 {
   switch (type)
   {
-    case ACT_LED:
-      digitalWrite(PIN_LED, value);
-      break;
-
     case ACT_USER_SW1:
       digitalWrite(PIN_USER_SWITCH_1, value);
       break;

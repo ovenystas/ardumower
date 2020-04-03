@@ -573,7 +573,7 @@ void Robot::printSettingSerial()
 
 void Robot::deleteRobotStats()
 {
-  memset(&m_stats, 0, sizeof(statsT));
+  memset(&m_stats, 0, sizeof(m_stats));
   saveRobotStats();
   Console.println(F("ALL ROBOT STATS ARE DELETED"));
 }
@@ -1643,14 +1643,7 @@ void Robot::readPerimeters()
     m_perimeterInside = inside;
   }
 
-  if (m_perimeterInside)
-  {
-    setActuator(ACT_LED, HIGH);
-  }
-  else
-  {
-    setActuator(ACT_LED, LOW);
-  }
+  m_ledPerimeter.set(m_perimeterInside);
 
   if (!m_perimeterInside && m_perimeterTriggerTime == 0)
   {

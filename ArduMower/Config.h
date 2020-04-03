@@ -37,7 +37,7 @@
 #define PIN_PERIMETER_RIGHT A3        // perimeter
 #define PIN_PERIMETER_LEFT A2
 
-#define PIN_LED 5                     // LED
+#define PIN_LED_PERIMETER 5           // LED showing perimeter state, lit=inside
 #define PIN_BUZZER 53                 // Buzzer
 #define PIN_TILT 35                   // Tilt sensor (required for TC-G158 board)
 #define PIN_BUTTON 51                 // digital ON/OFF button
