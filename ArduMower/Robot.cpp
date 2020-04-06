@@ -1965,7 +1965,8 @@ void Robot::receiveGPSTime()
   {
     Console.print(F("GPS date received: "));
     Console.println(date2str(m_datetime.date));
-    m_datetime.date.dayOfWeek = getDayOfWeek(month, day, year, 1);
+    m_datetime.date.dayOfWeek =
+        getDayOfWeek(month, day, year, CalendarSystem::Gregorian);
     m_datetime.date.day = day;
     m_datetime.date.month = month;
     m_datetime.date.year = year;

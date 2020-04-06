@@ -57,7 +57,7 @@ void StreamPrint_progmem(Print &out, PGM_P format, ...)
 }
 
 
-String verToString(const int v)
+String verToString(int v)
 {
   char buf[20] = { 0 };
 
@@ -82,7 +82,7 @@ int freeRam(void)
 
 
 // rescale to -PI..+PI
-float scalePI(const float v)
+float scalePI(float v)
 {
   float d = v;
   while (d < 0)
@@ -110,7 +110,7 @@ float scalePI(const float v)
 
 
 // computes minimum distance between x radiant (current-value) and w radiant (set-value)
-float distancePI(const float x, const float w)
+float distancePI(float x, float w)
 {
   // cases:
   // w=330 degree, x=350 degree => -20 degree
@@ -140,7 +140,7 @@ int time2minutes(const timehm_t& time)
 }
 
 
-void minutes2time(const int minutes, timehm_t& time)
+void minutes2time(int minutes, timehm_t& time)
 {
   time.hour = minutes / 60;
   time.minute = minutes % 60;
@@ -175,7 +175,7 @@ String date2str(const date_t& date)
 
 
 // ---- I2C helpers --------------------------------------------------------------
-void I2CwriteTo(const uint8_t device, const uint8_t address, const uint8_t val)
+void I2CwriteTo(uint8_t device, uint8_t address, uint8_t val)
 {
   Wire.beginTransmission(device);
   Wire.write(address);
@@ -184,27 +184,29 @@ void I2CwriteTo(const uint8_t device, const uint8_t address, const uint8_t val)
 }
 
 
-void I2CwriteTo(const uint8_t device, const uint8_t address,
-                const int num, const uint8_t buff[])
+void I2CwriteTo(uint8_t device, uint8_t address, int num, const uint8_t* buf_p)
 {
   Wire.beginTransmission(device);
   Wire.write(address);
+
   for (int i = 0; i < num; i++)
   {
-    Wire.write(buff[i]);
+    Wire.write(buf_p[i]);
   }
+
   Wire.endTransmission();
 }
 
 
-int I2CreadFrom(const uint8_t device, const uint8_t address,
-                const uint8_t num, uint8_t buff[], const int retryCount)
+int I2CreadFrom(uint8_t device, uint8_t address,
+                uint8_t num, uint8_t* buf_p, int retryCount)
 {
-  int i = 0;
+  int i;;
 
   for (int j = 0; j < retryCount + 1; j++)
   {
     i = 0;
+
     Wire.beginTransmission(device);
     Wire.write(address);
     Wire.endTransmission();
@@ -213,13 +215,15 @@ int I2CreadFrom(const uint8_t device, const uint8_t address,
 
     while (Wire.available())       // device may send less than requested (abnormal)
     {
-      buff[i] = Wire.read();       // receive a byte
+      buf_p[i] = Wire.read();       // receive a byte
       i++;
     }
+
     if (num == i)
     {
       return i;
     }
+
     if (j != retryCount)
     {
       delay(3);
@@ -304,8 +308,7 @@ bool setDS1307(const datetime_t& dt)
 
 
 // Returns the day of week (0=Sunday, 6=Saturday) for a given date
-int getDayOfWeek(int month, const int day, int year,
-                 const int CalendarSystem)
+uint8_t getDayOfWeek(uint8_t month, uint8_t day, uint16_t year, CalendarSystem calendarSystem)
 {
   // CalendarSystem = 1 for Gregorian Calendar, 0 for Julian Calendar
   if (month < 3)
@@ -313,7 +316,8 @@ int getDayOfWeek(int month, const int day, int year,
     month += 12;
     year--;
   }
-  return ((day + (2 * month) + int(6 * (month + 1) / 10) +
-           year + int(year / 4) - int(year / 100) + int(year / 400) +
-           CalendarSystem) % 7);
+
+  return (uint8_t)(((uint16_t)(day + (2 * month) + 6 * (month + 1) / 10) +
+           year + year / 4 - year / 100 + year / 400 +
+           (uint16_t)calendarSystem) % 7);
 }
