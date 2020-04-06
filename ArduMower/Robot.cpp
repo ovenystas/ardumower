@@ -41,46 +41,6 @@ const char* consoleModeNames[] =
     "sensor_counters", "sensor_values", "perimeter", "imu", "off"
 };
 
-Robot::Robot()
-{
-  m_name = "Generic";
-  m_developerActive = false;
-  m_rc.setRobot(this);
-
-  m_remoteSteer = 0;
-  m_remoteSpeed = 0;
-  m_remoteMow = 0;
-  m_remoteSwitch = 0;
-  m_remoteSteerLastTime = 0;
-  m_remoteSpeedLastTime = 0;
-  m_remoteMowLastTime = 0;
-  m_remoteSwitchLastTime = 0;
-  m_remoteSteerLastState = 0;
-  m_remoteSpeedLastState = 0;
-  m_remoteMowLastState = 0;
-  m_remoteSwitchLastState = LOW;
-
-  m_gpsLat = 0;
-  m_gpsLon = 0;
-  m_gpsX = 0;
-  m_gpsY = 0;
-  m_robotIsStuckCounter = 0;
-
-  m_imuDriveHeading = 0;
-  m_imuRollHeading = 0;
-  m_imuRollDir = LEFT;
-
-  m_perimeterMag = 0;
-  m_perimeterInside = true;
-  m_perimeterCounter = 0;
-  m_perimeterLastTransitionTime = 0;
-  m_perimeterTriggerTime = 0;
-  m_perimeterOutRevTime = 0;
-
-  m_nextTimeErrorCounterReset = 0;
-  m_nextTimeErrorBeep = 0;
-}
-
 const char *Robot::mowPatternName()
 {
   return mowPatternNames[m_mowPatternCurr];

@@ -40,50 +40,17 @@ Mower robot;
 
 Mower::Mower()
 {
-  m_name = "Ardumower";
-
   // ------ perimeter ---------------------------------
-  m_perimeterTriggerTimeout = 0;    // perimeter trigger timeout when escaping from inside (ms)
-  m_perimeterOutRollTimeMax = 2000; // roll time max after perimeter out (ms)
-  m_perimeterOutRollTimeMin = 750;  // roll time min after perimeter out (ms)
-  m_perimeterOutRevTime = 2200;     // reverse time after perimeter out (ms)
-  m_perimeterTrackRollTime = 1500;  // roll time during perimeter tracking
-  m_perimeterTrackRevTime = 2200;   // reverse time during perimeter tracking
   m_perimeters.m_perimeterArray_p[PERIMETER_LEFT].m_pid.setup(
       51.0, 12.5, 0.8, -100.0, 100.0, 100.0);  // perimeter PID controller
   m_perimeters.m_perimeterArray_p[PERIMETER_LEFT].m_pid.setSetPoint(0);
   //perimeters.perimeter[Perimeter::RIGHT].pid.setup(51.0, 12.5, 0.8);  // perimeter PID controller
-  m_trackingPerimeterTransitionTimeOut = 2000;
-  m_trackingErrorTimeOut = 10000;
-  m_trackingBlockInnerWheelWhilePerimeterStruggling = true;
 
   // ------  IMU (compass/accel/gyro) ----------------------
   m_imu.m_pid[Imu::DIR].setup(5.0, 1.0, 1.0, -100.0, 100.0, 100.0);  // direction PID controller
   m_imu.m_pid[Imu::DIR].setSetPoint(0);
   m_imu.m_pid[Imu::ROLL].setup(0.8, 21, 0, -80.0, 80.0, 80.0);    // roll PID controller
   m_imu.m_pid[Imu::ROLL].setSetPoint(0);
-
-  // ------ model R/C ------------------------------------
-  m_remoteUse = false; // use model remote control (R/C)?
-
-  // ------  charging station ---------------------------
-  m_stationRevTime = 1800;   // charge station reverse time (ms)
-  m_stationRollTime = 1000;  // charge station roll time (ms)
-  m_stationForwTime = 1500;  // charge station forward time (ms)
-  m_stationCheckTime = 1700; // charge station reverse check time (ms)
-
-  // ----- GPS -------------------------------------------
-  m_gpsUse = false;                   // use GPS?
-  m_stuckIfGpsSpeedBelow = 0.2; // if Gps speed is below given value the mower is stuck
-  m_gpsSpeedIgnoreTime = 5000;    // how long gpsSpeed is ignored when robot switches into a new STATE (in ms)
-
-  // ----- user-defined switch ---------------------------
-  m_userSwitch1 = false; // user-defined switch 1 (default value)
-  m_userSwitch2 = false; // user-defined switch 2 (default value)
-  m_userSwitch3 = false; // user-defined switch 3 (default value)
-
-  // ----- timer -----------------------------------------
-  m_timerUse = false; // use RTC and timer?
 
   // -----------configuration end-------------------------------------
 }
@@ -211,12 +178,6 @@ void Mower::setup()
   // perimeter
   m_perimeters.m_perimeterArray_p[PERIMETER_LEFT].setup(PIN_PERIMETER_LEFT);
   m_perimeters.m_perimeterArray_p[PERIMETER_RIGHT].setup(PIN_PERIMETER_RIGHT);
-
-  // button
-  // Nothing to be done here
-
-  // bumpers
-  // Nothing to be done here
 
   // drop sensor
   const uint8_t dropSensorPins[DROPSENSORS_NUM] =

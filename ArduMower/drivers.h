@@ -67,7 +67,7 @@ typedef struct ttimer_t
   bool active;
   timehm_t startTime;
   timehm_t stopTime;
-  byte daysOfWeek;
+  byte daysOfWeek; // Bit-field b7=unused, b6=Saturday, b0=Sunday
 } ttimer_t;
 
 
@@ -134,10 +134,10 @@ void StreamPrint_progmem(Print &out, PGM_P format, ...);
 String verToString(const int v);
 
 // time helpers
-void minutes2time(const int minutes, timehm_t &time);
-int time2minutes(const timehm_t time);
-String time2str(const timehm_t time);
-String date2str(const date_t date);
+void minutes2time(const int minutes, timehm_t& time);
+int time2minutes(const timehm_t& time);
+String time2str(const timehm_t& time_p);
+String date2str(const date_t& date_p);
 
 // I2C helpers
 void I2CwriteTo(const uint8_t device, const uint8_t address, const uint8_t val);

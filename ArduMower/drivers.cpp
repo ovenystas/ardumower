@@ -134,20 +134,20 @@ double distancePI(const double x, const double w)
 }
 
 
-int time2minutes(const timehm_t time)
+int time2minutes(const timehm_t& time)
 {
   return (time.hour * 60 + time.minute);
 }
 
 
-void minutes2time(const int minutes, timehm_t &time)
+void minutes2time(const int minutes, timehm_t& time)
 {
   time.hour = minutes / 60;
   time.minute = minutes % 60;
 }
 
 
-String time2str(const timehm_t time)
+String time2str(const timehm_t& time)
 {
   String s = String(time.hour / 10);
   s += (time.hour % 10);
@@ -159,7 +159,7 @@ String time2str(const timehm_t time)
 }
 
 
-String date2str(const date_t date)
+String date2str(const date_t& date)
 {
   String s = dayOfWeek[date.dayOfWeek];
   s += " ";

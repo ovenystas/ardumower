@@ -155,8 +155,8 @@ public:
     ACT_BATTERY_SW,
   } actuatorE;
 
-  String m_name;
-  bool m_developerActive;
+  String m_name { "Ardumower" };
+  bool m_developerActive { false };
 
   // --------- state machine --------------------------
   StateMachine m_stateMachine;
@@ -164,7 +164,7 @@ public:
   // --------- timer ----------------------------------
   ttimer_t m_timer[MAX_TIMERS];
   datetime_t m_datetime;
-  bool m_timerUse { false }; // use timer?
+  bool m_timerUse { false }; // Use RTC and timer?
 
   // -------- mow pattern -----------------------------
   byte m_mowPatternCurr { MOW_RANDOM };
@@ -172,15 +172,15 @@ public:
 
   // -------- gps state -------------------------------
   Gps m_gps;
-  bool m_gpsUse;       // use GPS?
-  float m_stuckIfGpsSpeedBelow;
-  int m_gpsSpeedIgnoreTime; // how long gpsSpeed is ignored when robot switches into a new STATE (in ms)
+  bool m_gpsUse { false };       // use GPS?
+  float m_stuckIfGpsSpeedBelow { 0.2 }; // if Gps speed is below given value the mower is stuck
+  int m_gpsSpeedIgnoreTime { 5000 }; // how long gpsSpeed is ignored when robot switches into a new STATE (in ms)
 
   // -------- odometer state --------------------------
   Odometer m_odometer;
 
   // -------- RC remote control state -----------------
-  bool m_remoteUse;       // use model remote control (R/C)?
+  bool m_remoteUse { false };       // use model remote control (R/C)?
 
   // --------- wheel motor state ----------------------------
   // wheel motor speed ( <0 backward, >0 forward); range -motorSpeedMaxRpm..motorSpeedMaxRpm
@@ -207,21 +207,21 @@ public:
 
   // ------- IMU state --------------------------------
   Imu m_imu;
-  float m_imuDriveHeading;     // drive heading (IMU)
-  float m_imuRollHeading;      // roll heading  (IMU)
+  float m_imuDriveHeading {};     // drive heading (IMU)
+  float m_imuRollHeading {};      // roll heading  (IMU)
 
   // ------- perimeter state --------------------------
   Perimeters m_perimeters;
   bool m_perimeterUse { false }; // use perimeter?
-  int m_perimeterOutRollTimeMax;
-  int m_perimeterOutRollTimeMin;
-  int m_perimeterOutRevTime;
-  int m_perimeterTrackRollTime; // perimeter tracking roll time (ms)
-  int m_perimeterTrackRevTime; // perimeter tracking reverse time (ms)
-  int m_perimeterTriggerTimeout;   // perimeter trigger timeout (ms)
-  int m_trackingErrorTimeOut;
-  int m_trackingPerimeterTransitionTimeOut;
-  bool m_trackingBlockInnerWheelWhilePerimeterStruggling;
+  int m_perimeterOutRollTimeMax { 2000 }; // roll time max after perimeter out (ms)
+  int m_perimeterOutRollTimeMin { 750 }; // roll time min after perimeter out (ms)
+  int m_perimeterOutRevTime { 2200 }; // reverse time after perimeter out (ms)
+  int m_perimeterTrackRollTime { 1500 }; // perimeter tracking roll time (ms)
+  int m_perimeterTrackRevTime { 2200 }; // perimeter tracking reverse time (ms)
+  int m_perimeterTriggerTimeout {};   // perimeter trigger timeout when escaping from inside (ms)
+  int m_trackingErrorTimeOut { 10000 };
+  int m_trackingPerimeterTransitionTimeOut { 2000 };
+  bool m_trackingBlockInnerWheelWhilePerimeterStruggling { true };
 
   //  --------- lawn state ----------------------------
   LawnSensor m_lawnSensorArray[LAWNSENSORS_NUM];
@@ -236,7 +236,7 @@ public:
   Sonars m_sonars;
 
   // --------- pfodApp ----------------------------------
-  RemoteControl m_rc; // pfodApp
+  RemoteControl m_rc { this }; // pfodApp
 
   // ----- other -----------------------------------------
   Button m_button { PIN_BUTTON };
@@ -256,10 +256,10 @@ public:
     PIN_BATTERY_SWITCH
   };
 
-  int m_stationRevTime {};    // charge station reverse time (ms)
-  int m_stationRollTime {};    // charge station roll time (ms)
-  int m_stationForwTime {};    // charge station forward time (ms)
-  int m_stationCheckTime {};    // charge station reverse check time (ms)
+  int m_stationRevTime { 1800 };    // charge station reverse time (ms)
+  int m_stationRollTime { 1000 };    // charge station roll time (ms)
+  int m_stationForwTime { 1500 };    // charge station forward time (ms)
+  int m_stationCheckTime { 1700 };    // charge station reverse check time (ms)
 
   // --------- error counters --------------------------
   byte m_errorCounterMax[ERR_ENUM_COUNT] {};
@@ -268,7 +268,7 @@ public:
   Stats m_stats {};
 
   // --------------------------------------------------
-  Robot();
+  Robot() {};
   virtual ~Robot() {};
 
   // robot setup
@@ -454,35 +454,35 @@ private:
   // --------- timer ------------------------------------
 
   // -------- gps state ---------------------------------
-  float m_gpsLat;
-  float m_gpsLon;
-  float m_gpsX;   // X position (m)
-  float m_gpsY;   // Y position (m)
-  int m_robotIsStuckCounter;
+  float m_gpsLat {};
+  float m_gpsLon {};
+  float m_gpsX {};   // X position (m)
+  float m_gpsY {};   // Y position (m)
+  int m_robotIsStuckCounter {};
 
   // -------- RC remote control state -------------------
-  int m_remoteSteer;  // range -100..100
-  int m_remoteSpeed;  // range -100..100
-  int m_remoteMow;    // range 0..100
-  int m_remoteSwitch; // range 0..100
-  unsigned long m_remoteSteerLastTime;
-  unsigned long m_remoteSpeedLastTime;
-  unsigned long m_remoteMowLastTime;
-  unsigned long m_remoteSwitchLastTime;
-  bool m_remoteSteerLastState;
-  bool m_remoteSpeedLastState;
-  bool m_remoteMowLastState;
-  bool m_remoteSwitchLastState;
+  int m_remoteSteer {};  // range -100..100
+  int m_remoteSpeed {};  // range -100..100
+  int m_remoteMow {};    // range 0..100
+  int m_remoteSwitch {}; // range 0..100
+  unsigned long m_remoteSteerLastTime {};
+  unsigned long m_remoteSpeedLastTime {};
+  unsigned long m_remoteMowLastTime {};
+  unsigned long m_remoteSwitchLastTime {};
+  bool m_remoteSteerLastState {};
+  bool m_remoteSpeedLastState {};
+  bool m_remoteMowLastState {};
+  bool m_remoteSwitchLastState { LOW };
 
   // ------- IMU state ----------------------------------
-  byte m_imuRollDir;
+  byte m_imuRollDir { LEFT };
 
   // ------- perimeter state ----------------------------
-  int m_perimeterMag;             // perimeter magnitude
-  bool m_perimeterInside;      // is inside perimeter?
-  unsigned long m_perimeterTriggerTime; // time to trigger perimeter transition (timeout)
-  unsigned long m_perimeterLastTransitionTime;
-  int m_perimeterCounter;         // counts perimeter transitions
+  int m_perimeterMag {};             // perimeter magnitude
+  bool m_perimeterInside { true };      // is inside perimeter?
+  unsigned long m_perimeterTriggerTime {}; // time to trigger perimeter transition (timeout)
+  unsigned long m_perimeterLastTransitionTime {};
+  int m_perimeterCounter {};         // counts perimeter transitions
 
   // --------- pfodApp ----------------------------------
 
@@ -497,9 +497,9 @@ private:
   int m_loopsPerSec {};  // main loops per second
   int m_loopsPerSecCounter {};
   byte m_consoleMode { CONSOLE_SENSOR_COUNTERS };
-  bool m_rollDir;
-  unsigned long m_nextTimeErrorCounterReset;
-  unsigned long m_nextTimeErrorBeep;
+  bool m_rollDir { LEFT };
+  unsigned long m_nextTimeErrorCounterReset {};
+  unsigned long m_nextTimeErrorBeep {};
 
   // ------------robot stats-----------------------------
   bool m_statsMowTimeTotalStart { false };

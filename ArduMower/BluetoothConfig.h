@@ -36,27 +36,30 @@
  NOTE for FBT06/MBTV4:    First you have to solder the PIO11 pin to VCC (PIN 12) which is 3.3 Volts using a thin wire.
  */
 
+enum class BluetoothType
+{
+  UNKNOWN,
+  LINVOR_HC06, // Linvor / HC06
+  HC05,        // HC05
+  FBT06_MBTV4, // ModiaTek FBT06/MBTV4
+};
+
 class BluetoothConfig
 {
 public:
-  BluetoothConfig();
-  void setParams(String name, int pin, long baudrate, bool quickBaudScan);
+  BluetoothConfig() {};
+  void setParams(String name, int pin, uint32_t baudrate, bool quickBaudScan);
 
 private:
   void setConfigs(byte* config);
   void writeBT(String s);
   void readBT();
   void writeReadBT(String s);
-  void setName(String name);
-  void setPin(int pin);
-  void setBaudrate(long rate);
+  void setName(String name, BluetoothType btType);
+  void setPin(int pin, BluetoothType btType);
+  void setBaudrate(uint32_t baudrate, BluetoothType btType);
   bool detectBaudrate(bool quickBaudScan);
-  void detectModuleType();
+  BluetoothType detectModuleType();
 
-  byte m_btTestConfig[24];
-  byte m_btConfig;
-  char m_btType;
-  char m_btData;
-  String m_btResult;
-  long m_btRate;
+  String m_btResult {};
 };
