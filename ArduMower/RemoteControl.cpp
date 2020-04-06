@@ -92,7 +92,7 @@ void RemoteControl::sendTimer(ttimer_t timer)
 }
 
 void RemoteControl::sendSlider(String cmd, String title, float value,
-    String unit, double scale, float maxvalue, float minvalue)
+    String unit, float scale, float maxvalue, float minvalue)
 {
   (void)unit; //FIXME: Remove unused parameter unit or start using it
 
@@ -134,7 +134,7 @@ void RemoteControl::sendSlider(String cmd, String title, float value,
 }
 
 void RemoteControl::sendPIDSlider(String cmd, String title, Pid& pid,
-    double scale, float maxvalue)
+    float scale, float maxvalue)
 {
   const Pid_settingsT* pidSettings_p = pid.getSettings();
   sendSlider(cmd + "p", title + " P", pidSettings_p->Kp, "", scale, maxvalue);
@@ -143,7 +143,7 @@ void RemoteControl::sendPIDSlider(String cmd, String title, Pid& pid,
 }
 
 void RemoteControl::processPIDSlider(String result, String cmd, Pid& pid,
-    double scale, float maxvalue)
+    float scale, float maxvalue)
 {
   (void)maxvalue; //FIXME: Warning unused parameter
 
@@ -179,7 +179,7 @@ void RemoteControl::processPIDSlider(String result, String cmd, Pid& pid,
 }
 
 // TODO: Make template out of processSlider()
-void RemoteControl::processSlider(String result, float& value, double scale)
+void RemoteControl::processSlider(String result, float& value, float scale)
 {
   int idx = result.indexOf('`');
   String s = result.substring(idx + 1);
@@ -187,7 +187,7 @@ void RemoteControl::processSlider(String result, float& value, double scale)
   value = v * scale;
 }
 
-void RemoteControl::processSlider(String result, long &value, double scale)
+void RemoteControl::processSlider(String result, long &value, float scale)
 {
   float v;
   processSlider(result, v, scale);
@@ -195,14 +195,14 @@ void RemoteControl::processSlider(String result, long &value, double scale)
 }
 
 void RemoteControl::processSlider(String result, unsigned long& value,
-    double scale)
+    float scale)
 {
   float v;
   processSlider(result, v, scale);
   value = v;
 }
 
-void RemoteControl::processSlider(String result, int &value, double scale)
+void RemoteControl::processSlider(String result, int &value, float scale)
 {
   float v;
   processSlider(result, v, scale);
@@ -210,21 +210,21 @@ void RemoteControl::processSlider(String result, int &value, double scale)
 }
 
 void RemoteControl::processSlider(String result, unsigned int &value,
-    double scale)
+    float scale)
 {
   float v;
   processSlider(result, v, scale);
   value = v;
 }
 
-void RemoteControl::processSlider(String result, byte &value, double scale)
+void RemoteControl::processSlider(String result, byte &value, float scale)
 {
   float v;
   processSlider(result, v, scale);
   value = v;
 }
 
-void RemoteControl::processSlider(String result, short &value, double scale)
+void RemoteControl::processSlider(String result, short &value, float scale)
 {
   float v;
   processSlider(result, v, scale);

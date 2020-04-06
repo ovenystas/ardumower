@@ -145,10 +145,10 @@ int I2CreadFrom(const uint8_t device, const uint8_t address, const uint8_t num,
                 uint8_t buff[], const int retryCount = 0);
 
 // rescale to -PI..+PI
-double scalePI(const double v);
+float scalePI(const float v);
 
 // computes minimum distance between x radiant (current-value) and w radiant (set-value)
-double distancePI(const double x, const double w);
+float distancePI(const float x, const float w);
 
 // real time drivers
 bool readDS1307(datetime_t& dt);

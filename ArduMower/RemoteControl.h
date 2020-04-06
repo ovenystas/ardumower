@@ -75,21 +75,21 @@ private:
   void sendOnOff(bool value);
 
   // PID slider
-  void sendPIDSlider(String cmd, String title, Pid& pid, double scale,
+  void sendPIDSlider(String cmd, String title, Pid& pid, float scale,
       float maxvalue);
-  void processPIDSlider(String result, String cmd, Pid& pid, double scale,
+  void processPIDSlider(String result, String cmd, Pid& pid, float scale,
       float maxvalue);
 
   // generic slider
   void sendSlider(String cmd, String title, float value, String unit,
-      double scale, float maxvalue, float minvalue = 0);
-  void processSlider(String result, float& value, double scale);
-  void processSlider(String result, long& value, double scale);
-  void processSlider(String result, unsigned long& value, double scale);
-  void processSlider(String result, int& value, double scale);
-  void processSlider(String result, unsigned int& value, double scale);
-  void processSlider(String result, byte& value, double scale);
-  void processSlider(String result, short& value, double scale);
+      float scale, float maxvalue, float minvalue = 0);
+  void processSlider(String result, float& value, float scale);
+  void processSlider(String result, long& value, float scale);
+  void processSlider(String result, unsigned long& value, float scale);
+  void processSlider(String result, int& value, float scale);
+  void processSlider(String result, unsigned int& value, float scale);
+  void processSlider(String result, byte& value, float scale);
+  void processSlider(String result, short& value, float scale);
 
   // send timer menu details
   void sendTimer(ttimer_t timer);

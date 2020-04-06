@@ -82,9 +82,9 @@ int freeRam(void)
 
 
 // rescale to -PI..+PI
-double scalePI(const double v)
+float scalePI(const float v)
 {
-  double d = v;
+  float d = v;
   while (d < 0)
   {
     d += 2 * PI;
@@ -110,7 +110,7 @@ double scalePI(const double v)
 
 
 // computes minimum distance between x radiant (current-value) and w radiant (set-value)
-double distancePI(const double x, const double w)
+float distancePI(const float x, const float w)
 {
   // cases:
   // w=330 degree, x=350 degree => -20 degree
@@ -119,7 +119,7 @@ double distancePI(const double x, const double w)
   // w=0   degree, x=190 degree => 170 degree
   // w=190 degree, x=0   degree => -170 degree
 
-  double d = scalePI(w - x);
+  float d = scalePI(w - x);
 
   if (d < -PI)
   {

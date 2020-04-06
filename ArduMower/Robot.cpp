@@ -592,7 +592,7 @@ void Robot::checkErrorCounter()
 //          left stick pos: 1000 uS
 int Robot::rcValue(const int ppmTime)
 {
-  int value = (int)((double)(ppmTime - 1500) / 3.4);
+  int value = (int)((float)(ppmTime - 1500) / 3.4);
   if (value > -5 && value < 5)
   {
     value = 0;  //  ensures exact zero position
@@ -1578,7 +1578,7 @@ void Robot::measureCutterMotorRpm()
   {
     // rpm may be updated via interrupt
     m_cutter.m_motor.setRpmMeas(
-        (int)(((double)m_cutter.m_motor.getRpmCounter() / (double)timeSinceLast)
+        (int)(((float)m_cutter.m_motor.getRpmCounter() / (float)timeSinceLast)
             * 60000.0));
     m_cutter.m_motor.clearRpmCounter();
   }
@@ -2451,7 +2451,7 @@ void Robot::checkIfStuck()
       m_gpsSpeedIgnoreTime = m_wheels.m_reverseTime - 500;
     }
     // low-pass filter
-    // double accel = 0.1;
+    // float accel = 0.1;
     // float gpsSpeed = (1.0-accel) * gpsSpeed + accel * gpsSpeedRead;
     // Console.println(gpsSpeed);
     // Console.println(robotIsStuckedCounter);
@@ -2595,7 +2595,7 @@ void Robot::runStateMachine()
       // driving forward
       if (m_mowPatternCurr == MOW_BIDIR)
       {
-        double ratio = m_wheels.m_biDirSpeedRatio1;
+        float ratio = m_wheels.m_biDirSpeedRatio1;
         if (m_stateMachine.getStateTime() > 4000)
         {
           ratio = m_wheels.m_biDirSpeedRatio2;
@@ -2605,14 +2605,14 @@ void Robot::runStateMachine()
           m_wheels.setSpeed(m_remoteSpeed);
           m_wheels.setSteer(m_remoteSteer);
           m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmSet =
-              ((double)m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet) * ratio;
+              ((float)m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet) * ratio;
         }
         else
         {
           m_wheels.setSpeed(m_remoteSpeed);
           m_wheels.setSteer(m_remoteSteer);
           m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet =
-              ((double)m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmSet) * ratio;
+              ((float)m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmSet) * ratio;
         }
       }
       checkErrorCounter();
@@ -2676,7 +2676,7 @@ void Robot::runStateMachine()
 
       if (m_mowPatternCurr == MOW_BIDIR)
       {
-        double ratio = m_wheels.m_biDirSpeedRatio1;
+        float ratio = m_wheels.m_biDirSpeedRatio1;
         if (m_stateMachine.getStateTime() > 4000)
         {
           ratio = m_wheels.m_biDirSpeedRatio2;
@@ -2684,12 +2684,12 @@ void Robot::runStateMachine()
         if (m_rollDir == RIGHT)
         {
           m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmSet =
-              ((double)m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet) * ratio;
+              ((float)m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet) * ratio;
         }
         else
         {
           m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet =
-              ((double)m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmSet) * ratio;
+              ((float)m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmSet) * ratio;
         }
         if (m_stateMachine.getStateTime() > m_wheels.m_forwardTimeMax)
         {

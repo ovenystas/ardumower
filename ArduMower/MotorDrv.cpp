@@ -9,7 +9,7 @@
 
 int16_t MotorDrv::getAverageCurrent(void)
 {
-  return (uint16_t((double)FilterEmaI16_getAverage(&m_filter) * m_scale + 0.5));
+  return (uint16_t((float)FilterEmaI16_getAverage(&m_filter) * m_scale + 0.5));
 }
 
 void MotorDrv::calcPower(float batV)

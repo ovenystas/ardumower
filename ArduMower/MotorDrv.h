@@ -30,7 +30,7 @@ class MotorDrv: public Motor
     int16_t getAverageCurrent(void);   // Get average motor current in mA
     void calcPower(float batV);
 
-    void setFilterAlpha(double alpha)
+    void setFilterAlpha(float alpha)
     {
       FilterEmaI16_setAlpha(alpha, &m_filter);
     }
@@ -40,12 +40,12 @@ class MotorDrv: public Motor
       m_channel = channel;
     }
 
-    double getScale(void) const
+    float getScale(void) const
     {
       return m_scale;
     }
 
-    void setScale(double scale)
+    void setScale(float scale)
     {
       m_scale = scale;
     }
@@ -54,7 +54,7 @@ class MotorDrv: public Motor
     // 1A measured over 0,15ohm => 1 * 0,15 * 10 = 1,5V.
     // Full-scale = 5,0 / 1,5 = 3,33A
     // Current/bit = 3,33 / 1023 = 0,00325839A/bit = 3,25839mA/bit
-    double m_scale {3.25839};  // TODO: Move to protected
+    float m_scale {3.25839};  // TODO: Move to protected
 
   protected:
     uint8_t m_channel {};

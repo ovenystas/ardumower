@@ -40,13 +40,13 @@ typedef struct
 } FilterEmaI16;
 
 static inline
-void FilterEmaI32_setAlpha(double alpha, FilterEmaI32* filter_p)
+void FilterEmaI32_setAlpha(float alpha, FilterEmaI32* filter_p)
 {
   filter_p->alpha = FILTER_EMA_I32_ALPHA(alpha);
 }
 
 static inline
-void FilterEmaI32_init(double alpha, FilterEmaI32* filter_p)
+void FilterEmaI32_init(float alpha, FilterEmaI32* filter_p)
 {
   filter_p->alpha = FILTER_EMA_I32_ALPHA(alpha);
   filter_p->average = 0;
@@ -61,13 +61,13 @@ int32_t FilterEmaI32_getAverage(const FilterEmaI32* filter_p)
 }
 
 static inline
-void FilterEmaI16_setAlpha(double alpha, FilterEmaI16* filter_p)
+void FilterEmaI16_setAlpha(float alpha, FilterEmaI16* filter_p)
 {
   filter_p->alpha = FILTER_EMA_I16_ALPHA(alpha);
 }
 
 static inline
-void FilterEmaI16_init(double alpha, FilterEmaI16* filter_p)
+void FilterEmaI16_init(float alpha, FilterEmaI16* filter_p)
 {
   filter_p->alpha = FILTER_EMA_I16_ALPHA(alpha);
   filter_p->average = 0;
