@@ -91,6 +91,9 @@ void BluetoothConfig::setName(String name, BluetoothType btType)
       writeReadBT("AT+NAME" + name + "\r\n");
       res = (m_btResult.indexOf("OK") != -1);
       break;
+
+    case BluetoothType::UNKNOWN:
+      break;
   }
 
   if (res)
@@ -127,6 +130,9 @@ void BluetoothConfig::setPin(int pin, BluetoothType btType)
     case BluetoothType::FBT06_MBTV4:
       writeReadBT("AT+PIN" + String(pin) + "\r\n");
       res = (m_btResult.indexOf("OK") != -1);
+      break;
+
+    case BluetoothType::UNKNOWN:
       break;
   }
 
@@ -220,6 +226,10 @@ void BluetoothConfig::setBaudrate(uint32_t baudrate, BluetoothType btType)
       }
       writeReadBT("AT+BAUD" + String(n) + "\r\n");
       res = (m_btResult.indexOf("OK") != -1);
+      break;
+
+
+    case BluetoothType::UNKNOWN:
       break;
   }
 
