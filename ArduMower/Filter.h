@@ -24,59 +24,66 @@
 
 #include <Arduino.h>
 
-#define FILTER_EMA_I32_ALPHA(x) ( (uint16_t)(x * UINT16_MAX) )
-#define FILTER_EMA_I16_ALPHA(x) ( (uint8_t)(x * UINT8_MAX) )
+#define FILTER_EMA_I32_ALPHA(x) ( static_cast<uint16_t>(x * UINT16_MAX) )
+#define FILTER_EMA_I16_ALPHA(x) ( static_cast<uint8_t>(x * UINT8_MAX) )
 
-typedef struct
+#define FILTER_EMA_I32_ALPHA_REVERSE(x) ( (static_cast<float>(x) / UINT16_MAX) )
+#define FILTER_EMA_I16_ALPHA_REVERSE(x) ( (static_cast<float>(x) / UINT8_MAX) )
+
+
+class FilterEmaI32
 {
-  int32_t average;
-  uint16_t alpha;
-} FilterEmaI32;
+public:
+  FilterEmaI32(float alpha) :
+    m_alpha(FILTER_EMA_I32_ALPHA(alpha)) {};
 
-typedef struct
+  void addValue(int32_t in);
+
+  int32_t getAverage()
+  {
+    return m_average;
+  }
+
+  void setAlpha(float alpha)
+  {
+    m_alpha = FILTER_EMA_I32_ALPHA(alpha);
+  }
+
+  float getAlpha()
+  {
+    return FILTER_EMA_I32_ALPHA_REVERSE(m_alpha);
+  }
+
+private:
+  int32_t m_average {};
+  uint16_t m_alpha;
+};
+
+
+class FilterEmaI16
 {
-  int16_t average;
-  uint8_t alpha;
-} FilterEmaI16;
+public:
+  FilterEmaI16(float alpha) :
+    m_alpha(FILTER_EMA_I16_ALPHA(alpha)) {};
 
-static inline
-void FilterEmaI32_setAlpha(float alpha, FilterEmaI32* filter_p)
-{
-  filter_p->alpha = FILTER_EMA_I32_ALPHA(alpha);
-}
+  void addValue(int16_t in);
 
-static inline
-void FilterEmaI32_init(float alpha, FilterEmaI32* filter_p)
-{
-  filter_p->alpha = FILTER_EMA_I32_ALPHA(alpha);
-  filter_p->average = 0;
-}
+  int16_t getAverage()
+  {
+    return m_average;
+  }
 
-void FilterEmaI32_addValue(int32_t in, FilterEmaI32* filter_p);
+  void setAlpha(float alpha)
+  {
+    m_alpha = FILTER_EMA_I16_ALPHA(alpha);
+  }
 
-static inline
-int32_t FilterEmaI32_getAverage(const FilterEmaI32* filter_p)
-{
-  return filter_p->average;
-}
+  float getAlpha()
+  {
+    return FILTER_EMA_I16_ALPHA_REVERSE(m_alpha);
+  }
 
-static inline
-void FilterEmaI16_setAlpha(float alpha, FilterEmaI16* filter_p)
-{
-  filter_p->alpha = FILTER_EMA_I16_ALPHA(alpha);
-}
-
-static inline
-void FilterEmaI16_init(float alpha, FilterEmaI16* filter_p)
-{
-  filter_p->alpha = FILTER_EMA_I16_ALPHA(alpha);
-  filter_p->average = 0;
-}
-
-void FilterEmaI16_addValue(int16_t in, FilterEmaI16* filter_p);
-
-static inline
-int16_t FilterEmaI16_getAverage(const FilterEmaI16* filter_p)
-{
-  return filter_p->average;
-}
+private:
+  int16_t m_average {};
+  uint8_t m_alpha;
+};

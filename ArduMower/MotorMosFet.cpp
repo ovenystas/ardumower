@@ -11,19 +11,19 @@
 
 //#define Console Serial
 
-void MotorMosFet::setup(void)
+void MotorMosFet::setup()
 {
   pinMode(pinPwm, OUTPUT);
   pinMode(pinSense, INPUT);
   ADCMan.setCapture(pinSense, 1, true);
 }
 
-void MotorMosFet::setSpeed(void)
+void MotorMosFet::setSpeed()
 {
   setSpeed(m_pwmCur);
 }
 
-void MotorMosFet::setSpeed(const int16_t speed)
+void MotorMosFet::setSpeed(int16_t speed)
 {
   uint8_t tmpSpeed = (uint8_t)constrain(speed, 0, m_pwmMax);
   analogWrite(pinPwm, tmpSpeed);
@@ -33,22 +33,22 @@ void MotorMosFet::setSpeed(const int16_t speed)
 //  Console.println(tmpSpeed);
 }
 
-void MotorMosFet::setSpeed(const int16_t speed, const bool brake)
+void MotorMosFet::setSpeed(int16_t speed, bool brake)
 {
   (void)brake; // No brake available
   setSpeed(speed);
 }
 
-void MotorMosFet::readCurrent(void)
+void MotorMosFet::readCurrent()
 {
   int16_t newAdcValue = ADCMan.read(pinSense);
-  FilterEmaI16_addValue(newAdcValue, &m_filter);
+  m_filter.addValue(newAdcValue);
 }
 
 // Sets motor PWM
 // - ensures that the motor is not switched to 100% too fast (acceleration)
 // - ensures that the motor voltage is not higher than pwmMax
-void MotorMosFet::control(void)
+void MotorMosFet::control()
 {
   int16_t pwmNew;
 

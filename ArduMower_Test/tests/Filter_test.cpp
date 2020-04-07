@@ -1,156 +1,184 @@
-#include "Filter.h"
-
 #include "CppUTest/TestHarness.h"
+
+// Get access to private class members in SUT
+#define private public
+#include "Filter.h"
 
 TEST_GROUP(FilterGroup32)
 {
+  FilterEmaI32* filter_p;
+
+  void setup()
+  {
+  }
+
+  void teardown()
+  {
+    if (filter_p)
+    {
+      delete filter_p;
+    }
+  }
 };
+
+TEST(FilterGroup32, setGetAlpha)
+{
+  filter_p = new FilterEmaI32(0.0);
+  DOUBLES_EQUAL(0.0, filter_p->getAlpha(), 0.00001);
+
+  filter_p->setAlpha(1.0);
+  DOUBLES_EQUAL(1.0, filter_p->getAlpha(), 0.00001);
+
+  filter_p->setAlpha(0.5);
+  DOUBLES_EQUAL(0.5, filter_p->getAlpha(), 0.00001);
+}
 
 TEST(FilterGroup32, Alpha32_00)
 {
-  FilterEmaI32 filter;
+  filter_p = new FilterEmaI32(0.0);
 
-  FilterEmaI32_init(0.0, &filter);
-  CHECK_EQUAL(0, filter.alpha);
-  CHECK_EQUAL(0, filter.average);
+  UNSIGNED_LONGS_EQUAL(0, filter_p->m_alpha);
+  LONGS_EQUAL(0, filter_p->m_average);
 
-  FilterEmaI32_addValue(0, &filter);
-  CHECK_EQUAL(0, FilterEmaI32_getAverage(&filter));
+  filter_p->addValue(0);
+  LONGS_EQUAL(0, filter_p->getAverage());
 
-  FilterEmaI32_addValue(10000, &filter);
-  CHECK_EQUAL(0, FilterEmaI32_getAverage(&filter));
+  filter_p->addValue(10000);
+  LONGS_EQUAL(0, filter_p->getAverage());
 
-  FilterEmaI32_addValue(100000, &filter);
-  CHECK_EQUAL(0, FilterEmaI32_getAverage(&filter));
+  filter_p->addValue(100000);
+  LONGS_EQUAL(0, filter_p->getAverage());
 
-  FilterEmaI32_addValue(-200000, &filter);
-  CHECK_EQUAL(0, FilterEmaI32_getAverage(&filter));
+  filter_p->addValue(-200000);
+  LONGS_EQUAL(0, filter_p->getAverage());
 
 }
 
 TEST(FilterGroup32, Alpha32_10)
 {
-  FilterEmaI32 filter;
+  filter_p = new FilterEmaI32(1.0);
 
-  FilterEmaI32_init(1.0, &filter);
-  CHECK_EQUAL(65535, filter.alpha);
-  CHECK_EQUAL(0, filter.average);
+  UNSIGNED_LONGS_EQUAL(65535, filter_p->m_alpha);
+  LONGS_EQUAL(0, filter_p->m_average);
 
-  FilterEmaI32_addValue(0, &filter);
-  CHECK_EQUAL(0, FilterEmaI32_getAverage(&filter));
+  filter_p->addValue(0);
+  LONGS_EQUAL(0, filter_p->getAverage());
 
-  FilterEmaI32_addValue(10000, &filter);
-  CHECK_EQUAL(10000, FilterEmaI32_getAverage(&filter));
+  filter_p->addValue(10000);
+  LONGS_EQUAL(10000, filter_p->getAverage());
 
-  FilterEmaI32_addValue(100000, &filter);
-  CHECK_EQUAL(100000, FilterEmaI32_getAverage(&filter));
+  filter_p->addValue(100000);
+  LONGS_EQUAL(100000, filter_p->getAverage());
 
-  FilterEmaI32_addValue(-200000, &filter);
-  CHECK_EQUAL(-200000, FilterEmaI32_getAverage(&filter));
+  filter_p->addValue(-200000);
+  LONGS_EQUAL(-200000, filter_p->getAverage());
 }
 
 TEST(FilterGroup32, Alpha32_05)
 {
-  FilterEmaI32 filter;
-  FilterEmaI32_init(0.5, &filter);
-  CHECK_EQUAL(32767, filter.alpha);
-  CHECK_EQUAL(0, filter.average);
+  filter_p = new FilterEmaI32(0.5);
 
-  FilterEmaI32_addValue(0, &filter);
-  CHECK_EQUAL(0, FilterEmaI32_getAverage(&filter));
+  UNSIGNED_LONGS_EQUAL(32767, filter_p->m_alpha);
+  LONGS_EQUAL(0, filter_p->m_average);
 
-  FilterEmaI32_addValue(32767, &filter);
-  CHECK_EQUAL(16383, FilterEmaI32_getAverage(&filter));
+  filter_p->addValue(0);
+  LONGS_EQUAL(0, filter_p->getAverage());
 
-  FilterEmaI32_addValue(65535, &filter);
-  CHECK_EQUAL(40959, FilterEmaI32_getAverage(&filter));
+  filter_p->addValue(32767);
+  LONGS_EQUAL(16383, filter_p->getAverage());
+
+  filter_p->addValue(65535);
+  LONGS_EQUAL(40959, filter_p->getAverage());
 }
 
 TEST_GROUP(FilterGroup16)
 {
+  FilterEmaI16* filter_p;
+
+  void setup()
+  {
+  }
+
+  void teardown()
+  {
+    if (filter_p)
+    {
+      delete filter_p;
+    }
+  }
 };
+
+TEST(FilterGroup16, setGetAlpha)
+{
+  filter_p = new FilterEmaI16(0.0);
+  DOUBLES_EQUAL(0.0, filter_p->getAlpha(), 0.002);
+
+  filter_p->setAlpha(1.0);
+  DOUBLES_EQUAL(1.0, filter_p->getAlpha(), 0.002);
+
+  filter_p->setAlpha(0.5);
+  DOUBLES_EQUAL(0.5, filter_p->getAlpha(), 0.002);
+}
 
 TEST(FilterGroup16, Alpha16_00)
 {
-  FilterEmaI16 filter;
+  filter_p = new FilterEmaI16(0.0);
 
-  FilterEmaI16_init(0.0, &filter);
-  CHECK_EQUAL(0, filter.alpha);
-  CHECK_EQUAL(0, filter.average);
+  UNSIGNED_LONGS_EQUAL(0, filter_p->m_alpha);
+  LONGS_EQUAL(0, filter_p->m_average);
 
-  FilterEmaI16_addValue(0, &filter);
-  CHECK_EQUAL(0, FilterEmaI16_getAverage(&filter));
+  filter_p->addValue(0);
+  LONGS_EQUAL(0, filter_p->getAverage());
 
-  FilterEmaI16_addValue(127, &filter);
-  CHECK_EQUAL(0, FilterEmaI16_getAverage(&filter));
+  filter_p->addValue(127);
+  LONGS_EQUAL(0, filter_p->getAverage());
 
-  FilterEmaI16_addValue(255, &filter);
-  CHECK_EQUAL(0, FilterEmaI16_getAverage(&filter));
+  filter_p->addValue(255);
+  LONGS_EQUAL(0, filter_p->getAverage());
 }
 
 TEST(FilterGroup16, Alpha16_10)
 {
-  FilterEmaI16 filter;
+  filter_p = new FilterEmaI16(1.0);
 
-  FilterEmaI16_init(1.0, &filter);
-  CHECK_EQUAL(255, filter.alpha);
-  CHECK_EQUAL(0, filter.average);
+  UNSIGNED_LONGS_EQUAL(255, filter_p->m_alpha);
+  LONGS_EQUAL(0, filter_p->m_average);
 
-  FilterEmaI16_addValue(0, &filter);
-  CHECK_EQUAL(0, FilterEmaI16_getAverage(&filter));
+  filter_p->addValue(0);
+  LONGS_EQUAL(0, filter_p->getAverage());
 
-  FilterEmaI16_addValue(100, &filter);
-  CHECK_EQUAL(100, FilterEmaI16_getAverage(&filter));
+  filter_p->addValue(100);
+  LONGS_EQUAL(100, filter_p->getAverage());
 
-  FilterEmaI16_addValue(10000, &filter);
-  CHECK_EQUAL(10000, FilterEmaI16_getAverage(&filter));
+  filter_p->addValue(10000);
+  LONGS_EQUAL(10000, filter_p->getAverage());
 
-  FilterEmaI16_addValue(-20000, &filter);
-  CHECK_EQUAL(-20000, FilterEmaI16_getAverage(&filter));
+  filter_p->addValue(-20000);
+  LONGS_EQUAL(-20000, filter_p->getAverage());
 }
 
 TEST(FilterGroup16, Alpha16_05)
 {
-  FilterEmaI16 filter;
+  filter_p = new FilterEmaI16(0.5);
 
-  FilterEmaI16_init(0.5, &filter);
-  CHECK_EQUAL(127, filter.alpha);
-  CHECK_EQUAL(0, filter.average);
+  UNSIGNED_LONGS_EQUAL(127, filter_p->m_alpha);
+  LONGS_EQUAL(0, filter_p->m_average);
 
-  FilterEmaI16_addValue(0, &filter);
-  CHECK_EQUAL(0, FilterEmaI16_getAverage(&filter));
+  filter_p->addValue(0);
+  LONGS_EQUAL(0, filter_p->getAverage());
 
-  FilterEmaI16_addValue(100, &filter);
-  CHECK_EQUAL(50, FilterEmaI16_getAverage(&filter));
+  filter_p->addValue(100);
+  LONGS_EQUAL(50, filter_p->getAverage());
 
-  FilterEmaI16_addValue(100, &filter);
-  CHECK_EQUAL(75, FilterEmaI16_getAverage(&filter));
+  filter_p->addValue(100);
+  LONGS_EQUAL(75, filter_p->getAverage());
 
-  FilterEmaI16_addValue(100, &filter);
-  CHECK_EQUAL(87, FilterEmaI16_getAverage(&filter));
+  filter_p->addValue(100);
+  LONGS_EQUAL(87, filter_p->getAverage());
 
-  FilterEmaI16_addValue(10000, &filter);
-  CHECK_EQUAL(5024, FilterEmaI16_getAverage(&filter));
+  filter_p->addValue(10000);
+  LONGS_EQUAL(5024, filter_p->getAverage());
 
-  FilterEmaI16_addValue(-20000, &filter);
-  CHECK_EQUAL(-7439, FilterEmaI16_getAverage(&filter));
+  filter_p->addValue(-20000);
+  LONGS_EQUAL(-7439, filter_p->getAverage());
 }
-
-TEST(FilterGroup32, Alpha32_x1)
-{
-  FilterEmaI32 filter =
-  { 0, 0 };
-
-  FilterEmaI32_addValue(INT16_MAX, &filter);
-  CHECK_EQUAL(0, FilterEmaI32_getAverage(&filter));
-}
-
-TEST(FilterGroup32, Alpha32_x2)
-{
-  FilterEmaI32 filter =
-  { 0, 32767 };
-
-  FilterEmaI32_addValue(1000000, &filter);
-  CHECK_EQUAL(499992, FilterEmaI32_getAverage(&filter));
-}
-

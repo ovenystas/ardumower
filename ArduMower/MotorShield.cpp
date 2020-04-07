@@ -10,7 +10,7 @@
 
 //#define Console Serial
 
-void MotorShield::setup(void)
+void MotorShield::setup()
 {
   pinMode(pinDir[m_channel], OUTPUT);
   digitalWrite(pinDir[m_channel], LOW);
@@ -25,12 +25,12 @@ void MotorShield::setup(void)
   ADCMan.setCapture(pinSense[m_channel], 1, true);
 }
 
-void MotorShield::setSpeed(void)
+void MotorShield::setSpeed()
 {
   setSpeed(m_pwmCur);
 }
 
-void MotorShield::setSpeed(const int16_t speed)
+void MotorShield::setSpeed(int16_t speed)
 {
   int16_t tmpSpeed = m_swapDir ? -speed : speed;
   digitalWrite(pinDir[m_channel], tmpSpeed < 0);
@@ -47,7 +47,7 @@ void MotorShield::setSpeed(const int16_t speed)
 //  Console.println(tmpSpeed);
 }
 
-void MotorShield::setSpeed(const int16_t speed, const bool brake)
+void MotorShield::setSpeed(int16_t speed, bool brake)
 {
   digitalWrite(pinBrake[m_channel], brake && speed == 0);
   setSpeed(speed);
@@ -56,13 +56,13 @@ void MotorShield::setSpeed(const int16_t speed, const bool brake)
 void MotorShield::readCurrent(void)
 {
   int16_t newAdcValue = ADCMan.read(pinSense[m_channel]);
-  FilterEmaI16_addValue(newAdcValue, &m_filter);
+  m_filter.addValue(newAdcValue);
 }
 
 // Sets motor PWM
 // - ensures that the motor is not switched to 100% too fast (acceleration)
 // - ensures that the motor voltage is not higher than pwmMax
-void MotorShield::control(void)
+void MotorShield::control()
 {
   int pwmNew;
 
