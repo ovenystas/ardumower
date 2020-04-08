@@ -9,10 +9,10 @@
 
 int16_t MotorDrv::getAverageCurrent()
 {
-  return (uint16_t((float)m_filter.getAverage() * m_scale + 0.5));
+  return static_cast<int16_t>(getAverageCurrentAsFloat() + 0.5);
 }
 
 void MotorDrv::calcPower(float batV)
 {
-  m_powerMeas = (int16_t)(getAverageCurrent() * batV / 1000 + 0.5);
+  m_powerMeas = static_cast<int16_t>(getAverageCurrentAsFloat() * batV / 1000 + 0.5);
 }

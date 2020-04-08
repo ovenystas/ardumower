@@ -54,6 +54,12 @@ public:
     m_scale = scale;
   }
 
+private:
+  float getAverageCurrentAsFloat() // in mA
+  {
+    return static_cast<float>(m_filter.getAverage()) * m_scale;
+  }
+
 public:
   Pid m_pid;
 
