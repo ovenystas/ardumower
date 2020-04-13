@@ -285,11 +285,6 @@ public:
 
   virtual void resetIdleTime();
 
-  // call this from R/C control interrupt
-  virtual void setRemotePPMState(const unsigned long timeMicros,
-      const bool remoteSpeedState, const bool remoteSteerState,
-      const bool remoteMowState, const bool remoteSwitchState);
-
   // state machine
   virtual void setNextState(StateMachine::stateE stateNew, bool dir = LEFT);
 
@@ -375,8 +370,6 @@ public:
   }
 
 protected:
-  // convert ppm time to RC slider value
-  virtual int rcValue(const int ppmTime);
   virtual void loadErrorCounters();
   virtual void saveErrorCounters();
 
@@ -396,6 +389,7 @@ protected:
   virtual void readImu();
   virtual void readCutterMotorCurrent();
   virtual void measureCutterMotorRpm();
+
   // read serial
   virtual void readSerial();
 
@@ -435,7 +429,6 @@ protected:
   virtual void reverseOrChangeDirection(const byte aRollDir);
 
   // other
-  virtual void printRemote();
   virtual void printOdometer();
   virtual void printMenu();
   virtual void delayInfo(const int ms);
@@ -461,20 +454,6 @@ private:
   float m_gpsX {};   // X position (m)
   float m_gpsY {};   // Y position (m)
   int m_robotIsStuckCounter {};
-
-  // -------- RC remote control state -------------------
-  int m_remoteSteer {};  // range -100..100
-  int m_remoteSpeed {};  // range -100..100
-  int m_remoteMow {};    // range 0..100
-  int m_remoteSwitch {}; // range 0..100
-  unsigned long m_remoteSteerLastTime {};
-  unsigned long m_remoteSpeedLastTime {};
-  unsigned long m_remoteMowLastTime {};
-  unsigned long m_remoteSwitchLastTime {};
-  bool m_remoteSteerLastState {};
-  bool m_remoteSpeedLastState {};
-  bool m_remoteMowLastState {};
-  bool m_remoteSwitchLastState { LOW };
 
   // ------- IMU state ----------------------------------
   byte m_imuRollDir { LEFT };

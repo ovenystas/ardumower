@@ -594,82 +594,6 @@ void Robot::checkErrorCounter()
   }
 }
 
-// ---- RC (interrupt) --------------------------------------------------------------
-// RC remote control helper
-// convert ppm time (us) to percent (-100..+100)
-// ppmtime: zero stick pos: 1500 uS
-//          right stick pos: 2000 uS
-//          left stick pos: 1000 uS
-int Robot::rcValue(const int ppmTime)
-{
-  int value = (int)((float)(ppmTime - 1500) / 3.4);
-  if (value > -5 && value < 5)
-  {
-    value = 0;  //  ensures exact zero position
-  }
-  return value;
-}
-
-// RC remote control driver
-// 1. save time (uS) and RC channel states (HI/LO)
-// 2. if new state is LO, evaluate ppm time for channel
-void Robot::setRemotePPMState(const unsigned long timeMicros,
-    const bool remoteSpeedState, const bool remoteSteerState,
-    const bool remoteMowState, const bool remoteSwitchState)
-{
-  if (remoteSpeedState != m_remoteSpeedLastState)
-  {
-    m_remoteSpeedLastState = remoteSpeedState;
-    if (remoteSpeedState)
-    {
-      m_remoteSpeedLastTime = timeMicros;
-    }
-    else
-    {
-      m_remoteSpeed = rcValue(timeMicros - m_remoteSpeedLastTime);
-    }
-  }
-
-  if (remoteSteerState != m_remoteSteerLastState)
-  {
-    m_remoteSteerLastState = remoteSteerState;
-    if (remoteSteerState)
-    {
-      m_remoteSteerLastTime = timeMicros;
-    }
-    else
-    {
-      m_remoteSteer = rcValue(timeMicros - m_remoteSteerLastTime);
-    }
-  }
-
-  if (remoteMowState != m_remoteMowLastState)
-  {
-    m_remoteMowLastState = remoteMowState;
-    if (remoteMowState)
-    {
-      m_remoteMowLastTime = timeMicros;
-    }
-    else
-    {
-      m_remoteMow = max(0, (rcValue(timeMicros - m_remoteMowLastTime) + 100) / 2);
-    }
-  }
-
-  if (remoteSwitchState != m_remoteSwitchLastState)
-  {
-    m_remoteSwitchLastState = remoteSwitchState;
-    if (remoteSwitchState)
-    {
-      m_remoteSwitchLastTime = timeMicros;
-    }
-    else
-    {
-      m_remoteSwitch = rcValue(timeMicros - m_remoteSwitchLastTime);
-    }
-  }
-}
-
 //motor is LEFT or RIGHT (0 or 1)
 void Robot::setMotorPWM(int pwm,
                         const uint8_t motor,
@@ -996,18 +920,6 @@ void Robot::setup()
   Console.println(F("  v to change console output @"
                     "(sensor counters, sensor values, perimeter, off)"));
   Console.println(consoleModeNames[m_consoleMode]);
-}
-
-void Robot::printRemote()
-{
-  Console.print(F("RC "));
-  Console.print(m_remoteSwitch);
-  Console.print(", ");
-  Console.print(m_remoteSteer);
-  Console.print(", ");
-  Console.print(m_remoteSpeed);
-  Console.print(", ");
-  Console.println(m_remoteMow);
 }
 
 void Robot::printOdometer()
@@ -1471,13 +1383,11 @@ void Robot::readSerial()
         break;
 
       case 'i': // toggle imu.use
-        ImuSettings* imuSettings_p = m_imu.getSettings();
-        imuSettings_p->use.value = !imuSettings_p->use.value;
-        break;
-
-      case '3': // activate model RC
-        setNextState(StateMachine::STATE_REMOTE);
-        break;
+        {
+          ImuSettings* imuSettings_p = m_imu.getSettings();
+          imuSettings_p->use.value = !imuSettings_p->use.value;
+          break;
+        }
 
       case '0': // turn OFF
         setNextState(StateMachine::STATE_OFF);
@@ -1531,11 +1441,6 @@ void Robot::checkButton()
             setNextState(StateMachine::STATE_FORWARD);
             break;
 
-          case 3:
-            // start remote control mode
-            setNextState(StateMachine::STATE_REMOTE);
-            break;
-
           case 4:
             // start normal without perimeter
             m_perimeters.m_use = false;
@@ -1557,6 +1462,11 @@ void Robot::checkButton()
             m_cutter.enable();
             m_mowPatternCurr = MOW_LANES;
             setNextState(StateMachine::STATE_FORWARD);
+            break;
+
+          default:
+            Console.print("Unknown number of button presses, ");
+            Console.println(m_button.getCounter());
             break;
         }
       }
@@ -1640,7 +1550,6 @@ void Robot::readPerimeters()
         !m_stateMachine.isCurrentState(StateMachine::STATE_STATION_REV) &&
         !m_stateMachine.isCurrentState(StateMachine::STATE_STATION_ROLL) &&
         !m_stateMachine.isCurrentState(StateMachine::STATE_STATION_FORW) &&
-        !m_stateMachine.isCurrentState(StateMachine::STATE_REMOTE) &&
         !m_stateMachine.isCurrentState(StateMachine::STATE_PERI_OUT_FORW) &&
         !m_stateMachine.isCurrentState(StateMachine::STATE_PERI_OUT_REV) &&
         !m_stateMachine.isCurrentState(StateMachine::STATE_PERI_OUT_ROLL))
@@ -1821,11 +1730,6 @@ void Robot::setNextState(StateMachine::stateE stateNew, bool dir)
                             random(m_wheels.m_rollTimeMin, m_wheels.m_rollTimeMax) +
                             zeroSettleTime);
   }
-  else if (stateNew == StateMachine::STATE_REMOTE)
-  {
-    m_cutter.enable();
-    //motorMowModulate = false;
-  }
   else if (stateNew == StateMachine::STATE_STATION)
   {
     m_battery.setChargeRelay(OFF);
@@ -1867,11 +1771,6 @@ void Robot::setNextState(StateMachine::stateE stateNew, bool dir)
     m_battery.setChargeRelay(OFF);
     //m_buzzer.beepLong(6);
   }
-  else if (stateNew != StateMachine::STATE_REMOTE)
-  {
-    // TODO: This feels dangerous!!!
-    m_cutter.m_motor.setPwmSet(m_cutter.m_motor.m_pwmMax);
-  }
 
   m_stateMachine.changeState();
 
@@ -1901,7 +1800,6 @@ void Robot::checkBattery()
              !m_stateMachine.isCurrentState(StateMachine::STATE_MANUAL) &&
              !m_stateMachine.isCurrentState(StateMachine::STATE_STATION) &&
              !m_stateMachine.isCurrentState(StateMachine::STATE_STATION_CHARGING) &&
-             !m_stateMachine.isCurrentState(StateMachine::STATE_REMOTE) &&
              !m_stateMachine.isCurrentState(StateMachine::STATE_ERROR) &&
              !m_stateMachine.isCurrentState(StateMachine::STATE_PERI_TRACK) &&
              m_perimeters.m_use)
@@ -2469,7 +2367,6 @@ void Robot::checkIfStuck()
     // Console.println(robotIsStuckedCounter);
     // Console.println(errorCounter[ERR_STUCK]);
     if (m_stateMachine.isCurrentState(StateMachine::STATE_MANUAL) &&
-        m_stateMachine.isCurrentState(StateMachine::STATE_REMOTE) &&
         gpsSpeed < m_stuckIfGpsSpeedBelow &&
         m_odometer.m_encoder.left_p->getWheelRpmCurr() != 0 &&
         m_odometer.m_encoder.right_p->getWheelRpmCurr() != 0 &&
@@ -2490,7 +2387,6 @@ void Robot::checkIfStuck()
           m_stateMachine.isCurrentState(StateMachine::STATE_STATION_CHECK) &&
           m_stateMachine.isCurrentState(StateMachine::STATE_STATION_REV) &&
           m_stateMachine.isCurrentState(StateMachine::STATE_STATION_ROLL) &&
-          m_stateMachine.isCurrentState(StateMachine::STATE_REMOTE) &&
           m_stateMachine.isCurrentState(StateMachine::STATE_ERROR))
       {
         m_cutter.enable();
@@ -2589,17 +2485,6 @@ void Robot::runStateMachine()
       m_imuDriveHeading = m_imu.getYaw();
       break;
 
-    case StateMachine::STATE_REMOTE:
-      // remote control mode (RC)
-//      if (remoteSwitch > 50)
-//      {
-//        setNextState(StateMachine::STATE_FORWARD, 0);
-//      }
-      m_wheels.setSpeed(m_remoteSpeed);
-      m_wheels.setSteer(m_remoteSteer);
-      m_cutter.setSpeed(m_remoteMow);
-      break;
-
     case StateMachine::STATE_MANUAL:
       break;
 
@@ -2614,15 +2499,11 @@ void Robot::runStateMachine()
         }
         if (m_rollDir == RIGHT)
         {
-          m_wheels.setSpeed(m_remoteSpeed);
-          m_wheels.setSteer(m_remoteSteer);
           m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmSet =
               ((float)m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet) * ratio;
         }
         else
         {
-          m_wheels.setSpeed(m_remoteSpeed);
-          m_wheels.setSteer(m_remoteSteer);
           m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet =
               ((float)m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmSet) * ratio;
         }
@@ -2895,18 +2776,6 @@ void Robot::tasks_continuous()
 
   runStateMachine();
 
-  // next line deactivated (issue with RC failsafe)
-//  if (useRemoteRC && remoteSwitch < -50)
-//  {
-//    setNextState(StateMachine::STATE_REMOTE, 0);
-//  }
-
-  if (!m_stateMachine.isCurrentState(StateMachine::STATE_REMOTE))
-  {
-    // TODO: This feels dangerous!!!
-    m_cutter.m_motor.setPwmSet(m_cutter.m_motor.m_pwmMax);
-  }
-
   m_bumpers.clearHit();
   m_dropSensors.clearDetected();
 
@@ -3011,10 +2880,6 @@ void Robot::tasks_500ms()
 void Robot::tasks_1s()
 {
   checkBattery();
-  if (m_stateMachine.isCurrentState(StateMachine::STATE_REMOTE))
-  {
-    printRemote();
-  }
   if (m_gpsUse)
   {
     m_gps.feed();

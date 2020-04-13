@@ -55,18 +55,6 @@ Mower::Mower()
   // -----------configuration end-------------------------------------
 }
 
-// remote control (RC) ppm signal change interrupt
-ISR(PCINT0_vect)
-{
-  unsigned long timeMicros = micros();
-  bool remoteSpeedState = digitalRead(PIN_REMOTE_SPEED);
-  bool remoteSteerState = digitalRead(PIN_REMOTE_STEER);
-  bool remoteMowState = digitalRead(PIN_REMOTE_MOW);
-  bool remoteSwitchState = digitalRead(PIN_REMOTE_SWITCH);
-  robot.setRemotePPMState(timeMicros, remoteSpeedState, remoteSteerState,
-                          remoteMowState, remoteSwitchState);
-}
-
 // odometer signal change interrupt
 // mower motor speed sensor interrupt
 // NOTE: when choosing a higher perimeter sample rate (38 kHz) and using odometer interrupts,

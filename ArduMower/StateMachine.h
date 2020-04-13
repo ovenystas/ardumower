@@ -14,7 +14,6 @@ class StateMachine
     typedef enum stateE
     {
       STATE_OFF,              // off
-      STATE_REMOTE,           // model remote control (R/C)
       STATE_FORWARD,          // drive forward
       STATE_ROLL,             // drive roll right/left
       STATE_REVERSE,          // drive reverse

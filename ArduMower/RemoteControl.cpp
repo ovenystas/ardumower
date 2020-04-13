@@ -1621,7 +1621,7 @@ void RemoteControl::sendCommandMenu(bool update)
   {
     Bluetooth.print(F("{.Commands`5000"));
   }
-  Bluetooth.print(F("|ro~OFF|ra~Auto mode|rc~RC mode|"));
+  Bluetooth.print(F("|ro~OFF|ra~Auto mode|"));
   Bluetooth.print(F("rm~Mowing is "));
   sendOnOff(m_robot_p->m_cutter.isEnabled());
   Bluetooth.print(F("|rp~Pattern is "));
@@ -1672,14 +1672,6 @@ void RemoteControl::processCommandMenu(String pfodCmd)
     // cmd: start auto mowing
     m_robot_p->m_cutter.enable();
     m_robot_p->setNextState(StateMachine::STATE_FORWARD, 0);
-    sendCommandMenu(true);
-  }
-  else if (pfodCmd == "rc")
-  {
-    // cmd: start remote control (RC)
-    m_robot_p->m_cutter.enable();
-    m_robot_p->m_cutter.m_motor.m_regulate = false;
-    m_robot_p->setNextState(StateMachine::STATE_REMOTE, 0);
     sendCommandMenu(true);
   }
   else if (pfodCmd == "rm")
