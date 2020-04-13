@@ -379,10 +379,13 @@ protected:
   virtual int rcValue(const int ppmTime);
   virtual void loadErrorCounters();
   virtual void saveErrorCounters();
+
   virtual void loadSaveUserSettings(bool readflag);
   virtual void loadSaveUserSettingsPid(bool readflag, int& addr, Pid& pid);
   virtual void loadSaveUserSettingsBumpers(bool readflag, int& addr,
       Bumpers& bumpers);
+  virtual void loadSaveUserSettingsImu(bool readflag, int& addr, Imu& imu);
+
   virtual void loadUserSettings();
   virtual void checkErrorCounter();
   virtual void printSettingSerial();
@@ -510,6 +513,9 @@ private:
   void loadRobotStats();
   void saveRobotStats();
   void runStateMachine();
+
+  template <class T>
+  void printSettingNameColonValue(const Setting<T> K);
 
   void printSettingSerialPidK(const __FlashStringHelper* prefixStr,
       Setting<float> K);

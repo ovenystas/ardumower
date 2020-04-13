@@ -1072,7 +1072,7 @@ void RemoteControl::sendImuMenu(bool update)
     Bluetooth.print(F("{.IMU`1000"));
   }
   Bluetooth.print(F("|g00~Use "));
-  sendYesNo(m_robot_p->m_imu.m_use);
+  sendYesNo(m_robot_p->m_imu.isUsed());
   Bluetooth.print(F("|g10~Use accel calib"));
   sendYesNo(m_robot_p->m_imu.getUseAccelCalibration());
   Bluetooth.print(F("|g01~Yaw "));
@@ -1088,7 +1088,7 @@ void RemoteControl::sendImuMenu(bool update)
   Bluetooth.print(m_robot_p->m_imu.getRollDeg());
   Bluetooth.print(F(" deg"));
   Bluetooth.print(F("|g04~Correct dir "));
-  sendYesNo(m_robot_p->m_imu.m_correctDir);
+  sendYesNo(m_robot_p->m_imu.isCorrectDir());
   sendPIDSlider("g05", F("Dir"), m_robot_p->m_imu.m_pid[Imu::DIR], 0.1, 20);
   sendPIDSlider("g06", F("Roll"), m_robot_p->m_imu.m_pid[Imu::ROLL], 0.1, 30);
   Bluetooth.print(F("|g07~Acc cal next side"));
@@ -1100,7 +1100,8 @@ void RemoteControl::processImuMenu(String pfodCmd)
 {
   if (pfodCmd == "g00")
   {
-    TOGGLE(m_robot_p->m_imu.m_use);
+    ImuSettings* imuSettings_p = m_robot_p->m_imu.getSettings();
+    TOGGLE(imuSettings_p->use.value);
   }
   else if (pfodCmd == "g10")
   {
@@ -1108,7 +1109,8 @@ void RemoteControl::processImuMenu(String pfodCmd)
   }
   else if (pfodCmd == "g04")
   {
-    TOGGLE(m_robot_p->m_imu.m_correctDir);
+    ImuSettings* imuSettings_p = m_robot_p->m_imu.getSettings();
+    TOGGLE(imuSettings_p->correctDir.value);
   }
   else if (pfodCmd.startsWith("g05"))
   {

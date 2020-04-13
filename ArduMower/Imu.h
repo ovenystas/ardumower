@@ -36,6 +36,7 @@
 #include "L3G.h"
 #include "LSM303.h"
 #include "Buzzer.h"
+#include "Setting.h"
 
 // IMU state
 enum
@@ -80,6 +81,12 @@ typedef struct calibrationData_t
   point_int_t magnetometerScale;
 } calibrationData_t;
 
+struct ImuSettings
+{
+  Setting<bool> use;
+  Setting<bool> correctDir;
+};
+
 class Imu
 {
 public:
@@ -91,6 +98,16 @@ public:
   };
 
   bool init(Buzzer* buzzer_p);
+
+  bool isUsed()
+  {
+    return m_use;
+  }
+  bool isCorrectDir()
+  {
+    return m_correctDir;
+  }
+
   void update(void);
   int getCallCounter(void);
   int getErrorCounter(void);
@@ -101,8 +118,6 @@ public:
   }
   void printInfo(Stream& s);
 
-  bool m_use { false };
-  bool m_correctDir { false };  // correct direction by magnetometer?
   Pid m_pid[END];             // direction and roll PID controllers
 
   float getYaw() const
@@ -154,6 +169,17 @@ public:
   void calibrateMagnetometerStartStop(void);
 
   // --------------------------------------------------
+
+  ImuSettings* getSettings()
+  {
+    return &m_settings;
+  }
+
+  void setSettings(ImuSettings* settings_p)
+  {
+    m_settings.use.value = settings_p->use.value;
+    m_settings.correctDir.value = settings_p->correctDir.value;
+  }
 
 private:
   void read();
@@ -247,4 +273,14 @@ private:
   float m_scaled2Yaw {};
   float m_filtYaw {};
   point_float_t m_magTilt { 0.0, 0.0, 0.0 };
+
+  ImuSettings m_settings
+  {
+    { "Use", "", false, false, true },
+    { "Correct dir", "", false, false, true } // Correct direction by magnetometer?
+  };
+
+  // Shorter convenient variables for settings variables
+  bool& m_use = m_settings.use.value;
+  bool& m_correctDir = m_settings.correctDir.value;
 };

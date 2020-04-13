@@ -126,6 +126,17 @@ void Robot::loadSaveUserSettingsBumpers(bool readflag, int& addr, Bumpers& bumpe
   eereadwrite(readflag, addr, bumpersSettings_p->use.value);
 }
 
+void Robot::loadSaveUserSettingsImu(bool readflag, int& addr, Imu& imu)
+{
+  ImuSettings* imuSettings_p = imu.getSettings();
+
+  eereadwrite(readflag, addr, imuSettings_p->use.value);
+  eereadwrite(readflag, addr, imuSettings_p->correctDir.value);
+
+  loadSaveUserSettingsPid(readflag, addr, imu.m_pid[Imu::DIR]);
+  loadSaveUserSettingsPid(readflag, addr, imu.m_pid[Imu::ROLL]);
+}
+
 void Robot::loadSaveUserSettings(bool readflag)
 {
   int addr = ADDR_USER_SETTINGS + 1;
@@ -187,11 +198,7 @@ void Robot::loadSaveUserSettings(bool readflag)
 
   eereadwrite(readflag, addr, m_lawnSensors.use);
 
-  eereadwrite(readflag, addr, m_imu.m_use);
-  eereadwrite(readflag, addr, m_imu.m_correctDir);
-
-  loadSaveUserSettingsPid(readflag, addr, m_imu.m_pid[Imu::DIR]);
-  loadSaveUserSettingsPid(readflag, addr, m_imu.m_pid[Imu::ROLL]);
+  loadSaveUserSettingsImu(readflag, addr, m_imu);
 
   eereadwrite(readflag, addr, m_battery.m_monitored);
   eereadwrite(readflag, addr, m_battery.m_batGoHomeIfBelow);
@@ -274,13 +281,19 @@ void Robot::deleteUserSettings()
   saveRobotStats();
 }
 
+template <class T>
+void Robot::printSettingNameColonValue(const Setting<T> K)
+{
+  Console.print(K.name);
+  Console.print(F(" : "));
+  Console.println(K.value);
+}
+
 void Robot::printSettingSerialPidK(const __FlashStringHelper* prefixStr,
     Setting<float> K)
 {
   Console.print(prefixStr);
-  Console.print(K.name);
-  Console.print(F(" : "));
-  Console.println(K.value);
+  printSettingNameColonValue(K);
 }
 
 void Robot::printSettingSerialPid(const __FlashStringHelper* prefixStr,
@@ -354,8 +367,8 @@ void Robot::printSettingSerial()
 
   // ------ bumper ------------------------------------
   Console.println(F("== Bumpers =="));
-  Console.print(F("use : "));
-  Console.println(m_bumpers.isUsed());
+  BumpersSettings* bumpersSettings_p = m_bumpers.getSettings();
+  printSettingNameColonValue(bumpersSettings_p->use);
 
   // ------ drop ------------------------------------
   Console.println(F("== Drop sensors =="));
@@ -417,11 +430,9 @@ void Robot::printSettingSerial()
 
   // ------  IMU (compass/accel/gyro) ----------------------
   Console.println(F("== IMU =="));
-  Console.print(F("use : "));
-  Console.println(m_imu.m_use);
-  Console.print(F("correctDir : "));
-  Console.println(m_imu.m_correctDir);
-
+  ImuSettings* imuSettings_p = m_imu.getSettings();
+  printSettingNameColonValue(imuSettings_p->use);
+  printSettingNameColonValue(imuSettings_p->correctDir);
   printSettingSerialPid(F("pid[DIR]."), m_imu.m_pid[Imu::DIR].getSettings());
   printSettingSerialPid(F("pid[ROLL]."), m_imu.m_pid[Imu::ROLL].getSettings());
 
@@ -1460,7 +1471,8 @@ void Robot::readSerial()
         break;
 
       case 'i': // toggle imu.use
-        m_imu.m_use = !m_imu.m_use;
+        ImuSettings* imuSettings_p = m_imu.getSettings();
+        imuSettings_p->use.value = !imuSettings_p->use.value;
         break;
 
       case '3': // activate model RC
@@ -2876,7 +2888,7 @@ void Robot::tasks_continuous()
   }
   checkOdometerFaults();
 
-  if (m_imu.m_use)
+  if (m_imu.isUsed())
   {
     m_imu.update();
   }
@@ -2927,7 +2939,7 @@ void Robot::tasks_100ms()
   }
 
   // Decide which motor control to use
-  if (m_imu.m_use &&
+  if (m_imu.isUsed() &&
       ((m_mowPatternCurr == MOW_LANES &&
         m_stateMachine.isCurrentState(StateMachine::STATE_ROLL)) ||
        m_stateMachine.isCurrentState(StateMachine::STATE_ROLL_WAIT)))
@@ -2939,9 +2951,9 @@ void Robot::tasks_100ms()
   {
     wheelControl_perimeter();
   }
-  else if (m_imu.m_use &&
+  else if (m_imu.isUsed() &&
            (m_stateMachine.isCurrentState(StateMachine::STATE_FORWARD) &&
-            (m_imu.m_correctDir || m_mowPatternCurr == MOW_LANES)))
+            (m_imu.isCorrectDir() || m_mowPatternCurr == MOW_LANES)))
   {
     wheelControl_imuDir();
   }
@@ -2963,7 +2975,7 @@ void Robot::tasks_200ms()
   {
     checkSonar();
   }
-  if (m_imu.m_use)
+  if (m_imu.isUsed())
   {
     readImu();
     checkTilt();

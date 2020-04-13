@@ -63,7 +63,7 @@ void Odometer::calc(void)
 
   m_lastWheelRpmTime = curMillis;
 
-  if (m_imu_p->m_use)
+  if (m_imu_p->isUsed())
   {
     float yaw = m_imu_p->getYaw();
     m_x += avg_cm * sin(yaw);
