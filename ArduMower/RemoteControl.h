@@ -119,7 +119,6 @@ private:
   void sendPerimeterMenu(bool update);
   void sendLawnSensorMenu(bool update);
   void sendImuMenu(bool update);
-  void sendRemoteMenu(bool update);
   void sendBatteryMenu(bool update);
   void sendStationMenu(bool update);
   void sendOdometerMenu(bool update);
@@ -140,7 +139,6 @@ private:
   void processDropMenu(String pfodCmd);
   void processGPSMenu(String pfodCmd);
   void processImuMenu(String pfodCmd);
-  void processRemoteMenu(String pfodCmd);
   void processBatteryMenu(String pfodCmd);
   void processStationMenu(String pfodCmd);
   void processOdometerMenu(String pfodCmd);

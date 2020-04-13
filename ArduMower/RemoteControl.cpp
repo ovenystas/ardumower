@@ -332,7 +332,6 @@ void RemoteControl::sendSettingsMenu(bool update)
                       "|s5~Perimeter"
                       "|s6~Lawn sensor"
                       "|s7~IMU"
-                      "|s8~R/C"
                       "|s9~Battery"
                       "|s10~Station"
                       "|s11~Odometer"
@@ -1130,30 +1129,6 @@ void RemoteControl::processImuMenu(String pfodCmd)
   sendImuMenu(true);
 }
 
-void RemoteControl::sendRemoteMenu(bool update)
-{
-  if (update)
-  {
-    Bluetooth.print("{:");
-  }
-  else
-  {
-    Bluetooth.print(F("{.Remote R/C`1000"));
-  }
-  Bluetooth.print(F("|h00~Use "));
-  sendYesNo(m_robot_p->m_remoteUse);
-  Bluetooth.println("}");
-}
-
-void RemoteControl::processRemoteMenu(String pfodCmd)
-{
-  if (pfodCmd == "h00")
-  {
-    TOGGLE(m_robot_p->m_remoteUse);
-  }
-  sendRemoteMenu(true);
-}
-
 void RemoteControl::sendBatteryMenu(bool update)
 {
   if (update)
@@ -1943,10 +1918,6 @@ void RemoteControl::processSettingsMenu(String pfodCmd)
   {
     sendImuMenu(false);
   }
-  else if (pfodCmd == "s8")
-  {
-    sendRemoteMenu(false);
-  }
   else if (pfodCmd == "s9")
   {
     sendBatteryMenu(false);
@@ -2523,10 +2494,6 @@ void RemoteControl::parsePfodCmd()
   else if (m_pfodCmd.startsWith("g"))
   {
     processImuMenu(m_pfodCmd);
-  }
-  else if (m_pfodCmd.startsWith("h"))
-  {
-    processRemoteMenu(m_pfodCmd);
   }
   else if (m_pfodCmd.startsWith("j"))
   {

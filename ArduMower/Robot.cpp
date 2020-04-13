@@ -193,8 +193,6 @@ void Robot::loadSaveUserSettings(bool readflag)
   loadSaveUserSettingsPid(readflag, addr, m_imu.m_pid[Imu::DIR]);
   loadSaveUserSettingsPid(readflag, addr, m_imu.m_pid[Imu::ROLL]);
 
-  eereadwrite(readflag, addr, m_remoteUse);
-
   eereadwrite(readflag, addr, m_battery.m_monitored);
   eereadwrite(readflag, addr, m_battery.m_batGoHomeIfBelow);
   eereadwrite(readflag, addr, m_battery.m_batSwitchOffIfBelow);
@@ -426,11 +424,6 @@ void Robot::printSettingSerial()
 
   printSettingSerialPid(F("pid[DIR]."), m_imu.m_pid[Imu::DIR].getSettings());
   printSettingSerialPid(F("pid[ROLL]."), m_imu.m_pid[Imu::ROLL].getSettings());
-
-  // ------ model R/C ------------------------------------
-  Console.println(F("== R/C =="));
-  Console.print(F("use : "));
-  Console.println(m_remoteUse);
 
   // ------ battery -------------------------------------
   Console.println(F("== Battery =="));

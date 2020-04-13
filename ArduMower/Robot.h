@@ -179,9 +179,6 @@ public:
   // -------- odometer state --------------------------
   Odometer m_odometer;
 
-  // -------- RC remote control state -----------------
-  bool m_remoteUse { false };       // use model remote control (R/C)?
-
   // --------- wheel motor state ----------------------------
   // wheel motor speed ( <0 backward, >0 forward); range -motorSpeedMaxRpm..motorSpeedMaxRpm
   Wheels m_wheels;
