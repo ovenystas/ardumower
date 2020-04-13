@@ -119,10 +119,18 @@ void Robot::loadSaveUserSettingsPid(bool readflag, int& addr, Pid& pid)
   eereadwrite(readflag, addr, pidSettings_p->Kd.value);
 }
 
+void Robot::loadSaveUserSettingsBumpers(bool readflag, int& addr, Bumpers& bumpers)
+{
+  BumpersSettings* bumpersSettings_p = bumpers.getSettings();
+
+  eereadwrite(readflag, addr, bumpersSettings_p->use.value);
+}
+
 void Robot::loadSaveUserSettings(bool readflag)
 {
   int addr = ADDR_USER_SETTINGS + 1;
   eereadwrite(readflag, addr, m_developerActive);
+
   eereadwrite(readflag, addr, m_wheels.m_wheel[Wheel::LEFT].m_motor.m_acceleration);
   eereadwrite(readflag, addr, m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmMax);
   eereadwrite(readflag, addr, m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pwmMax);
@@ -134,6 +142,7 @@ void Robot::loadSaveUserSettings(bool readflag)
   eereadwrite(readflag, addr, m_wheels.m_reverseTime);
   eereadwrite(readflag, addr, m_wheels.m_wheel[Wheel::LEFT].m_motor.m_powerIgnoreTime);
   eereadwrite(readflag, addr, m_wheels.m_forwardTimeMax);
+
   eereadwrite(readflag, addr, m_cutter.m_motor.m_pwmMax);
   eereadwrite(readflag, addr, m_cutter.m_motor.m_powerMax);
   eereadwrite(readflag, addr, m_cutter.m_motor.m_rpmSet);
@@ -146,13 +155,16 @@ void Robot::loadSaveUserSettings(bool readflag)
   eereadwrite(readflag, addr, m_wheels.m_biDirSpeedRatio2);
   eereadwrite(readflag, addr, m_wheels.m_wheel[Wheel::LEFT].m_motor.m_swapDir);
   eereadwrite(readflag, addr, m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_swapDir);
-  eereadwrite(readflag, addr, m_bumpers.m_use);
+
+  loadSaveUserSettingsBumpers(readflag, addr, m_bumpers);
+
   eereadwrite(readflag, addr, m_sonars.use);
   for (uint8_t i = 0; i < SONARS_NUM; i++)
   {
     eereadwrite(readflag, addr, m_sonars.sonarArray_p[i].use);
   }
   eereadwrite(readflag, addr, m_sonars.triggerBelow);
+
   eereadwrite(readflag, addr, m_perimeters.m_use);
   eereadwrite(readflag, addr,
               m_perimeters.m_perimeterArray_p[PERIMETER_LEFT].m_timedOutIfBelowSmag);
@@ -172,7 +184,9 @@ void Robot::loadSaveUserSettings(bool readflag)
   eereadwrite(readflag, addr,
               m_perimeters.m_perimeterArray_p[PERIMETER_LEFT].m_timeOutSecIfNotInside);
   eereadwrite(readflag, addr, m_trackingBlockInnerWheelWhilePerimeterStruggling);
+
   eereadwrite(readflag, addr, m_lawnSensors.use);
+
   eereadwrite(readflag, addr, m_imu.m_use);
   eereadwrite(readflag, addr, m_imu.m_correctDir);
 
@@ -180,6 +194,7 @@ void Robot::loadSaveUserSettings(bool readflag)
   loadSaveUserSettingsPid(readflag, addr, m_imu.m_pid[Imu::ROLL]);
 
   eereadwrite(readflag, addr, m_remoteUse);
+
   eereadwrite(readflag, addr, m_battery.m_monitored);
   eereadwrite(readflag, addr, m_battery.m_batGoHomeIfBelow);
   eereadwrite(readflag, addr, m_battery.m_batSwitchOffIfBelow);
@@ -190,26 +205,34 @@ void Robot::loadSaveUserSettings(bool readflag)
   eereadwrite(readflag, addr, m_battery.m_chgFactor);
   eereadwrite(readflag, addr, m_battery.m_batFullCurrent);
   eereadwrite(readflag, addr, m_battery.m_startChargingIfBelow);
+
   eereadwrite(readflag, addr, m_stationRevTime);
   eereadwrite(readflag, addr, m_stationRollTime);
   eereadwrite(readflag, addr, m_stationForwTime);
   eereadwrite(readflag, addr, m_stationCheckTime);
+
   eereadwrite(readflag, addr, m_odometer.m_use);
   eereadwrite(readflag, addr, m_odometer.m_ticksPerRevolution);
   eereadwrite(readflag, addr, m_odometer.m_ticksPerCm);
   eereadwrite(readflag, addr, m_odometer.m_wheelBaseCm);
   eereadwrite(readflag, addr, m_odometer.m_encoder.left_p->m_swapDir);
   eereadwrite(readflag, addr, m_odometer.m_encoder.right_p->m_swapDir);
+
   eereadwrite(readflag, addr, m_button.m_use);
+
   eereadwrite(readflag, addr, m_userSwitch1);
   eereadwrite(readflag, addr, m_userSwitch2);
   eereadwrite(readflag, addr, m_userSwitch3);
+
   eereadwrite(readflag, addr, m_timerUse);
   eereadwrite(readflag, addr, m_timer);
+
   eereadwrite(readflag, addr, m_rainSensor.use);
+
   eereadwrite(readflag, addr, m_gpsUse);
   eereadwrite(readflag, addr, m_stuckIfGpsSpeedBelow);
   eereadwrite(readflag, addr, m_gpsSpeedIgnoreTime);
+
   eereadwrite(readflag, addr, m_dropSensors.m_use);
 
   Console.print('-');

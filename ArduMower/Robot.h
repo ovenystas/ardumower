@@ -384,6 +384,8 @@ protected:
   virtual void saveErrorCounters();
   virtual void loadSaveUserSettings(bool readflag);
   virtual void loadSaveUserSettingsPid(bool readflag, int& addr, Pid& pid);
+  virtual void loadSaveUserSettingsBumpers(bool readflag, int& addr,
+      Bumpers& bumpers);
   virtual void loadUserSettings();
   virtual void checkErrorCounter();
   virtual void printSettingSerial();

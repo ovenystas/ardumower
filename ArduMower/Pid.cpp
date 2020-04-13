@@ -31,12 +31,13 @@
 void Pid::setup(float Kp, float Ki, float Kd, float yMin, float yMax,
     float maxOutput)
 {
-  m_settings.Kp.value = Kp;
-  m_settings.Ki.value = Ki;
-  m_settings.Kd.value = Kd;
+  m_kp = Kp;
+  m_ki = Ki;
+  m_kd = Kd;
   m_yMin = yMin;
   m_yMax = yMax;
   m_maxOutput = maxOutput;
+
   m_errorOld = 0;
   m_errorSum = 0;
   m_setPoint = 0;
@@ -55,11 +56,6 @@ float Pid::compute(float processValue)
     dt = 1.0; // Should only happen for the very first call
   }
 
-  // Get regulator constants
-  float& Kp = m_settings.Kp.value;
-  float& Ki = m_settings.Ki.value;
-  float& Kd = m_settings.Kd.value;
-
   // Compute error
   float error = m_setPoint - processValue;
 
@@ -67,21 +63,21 @@ float Pid::compute(float processValue)
   m_errorSum += error;
 
   // Anti wind-up
-  float iTerm = Ki * dt * m_errorSum;
+  float iTerm = m_ki * dt * m_errorSum;
 
   if (iTerm < -m_maxOutput)
   {
     iTerm = -m_maxOutput;
-    m_errorSum = -m_maxOutput / dt / Ki;
+    m_errorSum = -m_maxOutput / dt / m_ki;
   }
 
   if (iTerm > m_maxOutput)
   {
     iTerm = m_maxOutput;
-    m_errorSum = m_maxOutput / dt / Ki;
+    m_errorSum = m_maxOutput / dt / m_ki;
   }
 
-  float out = Kp * error + iTerm + Kd / dt * (error - m_errorOld);
+  float out = m_kp * error + iTerm + m_kd / dt * (error - m_errorOld);
 
   m_errorOld = error;
 

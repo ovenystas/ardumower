@@ -777,7 +777,8 @@ void RemoteControl::processBumperMenu(String pfodCmd)
 {
   if (pfodCmd == "b00")
   {
-    TOGGLE(m_robot_p->m_bumpers.m_use);
+    BumpersSettings* bumpersSettings_p = m_robot_p->m_bumpers.getSettings();
+    TOGGLE(bumpersSettings_p->use.value);
   }
   sendBumperMenu(true);
 }

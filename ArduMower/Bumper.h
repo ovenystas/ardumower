@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include "Setting.h"
 
 class Bumper
 {
@@ -50,6 +51,11 @@ private:
   uint16_t m_counter { 0 };
 };
 
+struct BumpersSettings
+{
+  Setting<bool> use; // Use this feature or not
+};
+
 class Bumpers
 {
 public:
@@ -70,9 +76,25 @@ public:
     return m_use;
   }
 
-  bool m_use { false };
+  BumpersSettings* getSettings()
+  {
+    return &m_settings;
+  }
+
+  void setSettings(BumpersSettings* settings_p)
+  {
+    m_settings.use.value = settings_p->use.value;
+  }
 
 private:
+  BumpersSettings m_settings
+  {
+    { "Use", "", false, false, true }
+  };
+
+  // Shorter convenient variables for settings variables
+  bool& m_use = m_settings.use.value;
+
   uint8_t m_len { 0 };
   Bumper* m_bumperArray_p { nullptr };
 };

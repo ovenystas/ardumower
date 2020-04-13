@@ -23,7 +23,6 @@
 #pragma once
 
 #include <Arduino.h>
-
 #include "Setting.h"
 
 /*
@@ -66,7 +65,7 @@ public:
     return &m_settings;
   }
 
-  void setConfig(PidSettings* settings_p)
+  void setSettings(PidSettings* settings_p)
   {
     m_settings.Kp.value = settings_p->Kp.value;
     m_settings.Ki.value = settings_p->Ki.value;
@@ -85,6 +84,12 @@ private:
     { "Ki", "", 1.0, 0.0, 1.0 },
     { "Kd", "", 1.0, 0.0, 1.0 }
   };
+
+  // Shorter convenient variables for settings variables
+  float& m_kp = m_settings.Kp.value;
+  float& m_ki = m_settings.Ki.value;
+  float& m_kd = m_settings.Kd.value;
+
   float m_setPoint {};
   float m_yMin {};
   float m_yMax {};
