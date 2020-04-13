@@ -110,13 +110,13 @@ void Robot::saveErrorCounters()
   Console.println(addr);
 }
 
-void Robot::loadSavePidSettings(bool readflag, int& addr, Pid& pid)
+void Robot::loadSaveUserSettingsPid(bool readflag, int& addr, Pid& pid)
 {
-  Pid_settingsT* pidSettings_p = pid.getSettings();
+  PidSettings* pidSettings_p = pid.getSettings();
 
-  eereadwrite(readflag, addr, pidSettings_p->Kp);
-  eereadwrite(readflag, addr, pidSettings_p->Ki);
-  eereadwrite(readflag, addr, pidSettings_p->Kd);
+  eereadwrite(readflag, addr, pidSettings_p->Kp.value);
+  eereadwrite(readflag, addr, pidSettings_p->Ki.value);
+  eereadwrite(readflag, addr, pidSettings_p->Kd.value);
 }
 
 void Robot::loadSaveUserSettings(bool readflag)
@@ -139,8 +139,8 @@ void Robot::loadSaveUserSettings(bool readflag)
   eereadwrite(readflag, addr, m_cutter.m_motor.m_rpmSet);
   eereadwrite(readflag, addr, m_cutter.m_motor.m_scale);
 
-  loadSavePidSettings(readflag, addr, m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pid);
-  loadSavePidSettings(readflag, addr, m_cutter.m_motor.m_pid);
+  loadSaveUserSettingsPid(readflag, addr, m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pid);
+  loadSaveUserSettingsPid(readflag, addr, m_cutter.m_motor.m_pid);
 
   eereadwrite(readflag, addr, m_wheels.m_biDirSpeedRatio1);
   eereadwrite(readflag, addr, m_wheels.m_biDirSpeedRatio2);
@@ -163,7 +163,7 @@ void Robot::loadSaveUserSettings(bool readflag)
   eereadwrite(readflag, addr, m_perimeterTrackRollTime);
   eereadwrite(readflag, addr, m_perimeterTrackRevTime);
 
-  loadSavePidSettings(readflag, addr, m_perimeters.m_perimeterArray_p[PERIMETER_LEFT].m_pid);
+  loadSaveUserSettingsPid(readflag, addr, m_perimeters.m_perimeterArray_p[PERIMETER_LEFT].m_pid);
 
   eereadwrite(readflag, addr,
               m_perimeters.m_perimeterArray_p[PERIMETER_LEFT].m_useDifferentialPerimeterSignal);
@@ -176,8 +176,8 @@ void Robot::loadSaveUserSettings(bool readflag)
   eereadwrite(readflag, addr, m_imu.m_use);
   eereadwrite(readflag, addr, m_imu.m_correctDir);
 
-  loadSavePidSettings(readflag, addr, m_imu.m_pid[Imu::DIR]);
-  loadSavePidSettings(readflag, addr, m_imu.m_pid[Imu::ROLL]);
+  loadSaveUserSettingsPid(readflag, addr, m_imu.m_pid[Imu::DIR]);
+  loadSaveUserSettingsPid(readflag, addr, m_imu.m_pid[Imu::ROLL]);
 
   eereadwrite(readflag, addr, m_remoteUse);
   eereadwrite(readflag, addr, m_battery.m_monitored);
@@ -253,6 +253,23 @@ void Robot::deleteUserSettings()
   saveRobotStats();
 }
 
+void Robot::printSettingSerialPidK(const __FlashStringHelper* prefixStr,
+    Setting<float> K)
+{
+  Console.print(prefixStr);
+  Console.print(K.name);
+  Console.print(F(" : "));
+  Console.println(K.value);
+}
+
+void Robot::printSettingSerialPid(const __FlashStringHelper* prefixStr,
+    PidSettings* pidSettings_p)
+{
+  printSettingSerialPidK(prefixStr, pidSettings_p->Kp);
+  printSettingSerialPidK(prefixStr, pidSettings_p->Ki);
+  printSettingSerialPidK(prefixStr, pidSettings_p->Kd);
+}
+
 void Robot::printSettingSerial()
 {
   // ------- wheel motors -----------------------------
@@ -287,21 +304,10 @@ void Robot::printSettingSerial()
   Console.print(F("biDirSpeedRatio2 : "));
   Console.println(m_wheels.m_biDirSpeedRatio2);
 
-  Pid_settingsT* pidSettings_p = m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pid.getSettings();
-  Console.print(F("LEFT.pid.Kp : "));
-  Console.println(pidSettings_p->Kp);
-  Console.print(F("LEFT.pid.Ki : "));
-  Console.println(pidSettings_p->Ki);
-  Console.print(F("LEFT.pid.Kd : "));
-  Console.println(pidSettings_p->Kd);
-
-  pidSettings_p = m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pid.getSettings();
-  Console.print(F("RIGHT.pid.Kp : "));
-  Console.println(pidSettings_p->Kp);
-  Console.print(F("RIGHT.pid.Ki : "));
-  Console.println(pidSettings_p->Ki);
-  Console.print(F("RIGHT.pid.Kd : "));
-  Console.println(pidSettings_p->Kd);
+  printSettingSerialPid(F("LEFT.pid."),
+      m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pid.getSettings());
+  printSettingSerialPid(F("RIGHT.pid."),
+      m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pid.getSettings());
 
   Console.print(F("LEFT.swapDir : "));
   Console.println(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_swapDir);
@@ -323,13 +329,7 @@ void Robot::printSettingSerial()
   Console.print(F("scale : "));
   Console.println(m_cutter.m_motor.getScale());
 
-  pidSettings_p = m_cutter.m_motor.m_pid.getSettings();
-  Console.print(F("pid.Kp : "));
-  Console.println(pidSettings_p->Kp);
-  Console.print(F("pid.Ki : "));
-  Console.println(pidSettings_p->Ki);
-  Console.print(F("pid.Kd : "));
-  Console.println(pidSettings_p->Kd);
+  printSettingSerialPid(F("pid."), m_cutter.m_motor.m_pid.getSettings());
 
   // ------ bumper ------------------------------------
   Console.println(F("== Bumpers =="));
@@ -379,13 +379,9 @@ void Robot::printSettingSerial()
   Console.print(F("trackRevTime : "));
   Console.println(m_perimeterTrackRevTime);
 
-  pidSettings_p = m_perimeters.m_perimeterArray_p[PERIMETER_LEFT].m_pid.getSettings();
-  Console.print(F("pid.Kp : "));
-  Console.println(pidSettings_p->Kp);
-  Console.print(F("pid.Ki : "));
-  Console.println(pidSettings_p->Ki);
-  Console.print(F("pid.Kd : "));
-  Console.println(pidSettings_p->Kd);
+  printSettingSerialPid(F("pid."),
+      m_perimeters.m_perimeterArray_p[PERIMETER_LEFT].m_pid.getSettings());
+
   Console.print(F("trackingPerimeterTransitionTimeOut : "));
   Console.println(m_trackingPerimeterTransitionTimeOut);
   Console.print(F("trackingErrorTimeOut : "));
@@ -405,21 +401,8 @@ void Robot::printSettingSerial()
   Console.print(F("correctDir : "));
   Console.println(m_imu.m_correctDir);
 
-  pidSettings_p = m_imu.m_pid[Imu::DIR].getSettings();
-  Console.print(F("pid[DIR].Kp : "));
-  Console.println(pidSettings_p->Kp);
-  Console.print(F("pid[DIR].Ki : "));
-  Console.println(pidSettings_p->Ki);
-  Console.print(F("pid[DIR].Kd : "));
-  Console.println(pidSettings_p->Kd);
-
-  pidSettings_p = m_imu.m_pid[Imu::ROLL].getSettings();
-  Console.print(F("pid[ROLL].Kp : "));
-  Console.println(pidSettings_p->Kp);
-  Console.print(F("pid[ROLL].Ki : "));
-  Console.println(pidSettings_p->Ki);
-  Console.print(F("pid[ROLL].Kd : "));
-  Console.println(pidSettings_p->Kd);
+  printSettingSerialPid(F("pid[DIR]."), m_imu.m_pid[Imu::DIR].getSettings());
+  printSettingSerialPid(F("pid[ROLL]."), m_imu.m_pid[Imu::ROLL].getSettings());
 
   // ------ model R/C ------------------------------------
   Console.println(F("== R/C =="));

@@ -24,15 +24,17 @@
 
 #include <Arduino.h>
 
+#include "Setting.h"
+
 /*
  digital PID controller
  */
 
-struct Pid_settingsT
+struct PidSettings
 {
-  float Kp;         // proportional control
-  float Ki;         // integral control
-  float Kd;         // differential control
+  Setting<float> Kp; // Proportional control constant
+  Setting<float> Ki; // Integral control constant
+  Setting<float> Kd; // Differential control constant
 };
 
 class Pid
@@ -43,6 +45,7 @@ public:
   {
     setup(Kp, Ki, Kd, yMin, yMax, maxOutput);
   }
+
   void setup(float Kp, float Ki, float Kd, float yMin, float yMax,
       float maxOutput);
 
@@ -58,14 +61,16 @@ public:
     m_setPoint = setPoint;
   }
 
-  Pid_settingsT* getSettings()
+  PidSettings* getSettings()
   {
     return &m_settings;
   }
 
-  void setSettings(Pid_settingsT* settings_p)
+  void setConfig(PidSettings* settings_p)
   {
-    m_settings = *settings_p;
+    m_settings.Kp.value = settings_p->Kp.value;
+    m_settings.Ki.value = settings_p->Ki.value;
+    m_settings.Kd.value = settings_p->Kd.value;
   }
 
   float getErrorOld()
@@ -74,7 +79,12 @@ public:
   }
 
 private:
-  Pid_settingsT m_settings {};
+  PidSettings m_settings
+  {
+    { "Kp", "", 1.0, 0.0, 1.0 },
+    { "Ki", "", 1.0, 0.0, 1.0 },
+    { "Kd", "", 1.0, 0.0, 1.0 }
+  };
   float m_setPoint {};
   float m_yMin {};
   float m_yMax {};

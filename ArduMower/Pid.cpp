@@ -23,7 +23,7 @@
 
  How to find out P,I,D:
  1. Increase P until system starts to oscillate
- 2. Set I =0.6 * P and D = 0.125 * P
+ 2. Set I = 0.6 * P and D = 0.125 * P
 */
 
 #include "Pid.h"
@@ -31,9 +31,9 @@
 void Pid::setup(float Kp, float Ki, float Kd, float yMin, float yMax,
     float maxOutput)
 {
-  m_settings.Kp = Kp;
-  m_settings.Ki = Ki;
-  m_settings.Kd = Kd;
+  m_settings.Kp.value = Kp;
+  m_settings.Ki.value = Ki;
+  m_settings.Kd.value = Kd;
   m_yMin = yMin;
   m_yMax = yMax;
   m_maxOutput = maxOutput;
@@ -52,34 +52,40 @@ float Pid::compute(float processValue)
 
   if (dt > 1.0)
   {
-    dt = 1.0;   // should only happen for the very first call
+    dt = 1.0; // Should only happen for the very first call
   }
 
-  // compute error
+  // Get regulator constants
+  float& Kp = m_settings.Kp.value;
+  float& Ki = m_settings.Ki.value;
+  float& Kd = m_settings.Kd.value;
+
+  // Compute error
   float error = m_setPoint - processValue;
 
-  // integrate error
+  // Integration error
   m_errorSum += error;
 
-  // anti wind-up
-  float iTerm = m_settings.Ki * dt * m_errorSum;
+  // Anti wind-up
+  float iTerm = Ki * dt * m_errorSum;
+
   if (iTerm < -m_maxOutput)
   {
     iTerm = -m_maxOutput;
-    m_errorSum = -m_maxOutput / dt / m_settings.Ki;
+    m_errorSum = -m_maxOutput / dt / Ki;
   }
+
   if (iTerm > m_maxOutput)
   {
     iTerm = m_maxOutput;
-    m_errorSum = m_maxOutput / dt / m_settings.Ki;
+    m_errorSum = m_maxOutput / dt / Ki;
   }
 
-  float out = m_settings.Kp * error + iTerm +
-      m_settings.Kd / dt * (error - m_errorOld);
+  float out = Kp * error + iTerm + Kd / dt * (error - m_errorOld);
 
   m_errorOld = error;
 
-  // restrict output to min/max
+  // Restrict output
   out = constrain(out, m_yMin, m_yMax);
 
   return out;

@@ -383,7 +383,7 @@ protected:
   virtual void loadErrorCounters();
   virtual void saveErrorCounters();
   virtual void loadSaveUserSettings(bool readflag);
-  virtual void loadSavePidSettings(bool readflag, int& addr, Pid& pid);
+  virtual void loadSaveUserSettingsPid(bool readflag, int& addr, Pid& pid);
   virtual void loadUserSettings();
   virtual void checkErrorCounter();
   virtual void printSettingSerial();
@@ -511,4 +511,9 @@ private:
   void loadRobotStats();
   void saveRobotStats();
   void runStateMachine();
+
+  void printSettingSerialPidK(const __FlashStringHelper* prefixStr,
+      Setting<float> K);
+  void printSettingSerialPid(const __FlashStringHelper* prefixStr,
+      PidSettings* pidSettings_p);
 };

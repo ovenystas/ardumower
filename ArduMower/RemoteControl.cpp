@@ -136,10 +136,17 @@ void RemoteControl::sendSlider(String cmd, String title, float value,
 void RemoteControl::sendPIDSlider(String cmd, String title, Pid& pid,
     float scale, float maxvalue)
 {
-  const Pid_settingsT* pidSettings_p = pid.getSettings();
-  sendSlider(cmd + "p", title + " P", pidSettings_p->Kp, "", scale, maxvalue);
-  sendSlider(cmd + "i", title + " I", pidSettings_p->Ki, "", scale, maxvalue);
-  sendSlider(cmd + "d", title + " D", pidSettings_p->Kd, "", scale, maxvalue);
+  const PidSettings* pidSettings_p = pid.getSettings();
+  // TODO: Get maxvalue from pidSettings_p
+
+  const auto& Kp = pidSettings_p->Kp;
+  sendSlider(cmd + "p", title + " " + Kp.name, Kp.value, Kp.unit, scale, maxvalue);
+
+  const auto& Ki = pidSettings_p->Ki;
+  sendSlider(cmd + "i", title + " " + Ki.name, Ki.value, Ki.unit, scale, maxvalue);
+
+  const auto& Kd = pidSettings_p->Kd;
+  sendSlider(cmd + "d", title + " " + Kd.name, Kd.value, Kd.unit, scale, maxvalue);
 }
 
 void RemoteControl::processPIDSlider(String result, String cmd, Pid& pid,
@@ -152,20 +159,20 @@ void RemoteControl::processPIDSlider(String result, String cmd, Pid& pid,
   //Console.println(tmp);
   float v = stringToFloat(s);
 
-  Pid_settingsT* pidSettings_p = pid.getSettings();
+  PidSettings* pidSettings_p = pid.getSettings();
   float* ptr = nullptr;
 
   if (m_pfodCmd.startsWith(cmd + "p"))
   {
-    ptr = &pidSettings_p->Kp;
+    ptr = &pidSettings_p->Kp.value;
   }
   else if (m_pfodCmd.startsWith(cmd + "i"))
   {
-    ptr = &pidSettings_p->Ki;
+    ptr = &pidSettings_p->Ki.value;
   }
   else if (m_pfodCmd.startsWith(cmd + "d"))
   {
-    ptr = &pidSettings_p->Kd;
+    ptr = &pidSettings_p->Kd.value;
   }
 
   if (ptr)
@@ -496,9 +503,9 @@ void RemoteControl::processMotorMenu(String pfodCmd)
   if (pfodCmd.startsWith("a02"))
   {
     processSlider(pfodCmd,
-                  m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_powerMax, 1);
+                  m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_powerMax, 1.0);
     processSlider(pfodCmd,
-                  m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_powerMax, 1);
+                  m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_powerMax, 1.0);
   }
 
   else if (pfodCmd.startsWith("a03"))
@@ -521,29 +528,29 @@ void RemoteControl::processMotorMenu(String pfodCmd)
   }
   else if (pfodCmd.startsWith("a06"))
   {
-    processSlider(pfodCmd, m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmMax, 1);
-    processSlider(pfodCmd, m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmMax, 1);
+    processSlider(pfodCmd, m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmMax, 1.0);
+    processSlider(pfodCmd, m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmMax, 1.0);
   }
   else if (pfodCmd.startsWith("a15"))
   {
-    processSlider(pfodCmd, m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pwmMax, 1);
-    processSlider(pfodCmd, m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pwmMax, 1);
+    processSlider(pfodCmd, m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pwmMax, 1.0);
+    processSlider(pfodCmd, m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pwmMax, 1.0);
   }
   else if (pfodCmd.startsWith("a07"))
   {
-    processSlider(pfodCmd, m_robot_p->m_wheels.m_rollTimeMax, 1);
+    processSlider(pfodCmd, m_robot_p->m_wheels.m_rollTimeMax, 1.0);
   }
   else if (pfodCmd.startsWith("a19"))
   {
-    processSlider(pfodCmd, m_robot_p->m_wheels.m_rollTimeMin, 1);
+    processSlider(pfodCmd, m_robot_p->m_wheels.m_rollTimeMin, 1.0);
   }
   else if (pfodCmd.startsWith("a08"))
   {
-    processSlider(pfodCmd, m_robot_p->m_wheels.m_reverseTime, 1);
+    processSlider(pfodCmd, m_robot_p->m_wheels.m_reverseTime, 1.0);
   }
   else if (pfodCmd.startsWith("a09"))
   {
-    processSlider(pfodCmd, m_robot_p->m_wheels.m_forwardTimeMax, 10);
+    processSlider(pfodCmd, m_robot_p->m_wheels.m_forwardTimeMax, 10.0);
   }
   else if (pfodCmd.startsWith("a11"))
   {
@@ -578,9 +585,9 @@ void RemoteControl::processMotorMenu(String pfodCmd)
   else if (pfodCmd.startsWith("a18"))
   {
     processSlider(pfodCmd,
-                  m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_powerIgnoreTime, 1);
+                  m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_powerIgnoreTime, 1.0);
     processSlider(pfodCmd,
-                  m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_powerIgnoreTime, 1);
+                  m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_powerIgnoreTime, 1.0);
   }
   else if (pfodCmd == "a10")
   {
@@ -669,7 +676,7 @@ void RemoteControl::processMowMenu(String pfodCmd)
 {
   if (pfodCmd.startsWith("o02"))
   {
-    processSlider(pfodCmd, m_robot_p->m_cutter.m_motor.m_powerMax, 1);
+    processSlider(pfodCmd, m_robot_p->m_cutter.m_motor.m_powerMax, 1.0);
   }
   else if (pfodCmd.startsWith("o03"))
   {
@@ -680,7 +687,7 @@ void RemoteControl::processMowMenu(String pfodCmd)
   }
   else if (pfodCmd.startsWith("o05"))
   {
-    processSlider(pfodCmd, m_robot_p->m_cutter.m_motor.m_pwmMax, 1);
+    processSlider(pfodCmd, m_robot_p->m_cutter.m_motor.m_pwmMax, 1.0);
   }
   else if (pfodCmd == "o06")
   {
@@ -688,7 +695,7 @@ void RemoteControl::processMowMenu(String pfodCmd)
   }
   else if (pfodCmd.startsWith("o08"))
   {
-    processSlider(pfodCmd, m_robot_p->m_cutter.m_motor.m_rpmSet, 1);
+    processSlider(pfodCmd, m_robot_p->m_cutter.m_motor.m_rpmSet, 1.0);
   }
   else if (pfodCmd.startsWith("o09"))
   {
@@ -825,7 +832,7 @@ void RemoteControl::processSonarMenu(String pfodCmd)
   }
   else if (pfodCmd.startsWith("d03"))
   {
-    processSlider(pfodCmd, m_robot_p->m_sonars.triggerBelow, 1);
+    processSlider(pfodCmd, m_robot_p->m_sonars.triggerBelow, 1.0);
   }
   else if (pfodCmd == "d04")
   {
@@ -902,27 +909,27 @@ void RemoteControl::processPerimeterMenu(String pfodCmd)
   }
   else if (pfodCmd.startsWith("e04"))
   {
-    processSlider(pfodCmd, m_robot_p->m_perimeterTriggerTimeout, 1);
+    processSlider(pfodCmd, m_robot_p->m_perimeterTriggerTimeout, 1.0);
   }
   else if (pfodCmd.startsWith("e05"))
   {
-    processSlider(pfodCmd, m_robot_p->m_perimeterOutRollTimeMax, 1);
+    processSlider(pfodCmd, m_robot_p->m_perimeterOutRollTimeMax, 1.0);
   }
   else if (pfodCmd.startsWith("e06"))
   {
-    processSlider(pfodCmd, m_robot_p->m_perimeterOutRollTimeMin, 1);
+    processSlider(pfodCmd, m_robot_p->m_perimeterOutRollTimeMin, 1.0);
   }
   else if (pfodCmd.startsWith("e15"))
   {
-    processSlider(pfodCmd, m_robot_p->m_perimeterOutRevTime, 1);
+    processSlider(pfodCmd, m_robot_p->m_perimeterOutRevTime, 1.0);
   }
   else if (pfodCmd.startsWith("e16"))
   {
-    processSlider(pfodCmd, m_robot_p->m_perimeterTrackRollTime, 1);
+    processSlider(pfodCmd, m_robot_p->m_perimeterTrackRollTime, 1.0);
   }
   else if (pfodCmd.startsWith("e17"))
   {
-    processSlider(pfodCmd, m_robot_p->m_perimeterTrackRevTime, 1);
+    processSlider(pfodCmd, m_robot_p->m_perimeterTrackRevTime, 1.0);
   }
   else if (pfodCmd.startsWith("e07"))
   {
@@ -930,7 +937,7 @@ void RemoteControl::processPerimeterMenu(String pfodCmd)
   }
   else if (pfodCmd.startsWith("e08"))
   {
-    processSlider(pfodCmd, m_robot_p->m_perimeters.m_perimeterArray_p[PERIMETER_LEFT].m_timedOutIfBelowSmag, 1);
+    processSlider(pfodCmd, m_robot_p->m_perimeters.m_perimeterArray_p[PERIMETER_LEFT].m_timedOutIfBelowSmag, 1.0);
   }
   else if (pfodCmd.startsWith("e09"))
   {
@@ -942,11 +949,11 @@ void RemoteControl::processPerimeterMenu(String pfodCmd)
   }
   else if (pfodCmd.startsWith("e11"))
   {
-    processSlider(pfodCmd, m_robot_p->m_trackingPerimeterTransitionTimeOut, 1);
+    processSlider(pfodCmd, m_robot_p->m_trackingPerimeterTransitionTimeOut, 1.0);
   }
   else if (pfodCmd.startsWith("e12"))
   {
-    processSlider(pfodCmd, m_robot_p->m_trackingErrorTimeOut, 1);
+    processSlider(pfodCmd, m_robot_p->m_trackingErrorTimeOut, 1.0);
   }
   else if (pfodCmd.startsWith("e13"))
   {
@@ -954,7 +961,7 @@ void RemoteControl::processPerimeterMenu(String pfodCmd)
   }
   else if (pfodCmd.startsWith("e14"))
   {
-    processSlider(pfodCmd, m_robot_p->m_perimeters.m_perimeterArray_p[PERIMETER_LEFT].m_timeOutSecIfNotInside, 1);
+    processSlider(pfodCmd, m_robot_p->m_perimeters.m_perimeterArray_p[PERIMETER_LEFT].m_timeOutSecIfNotInside, 1.0);
   }
   sendPerimeterMenu(true);
 }
@@ -1049,7 +1056,7 @@ void RemoteControl::processGPSMenu(String pfodCmd)
   }
   else if (pfodCmd.startsWith("q02"))
   {
-    processSlider(pfodCmd, m_robot_p->m_gpsSpeedIgnoreTime, 1);
+    processSlider(pfodCmd, m_robot_p->m_gpsSpeedIgnoreTime, 1.0);
   }
   sendGPSMenu(true);
 }
@@ -1235,7 +1242,7 @@ void RemoteControl::processBatteryMenu(String pfodCmd)
   }
   else if (pfodCmd.startsWith("j12"))
   {
-    processSlider(pfodCmd, m_robot_p->m_battery.m_batSwitchOffIfIdle, 1);
+    processSlider(pfodCmd, m_robot_p->m_battery.m_batSwitchOffIfIdle, 1.0);
   }
   sendBatteryMenu(true);
 }
@@ -1262,19 +1269,19 @@ void RemoteControl::processStationMenu(String pfodCmd)
 {
   if (pfodCmd.startsWith("k00"))
   {
-    processSlider(pfodCmd, m_robot_p->m_stationRevTime, 1);
+    processSlider(pfodCmd, m_robot_p->m_stationRevTime, 1.0);
   }
   else if (pfodCmd.startsWith("k01"))
   {
-    processSlider(pfodCmd, m_robot_p->m_stationRollTime, 1);
+    processSlider(pfodCmd, m_robot_p->m_stationRollTime, 1.0);
   }
   else if (pfodCmd.startsWith("k02"))
   {
-    processSlider(pfodCmd, m_robot_p->m_stationForwTime, 1);
+    processSlider(pfodCmd, m_robot_p->m_stationForwTime, 1.0);
   }
   else if (pfodCmd.startsWith("k03"))
   {
-    processSlider(pfodCmd, m_robot_p->m_stationCheckTime, 1);
+    processSlider(pfodCmd, m_robot_p->m_stationCheckTime, 1.0);
   }
   sendStationMenu(true);
 }
@@ -1328,7 +1335,7 @@ void RemoteControl::processOdometerMenu(String pfodCmd)
   }
   else if (pfodCmd.startsWith("l04"))
   {
-    processSlider(pfodCmd, m_robot_p->m_odometer.m_ticksPerRevolution, 1);
+    processSlider(pfodCmd, m_robot_p->m_odometer.m_ticksPerRevolution, 1.0);
   }
   else if (pfodCmd.startsWith("l05"))
   {
@@ -1369,27 +1376,27 @@ void RemoteControl::processDateTimeMenu(String pfodCmd)
 {
   if (pfodCmd.startsWith("t01"))
   {
-    processSlider(pfodCmd, m_robot_p->m_datetime.date.dayOfWeek, 1);
+    processSlider(pfodCmd, m_robot_p->m_datetime.date.dayOfWeek, 1.0);
   }
   else if (pfodCmd.startsWith("t02"))
   {
-    processSlider(pfodCmd, m_robot_p->m_datetime.date.day, 1);
+    processSlider(pfodCmd, m_robot_p->m_datetime.date.day, 1.0);
   }
   else if (pfodCmd.startsWith("t03"))
   {
-    processSlider(pfodCmd, m_robot_p->m_datetime.date.month, 1);
+    processSlider(pfodCmd, m_robot_p->m_datetime.date.month, 1.0);
   }
   else if (pfodCmd.startsWith("t04"))
   {
-    processSlider(pfodCmd, m_robot_p->m_datetime.date.year, 1);
+    processSlider(pfodCmd, m_robot_p->m_datetime.date.year, 1.0);
   }
   else if (pfodCmd.startsWith("t05"))
   {
-    processSlider(pfodCmd, m_robot_p->m_datetime.time.hour, 1);
+    processSlider(pfodCmd, m_robot_p->m_datetime.time.hour, 1.0);
   }
   else if (pfodCmd.startsWith("t06"))
   {
-    processSlider(pfodCmd, m_robot_p->m_datetime.time.minute, 1);
+    processSlider(pfodCmd, m_robot_p->m_datetime.time.minute, 1.0);
   }
   sendDateTimeMenu(true);
   Console.print(F("setting RTC datetime: "));
@@ -1457,22 +1464,22 @@ void RemoteControl::processTimerDetailMenu(String pfodCmd)
   }
   else if (pfodCmd.startsWith("p1"))
   {
-    processSlider(pfodCmd, m_robot_p->m_timer[timerIdx].startTime.hour, 1);
+    processSlider(pfodCmd, m_robot_p->m_timer[timerIdx].startTime.hour, 1.0);
     checkStop = true;
   }
   else if (pfodCmd.startsWith("p2"))
   {
-    processSlider(pfodCmd, m_robot_p->m_timer[timerIdx].startTime.minute, 1);
+    processSlider(pfodCmd, m_robot_p->m_timer[timerIdx].startTime.minute, 1.0);
     checkStop = true;
   }
   else if (pfodCmd.startsWith("p3"))
   {
-    processSlider(pfodCmd, m_robot_p->m_timer[timerIdx].stopTime.hour, 1);
+    processSlider(pfodCmd, m_robot_p->m_timer[timerIdx].stopTime.hour, 1.0);
     checkStart = true;
   }
   else if (pfodCmd.startsWith("p4"))
   {
-    processSlider(pfodCmd, m_robot_p->m_timer[timerIdx].stopTime.minute, 1);
+    processSlider(pfodCmd, m_robot_p->m_timer[timerIdx].stopTime.minute, 1.0);
     checkStart = true;
   }
   else if (pfodCmd.startsWith("p9"))

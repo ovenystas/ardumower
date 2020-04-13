@@ -33,11 +33,11 @@ TEST(PidPInit, defaultInit_setup)
   pid_p = new Pid();
   pid_p->setup(1.0, 0.0, 0.0, -1.0, 1.0, 1.0);
 
-  Pid_settingsT* pidSettings_p = pid_p->getSettings();
+  PidSettings* pidSettings_p = pid_p->getSettings();
 
-  DOUBLES_EQUAL(1.0, pidSettings_p->Kp, 0.01);
-  DOUBLES_EQUAL(0.0, pidSettings_p->Ki, 0.01);
-  DOUBLES_EQUAL(0.0, pidSettings_p->Kd, 0.01);
+  DOUBLES_EQUAL(1.0, pidSettings_p->Kp.value, 0.01);
+  DOUBLES_EQUAL(0.0, pidSettings_p->Ki.value, 0.01);
+  DOUBLES_EQUAL(0.0, pidSettings_p->Kd.value, 0.01);
 
   DOUBLES_EQUAL(-1.0, pid_p->m_yMin, 0.01);
   DOUBLES_EQUAL(1.0, pid_p->m_yMax, 0.01);
@@ -56,11 +56,11 @@ TEST(PidPInit, parameterizedInit)
 
   pid_p = new Pid(1.0, 0.0, 0.0, -1.0, 1.0, 1.0);
 
-  Pid_settingsT* pidSettings_p = pid_p->getSettings();
+  PidSettings* pidSettings_p = pid_p->getSettings();
 
-  DOUBLES_EQUAL(1.0, pidSettings_p->Kp, 0.01);
-  DOUBLES_EQUAL(0.0, pidSettings_p->Ki, 0.01);
-  DOUBLES_EQUAL(0.0, pidSettings_p->Kd, 0.01);
+  DOUBLES_EQUAL(1.0, pidSettings_p->Kp.value, 0.01);
+  DOUBLES_EQUAL(0.0, pidSettings_p->Ki.value, 0.01);
+  DOUBLES_EQUAL(0.0, pidSettings_p->Kd.value, 0.01);
 
   DOUBLES_EQUAL(-1.0, pid_p->m_yMin, 0.01);
   DOUBLES_EQUAL(1.0, pid_p->m_yMax, 0.01);

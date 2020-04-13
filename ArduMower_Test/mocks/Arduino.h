@@ -105,6 +105,7 @@ uint8_t* portOutputRegister(uint8_t pin);
 uint8_t* portInputRegister(uint8_t pin);
 
 
+#include "WString.h"
 #include "HardwareSerial.h"
 
 uint32_t pulseIn(uint8_t pin, uint8_t state, uint32_t timeout = 1000000L);
