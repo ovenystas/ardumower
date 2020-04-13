@@ -119,7 +119,8 @@ void Robot::loadSaveUserSettingsPid(bool readflag, int& addr, Pid& pid)
   eereadwrite(readflag, addr, pidSettings_p->Kd.value);
 }
 
-void Robot::loadSaveUserSettingsBumpers(bool readflag, int& addr, Bumpers& bumpers)
+void Robot::loadSaveUserSettingsBumpers(bool readflag, int& addr,
+    Bumpers& bumpers)
 {
   BumpersSettings* bumpersSettings_p = bumpers.getSettings();
 
@@ -136,6 +137,21 @@ void Robot::loadSaveUserSettingsImu(bool readflag, int& addr, Imu& imu)
   loadSaveUserSettingsPid(readflag, addr, imu.m_pid[Imu::DIR]);
   loadSaveUserSettingsPid(readflag, addr, imu.m_pid[Imu::ROLL]);
 }
+
+void Robot::loadSaveUserSettingsOdometer(bool readflag, int& addr,
+    Odometer& odometer)
+{
+  OdometerSettings* odometerSettings_p = odometer.getSettings();
+
+  eereadwrite(readflag, addr, odometerSettings_p->use.value);
+  eereadwrite(readflag, addr, odometerSettings_p->ticksPerRevolution.value);
+  eereadwrite(readflag, addr, odometerSettings_p->ticksPerCm.value);
+  eereadwrite(readflag, addr, odometerSettings_p->wheelBaseCm.value);
+
+  eereadwrite(readflag, addr, odometer.m_encoder.left_p->m_swapDir);
+  eereadwrite(readflag, addr, odometer.m_encoder.right_p->m_swapDir);
+}
+
 
 void Robot::loadSaveUserSettings(bool readflag)
 {
@@ -216,12 +232,7 @@ void Robot::loadSaveUserSettings(bool readflag)
   eereadwrite(readflag, addr, m_stationForwTime);
   eereadwrite(readflag, addr, m_stationCheckTime);
 
-  eereadwrite(readflag, addr, m_odometer.m_use);
-  eereadwrite(readflag, addr, m_odometer.m_ticksPerRevolution);
-  eereadwrite(readflag, addr, m_odometer.m_ticksPerCm);
-  eereadwrite(readflag, addr, m_odometer.m_wheelBaseCm);
-  eereadwrite(readflag, addr, m_odometer.m_encoder.left_p->m_swapDir);
-  eereadwrite(readflag, addr, m_odometer.m_encoder.right_p->m_swapDir);
+  loadSaveUserSettingsOdometer(readflag, addr, m_odometer);
 
   eereadwrite(readflag, addr, m_button.m_use);
 
@@ -282,7 +293,7 @@ void Robot::deleteUserSettings()
 }
 
 template <class T>
-void Robot::printSettingNameColonValue(const Setting<T> K)
+void Robot::printSettingNameColonValue(const Setting<T>& K)
 {
   Console.print(K.name);
   Console.print(F(" : "));
@@ -484,14 +495,11 @@ void Robot::printSettingSerial()
 
   // ------ odometer ------------------------------------
   Console.println(F("== Odometer =="));
-  Console.print(F("use : "));
-  Console.println(m_odometer.m_use);
-  Console.print(F("ticksPerRevolution : "));
-  Console.println(m_odometer.m_ticksPerRevolution);
-  Console.print(F("ticksPerCm : "));
-  Console.println(m_odometer.m_ticksPerCm);
-  Console.print(F("wheelBaseCm : "));
-  Console.println(m_odometer.m_wheelBaseCm);
+  OdometerSettings* odometerSettings_p = m_odometer.getSettings();
+  printSettingNameColonValue(odometerSettings_p->use);
+  printSettingNameColonValue(odometerSettings_p->ticksPerRevolution);
+  printSettingNameColonValue(odometerSettings_p->ticksPerCm);
+  printSettingNameColonValue(odometerSettings_p->wheelBaseCm);
   Console.print(F("LEFT.swapDir : "));
   Console.println(m_odometer.m_encoder.left_p->m_swapDir);
   Console.print(F("RIGHT.swapDir : "));
@@ -619,7 +627,7 @@ void Robot::setMotorPWM(int pwm,
     }
   }
 
-  if (m_odometer.m_use)
+  if (m_odometer.isUsed())
   {
     m_wheels.m_wheel[motor].m_motor.m_pwmCur = pwm;
     if (abs(m_wheels.m_wheel[motor].m_encoder.getWheelRpmCurr()) == 0)
@@ -758,7 +766,7 @@ void Robot::wheelControl_imuDir()
 void Robot::wheelControl_normal()
 {
   // Use wheel motor PID-regulator if we use odometer
-  m_wheels.m_wheel[Wheel::LEFT].m_motor.m_regulate = m_odometer.m_use;
+  m_wheels.m_wheel[Wheel::LEFT].m_motor.m_regulate = m_odometer.isUsed();
 
   int zeroSettleTime = m_wheels.m_wheel[Wheel::LEFT].m_motor.m_zeroSettleTime;
   if (millis() < m_stateMachine.getStateStartTime() + zeroSettleTime)
@@ -783,7 +791,7 @@ void Robot::wheelControl_normal()
 // check for odometer sensor faults
 void Robot::checkOdometerFaults()
 {
-  if (!m_odometer.m_use)
+  if (!m_odometer.isUsed())
   {
     return;
   }
@@ -1035,7 +1043,7 @@ void Robot::printInfo(Stream &s)
   }
   else
   {
-    if (m_odometer.m_use)
+    if (m_odometer.isUsed())
     {
       printInfo_odometer(s);
     }
@@ -2862,7 +2870,7 @@ void Robot::tasks_250ms()
 void Robot::tasks_300ms()
 {
   checkIfStuck();
-  if (m_odometer.m_use)
+  if (m_odometer.isUsed())
   {
     m_odometer.calc();
   }

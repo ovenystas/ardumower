@@ -83,6 +83,8 @@ private:
   // generic slider
   void sendSlider(String cmd, String title, float value, String unit,
       float scale, float maxvalue, float minvalue = 0);
+  template <class T>
+  void sendSettingSlider(String cmd, Setting<T>& setting);
   void processSlider(String result, float& value, float scale);
   void processSlider(String result, long& value, float scale);
   void processSlider(String result, unsigned long& value, float scale);

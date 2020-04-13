@@ -91,6 +91,13 @@ void RemoteControl::sendTimer(ttimer_t timer)
   }
 }
 
+template <class T>
+void RemoteControl::sendSettingSlider(String cmd, Setting<T>& setting)
+{
+  sendSlider(cmd, setting.name, setting.value, setting.unit,
+      setting.minValue, setting.maxValue);
+}
+
 void RemoteControl::sendSlider(String cmd, String title, float value,
     String unit, float scale, float maxvalue, float minvalue)
 {
@@ -1274,8 +1281,9 @@ void RemoteControl::sendOdometerMenu(bool update)
   {
     Bluetooth.print(F("{.Odometer2D`1000"));
   }
+  OdometerSettings* odometerSettings_p = m_robot_p->m_odometer.getSettings();
   Bluetooth.print(F("|l00~Use "));
-  sendYesNo(m_robot_p->m_odometer.m_use);
+  sendYesNo(odometerSettings_p->use.value);
   Bluetooth.print(F("|l01~Value l, r "));
   Bluetooth.print(m_robot_p->m_odometer.m_encoder.left_p->getCounter());
   Bluetooth.print(", ");
@@ -1284,12 +1292,9 @@ void RemoteControl::sendOdometerMenu(bool update)
   Bluetooth.print(m_robot_p->m_odometer.m_encoder.left_p->getWheelRpmCurr());
   Bluetooth.print(", ");
   Bluetooth.println(m_robot_p->m_odometer.m_encoder.right_p->getWheelRpmCurr());
-  sendSlider("l04", F("Ticks per one full revolution"),
-             m_robot_p->m_odometer.m_ticksPerRevolution, "", 1, 2000);
-  sendSlider("l01", F("Ticks per cm"),
-             m_robot_p->m_odometer.m_ticksPerCm, "", 0.1, 30);
-  sendSlider("l02", F("Wheel base cm"),
-             m_robot_p->m_odometer.m_wheelBaseCm, "", 0.1, 50);
+  sendSettingSlider("l04", odometerSettings_p->ticksPerRevolution);
+  sendSettingSlider("l01", odometerSettings_p->ticksPerCm);
+  sendSettingSlider("l02", odometerSettings_p->wheelBaseCm);
   Bluetooth.print(F("|l05~Swap left direction "));
   sendYesNo(m_robot_p->m_odometer.m_encoder.left_p->m_swapDir);
   Bluetooth.print(F("|l06~Swap right direction "));
@@ -1299,21 +1304,23 @@ void RemoteControl::sendOdometerMenu(bool update)
 
 void RemoteControl::processOdometerMenu(String pfodCmd)
 {
+  OdometerSettings* odometerSettings_p = m_robot_p->m_odometer.getSettings();
+
   if (pfodCmd == "l00")
   {
-    TOGGLE(m_robot_p->m_odometer.m_use);
+    TOGGLE(odometerSettings_p->use.value);
   }
   else if (pfodCmd.startsWith("l01"))
   {
-    processSlider(pfodCmd, m_robot_p->m_odometer.m_ticksPerCm, 0.1);
+    processSlider(pfodCmd, odometerSettings_p->ticksPerCm.value, 0.1);
   }
   else if (pfodCmd.startsWith("l02"))
   {
-    processSlider(pfodCmd, m_robot_p->m_odometer.m_wheelBaseCm, 0.1);
+    processSlider(pfodCmd, odometerSettings_p->wheelBaseCm.value, 0.1);
   }
   else if (pfodCmd.startsWith("l04"))
   {
-    processSlider(pfodCmd, m_robot_p->m_odometer.m_ticksPerRevolution, 1.0);
+    processSlider(pfodCmd, odometerSettings_p->ticksPerRevolution.value, 1.0);
   }
   else if (pfodCmd.startsWith("l05"))
   {

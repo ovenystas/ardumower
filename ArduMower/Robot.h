@@ -378,7 +378,8 @@ protected:
   virtual void loadSaveUserSettingsBumpers(bool readflag, int& addr,
       Bumpers& bumpers);
   virtual void loadSaveUserSettingsImu(bool readflag, int& addr, Imu& imu);
-
+  virtual void loadSaveUserSettingsOdometer(bool readflag, int& addr,
+      Odometer& odometer);
   virtual void loadUserSettings();
   virtual void checkErrorCounter();
   virtual void printSettingSerial();
@@ -494,7 +495,7 @@ private:
   void runStateMachine();
 
   template <class T>
-  void printSettingNameColonValue(const Setting<T> K);
+  void printSettingNameColonValue(const Setting<T>& K);
 
   void printSettingSerialPidK(const __FlashStringHelper* prefixStr,
       Setting<float> K);
