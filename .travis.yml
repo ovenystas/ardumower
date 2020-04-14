@@ -14,12 +14,7 @@ jobs:
         - arduino-cli core install arduino:avr
         - cd ardumower
       script:
-        - >
-          arduino-cli compile
-          --fqbn arduino:avr:mega
-          --warnings all
-          --build-properties compiler.cpp.extra_flags=-Werror,compiler.c.extra_flags=-Werror
-          ArduMower
+        - make all
     - install:
         - cd ..
         - git clone https://github.com/cpputest/cpputest.git

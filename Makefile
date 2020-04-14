@@ -15,17 +15,17 @@ all:
 	$(SILENCE)arduino-cli compile --fqbn $(ARDUINO_CLI_FQBN) --warnings $(ARDUINO_CLI_WARNINGS) --build-properties $(ARDUINO_CLI_BUILD_PROPERTIES) $(ARDUINO_CLI_PROJECT) $(ARDUINO_CLI_VERBOSE)
 
 test:
-	$(SILENCE)make -C ArduMower_Test
+	$(SILENCE)make -j -C ArduMower_Test
 
 gcov:
-	$(SILENCE)make -C ArduMower_Test gcov
+	$(SILENCE)make -j -C ArduMower_Test gcov
 
 clean:
 	$(SILENCE)rm -rf ArduMower/build
 	$(SILENCE)rm -f ArduMower/ArduMower.*.hex
 	$(SILENCE)rm -f ArduMower/ArduMower.*.elf
 
-	$(SILENCE)make -C ArduMower_Test clean
+	$(SILENCE)make -j -C ArduMower_Test clean
 
 phony: test gcov clean
 
