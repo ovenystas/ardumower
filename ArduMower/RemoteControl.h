@@ -92,6 +92,7 @@ private:
   void processSlider(String result, unsigned int& value, float scale);
   void processSlider(String result, byte& value, float scale);
   void processSlider(String result, short& value, float scale);
+  void processSlider(String result, unsigned short& value, float scale);
 
   // send timer menu details
   void sendTimer(ttimer_t timer);

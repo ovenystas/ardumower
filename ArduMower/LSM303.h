@@ -177,12 +177,12 @@ class LSM303
       D_OUT_Z_H_M       = 0x0D
     };
 
-    vector<int16_t> m_acc; // accelerometer readings
-    vector<int16_t> m_mag; // magnetometer readings
-    vector<int16_t> m_mag_max; // maximum magnetometer values, used for calibration
-    vector<int16_t> m_mag_min; // minimum magnetometer values, used for calibration
+    vector<int16_t> m_acc {}; // accelerometer readings
+    vector<int16_t> m_mag {}; // magnetometer readings
+    vector<int16_t> m_mag_max { INT16_MAX, INT16_MAX, INT16_MAX }; // maximum magnetometer values, used for calibration
+    vector<int16_t> m_mag_min { INT16_MIN, INT16_MIN, INT16_MIN }; // minimum magnetometer values, used for calibration
 
-    byte m_last_status; // status of last I2C transmission
+    byte m_last_status {}; // status of last I2C transmission
 
     LSM303(void);
 
@@ -223,15 +223,15 @@ class LSM303
     static void vector_normalize(vector<float> *a);
 
   private:
-    deviceTypeE m_deviceType; // chip type (D, DLHC, DLM, or DLH)
-    byte m_acc_address;
-    byte m_mag_address;
+    deviceTypeE m_deviceType { DEVICE_AUTO }; // chip type (D, DLHC, DLM, or DLH)
+    byte m_acc_address {};
+    byte m_mag_address {};
 
     static const int m_dummy_reg_count = 6;
-    regAddrE m_translated_regs[m_dummy_reg_count + 1]; // index 0 not used
+    regAddrE m_translated_regs[m_dummy_reg_count + 1] {}; // index 0 not used
 
-    unsigned int m_io_timeout;
-    bool m_did_timeout;
+    unsigned int m_io_timeout {};
+    bool m_did_timeout { false };
 
     int testReg(byte address, regAddrE reg);
 };

@@ -27,17 +27,6 @@ LSM303::LSM303(void)
   for your particular unit. The Heading example demonstrates how to
   adjust these values in your own sketch.
   */
-  m_mag_min = { INT16_MIN, INT16_MIN, INT16_MIN };
-  m_mag_max = { INT16_MAX, INT16_MAX, INT16_MAX };
-
-  m_deviceType = DEVICE_AUTO;
-
-  m_io_timeout = 0;  // 0 = no timeout
-  m_did_timeout = false;
-
-  m_acc_address = 0;
-  m_mag_address = 0;
-  m_last_status = 0;
 }
 
 // Public Methods //////////////////////////////////////////////////////////////

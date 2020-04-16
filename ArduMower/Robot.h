@@ -286,7 +286,7 @@ public:
   virtual void resetIdleTime();
 
   // state machine
-  virtual void setNextState(StateMachine::stateE stateNew, bool dir = LEFT);
+  virtual void setNextState(StateMachine::stateE stateNew, int dir = LEFT);
 
   // motor
   virtual void setMotorPWMs(const int pwmLeft, const int pwmRight,
@@ -479,7 +479,7 @@ private:
   int m_loopsPerSec {};  // main loops per second
   int m_loopsPerSecCounter {};
   byte m_consoleMode { CONSOLE_SENSOR_COUNTERS };
-  bool m_rollDir { LEFT };
+  int m_rollDir { LEFT };
   unsigned long m_nextTimeErrorCounterReset {};
   unsigned long m_nextTimeErrorBeep {};
 

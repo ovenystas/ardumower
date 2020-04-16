@@ -19,15 +19,6 @@
 
 // Constructors ////////////////////////////////////////////////////////////////
 
-L3G::L3G(void)
-{
-  m_deviceType = DEVICE_AUTO;
-
-  m_io_timeout = 0;  // 0 = no timeout
-  m_did_timeout = false;
-  m_last_status = 0;
-  m_address = 0;
-}
 
 // Public Methods //////////////////////////////////////////////////////////////
 
@@ -41,14 +32,14 @@ bool L3G::timeoutOccurred()
 
 bool L3G::init(deviceTypeE device, sa0StateE sa0)
 {
-  int id;
-
   // perform auto-detection unless device type and SA0 state were both specified
   if (device == DEVICE_AUTO || sa0 == SA0_AUTO)
   {
     // check for L3GD20H, D20 if device is unidentified or was specified to be one of these types
     if (device == DEVICE_AUTO || device == DEVICE_D20H || device == DEVICE_D20)
     {
+      int id;
+
       // check SA0 high address unless SA0 was specified to be low
       if (sa0 != SA0_LOW && (id = testReg(D20_SA0_HIGH_ADDRESS, WHO_AM_I)) != TEST_REG_ERROR)
       {

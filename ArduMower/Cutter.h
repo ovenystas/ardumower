@@ -12,6 +12,7 @@
 class Cutter
 {
   public:
+	Cutter() {};
     MotorMosFet m_motor;
 
     bool isEnabled() const
@@ -71,5 +72,5 @@ class Cutter
   private:
     bool m_enabled {false};
     bool m_enableOverriden {false};
-    int8_t m_speed; // Range 0..100
+    int8_t m_speed {}; // Range 0..100
 };

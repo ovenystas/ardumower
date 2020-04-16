@@ -208,6 +208,14 @@ void RemoteControl::processSlider(String result, long &value, float scale)
   value = v;
 }
 
+void RemoteControl::processSlider(String result, unsigned short& value,
+    float scale)
+{
+  float v;
+  processSlider(result, v, scale);
+  value = v;
+}
+
 void RemoteControl::processSlider(String result, unsigned long& value,
     float scale)
 {
@@ -1809,23 +1817,23 @@ void RemoteControl::processManualMenu(String pfodCmd)
   {
     // manual: left
     m_robot_p->setNextState(StateMachine::STATE_MANUAL, 0);
-    int sign = 1;
+    int signVal = 1;
     if (m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet < 0)
     {
-      sign = -1;
+      signVal = -1;
     }
-    if (sign * m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet >=
-        sign * m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmSet)
+    if (signVal * m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet >=
+        signVal * m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmSet)
     {
       m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet =
-          sign * m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmMax / 2;
+          signVal * m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmMax / 2;
     }
     else
     {
       m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet /= 2;
     }
     m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmSet =
-        sign * m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmMax;
+        signVal * m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmMax;
 
     sendManualMenu(true);
   }
@@ -1833,23 +1841,23 @@ void RemoteControl::processManualMenu(String pfodCmd)
   {
     // manual: right
     m_robot_p->setNextState(StateMachine::STATE_MANUAL, 0);
-    int sign = 1;
+    int signVal = 1;
     if (m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmSet < 0)
     {
-      sign = -1;
+      signVal = -1;
     }
-    if (sign * m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmSet >=
-        sign * m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet)
+    if (signVal * m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmSet >=
+        signVal * m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet)
     {
       m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmSet =
-          sign * m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmMax / 2;
+          signVal * m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmMax / 2;
     }
     else
     {
       m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmSet /= 2;
     }
     m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet =
-        sign * m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmMax;
+        signVal * m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmMax;
 
     sendManualMenu(true);
   }

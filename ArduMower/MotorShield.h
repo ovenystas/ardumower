@@ -16,11 +16,11 @@
 class MotorShield: public MotorDrv
 {
 public:
-  void setup();
-  void setSpeed();
-  void setSpeed(int16_t speed);
-  void setSpeed(int16_t speed, bool brake);
-  void readCurrent();
+  void setup() override;
+  void setSpeed() override;
+  void setSpeed(int16_t speed) override;
+  void setSpeed(int16_t speed, bool brake) override;
+  void readCurrent() override;
   void control();
 
 private:

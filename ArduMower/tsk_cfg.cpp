@@ -74,6 +74,7 @@ static TaskType Tasks[] =
   { INTERVAL_50MS,  0, run_task_50ms },
   { INTERVAL_100MS, 0, run_task_100ms },
   { INTERVAL_200MS, 0, run_task_200ms },
+  { INTERVAL_250MS, 0, run_task_250ms },
   { INTERVAL_300MS, 0, run_task_300ms },
   { INTERVAL_500MS, 0, run_task_500ms },
   { INTERVAL_1S,    0, run_task_1s },

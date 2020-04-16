@@ -37,10 +37,10 @@ class Mower: public Robot
 {
 public:
   Mower();
-  virtual void setup(void);
-  virtual void configureBluetooth(bool quick);
-  virtual int readSensor(Robot::sensorE type);
-  virtual void setActuator(Robot::actuatorE type, int value);
+  virtual void setup(void) override;
+  virtual void configureBluetooth(bool quick) override;
+  virtual int readSensor(Robot::sensorE type) override;
+  virtual void setActuator(Robot::actuatorE type, int value) override;
 };
 
 extern Mower robot;

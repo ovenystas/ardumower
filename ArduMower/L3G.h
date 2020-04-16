@@ -87,11 +87,11 @@ class L3G
        LOW_ODR        = 0x39  // D20H
     };
 
-    vector<int16_t> m_g; // gyro angular velocity readings
+    vector<int16_t> m_g {}; // gyro angular velocity readings
 
-    byte m_last_status; // status of last I2C transmission
+    byte m_last_status {}; // status of last I2C transmission
 
-    L3G(void);
+    L3G() {};
 
     bool init(deviceTypeE device = DEVICE_AUTO, sa0StateE sa0 = SA0_AUTO);
     deviceTypeE getDeviceType(void) const
@@ -128,11 +128,11 @@ class L3G
     static void vectorNormalize(vector<float> *a);
 
   private:
-      deviceTypeE m_deviceType; // chip type (D20H, D20, or 4200D)
-      byte m_address;
+      deviceTypeE m_deviceType { DEVICE_AUTO }; // chip type (D20H, D20, or 4200D)
+      byte m_address {};
 
-      unsigned int m_io_timeout;
-      bool m_did_timeout;
+      unsigned int m_io_timeout {};
+      bool m_did_timeout { false };
 
       int testReg(const byte address, const regAddrE reg);
 };

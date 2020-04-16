@@ -11,6 +11,8 @@
 class StateMachine
 {
   public:
+	StateMachine() {};
+
     typedef enum stateE
     {
       STATE_OFF,              // off

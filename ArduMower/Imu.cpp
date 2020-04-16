@@ -276,11 +276,10 @@ void Imu::initAccelerometer()
   Console.print(F("deviceType="));
   Console.print(m_accMag.getDeviceType());
 
-  uint8_t devId;
   int retry = 0;
   for (;;)
   {
-    devId = m_accMag.readReg(LSM303::WHO_AM_I_M);
+	uint8_t devId = m_accMag.readReg(LSM303::WHO_AM_I_M);
     Console.print(F(" devId="));
     Console.println(devId);
     if (devId != LSM303::DEV_ID_LSM303DLM)
@@ -340,11 +339,10 @@ bool Imu::initGyroscope()
   Console.print(F("deviceType="));
   Console.print(m_gyro.getDeviceType());
 
-  uint8_t devId;
   int retry = 0;
   for (;;)
   {
-    devId = m_gyro.readReg(L3G::WHO_AM_I);
+    uint8_t devId = m_gyro.readReg(L3G::WHO_AM_I);
     Console.print(F(" devId="));
     Console.println(devId);
     if (devId != L3G::DEV_ID_4200D)
@@ -472,12 +470,12 @@ void Imu::calibrateMagnetometerUpdate(void)
 
   readMagnetometer();
 
-  bool newfound = false;
-
   if (abs(m_accMag.m_mag.x - m_magLast.x) < 10 &&
       abs(m_accMag.m_mag.y - m_magLast.y) < 10 &&
       abs(m_accMag.m_mag.z - m_magLast.z) < 10)
   {
+    bool newfound = false;
+
     if (m_accMag.m_mag.x < m_magMin.x)
     {
       m_magMin.x = m_accMag.m_mag.x;

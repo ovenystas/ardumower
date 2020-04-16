@@ -14,6 +14,8 @@
 class Motor
 {
   public:
+	Motor() {};
+
     float m_acceleration {};
     bool m_regulate { false };
     int16_t m_rpmMax {};
@@ -165,11 +167,11 @@ class Motor
     static constexpr float RPM_DIVISOR_HALF { 1.5 };
     static constexpr float RPM_DIVISOR_SLOW { 2.0 };
 
-    uint8_t m_pinDir;
-    uint8_t m_pinPwm;
-    uint8_t m_pinSense;
-    uint8_t m_pinRpm;
-    uint8_t m_pinBrake;
+    uint8_t m_pinDir {};
+    uint8_t m_pinPwm {};
+    uint8_t m_pinSense {};
+    uint8_t m_pinRpm {};
+    uint8_t m_pinBrake {};
     uint16_t m_overloadCounter {};
     uint32_t m_lastRpmTime {};
     uint32_t m_nextTimeRpmMeas {};

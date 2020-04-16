@@ -1602,7 +1602,7 @@ void Robot::setDefaults()
 // set state machine new state
 // http://wiki.ardumower.de/images/f/ff/Ardumower_states.png
 // called *ONCE* to set to a *NEW* state
-void Robot::setNextState(StateMachine::stateE stateNew, bool dir)
+void Robot::setNextState(StateMachine::stateE stateNew, int dir)
 {
   if (m_stateMachine.isCurrentState(stateNew))
   {

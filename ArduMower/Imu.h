@@ -90,6 +90,8 @@ struct ImuSettings
 class Imu
 {
 public:
+  Imu() {};
+
   enum imuPidE
   {
     DIR,

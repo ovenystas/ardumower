@@ -41,10 +41,9 @@ void BluetoothConfig::readBT()
   {
     Console.print(F("  received: "));
 
-    char btData;
     do
     {
-      btData = Bluetooth.read();
+      char btData = Bluetooth.read();
       m_btResult += btData;
       Console.print(btData);
     } while (Bluetooth.available());
