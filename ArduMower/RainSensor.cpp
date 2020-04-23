@@ -7,20 +7,20 @@
 
 #include "RainSensor.h"
 
-void rainSensor_setup(const uint8_t pin, RainSensor* rainSensor_p)
+void RainSensor::setup(const uint8_t pin)
 {
-  rainSensor_p->use = false;
-  rainSensor_p->pin = pin;
-  rainSensor_p->raining = false;
-  rainSensor_p->counter = 0;
-  pinMode(rainSensor_p->pin, INPUT);
+  m_use = false;
+  m_pin = pin;
+  m_raining = false;
+  m_counter = 0;
+  pinMode(m_pin, INPUT);
 }
 
-void rainSensor_check(RainSensor* rainSensor_p)
+void RainSensor::check()
 {
-  rainSensor_p->raining = (digitalRead(rainSensor_p->pin) == LOW);
-  if (rainSensor_p->raining)
+  m_raining = (digitalRead(m_pin) == LOW);
+  if (m_raining)
   {
-    rainSensor_p->counter++;
+    m_counter++;
   }
 }

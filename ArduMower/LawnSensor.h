@@ -41,7 +41,7 @@ private:
 
 struct LawnSensorsSettings
 {
-  Setting<bool> use;                // Use the lawn swnsors or not
+  Setting<bool> use;                // Use the lawn sensors or not
 };
 
 class LawnSensors

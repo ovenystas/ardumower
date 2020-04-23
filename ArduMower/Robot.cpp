@@ -160,6 +160,14 @@ void Robot::loadSaveUserSettingsLawnSensors(bool readflag, int& addr,
   eereadwrite(readflag, addr, lawnSensorsSettings_p->use.value);
 }
 
+void Robot::loadSaveUserSettingsRainSensor(bool readflag, int& addr,
+    RainSensor& rainSensor)
+{
+  RainSensorSettings* rainSensorSettings_p = rainSensor.getSettings();
+
+  eereadwrite(readflag, addr, rainSensorSettings_p->use.value);
+}
+
 void Robot::loadSaveUserSettings(bool readflag)
 {
   int addr = ADDR_USER_SETTINGS + 1;
@@ -250,7 +258,7 @@ void Robot::loadSaveUserSettings(bool readflag)
   eereadwrite(readflag, addr, m_timerUse);
   eereadwrite(readflag, addr, m_timer);
 
-  eereadwrite(readflag, addr, m_rainSensor.use);
+  loadSaveUserSettingsRainSensor(readflag, addr, m_rainSensor);
 
   eereadwrite(readflag, addr, m_gpsUse);
   eereadwrite(readflag, addr, m_stuckIfGpsSpeedBelow);
@@ -385,8 +393,7 @@ void Robot::printSettingSerial()
 
   // ------ bumper ------------------------------------
   Console.println(F("== Bumpers =="));
-  BumpersSettings* bumpersSettings_p = m_bumpers.getSettings();
-  printSettingNameColonValue(bumpersSettings_p->use);
+  printSettingNameColonValue(m_bumpers.getSettings()->use);
 
   // ------ drop ------------------------------------
   Console.println(F("== Drop sensors =="));
@@ -398,8 +405,7 @@ void Robot::printSettingSerial()
 
   // ------ rain ------------------------------------
   Console.println(F("== Rain sensor =="));
-  Console.print(F("use : "));
-  Console.println(m_rainSensor.use);
+  printSettingNameColonValue(m_rainSensor.getSettings()->use);
 
   // ------ sonar ------------------------------------
   Console.println(F("== Sonars =="));
@@ -2259,7 +2265,7 @@ void Robot::checkLawn()
 
 void Robot::checkRain()
 {
-  if (rainSensor_isRaining(&m_rainSensor))
+  if (m_rainSensor.isRaining())
   {
     Console.println(F("RAIN"));
     if (m_perimeters.m_use)
@@ -2525,7 +2531,7 @@ void Robot::runStateMachine()
       }
       checkErrorCounter();
       checkTimer();
-      if (m_rainSensor.use)
+      if (m_rainSensor.isUsed())
       {
         checkRain();
       }
@@ -2917,9 +2923,9 @@ void Robot::tasks_2s()
 
 void Robot::tasks_5s()
 {
-  if (m_rainSensor.use)
+  if (m_rainSensor.isUsed())
   {
-    rainSensor_check(&m_rainSensor);
+    m_rainSensor.check();
   }
 }
 

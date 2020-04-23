@@ -7,26 +7,62 @@
 #pragma once
 
 #include <Arduino.h>
+#include "Setting.h"
 
-typedef struct
+struct RainSensorSettings
 {
-  bool use;
-  uint8_t pin;
-  bool raining;
-  uint16_t counter;
-} RainSensor;
+  Setting<bool> use;                // Use the rain sensor or not
+};
 
-void rainSensor_setup(const uint8_t pin, RainSensor* rainSensor_p);
-void rainSensor_check(RainSensor* rainSensor_p);
-
-static inline
-bool rainSensor_isRaining(RainSensor* rainSensor_p)
+class RainSensor
 {
-  return rainSensor_p->raining;
-}
+public:
+  RainSensor() = default;
+  RainSensor(const uint8_t pin)
+  {
+    setup(pin);
+  }
 
-static inline
-uint16_t rainSensor_getCounter(RainSensor* rainSensor_p)
-{
-  return rainSensor_p->counter;
-}
+  void setup(const uint8_t pin);
+
+  bool isUsed()
+  {
+    return m_use;
+  }
+
+  void check();
+
+  bool isRaining()
+  {
+    return m_raining;
+  }
+
+  uint16_t getCounter()
+  {
+    return m_counter;
+  }
+
+  RainSensorSettings* getSettings()
+  {
+    return &m_settings;
+  }
+
+  void setSettings(RainSensorSettings* settings_p)
+  {
+    m_settings.use.value = settings_p->use.value;
+ }
+
+private:
+  uint8_t m_pin {};
+  bool m_raining {};
+  uint16_t m_counter {};
+
+  RainSensorSettings m_settings
+  {
+    { "Use", "", false, false, true }
+  };
+
+  // Shorter convenient variables for settings variables
+  bool& m_use = m_settings.use.value;
+};
+

@@ -1,136 +1,197 @@
-#include "RainSensor.h"
-
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
 
-RainSensor rainSensor;
+// Get access to private class members in SUT
+#define private public
+#include "RainSensor.h"
 
-// RainSensorGroup ------------------------------------------------------------
+// RainSensorInit ------------------------------------------------------------
 
-TEST_GROUP(RainSensorGroup)
+TEST_GROUP(RainSensorInit)
 {
+  RainSensor* rainSensor_p;
+
   void setup()
   {
-    mock().expectOneCall("pinMode")
-        .withIntParameter("pin", 1)
-        .withIntParameter("mode", INPUT);
-    rainSensor_setup(1, &rainSensor);
-
-    mock().checkExpectations();
   }
 
   void teardown()
   {
+    if (rainSensor_p)
+    {
+      delete rainSensor_p;
+    }
+    mock().clear();
+  }
+
+  void mockSetup_defaultInit_setup_and_parameterizedInit()
+  {
+    mock().expectOneCall("pinMode")
+        .withIntParameter("pin", 1)
+        .withIntParameter("mode", INPUT);
+  }
+
+  void checks_defaultInit_setup_and_parameterizedInit()
+  {
+    CHECK_FALSE(rainSensor_p->m_use);
+    UNSIGNED_LONGS_EQUAL(1, rainSensor_p->m_pin);
+    CHECK_FALSE(rainSensor_p->m_raining);
+    UNSIGNED_LONGS_EQUAL(0, rainSensor_p->m_counter);
+
+    mock().checkExpectations();
+  }
+};
+
+TEST(RainSensorInit, defaultInit)
+{
+  rainSensor_p = new RainSensor();
+
+  CHECK_FALSE(rainSensor_p->m_use);
+  UNSIGNED_LONGS_EQUAL(0, rainSensor_p->m_pin);
+  CHECK_FALSE(rainSensor_p->m_raining);
+  UNSIGNED_LONGS_EQUAL(0, rainSensor_p->m_counter);
+}
+
+TEST(RainSensorInit, defaultInit_setup)
+{
+  mockSetup_defaultInit_setup_and_parameterizedInit();
+
+  rainSensor_p = new RainSensor();
+  rainSensor_p->setup(1);
+
+  checks_defaultInit_setup_and_parameterizedInit();
+}
+
+TEST(RainSensorInit, parameterizedInit)
+{
+  mockSetup_defaultInit_setup_and_parameterizedInit();
+
+  rainSensor_p = new RainSensor(1);
+
+  checks_defaultInit_setup_and_parameterizedInit();
+}
+
+// RainSensor -----------------------------------------------------------------
+
+TEST_GROUP(RainSensor)
+{
+  RainSensor* rainSensor_p;
+
+  void setup()
+  {
+    mock().disable();
+    rainSensor_p = new RainSensor(1);
+    mock().enable();
+  }
+
+  void teardown()
+  {
+    if (rainSensor_p)
+    {
+      delete rainSensor_p;
+    }
     mock().clear();
   }
 };
 
-TEST(RainSensorGroup, Setup)
-{
-  CHECK_EQUAL(false, rainSensor.use);
-  CHECK_EQUAL(1, rainSensor.pin);
-  CHECK_EQUAL(false, rainSensor.raining);
-  CHECK_EQUAL(0, rainSensor.counter);
-}
-
-TEST(RainSensorGroup, CheckOnceHigh)
+TEST(RainSensor, CheckOnceHigh)
 {
   mock().expectOneCall("digitalRead")
       .withIntParameter("pin", 1)
       .andReturnValue(HIGH);
 
-  rainSensor_check(&rainSensor);
-  CHECK_EQUAL(false, rainSensor_isRaining(&rainSensor));
-  CHECK_EQUAL(0, rainSensor_getCounter(&rainSensor));
+  rainSensor_p->check();
+  CHECK_EQUAL(false, rainSensor_p->isRaining());
+  CHECK_EQUAL(0, rainSensor_p->getCounter());
 
   mock().checkExpectations();
 }
 
-TEST(RainSensorGroup, CheckOnceLow)
+TEST(RainSensor, CheckOnceLow)
 {
   mock().expectOneCall("digitalRead")
       .withIntParameter("pin", 1)
       .andReturnValue(LOW);
 
-  rainSensor_check(&rainSensor);
-  CHECK_EQUAL(true, rainSensor_isRaining(&rainSensor));
-  CHECK_EQUAL(1, rainSensor_getCounter(&rainSensor));
+  rainSensor_p->check();
+  CHECK_EQUAL(true, rainSensor_p->isRaining());
+  CHECK_EQUAL(1, rainSensor_p->getCounter());
 
   mock().checkExpectations();
 }
 
-TEST(RainSensorGroup, CheckTwiceHigh)
+TEST(RainSensor, CheckTwiceHigh)
 {
   mock().expectNCalls(2, "digitalRead")
       .withIntParameter("pin", 1)
       .andReturnValue(HIGH);
 
-  rainSensor_check(&rainSensor);
-  CHECK_EQUAL(false, rainSensor_isRaining(&rainSensor));
-  CHECK_EQUAL(0, rainSensor_getCounter(&rainSensor));
+  rainSensor_p->check();
+  CHECK_EQUAL(false, rainSensor_p->isRaining());
+  CHECK_EQUAL(0, rainSensor_p->getCounter());
 
-  rainSensor_check(&rainSensor);
-  CHECK_EQUAL(false, rainSensor_isRaining(&rainSensor));
-  CHECK_EQUAL(0, rainSensor_getCounter(&rainSensor));
+  rainSensor_p->check();
+  CHECK_EQUAL(false, rainSensor_p->isRaining());
+  CHECK_EQUAL(0, rainSensor_p->getCounter());
 
   mock().checkExpectations();
 }
 
-TEST(RainSensorGroup, CheckTwiceLow)
+TEST(RainSensor, CheckTwiceLow)
 {
   mock().expectNCalls(2, "digitalRead")
       .withIntParameter("pin", 1)
       .andReturnValue(LOW);
 
-  rainSensor_check(&rainSensor);
-  CHECK_EQUAL(true, rainSensor_isRaining(&rainSensor));
-  CHECK_EQUAL(1, rainSensor_getCounter(&rainSensor));
+  rainSensor_p->check();
+  CHECK_EQUAL(true, rainSensor_p->isRaining());
+  CHECK_EQUAL(1, rainSensor_p->getCounter());
 
-  rainSensor_check(&rainSensor);
-  CHECK_EQUAL(true, rainSensor_isRaining(&rainSensor));
-  CHECK_EQUAL(2, rainSensor_getCounter(&rainSensor));
+  rainSensor_p->check();
+  CHECK_EQUAL(true, rainSensor_p->isRaining());
+  CHECK_EQUAL(2, rainSensor_p->getCounter());
 
   mock().checkExpectations();
 }
 
-TEST(RainSensorGroup, CheckLowHigh)
+TEST(RainSensor, CheckLowHigh)
 {
   mock().expectOneCall("digitalRead")
       .withIntParameter("pin", 1)
       .andReturnValue(LOW);
 
-  rainSensor_check(&rainSensor);
-  CHECK_EQUAL(true, rainSensor_isRaining(&rainSensor));
-  CHECK_EQUAL(1, rainSensor_getCounter(&rainSensor));
+  rainSensor_p->check();
+  CHECK_EQUAL(true, rainSensor_p->isRaining());
+  CHECK_EQUAL(1, rainSensor_p->getCounter());
 
   mock().expectOneCall("digitalRead")
       .withIntParameter("pin", 1)
       .andReturnValue(HIGH);
 
-  rainSensor_check(&rainSensor);
-  CHECK_EQUAL(false, rainSensor_isRaining(&rainSensor));
-  CHECK_EQUAL(1, rainSensor_getCounter(&rainSensor));
+  rainSensor_p->check();
+  CHECK_EQUAL(false, rainSensor_p->isRaining());
+  CHECK_EQUAL(1, rainSensor_p->getCounter());
 
   mock().checkExpectations();
 }
 
-TEST(RainSensorGroup, CheckHighLow)
+TEST(RainSensor, CheckHighLow)
 {
   mock().expectOneCall("digitalRead")
       .withIntParameter("pin", 1)
       .andReturnValue(HIGH);
 
-  rainSensor_check(&rainSensor);
-  CHECK_EQUAL(false, rainSensor_isRaining(&rainSensor));
-  CHECK_EQUAL(0, rainSensor_getCounter(&rainSensor));
+  rainSensor_p->check();
+  CHECK_EQUAL(false, rainSensor_p->isRaining());
+  CHECK_EQUAL(0, rainSensor_p->getCounter());
 
   mock().expectOneCall("digitalRead")
       .withIntParameter("pin", 1)
       .andReturnValue(LOW);
 
-  rainSensor_check(&rainSensor);
-  CHECK_EQUAL(true, rainSensor_isRaining(&rainSensor));
-  CHECK_EQUAL(1, rainSensor_getCounter(&rainSensor));
+  rainSensor_p->check();
+  CHECK_EQUAL(true, rainSensor_p->isRaining());
+  CHECK_EQUAL(1, rainSensor_p->getCounter());
 
   mock().checkExpectations();
 }

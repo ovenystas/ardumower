@@ -382,6 +382,8 @@ protected:
       Odometer& odometer);
   virtual void loadSaveUserSettingsLawnSensors(bool readflag, int& addr,
       LawnSensors& lawnSensors);
+  virtual void loadSaveUserSettingsRainSensor(bool readflag, int& addr,
+      RainSensor& rainSensor);
   virtual void loadUserSettings();
   virtual void checkErrorCounter();
   virtual void printSettingSerial();
