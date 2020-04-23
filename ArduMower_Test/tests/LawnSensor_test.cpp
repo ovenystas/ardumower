@@ -177,11 +177,10 @@ TEST(LawnSensor, readVal2)
 const uint8_t LAWN_SENSORS_NUM = 2;
 const uint8_t sendPins[LAWN_SENSORS_NUM] = { 1, 3 };
 const uint8_t receivePins[LAWN_SENSORS_NUM] = { 2, 4 };
-LawnSensor array[LAWN_SENSORS_NUM];
-LawnSensors lawnSensors;
 
 TEST_GROUP(LawnSensorsInit)
 {
+  LawnSensor lawnSensorArray[LAWN_SENSORS_NUM];
   LawnSensors* lawnSensors_p;
 
   void setup()
@@ -196,44 +195,6 @@ TEST_GROUP(LawnSensorsInit)
     }
     mock().clear();
   }
-
-  void mockSetup_defaultInit_setup_and_parameterizedInit()
-  {
-    mock().expectOneCall("pinMode")
-        .withIntParameter("pin", 1)
-        .withIntParameter("mode", OUTPUT);
-    mock().expectOneCall("pinMode")
-        .withIntParameter("pin", 2)
-        .withIntParameter("mode", INPUT);
-    mock().expectOneCall("pinMode")
-        .withIntParameter("pin", 3)
-        .withIntParameter("mode", OUTPUT);
-    mock().expectOneCall("pinMode")
-        .withIntParameter("pin", 4)
-        .withIntParameter("mode", INPUT);
-  }
-
-  void checks_defaultInit_setup_and_parameterizedInit()
-  {
-    UNSIGNED_LONGS_EQUAL(LAWN_SENSORS_NUM, lawnSensors_p->m_len);
-    CHECK_FALSE(lawnSensors_p->m_detected);
-    UNSIGNED_LONGS_EQUAL(0, lawnSensors_p->m_counter);
-    CHECK_FALSE(lawnSensors_p->m_use);
-
-    CHECK_FALSE(nullptr == lawnSensors_p->m_lawnSensorArray_p);
-
-    UNSIGNED_LONGS_EQUAL(sendPins[0], lawnSensors_p->m_lawnSensorArray_p[0].m_sendPin);
-    UNSIGNED_LONGS_EQUAL(receivePins[0], lawnSensors_p->m_lawnSensorArray_p[0].m_receivePin);
-    UNSIGNED_LONGS_EQUAL(0, lawnSensors_p->m_lawnSensorArray_p[0].m_value);
-    UNSIGNED_LONGS_EQUAL(0, lawnSensors_p->m_lawnSensorArray_p[0].m_valueOld);
-
-    UNSIGNED_LONGS_EQUAL(sendPins[1], lawnSensors_p->m_lawnSensorArray_p[1].m_sendPin);
-    UNSIGNED_LONGS_EQUAL(receivePins[1], lawnSensors_p->m_lawnSensorArray_p[1].m_receivePin);
-    UNSIGNED_LONGS_EQUAL(0, lawnSensors_p->m_lawnSensorArray_p[1].m_value);
-    UNSIGNED_LONGS_EQUAL(0, lawnSensors_p->m_lawnSensorArray_p[1].m_valueOld);
-
-    mock().checkExpectations();
-  }
 };
 
 TEST(LawnSensorsInit, defaultInit)
@@ -247,37 +208,30 @@ TEST(LawnSensorsInit, defaultInit)
   CHECK_FALSE(lawnSensors_p->m_use);
 }
 
-
-TEST(LawnSensorsInit, defaultInit_setup)
-{
-  mockSetup_defaultInit_setup_and_parameterizedInit();
-
-  lawnSensors_p = new LawnSensors();
-  lawnSensors_p->setup(sendPins, receivePins, array, LAWN_SENSORS_NUM);
-
-  checks_defaultInit_setup_and_parameterizedInit();
-}
-
 TEST(LawnSensorsInit, parameterizedInit)
 {
-  mockSetup_defaultInit_setup_and_parameterizedInit();
+  lawnSensors_p = new LawnSensors(lawnSensorArray, LAWN_SENSORS_NUM);
 
-  lawnSensors_p = new LawnSensors(sendPins, receivePins, array, LAWN_SENSORS_NUM);
+  UNSIGNED_LONGS_EQUAL(LAWN_SENSORS_NUM, lawnSensors_p->m_len);
+  CHECK_FALSE(lawnSensors_p->m_detected);
+  UNSIGNED_LONGS_EQUAL(0, lawnSensors_p->m_counter);
+  CHECK_FALSE(lawnSensors_p->m_use);
+  CHECK_FALSE(nullptr == lawnSensors_p->m_lawnSensorArray_p);
 
-  checks_defaultInit_setup_and_parameterizedInit();
+  mock().checkExpectations();
 }
 
 // LawnSensors ----------------------------------------------------------------
 
 TEST_GROUP(LawnSensors)
 {
+  LawnSensor lawnSensorArray[LAWN_SENSORS_NUM];
   LawnSensors* lawnSensors_p;
 
   void setup()
   {
     mock().disable();
-    lawnSensors_p =
-        new LawnSensors(sendPins, receivePins, array, LAWN_SENSORS_NUM);
+    lawnSensors_p = new LawnSensors(lawnSensorArray, LAWN_SENSORS_NUM);
     mock().enable();
   }
 
@@ -294,6 +248,11 @@ TEST_GROUP(LawnSensors)
 TEST(LawnSensors, read)
 {
   const float accel = 0.03f;
+
+  mock().disable();
+  lawnSensorArray[0].setup(1, 2);
+  lawnSensorArray[1].setup(3, 4);
+  mock().enable();
 
   mock().expectOneCall("digitalWrite")
       .withIntParameter("pin", 1)
@@ -322,6 +281,7 @@ TEST(LawnSensors, read)
       .withIntParameter("val", LOW);
 
   lawnSensors_p->read();
+
   DOUBLES_EQUAL(accel * 5.0f, lawnSensors_p->m_lawnSensorArray_p[0].m_value,
       0.01);
   DOUBLES_EQUAL(accel * 5.0f, lawnSensors_p->m_lawnSensorArray_p[1].m_value,

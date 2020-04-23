@@ -222,7 +222,7 @@ public:
 
   //  --------- lawn state ----------------------------
   LawnSensor m_lawnSensorArray[LAWNSENSORS_NUM];
-  LawnSensors m_lawnSensors;
+  LawnSensors m_lawnSensors { m_lawnSensorArray, LAWNSENSORS_NUM };
 
   // --------- rain -----------------------------------
   RainSensor m_rainSensor;
@@ -230,7 +230,7 @@ public:
   // --------- sonar ----------------------------------
   // ultrasonic sensor distance-to-obstacle (cm)
   Sonar m_sonarArray[SONARS_NUM];
-  Sonars m_sonars;
+  Sonars m_sonars { m_sonarArray, SONARS_NUM };
 
   // --------- pfodApp ----------------------------------
   RemoteControl m_rc { this }; // pfodApp
@@ -384,6 +384,10 @@ protected:
       LawnSensors& lawnSensors);
   virtual void loadSaveUserSettingsRainSensor(bool readflag, int& addr,
       RainSensor& rainSensor);
+  virtual void loadSaveUserSettingsSonar(bool readflag, int& addr,
+      Sonar& sonar);
+  virtual void loadSaveUserSettingsSonars(bool readflag, int& addr,
+      Sonars& sonars);
   virtual void loadUserSettings();
   virtual void checkErrorCounter();
   virtual void printSettingSerial();

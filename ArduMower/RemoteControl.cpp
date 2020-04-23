@@ -114,6 +114,7 @@ void RemoteControl::sendSlider(String cmd, String title, float value,
   Bluetooth.print("`");
   Bluetooth.print(((int)(minvalue / scale)));
   Bluetooth.print("~ ~");
+
   if (scale == 10)
   {
     Bluetooth.print("10");
@@ -816,25 +817,28 @@ void RemoteControl::sendSonarMenu(bool update)
     Bluetooth.print(F("{.Sonar`1000"));
   }
   Bluetooth.print(F("|d00~Use "));
-  sendYesNo(m_robot_p->m_sonars.use);
+  sendYesNo(m_robot_p->m_sonars.isUsed());
   Bluetooth.print(F("|d04~Use left "));
-  sendYesNo(m_robot_p->m_sonars.sonarArray_p[LEFT].use);
+  sendYesNo(m_robot_p->m_sonars.
+      m_sonarArray_p[static_cast<uint8_t>(SonarE::LEFT)].isUsed());
   Bluetooth.print(F("|d05~Use center "));
-  sendYesNo(m_robot_p->m_sonars.sonarArray_p[CENTER].use);
+  sendYesNo(m_robot_p->m_sonars.
+      m_sonarArray_p[static_cast<uint8_t>(SonarE::CENTER)].isUsed());
   Bluetooth.print(F("|d06~Use right "));
-  sendYesNo(m_robot_p->m_sonars.sonarArray_p[RIGHT].use);
+  sendYesNo(m_robot_p->m_sonars.
+      m_sonarArray_p[static_cast<uint8_t>(SonarE::RIGHT)].isUsed());
   Bluetooth.print(F("|d01~Counter "));
-  Bluetooth.print(sonars_getDistanceCounter(&m_robot_p->m_sonars));
+  Bluetooth.print(m_robot_p->m_sonars.getDistanceCounter());
   Bluetooth.println(F("|d02~Value [cm] l, c, r"));
   for (uint8_t i = 0; i < SONARS_NUM; i++)
   {
-    Bluetooth.print(sonar_getDistance_cm(&m_robot_p->m_sonars.sonarArray_p[i]));
+    Bluetooth.print(m_robot_p->m_sonars.m_sonarArray_p[i].getDistance_cm());
     if (i < SONARS_NUM - 1)
     {
       Bluetooth.print(", ");
     }
   }
-  sendSlider("d03", F("Trigger below [us]"), m_robot_p->m_sonars.triggerBelow, "", 1, 3000);
+  sendSettingSlider("d03", m_robot_p->m_sonars.getSettings()->triggerBelow);
   Bluetooth.println("}");
 }
 
@@ -842,23 +846,30 @@ void RemoteControl::processSonarMenu(String pfodCmd)
 {
   if (pfodCmd == "d00")
   {
-    TOGGLE(m_robot_p->m_sonars.use);
+    TOGGLE(m_robot_p->m_sonars.getSettings()->use.value);
   }
   else if (pfodCmd.startsWith("d03"))
   {
-    processSlider(pfodCmd, m_robot_p->m_sonars.triggerBelow, 1.0);
+    processSlider(pfodCmd,
+        m_robot_p->m_sonars.getSettings()->triggerBelow.value, 1.0);
   }
   else if (pfodCmd == "d04")
   {
-    TOGGLE(m_robot_p->m_sonars.sonarArray_p[LEFT].use);
+    TOGGLE(m_robot_p->m_sonars.
+        m_sonarArray_p[static_cast<uint8_t>(SonarE::LEFT)].getSettings()->
+        use.value);
   }
   else if (pfodCmd == "d05")
   {
-    TOGGLE(m_robot_p->m_sonars.sonarArray_p[CENTER].use);
+    TOGGLE(m_robot_p->m_sonars.
+        m_sonarArray_p[static_cast<uint8_t>(SonarE::CENTER)].getSettings()->
+        use.value);
   }
   else if (pfodCmd == "d06")
   {
-    TOGGLE(m_robot_p->m_sonars.sonarArray_p[RIGHT].use);
+    TOGGLE(m_robot_p->m_sonars.
+        m_sonarArray_p[static_cast<uint8_t>(SonarE::RIGHT)].getSettings()->
+        use.value);
   }
   sendSonarMenu(true);
 }
@@ -1988,7 +1999,7 @@ void RemoteControl::run()
     Bluetooth.print(",");
     for (uint8_t i = 0; i < SONARS_NUM; i++)
     {
-      Bluetooth.print(sonar_getDistance_us(&m_robot_p->m_sonars.sonarArray_p[i]));
+      Bluetooth.print(m_robot_p->m_sonars.m_sonarArray_p[i].getDistance_us());
       Bluetooth.print(",");
     }
     Bluetooth.print(m_robot_p->m_perimeters.m_perimeterArray_p[PERIMETER_LEFT].isInside());
@@ -2118,7 +2129,7 @@ void RemoteControl::run()
       Bluetooth.print(",");
       Bluetooth.print(m_robot_p->m_bumperArray[RIGHT].getCounter());
       Bluetooth.print(",");
-      Bluetooth.print(sonars_getDistanceCounter(&m_robot_p->m_sonars));
+      Bluetooth.print(m_robot_p->m_sonars.getDistanceCounter());
       Bluetooth.print(",");
       Bluetooth.print(m_robot_p->getPerimeterCounter());
       Bluetooth.print(",");
@@ -2148,7 +2159,7 @@ void RemoteControl::run()
       Bluetooth.print(",");
       for (uint8_t i = 0; i < SONARS_NUM; i++)
       {
-        Bluetooth.print(sonar_getDistance_cm(&m_robot_p->m_sonars.sonarArray_p[i]));
+        Bluetooth.print(m_robot_p->m_sonars.m_sonarArray_p[i].getDistance_cm());
         Bluetooth.print(",");
       }
       Bluetooth.print(m_robot_p->m_perimeters.m_perimeterArray_p[PERIMETER_LEFT].isInside());

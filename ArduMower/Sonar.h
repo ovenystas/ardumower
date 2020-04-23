@@ -15,6 +15,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include "Setting.h"
 
 #define SONAR_DEFAULT_MAX_ECHO_TIME 3000  // 3000 us / 58.8 = 51 cm
 #define SONAR_DEFAULT_MIN_ECHO_TIME 150   // 150 us / 58,8 = 2.5 cm
@@ -24,86 +25,190 @@
 #define US_ROUNDTRIP_CM 57u    // Microseconds (uS) it takes sound to travel round-trip 1 cm (2 cm total), uses integer to save compiled code space.
 #define PING_CONVERT(us, conversionFactor) (uint16_t)(max((us + conversionFactor / 2u) / conversionFactor, (us ? 1u : 0u)))
 
-typedef enum
+enum class SonarE
 {
-  SONAR_LEFT,
-  SONAR_CENTER,
-  SONAR_RIGHT,
-  SONAR_END
-} sonarE;
+  LEFT,
+  CENTER,
+  RIGHT,
+  END
+};
 
-typedef struct
+struct SonarSettings
 {
-  bool use;
-  uint8_t triggerPin;
-  uint8_t echoPin;
-  uint16_t maxEchoTime;
-  uint16_t minEchoTime;
-  uint16_t distance_us;   // As time in us
-  uint8_t triggerBitMask;
-  uint8_t echoBitMask;
-  volatile uint8_t* triggerOutputRegister_p;
-  volatile uint8_t* echoInputRegister_p;
-  uint32_t maxTime;
-} Sonar;
+  Setting<bool> use;                // Use the sonar sensor or not
+};
 
-typedef struct
+class Sonar
 {
-  bool use {false};
-  uint16_t triggerBelow {1050};  // trigger distance
-  uint8_t tempDistanceCounter;
-  uint32_t obstacleTimeout;
-  uint8_t len;
-  Sonar* sonarArray_p;
-  uint16_t distanceCounter;
-} Sonars;
-
-void sonar_setup(const uint8_t triggerPin, const uint8_t echoPin,
-                 const uint16_t maxEchoTime,
-                 const uint16_t minEchoTime,
-                 Sonar* sonar_p);
-
-void sonar_ping(Sonar* sonar_p);
-
-static inline
-uint16_t sonar_getDistance_us(Sonar* sonar_p)
-{
-  return sonar_p->distance_us;
-}
-
-static inline
-uint16_t sonar_getDistance_cm(Sonar* sonar_p)
-{
-  return PING_CONVERT(sonar_p->distance_us, US_ROUNDTRIP_CM);
-}
-
-static inline
-uint16_t sonar_getDistance_inch(Sonar* sonar_p)
-{
-  return PING_CONVERT(sonar_p->distance_us, US_ROUNDTRIP_INCH);
-}
-
-
-
-static inline
-void sonars_ping(Sonars* sonars_p)
-{
-  for (uint8_t i = 0; i < SONAR_END; i++)
+public:
+  Sonar() = default;
+  Sonar(const uint8_t triggerPin, const uint8_t echoPin,
+      const uint16_t maxEchoTime = SONAR_DEFAULT_MAX_ECHO_TIME,
+      const uint16_t minEchoTime = SONAR_DEFAULT_MIN_ECHO_TIME)
   {
-    sonar_ping(&sonars_p->sonarArray_p[i]);
+    setup(triggerPin, echoPin, maxEchoTime, minEchoTime);
   }
-}
 
-static inline
-uint16_t sonars_getDistanceCounter(Sonars* sonars_p)
+  void setup(const uint8_t triggerPin, const uint8_t echoPin,
+      const uint16_t maxEchoTime = SONAR_DEFAULT_MAX_ECHO_TIME,
+      const uint16_t minEchoTime = SONAR_DEFAULT_MIN_ECHO_TIME);
+
+  bool isUsed()
+  {
+    return m_use;
+  }
+
+  void ping();
+
+
+  uint16_t getDistance_us()
+  {
+    return m_distance_us;
+  }
+
+
+  uint16_t getDistance_cm()
+  {
+    return PING_CONVERT(m_distance_us, US_ROUNDTRIP_CM);
+  }
+
+
+  uint16_t getDistance_inch()
+  {
+    return PING_CONVERT(m_distance_us, US_ROUNDTRIP_INCH);
+  }
+
+  SonarSettings* getSettings()
+  {
+    return &m_settings;
+  }
+
+  void setSettings(SonarSettings* settings_p)
+  {
+    m_settings.use.value = settings_p->use.value;
+ }
+
+private:
+  bool pingTrigger();
+  uint16_t pingInternal();
+
+private:
+  uint8_t m_triggerPin {};
+  uint8_t m_echoPin {};
+  uint16_t m_maxEchoTime {};
+  uint16_t m_minEchoTime {};
+  uint16_t m_distance_us {};   // As time in us
+  uint8_t m_triggerBitMask {};
+  uint8_t m_echoBitMask {};
+  volatile uint8_t* m_triggerOutputRegister_p {};
+  volatile uint8_t* m_echoInputRegister_p {};
+  uint32_t m_maxTime {};
+
+  SonarSettings m_settings
+  {
+    { "Use", "", false, false, true }
+  };
+
+  // Shorter convenient variables for settings variables
+  bool& m_use = m_settings.use.value;
+};
+
+struct SonarsSettings
 {
-  return sonars_p->distanceCounter;
-}
+  Setting<bool> use;              // Use the sonar sensors or not
+  Setting<uint16_t> triggerBelow; // Trigger distance in us
+};
 
-static inline
-void sonars_incDistanceCounter(Sonars* sonars_p)
+class Sonars
 {
-  ++sonars_p->distanceCounter;
-}
+public:
+  Sonars() = default;
+  Sonars(Sonar* sonarArray_p, const uint8_t len) :
+    m_sonarArray_p(sonarArray_p),
+    m_len(len)
+  {};
 
-bool sonars_isClose(Sonars* sonars_p);
+  bool isUsed()
+  {
+    return m_use;
+  }
+
+  void ping()
+  {
+    for (uint8_t i = 0; i < static_cast<uint8_t>(SonarE::END); i++)
+    {
+      m_sonarArray_p[i].ping();
+    }
+  }
+
+
+  uint16_t getDistanceCounter()
+  {
+    return m_distanceCounter;
+  }
+
+
+  void incDistanceCounter()
+  {
+    ++m_distanceCounter;
+  }
+
+  bool isClose();
+
+  SonarsSettings* getSettings()
+  {
+    return &m_settings;
+  }
+
+  void setSettings(SonarsSettings* settings_p)
+  {
+    m_settings.use.value = settings_p->use.value;
+    m_settings.triggerBelow.value = settings_p->triggerBelow.value;
+  }
+
+  uint32_t getObstacleTimeout() const
+  {
+    return m_obstacleTimeout;
+  }
+
+  void setObstacleTimeout(uint32_t obstacleTimeout)
+  {
+    m_obstacleTimeout = obstacleTimeout;
+  }
+
+  uint8_t getTempDistanceCounter() const
+  {
+    return m_tempDistanceCounter;
+  }
+
+  void incTempDistanceCounter()
+  {
+    ++m_tempDistanceCounter;
+  }
+
+  void clearTempDistanceCounter()
+  {
+    m_tempDistanceCounter = 0;
+  }
+
+public:
+  // TODO: Make this private
+  Sonar* m_sonarArray_p {};
+
+private:
+  uint8_t m_tempDistanceCounter {};
+  uint32_t m_obstacleTimeout {};
+  uint8_t m_len {};
+  uint16_t m_distanceCounter {};
+
+  SonarsSettings m_settings
+  {
+    { "Use", "", false, false, true },
+    { "Trigger below", "us", 1050, 1, 3000 }
+  };
+
+  // Shorter convenient variables for settings variables
+  bool& m_use = m_settings.use.value;
+  uint16_t& m_triggerBelow = m_settings.triggerBelow.value;
+
+};

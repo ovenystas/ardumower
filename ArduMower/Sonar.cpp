@@ -18,64 +18,63 @@
  * @param maxEchoTime
  * @param minEchoTime
  */
-void sonar_setup(const uint8_t triggerPin, const uint8_t echoPin,
-                 const uint16_t maxEchoTime, const uint16_t minEchoTime,
-                 Sonar* sonar_p)
+void Sonar::setup(const uint8_t triggerPin, const uint8_t echoPin,
+    const uint16_t maxEchoTime, const uint16_t minEchoTime)
 {
-  sonar_p->triggerPin = triggerPin;
-  sonar_p->echoPin = echoPin;
-  sonar_p->maxEchoTime = maxEchoTime;
-  sonar_p->minEchoTime = minEchoTime;
+  m_triggerPin = triggerPin;
+  m_echoPin = echoPin;
+  m_maxEchoTime = maxEchoTime;
+  m_minEchoTime = minEchoTime;
 
-  digitalWrite(sonar_p->triggerPin, LOW);
-  pinMode(sonar_p->triggerPin, OUTPUT);
-  pinMode(sonar_p->echoPin, INPUT);
+  digitalWrite(m_triggerPin, LOW);
+  pinMode(m_triggerPin, OUTPUT);
+  pinMode(m_echoPin, INPUT);
 
-  sonar_p->triggerBitMask = digitalPinToBitMask(triggerPin); // Get the port register bit mask for the trigger pin.
-  sonar_p->echoBitMask = digitalPinToBitMask(echoPin);       // Get the port register bit mask for the echo pin.
-  sonar_p->triggerOutputRegister_p = portOutputRegister(digitalPinToPort(triggerPin)); // Get the output port register for the trigger pin.
-  sonar_p->echoInputRegister_p = portInputRegister(digitalPinToPort(echoPin));         // Get the input port register for the echo pin.
+  m_triggerBitMask = digitalPinToBitMask(triggerPin); // Get the port register bit mask for the trigger pin.
+  m_echoBitMask = digitalPinToBitMask(echoPin);       // Get the port register bit mask for the echo pin.
+  m_triggerOutputRegister_p = portOutputRegister(digitalPinToPort(triggerPin)); // Get the output port register for the trigger pin.
+  m_echoInputRegister_p = portInputRegister(digitalPinToPort(echoPin));         // Get the input port register for the echo pin.
 }
 
-static inline bool sonar_pingTrigger(Sonar* sonar_p)
+bool Sonar::pingTrigger()
 {
-  delayMicroseconds(4);                        // Wait for pin to go low, testing shows it needs 4uS to work every time.
-  *sonar_p->triggerOutputRegister_p |= sonar_p->triggerBitMask;  // Set trigger pin high, this tells the sensor to send out a ping.
-  delayMicroseconds(10);                       // Wait long enough for the sensor to realize the trigger pin is high. Sensor specs say to wait 10uS.
-  *sonar_p->triggerOutputRegister_p &= (uint8_t)~sonar_p->triggerBitMask; // Set trigger pin back to low.
+  delayMicroseconds(4);                            // Wait for pin to go low, testing shows it needs 4uS to work every time.
+  *m_triggerOutputRegister_p |= m_triggerBitMask;  // Set trigger pin high, this tells the sensor to send out a ping.
+  delayMicroseconds(10);                           // Wait long enough for the sensor to realize the trigger pin is high. Sensor specs say to wait 10uS.
+  *m_triggerOutputRegister_p &= (uint8_t)~m_triggerBitMask; // Set trigger pin back to low.
 
-  sonar_p->maxTime =  micros() + MAX_SENSOR_DELAY;                                // Set a timeout for the ping to trigger.
-  while ((*sonar_p->echoInputRegister_p & sonar_p->echoBitMask) && micros() <= sonar_p->maxTime)
+  m_maxTime =  micros() + MAX_SENSOR_DELAY;                                // Set a timeout for the ping to trigger.
+  while ((*m_echoInputRegister_p & m_echoBitMask) && micros() <= m_maxTime)
   {
     // Wait for echo pin to clear.
   }
-  while (!(*sonar_p->echoInputRegister_p & sonar_p->echoBitMask))                          // Wait for ping to start.
+  while (!(*m_echoInputRegister_p & m_echoBitMask))                          // Wait for ping to start.
   {
-    if (micros() > sonar_p->maxTime)
+    if (micros() > m_maxTime)
     {
       return false;                                // Something went wrong, abort.
     }
   }
 
-  sonar_p->maxTime = micros() + sonar_p->maxEchoTime;    // Ping started, set the timeout.
-  return true;                         // Ping started successfully.
+  m_maxTime = micros() + m_maxEchoTime; // Ping started, set the timeout.
+  return true;                          // Ping started successfully.
 }
 
-static inline uint16_t sonar_pingInternal(Sonar* sonar_p)
+uint16_t Sonar::pingInternal()
 {
-  if (!sonar_pingTrigger(sonar_p))  // Trigger a ping, if it returns false, return NO_ECHO to the calling function.
+  if (!pingTrigger())  // Trigger a ping, if it returns false, return NO_ECHO to the calling function.
   {
     return NO_ECHO;
   }
 
-  while (*sonar_p->echoInputRegister_p & sonar_p->echoBitMask)  // Wait for the ping echo.
+  while (*m_echoInputRegister_p & m_echoBitMask)  // Wait for the ping echo.
   {
-    if (micros() > sonar_p->maxTime)
+    if (micros() > m_maxTime)
     {
       return NO_ECHO;  // Stop the loop and return NO_ECHO (false) if we're beyond the set maximum distance.
     }
   }
-  return (uint16_t)(micros() - (sonar_p->maxTime - sonar_p->maxEchoTime) - 5); // Calculate ping time, 5uS of overhead.
+  return (uint16_t)(micros() - (m_maxTime - m_maxEchoTime) - 5); // Calculate ping time, 5uS of overhead.
 }
 
 /**
@@ -84,22 +83,20 @@ static inline uint16_t sonar_pingInternal(Sonar* sonar_p)
  * Sets distance_us to time until echo arrives in us.
  * To get distance in cm divide value with 58.8.
  */
-void sonar_ping(Sonar* sonar_p)
+void Sonar::ping()
 {
-  if (!sonar_p->use)
+  if (m_use)
   {
-    return;
+    m_distance_us = pingInternal();
   }
-
-  sonar_p->distance_us = sonar_pingInternal(sonar_p);
 }
 
-bool sonars_isClose(Sonars* sonars_p)
+bool Sonars::isClose()
 {
-  uint16_t closeLimit = (uint16_t)(sonars_p->triggerBelow * 2);
-  for (uint8_t i = 0; i < SONAR_END; i++)
+  uint16_t closeLimit = (uint16_t)(m_triggerBelow * 2);
+  for (uint8_t i = 0; i < static_cast<uint8_t>(SonarE::END); i++)
   {
-    if (sonar_getDistance_us(&sonars_p->sonarArray_p[i]) < closeLimit)
+    if (m_sonarArray_p[i].getDistance_us() < closeLimit)
     {
       return true;
     }

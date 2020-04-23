@@ -24,16 +24,16 @@ uint8_t digitalPinToPort(uint8_t pin)
   return static_cast<uint8_t>(mock().unsignedIntReturnValue());
 }
 
-uint8_t* portOutputRegister(uint8_t pin)
+uint8_t* portOutputRegister(uint8_t port)
 {
   mock().actualCall("portOutputRegister")
-      .withParameter("pin", pin);
+      .withParameter("port", port);
   return static_cast<uint8_t*>(mock().pointerReturnValue());
 }
 
-uint8_t* portInputRegister(uint8_t pin)
+uint8_t* portInputRegister(uint8_t port)
 {
   mock().actualCall("portInputRegister")
-      .withParameter("pin", pin);
+      .withParameter("port", port);
   return static_cast<uint8_t*>(mock().pointerReturnValue());
 }

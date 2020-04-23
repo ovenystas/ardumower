@@ -44,22 +44,6 @@ void LawnSensor::read()
       accel * (float)measureLawnCapacity();
 }
 
-void LawnSensors::setup(const uint8_t* sendPins, const uint8_t* receivePins,
-    LawnSensor* lawnSensorArray_p, const uint8_t len)
-{
-  m_use = false;
-  m_len = len;
-  m_lawnSensorArray_p = lawnSensorArray_p;
-
-  for (uint8_t i = 0; i < len; i++)
-  {
-    lawnSensorArray_p[i].setup(sendPins[i], receivePins[i]);
-  }
-
-  m_detected = false;
-  m_counter = 0;
-}
-
 void LawnSensors::check()
 {
   LawnSensor* sensorF_p = &m_lawnSensorArray_p[0];

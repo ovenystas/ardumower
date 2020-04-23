@@ -152,16 +152,8 @@ void Mower::setup()
   m_cutter.m_motor.m_pid.setSetPoint(m_cutter.m_motor.m_rpmSet);
 
   // lawn sensor
-  const uint8_t lawnSensorSendPins[LAWNSENSORS_NUM] =
-  {
-      PIN_LAWN_FRONT_SEND, PIN_LAWN_BACK_SEND
-  };
-  const uint8_t lawnSensorReceivePins[LAWNSENSORS_NUM] =
-  {
-      PIN_LAWN_FRONT_RECV, PIN_LAWN_BACK_RECV
-  };
-  m_lawnSensors.setup(lawnSensorSendPins, lawnSensorReceivePins,
-      m_lawnSensorArray, LAWNSENSORS_NUM);
+  m_lawnSensorArray[0].setup(PIN_LAWN_FRONT_SEND, PIN_LAWN_FRONT_RECV);
+  m_lawnSensorArray[1].setup(PIN_LAWN_BACK_SEND, PIN_LAWN_BACK_RECV);
 
   // perimeter
   m_perimeters.m_perimeterArray_p[PERIMETER_LEFT].setup(PIN_PERIMETER_LEFT);
@@ -176,25 +168,15 @@ void Mower::setup()
       DropSensor_Contact::NO, m_dropSensorArray, DROPSENSORS_NUM);
 
   // sonar
-  m_sonars.use = true;
-  sonar_setup(
-      PIN_SONAR_LEFT_TRIGGER, PIN_SONAR_LEFT_ECHO,
-      SONAR_DEFAULT_MAX_ECHO_TIME,
-      SONAR_DEFAULT_MIN_ECHO_TIME,
-      &m_sonars.sonarArray_p[SONAR_LEFT]);
-  sonar_setup(
-      PIN_SONAR_RIGHT_TRIGGER, PIN_SONAR_RIGHT_ECHO,
-      SONAR_DEFAULT_MAX_ECHO_TIME,
-      SONAR_DEFAULT_MIN_ECHO_TIME,
-      &m_sonars.sonarArray_p[SONAR_RIGHT]);
-  sonar_setup(
-      PIN_SONAR_CENTER_TRIGGER, PIN_SONAR_CENTER_ECHO,
-      SONAR_DEFAULT_MAX_ECHO_TIME,
-      SONAR_DEFAULT_MIN_ECHO_TIME,
-      &m_sonars.sonarArray_p[SONAR_CENTER]);
-  m_sonars.sonarArray_p[SONAR_LEFT].use = false;
-  m_sonars.sonarArray_p[SONAR_RIGHT].use = false;
-  m_sonars.sonarArray_p[SONAR_CENTER].use = true;
+  m_sonarArray[static_cast<uint8_t>(SonarE::LEFT)].setup(
+      PIN_SONAR_LEFT_TRIGGER,
+      PIN_SONAR_LEFT_ECHO);
+  m_sonarArray[static_cast<uint8_t>(SonarE::CENTER)].setup(
+      PIN_SONAR_CENTER_TRIGGER,
+      PIN_SONAR_CENTER_ECHO);
+  m_sonarArray[static_cast<uint8_t>(SonarE::RIGHT)].setup(
+      PIN_SONAR_RIGHT_TRIGGER,
+      PIN_SONAR_RIGHT_ECHO);
 
   // rain
   m_rainSensor.setup(PIN_RAIN);

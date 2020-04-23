@@ -112,7 +112,7 @@ void Robot::saveErrorCounters()
 
 void Robot::loadSaveUserSettingsPid(bool readflag, int& addr, Pid& pid)
 {
-  PidSettings* pidSettings_p = pid.getSettings();
+  auto pidSettings_p = pid.getSettings();
 
   eereadwrite(readflag, addr, pidSettings_p->Kp.value);
   eereadwrite(readflag, addr, pidSettings_p->Ki.value);
@@ -122,14 +122,14 @@ void Robot::loadSaveUserSettingsPid(bool readflag, int& addr, Pid& pid)
 void Robot::loadSaveUserSettingsBumpers(bool readflag, int& addr,
     Bumpers& bumpers)
 {
-  BumpersSettings* bumpersSettings_p = bumpers.getSettings();
+  auto bumpersSettings_p = bumpers.getSettings();
 
   eereadwrite(readflag, addr, bumpersSettings_p->use.value);
 }
 
 void Robot::loadSaveUserSettingsImu(bool readflag, int& addr, Imu& imu)
 {
-  ImuSettings* imuSettings_p = imu.getSettings();
+  auto imuSettings_p = imu.getSettings();
 
   eereadwrite(readflag, addr, imuSettings_p->use.value);
   eereadwrite(readflag, addr, imuSettings_p->correctDir.value);
@@ -141,7 +141,7 @@ void Robot::loadSaveUserSettingsImu(bool readflag, int& addr, Imu& imu)
 void Robot::loadSaveUserSettingsOdometer(bool readflag, int& addr,
     Odometer& odometer)
 {
-  OdometerSettings* odometerSettings_p = odometer.getSettings();
+  auto odometerSettings_p = odometer.getSettings();
 
   eereadwrite(readflag, addr, odometerSettings_p->use.value);
   eereadwrite(readflag, addr, odometerSettings_p->ticksPerRevolution.value);
@@ -155,7 +155,7 @@ void Robot::loadSaveUserSettingsOdometer(bool readflag, int& addr,
 void Robot::loadSaveUserSettingsLawnSensors(bool readflag, int& addr,
     LawnSensors& lawnSensors)
 {
-  LawnSensorsSettings* lawnSensorsSettings_p = lawnSensors.getSettings();
+  auto lawnSensorsSettings_p = lawnSensors.getSettings();
 
   eereadwrite(readflag, addr, lawnSensorsSettings_p->use.value);
 }
@@ -163,9 +163,31 @@ void Robot::loadSaveUserSettingsLawnSensors(bool readflag, int& addr,
 void Robot::loadSaveUserSettingsRainSensor(bool readflag, int& addr,
     RainSensor& rainSensor)
 {
-  RainSensorSettings* rainSensorSettings_p = rainSensor.getSettings();
+  auto rainSensorSettings_p = rainSensor.getSettings();
 
   eereadwrite(readflag, addr, rainSensorSettings_p->use.value);
+}
+
+void Robot::loadSaveUserSettingsSonar(bool readflag, int& addr,
+    Sonar& sonar)
+{
+  auto sonarSettings_p = sonar.getSettings();
+
+  eereadwrite(readflag, addr, sonarSettings_p->use.value);
+}
+
+void Robot::loadSaveUserSettingsSonars(bool readflag, int& addr,
+    Sonars& sonars)
+{
+  auto sonarsSettings_p = sonars.getSettings();
+
+  eereadwrite(readflag, addr, sonarsSettings_p->use.value);
+  eereadwrite(readflag, addr, sonarsSettings_p->triggerBelow.value);
+
+  for (uint8_t i = 0; i < SONARS_NUM; i++)
+  {
+    loadSaveUserSettingsSonar(readflag, addr, m_sonars.m_sonarArray_p[i]);
+  }
 }
 
 void Robot::loadSaveUserSettings(bool readflag)
@@ -200,12 +222,7 @@ void Robot::loadSaveUserSettings(bool readflag)
 
   loadSaveUserSettingsBumpers(readflag, addr, m_bumpers);
 
-  eereadwrite(readflag, addr, m_sonars.use);
-  for (uint8_t i = 0; i < SONARS_NUM; i++)
-  {
-    eereadwrite(readflag, addr, m_sonars.sonarArray_p[i].use);
-  }
-  eereadwrite(readflag, addr, m_sonars.triggerBelow);
+  loadSaveUserSettingsSonars(readflag, addr, m_sonars);
 
   eereadwrite(readflag, addr, m_perimeters.m_use);
   eereadwrite(readflag, addr,
@@ -409,16 +426,21 @@ void Robot::printSettingSerial()
 
   // ------ sonar ------------------------------------
   Console.println(F("== Sonars =="));
-  Console.print(F("use : "));
-  Console.println(m_sonars.use);
-  Console.print(F("LEFT.use : "));
-  Console.println(m_sonars.sonarArray_p[SONAR_LEFT].use);
-  Console.print(F("CENTER.use : "));
-  Console.println(m_sonars.sonarArray_p[SONAR_CENTER].use);
-  Console.print(F("RIGHT.use : "));
-  Console.println(m_sonars.sonarArray_p[SONAR_RIGHT].use);
-  Console.print(F("triggerBelow : "));
-  Console.println(m_sonars.triggerBelow);
+  auto sonarsSettings_p = m_sonars.getSettings();
+  printSettingNameColonValue(sonarsSettings_p->use);
+  Console.print(F("LEFT."));
+  printSettingNameColonValue(
+      m_sonars.m_sonarArray_p[static_cast<uint8_t>(SonarE::LEFT)].
+      getSettings()->use);
+  Console.print(F("CENTER."));
+  printSettingNameColonValue(
+      m_sonars.m_sonarArray_p[static_cast<uint8_t>(SonarE::CENTER)].
+      getSettings()->use);
+  Console.print(F("RIGHT."));
+  printSettingNameColonValue(
+      m_sonars.m_sonarArray_p[static_cast<uint8_t>(SonarE::RIGHT)].
+      getSettings()->use);
+  printSettingNameColonValue(sonarsSettings_p->triggerBelow);
 
   // ------ perimeter ---------------------------------
   Console.println(F("== Perimeter =="));
@@ -979,9 +1001,9 @@ void Robot::printInfo_sensorValues(Stream &s)
       m_dropSensorArray[LEFT].isDetected(),
       m_dropSensorArray[RIGHT].isDetected());
   Streamprint(s, "son %4u %4u %4u ",
-              sonar_getDistance_us(&m_sonars.sonarArray_p[LEFT]),
-              sonar_getDistance_us(&m_sonars.sonarArray_p[CENTER]),
-              sonar_getDistance_us(&m_sonars.sonarArray_p[RIGHT]));
+      m_sonars.m_sonarArray_p[static_cast<uint8_t>(SonarE::LEFT)].getDistance_us(),
+      m_sonars.m_sonarArray_p[static_cast<uint8_t>(SonarE::CENTER)].getDistance_us(),
+      m_sonars.m_sonarArray_p[static_cast<uint8_t>(SonarE::RIGHT)].getDistance_us());
   Streamprint(s, "yaw %3d ", (int)(m_imu.getYawDeg()));
   Streamprint(s, "pit %3d ", (int)(m_imu.getPitchDeg()));
   Streamprint(s, "rol %3d ", (int)(m_imu.getRollDeg()));
@@ -1011,7 +1033,7 @@ void Robot::printInfo_sensorCounters(Stream &s)
   Streamprint(s, "dro %4d %4d ",
       m_dropSensorArray[LEFT].getCounter(),
       m_dropSensorArray[RIGHT].getCounter());
-  Streamprint(s, "son %3d ", sonars_getDistanceCounter(&m_sonars));
+  Streamprint(s, "son %3d ", m_sonars.getDistanceCounter());
   Streamprint(s, "yaw %3d ", (int)(m_imu.getYawDeg()));
   Streamprint(s, "pit %3d ", (int)(m_imu.getPitchDeg()));
   Streamprint(s, "rol %3d ", (int)(m_imu.getRollDeg()));
@@ -1795,7 +1817,7 @@ void Robot::setNextState(StateMachine::stateE stateNew, int dir)
 
   m_stateMachine.changeState();
 
-  m_sonars.obstacleTimeout = 0;
+  m_sonars.setObstacleTimeout(0);
   m_perimeterTriggerTime = 0;
 
   printInfo(Console);
@@ -2283,21 +2305,23 @@ void Robot::checkRain()
 void Robot::checkSonar()
 {
   unsigned long curMillis = millis();
-  if (m_mowPatternCurr == MOW_BIDIR && curMillis < (m_stateMachine.getStateStartTime() + 4000))
+  if (m_mowPatternCurr == MOW_BIDIR &&
+      curMillis < (m_stateMachine.getStateStartTime() + 4000))
   {
     return;
   }
 
   // slow down motor wheel speed near obstacles
   if (m_stateMachine.isCurrentState(StateMachine::STATE_FORWARD) ||
-      (m_mowPatternCurr == MOW_BIDIR && m_stateMachine.isCurrentState(StateMachine::STATE_REVERSE)))
+      (m_mowPatternCurr == MOW_BIDIR &&
+       m_stateMachine.isCurrentState(StateMachine::STATE_REVERSE)))
   {
-    if (m_sonars.obstacleTimeout == 0)
+    if (m_sonars.getObstacleTimeout() == 0)
     {
-      if (sonars_isClose(&m_sonars))
+      if (m_sonars.isClose())
       {
-        m_sonars.tempDistanceCounter++;
-        if (m_sonars.tempDistanceCounter >= 5)
+        m_sonars.incTempDistanceCounter();
+        if (m_sonars.getTempDistanceCounter() >= 5)
         {
           // Console.println("sonar slow down");
 
@@ -2311,43 +2335,49 @@ void Robot::checkSonar()
           {
             m_speed = tmpSpeed;
           }
-          m_sonars.obstacleTimeout = curMillis + 3000;
+          m_sonars.setObstacleTimeout(curMillis + 3000);
         }
       }
       else
       {
-        m_sonars.tempDistanceCounter = 0;
+        m_sonars.clearTempDistanceCounter();
       }
     }
-    else if (m_sonars.obstacleTimeout != 0 && curMillis > m_sonars.obstacleTimeout)
+    else if (m_sonars.getObstacleTimeout() != 0 &&
+             curMillis > m_sonars.getObstacleTimeout())
     {
       //Console.println("no sonar");
-      m_sonars.obstacleTimeout = 0;
-      m_sonars.tempDistanceCounter = 0;
+      m_sonars.setObstacleTimeout(0);
+      m_sonars.clearTempDistanceCounter();
       m_speed = constrain(m_speed * 2, -100, 100);
     }
   }
 
   uint16_t distanceUs;
+  const uint16_t triggerBelow = m_sonars.getSettings()->triggerBelow.value;
 
-  distanceUs = sonar_getDistance_us(&m_sonars.sonarArray_p[CENTER]);
-  if (distanceUs < m_sonars.triggerBelow)
+  distanceUs = m_sonars.m_sonarArray_p[static_cast<uint8_t>(SonarE::CENTER)].
+      getDistance_us();
+  if (distanceUs < triggerBelow)
   {
-    sonars_incDistanceCounter(&m_sonars);
+    m_sonars.incDistanceCounter();
     reverseOrChangeDirection(!m_rollDir); // toggle roll dir
   }
 
-  distanceUs = sonar_getDistance_us(&m_sonars.sonarArray_p[RIGHT]);
-  if (distanceUs < m_sonars.triggerBelow)
+  distanceUs =
+      m_sonars.m_sonarArray_p[static_cast<uint8_t>(SonarE::RIGHT)].
+      getDistance_us();
+  if (distanceUs < triggerBelow)
   {
-    sonars_incDistanceCounter(&m_sonars);
+    m_sonars.incDistanceCounter();
     reverseOrChangeDirection(LEFT);
   }
 
-  distanceUs = sonar_getDistance_us(&m_sonars.sonarArray_p[LEFT]);
-  if (distanceUs < m_sonars.triggerBelow)
+  distanceUs = m_sonars.m_sonarArray_p[static_cast<uint8_t>(SonarE::LEFT)].
+      getDistance_us();
+  if (distanceUs < triggerBelow)
   {
-    sonars_incDistanceCounter(&m_sonars);
+    m_sonars.incDistanceCounter();
     reverseOrChangeDirection(RIGHT);
   }
 }
@@ -2861,7 +2891,7 @@ void Robot::tasks_100ms()
 void Robot::tasks_200ms()
 {
   m_rc.run();
-  if (m_sonars.use)
+  if (m_sonars.isUsed())
   {
     checkSonar();
   }
@@ -2874,9 +2904,9 @@ void Robot::tasks_200ms()
 
 void Robot::tasks_250ms()
 {
-  if (m_sonars.use)
+  if (m_sonars.isUsed())
   {
-    sonars_ping(&m_sonars);
+    m_sonars.ping();
   }
 }
 

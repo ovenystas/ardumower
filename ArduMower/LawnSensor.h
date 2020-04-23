@@ -48,14 +48,10 @@ class LawnSensors
 {
 public:
   LawnSensors() = default;
-  LawnSensors(const uint8_t* sendPins, const uint8_t* receivePins,
-      LawnSensor* lawnSensorArray_p, const uint8_t len)
-  {
-    setup(sendPins, receivePins, lawnSensorArray_p, len);
-  }
-
-  void setup(const uint8_t* sendPins, const uint8_t* receivePins,
-      LawnSensor* lawnSensorArray_p, const uint8_t len);
+  LawnSensors(LawnSensor* lawnSensorArray_p, const uint8_t len) :
+    m_lawnSensorArray_p(lawnSensorArray_p),
+    m_len(len)
+  {};
 
   bool isUsed()
   {
@@ -104,8 +100,8 @@ public:
  }
 
 private:
-  uint8_t m_len {};
   LawnSensor* m_lawnSensorArray_p  {};
+  uint8_t m_len {};
   bool m_detected { false };
   uint16_t m_counter {};
 
