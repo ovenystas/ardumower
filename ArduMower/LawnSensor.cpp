@@ -7,58 +7,73 @@
 
 #include "LawnSensor.h"
 
-void lawnSensor_setup(const uint8_t sendPin, const uint8_t receivePin,
-                      LawnSensor* lawnSensor_p)
+void LawnSensor::setup(uint8_t sendPin, uint8_t receivePin)
 {
-  lawnSensor_p->sendPin = sendPin;
-  lawnSensor_p->receivePin = receivePin;
+  m_sendPin = sendPin;
+  m_receivePin = receivePin;
 
-  pinMode(lawnSensor_p->sendPin, OUTPUT);
-  pinMode(lawnSensor_p->receivePin, INPUT);
+  pinMode(m_sendPin, OUTPUT);
+  pinMode(m_receivePin, INPUT);
 
-  lawnSensor_p->value = 0;
-  lawnSensor_p->valueOld = 0;
+  m_value = 0;
+  m_valueOld = 0;
 }
 
 
-uint16_t lawnSensor_measureLawnCapacity(LawnSensor* lawnSensor_p)
+uint16_t LawnSensor::measureLawnCapacity()
 {
-  digitalWrite(lawnSensor_p->sendPin, HIGH);
+  digitalWrite(m_sendPin, HIGH);
 
   // TODO: Improve this
   uint16_t t = 0;
-  while (digitalRead(lawnSensor_p->receivePin) == LOW)
+  while (digitalRead(m_receivePin) == LOW)
   {
     t++;
   }
 
-  digitalWrite(lawnSensor_p->sendPin, LOW);
+  digitalWrite(m_sendPin, LOW);
 
   return t;
 }
 
-void lawnSensor_read(LawnSensor* lawnSensor_p)
+void LawnSensor::read()
 {
   const float accel = 0.03f;
 
-  lawnSensor_p->value = (1.0f - accel) * lawnSensor_p->value +
-      accel * (float)lawnSensor_measureLawnCapacity(lawnSensor_p);
+  m_value = (1.0f - accel) * m_value +
+      accel * (float)measureLawnCapacity();
 }
 
-void lawnSensors_check(LawnSensors* lawnSensors_p)
+void LawnSensors::setup(const uint8_t* sendPins, const uint8_t* receivePins,
+    LawnSensor* lawnSensorArray_p, const uint8_t len)
 {
-  LawnSensor* sensorF_p = &lawnSensors_p->lawnSensorArray_p[0];
-  LawnSensor* sensorB_p = &lawnSensors_p->lawnSensorArray_p[1];
+  m_use = false;
+  m_len = len;
+  m_lawnSensorArray_p = lawnSensorArray_p;
 
-  float deltaF = (sensorF_p->value / sensorF_p->valueOld) * 100.0f;
-  float deltaB = (sensorB_p->value / sensorB_p->valueOld) * 100.0f;
+  for (uint8_t i = 0; i < len; i++)
+  {
+    lawnSensorArray_p[i].setup(sendPins[i], receivePins[i]);
+  }
+
+  m_detected = false;
+  m_counter = 0;
+}
+
+void LawnSensors::check()
+{
+  LawnSensor* sensorF_p = &m_lawnSensorArray_p[0];
+  LawnSensor* sensorB_p = &m_lawnSensorArray_p[1];
+
+  float deltaF = (sensorF_p->m_value / sensorF_p->m_valueOld) * 100.0f;
+  float deltaB = (sensorB_p->m_value / sensorB_p->m_valueOld) * 100.0f;
 
   if (deltaF <= 95 || deltaB <= 95)
   {
-    lawnSensors_p->counter++;
-    lawnSensors_p->detected = true;
+    m_counter++;
+    m_detected = true;
   }
 
-  sensorF_p->valueOld = sensorF_p->value;
-  sensorB_p->valueOld = sensorB_p->value;
+  sensorF_p->m_valueOld = sensorF_p->m_value;
+  sensorB_p->m_valueOld = sensorB_p->m_value;
 }

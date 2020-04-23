@@ -7,86 +7,113 @@
 #pragma once
 
 #include <Arduino.h>
+#include "Setting.h"
 
-typedef struct
+class LawnSensor
 {
-  uint8_t sendPin;
-  uint8_t receivePin;
-  float value;     // lawn sensor capacity (time)
-  float valueOld;  // lawn sensor capacity (time)
-} LawnSensor;
-
-typedef struct
-{
-  bool use;
-  uint8_t len;
-  LawnSensor* lawnSensorArray_p;
-  bool detected;
-  uint16_t counter;
-} LawnSensors;
-
-
-void lawnSensor_setup(const uint8_t sendPin, const uint8_t receivePin,
-    LawnSensor* lawnSensor_p);
-
-void lawnSensor_read(LawnSensor* lawnSensor_p);
-
-static inline
-float lawnSensor_getValue(LawnSensor* lawnSensor_p)
-{
-  return lawnSensor_p->value;
-}
-
-uint16_t lawnSensor_measureLawnCapacity(LawnSensor* lawnSensor_p);
-
-static inline
-void lawnSensors_setup(const uint8_t* sendPins, const uint8_t* receivePins,
-                        LawnSensor* lawnSensorArray_p,
-                        LawnSensors* lawnSensors_p, const uint8_t len)
-{
-  lawnSensors_p->use = false;
-  lawnSensors_p->len = len;
-  lawnSensors_p->lawnSensorArray_p = lawnSensorArray_p;
-  for (uint8_t i = 0; i < len; i++)
+public:
+  LawnSensor() = default;
+  LawnSensor(const uint8_t sendPin, const uint8_t receivePin)
   {
-    lawnSensor_setup(sendPins[i], receivePins[i], &lawnSensorArray_p[i]);
+    setup(sendPin, receivePin);
   }
-  lawnSensors_p->detected = false;
-  lawnSensors_p->counter = 0;
-}
 
-static inline
-void lawnSensors_read(LawnSensors* lawnSensors_p)
-{
-  for (uint8_t i = 0; i < lawnSensors_p->len; i++)
+  void setup(uint8_t sendPin, uint8_t receivePin);
+
+  void read();
+
+  float getValue()
   {
-    lawnSensor_read(&lawnSensors_p->lawnSensorArray_p[i]);
+    return m_value;
   }
-}
 
-static inline
-bool lawnSensors_isDetected(LawnSensors* lawnSensors_p)
+  uint16_t measureLawnCapacity();
+
+public:
+  // TODO: Make these private
+  float m_value {};     // lawn sensor capacity (time)
+  float m_valueOld {};  // lawn sensor capacity (time)
+
+private:
+  uint8_t m_sendPin {};
+  uint8_t m_receivePin {};
+};
+
+struct LawnSensorsSettings
 {
-  return lawnSensors_p->detected;
-}
+  Setting<bool> use;                // Use the lawn swnsors or not
+};
 
-static inline
-void lawnSensors_clearDetected(LawnSensors* lawnSensors_p)
- {
-  lawnSensors_p->detected = false;
+class LawnSensors
+{
+public:
+  LawnSensors() = default;
+  LawnSensors(const uint8_t* sendPins, const uint8_t* receivePins,
+      LawnSensor* lawnSensorArray_p, const uint8_t len)
+  {
+    setup(sendPins, receivePins, lawnSensorArray_p, len);
+  }
+
+  void setup(const uint8_t* sendPins, const uint8_t* receivePins,
+      LawnSensor* lawnSensorArray_p, const uint8_t len);
+
+  bool isUsed()
+  {
+    return m_use;
+  }
+
+  void read()
+  {
+    for (uint8_t i = 0; i < m_len; i++)
+    {
+      m_lawnSensorArray_p[i].read();
+    }
+  }
+
+  bool isDetected()
+  {
+    return m_detected;
+  }
+
+  void clearDetected()
+   {
+    m_detected = false;
+   }
+
+  void simDetected()
+  {
+    m_detected = true;
+    m_counter++;
+  }
+
+  uint16_t getCounter()
+  {
+    return m_counter;
+  }
+
+  void check();
+
+  LawnSensorsSettings* getSettings()
+  {
+    return &m_settings;
+  }
+
+  void setSettings(LawnSensorsSettings* settings_p)
+  {
+    m_settings.use.value = settings_p->use.value;
  }
 
-static inline
-void lawnSensors_simDetected(LawnSensors* lawnSensors_p)
-{
-  lawnSensors_p->detected = true;
-  lawnSensors_p->counter++;
-}
+private:
+  uint8_t m_len {};
+  LawnSensor* m_lawnSensorArray_p  {};
+  bool m_detected { false };
+  uint16_t m_counter {};
 
-static inline
-uint16_t lawnSensors_getCounter(LawnSensors* lawnSensors_p)
-{
-  return lawnSensors_p->counter;
-}
+  LawnSensorsSettings m_settings
+  {
+    { "Use", "", false, false, true }
+  };
 
-void lawnSensors_check(LawnSensors* lawnSensors_p);
+  // Shorter convenient variables for settings variables
+  bool& m_use = m_settings.use.value;
+};

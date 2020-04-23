@@ -791,8 +791,7 @@ void RemoteControl::processBumperMenu(String pfodCmd)
 {
   if (pfodCmd == "b00")
   {
-    BumpersSettings* bumpersSettings_p = m_robot_p->m_bumpers.getSettings();
-    TOGGLE(bumpersSettings_p->use.value);
+    TOGGLE(m_robot_p->m_bumpers.getSettings()->use.value);
   }
   sendBumperMenu(true);
 }
@@ -992,13 +991,13 @@ void RemoteControl::sendLawnSensorMenu(bool update)
     Bluetooth.print(F("{.Lawn sensor`1000"));
   }
   Bluetooth.print(F("|f00~Use "));
-  sendYesNo(m_robot_p->m_lawnSensors.use);
+  sendYesNo(m_robot_p->m_lawnSensors.isUsed());
   Bluetooth.print(F("|f01~Counter "));
-  Bluetooth.print(lawnSensors_getCounter(&m_robot_p->m_lawnSensors));
+  Bluetooth.print(m_robot_p->m_lawnSensors.getCounter());
   Bluetooth.println(F("|f02~Value f, b"));
-  Bluetooth.print(lawnSensor_getValue(&m_robot_p->m_lawnSensorArray[FRONT]));
+  Bluetooth.print(m_robot_p->m_lawnSensorArray[FRONT].getValue());
   Bluetooth.print(", ");
-  Bluetooth.print(lawnSensor_getValue(&m_robot_p->m_lawnSensorArray[BACK]));
+  Bluetooth.print(m_robot_p->m_lawnSensorArray[BACK].getValue());
   Bluetooth.println("}");
 }
 
@@ -1006,7 +1005,7 @@ void RemoteControl::processLawnSensorMenu(String pfodCmd)
 {
   if (pfodCmd == "f00")
   {
-    TOGGLE(m_robot_p->m_lawnSensors.use);
+    TOGGLE(m_robot_p->m_lawnSensors.getSettings()->use.value);
   }
   sendLawnSensorMenu(true);
 }
@@ -1115,8 +1114,7 @@ void RemoteControl::processImuMenu(String pfodCmd)
 {
   if (pfodCmd == "g00")
   {
-    ImuSettings* imuSettings_p = m_robot_p->m_imu.getSettings();
-    TOGGLE(imuSettings_p->use.value);
+    TOGGLE(m_robot_p->m_imu.getSettings()->use.value);
   }
   else if (pfodCmd == "g10")
   {
@@ -1124,8 +1122,7 @@ void RemoteControl::processImuMenu(String pfodCmd)
   }
   else if (pfodCmd == "g04")
   {
-    ImuSettings* imuSettings_p = m_robot_p->m_imu.getSettings();
-    TOGGLE(imuSettings_p->correctDir.value);
+    TOGGLE(m_robot_p->m_imu.getSettings()->correctDir.value);
   }
   else if (pfodCmd.startsWith("g05"))
   {
@@ -1312,23 +1309,24 @@ void RemoteControl::sendOdometerMenu(bool update)
 
 void RemoteControl::processOdometerMenu(String pfodCmd)
 {
-  OdometerSettings* odometerSettings_p = m_robot_p->m_odometer.getSettings();
-
   if (pfodCmd == "l00")
   {
-    TOGGLE(odometerSettings_p->use.value);
+    TOGGLE(m_robot_p->m_odometer.getSettings()->use.value);
   }
   else if (pfodCmd.startsWith("l01"))
   {
-    processSlider(pfodCmd, odometerSettings_p->ticksPerCm.value, 0.1);
+    processSlider(pfodCmd,
+        m_robot_p->m_odometer.getSettings()->ticksPerCm.value, 0.1);
   }
   else if (pfodCmd.startsWith("l02"))
   {
-    processSlider(pfodCmd, odometerSettings_p->wheelBaseCm.value, 0.1);
+    processSlider(pfodCmd,
+        m_robot_p->m_odometer.getSettings()->wheelBaseCm.value, 0.1);
   }
   else if (pfodCmd.startsWith("l04"))
   {
-    processSlider(pfodCmd, odometerSettings_p->ticksPerRevolution.value, 1.0);
+    processSlider(pfodCmd,
+        m_robot_p->m_odometer.getSettings()->ticksPerRevolution.value, 1.0);
   }
   else if (pfodCmd.startsWith("l05"))
   {
@@ -2124,7 +2122,7 @@ void RemoteControl::run()
       Bluetooth.print(",");
       Bluetooth.print(m_robot_p->getPerimeterCounter());
       Bluetooth.print(",");
-      Bluetooth.print(lawnSensors_getCounter(&m_robot_p->m_lawnSensors));
+      Bluetooth.print(m_robot_p->m_lawnSensors.getCounter());
       Bluetooth.print(",");
       Bluetooth.print(rainSensor_getCounter(&m_robot_p->m_rainSensor));
       Bluetooth.print(",");
@@ -2155,7 +2153,7 @@ void RemoteControl::run()
       }
       Bluetooth.print(m_robot_p->m_perimeters.m_perimeterArray_p[PERIMETER_LEFT].isInside());
       Bluetooth.print(",");
-      Bluetooth.print(lawnSensors_isDetected(&m_robot_p->m_lawnSensors));
+      Bluetooth.print(m_robot_p->m_lawnSensors.isDetected());
       Bluetooth.print(",");
       Bluetooth.print(rainSensor_isRaining(&m_robot_p->m_rainSensor));
       Bluetooth.print(",");

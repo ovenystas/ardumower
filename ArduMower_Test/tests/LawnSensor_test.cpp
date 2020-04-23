@@ -1,40 +1,101 @@
-#include "LawnSensor.h"
-
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
 
-LawnSensor lawnSensor;
+// Get access to private class members in SUT
+#define private public
+#include "LawnSensor.h"
+
+// LawnSensorInit --------------------------------------------------------
+
+TEST_GROUP(LawnSensorInit)
+{
+  LawnSensor* lawnSensor_p;
+
+  void setup()
+  {
+  }
+
+  void teardown()
+  {
+    if (lawnSensor_p)
+    {
+      delete lawnSensor_p;
+    }
+    mock().clear();
+  }
+};
+
+TEST(LawnSensorInit, defaultInit)
+{
+  lawnSensor_p = new LawnSensor();
+
+  UNSIGNED_LONGS_EQUAL(0, lawnSensor_p->m_sendPin);
+  UNSIGNED_LONGS_EQUAL(0, lawnSensor_p->m_receivePin);
+  UNSIGNED_LONGS_EQUAL(0, lawnSensor_p->m_value);
+  UNSIGNED_LONGS_EQUAL(0, lawnSensor_p->m_valueOld);
+}
+
+TEST(LawnSensorInit, defaultInit_setup)
+{
+  mock().expectOneCall("pinMode")
+      .withParameter("pin", 1)
+      .withParameter("mode", OUTPUT);
+  mock().expectOneCall("pinMode")
+      .withParameter("pin", 2)
+      .withParameter("mode", INPUT);
+
+  lawnSensor_p = new LawnSensor();
+  lawnSensor_p->setup(1, 2);
+
+  UNSIGNED_LONGS_EQUAL(1, lawnSensor_p->m_sendPin);
+  UNSIGNED_LONGS_EQUAL(2, lawnSensor_p->m_receivePin);
+  UNSIGNED_LONGS_EQUAL(0, lawnSensor_p->m_value);
+  UNSIGNED_LONGS_EQUAL(0, lawnSensor_p->m_valueOld);
+
+  mock().checkExpectations();
+}
+
+TEST(LawnSensorInit, parameterizedInit)
+{
+  mock().expectOneCall("pinMode")
+      .withParameter("pin", 1)
+      .withParameter("mode", OUTPUT);
+  mock().expectOneCall("pinMode")
+      .withParameter("pin", 2)
+      .withParameter("mode", INPUT);
+
+  lawnSensor_p = new LawnSensor(1, 2);
+
+  UNSIGNED_LONGS_EQUAL(1, lawnSensor_p->m_sendPin);
+  UNSIGNED_LONGS_EQUAL(2, lawnSensor_p->m_receivePin);
+  UNSIGNED_LONGS_EQUAL(0, lawnSensor_p->m_value);
+  UNSIGNED_LONGS_EQUAL(0, lawnSensor_p->m_valueOld);
+
+  mock().checkExpectations();
+}
 
 // LawnSensor ------------------------------------------------------------
 
 TEST_GROUP(LawnSensor)
 {
+  LawnSensor* lawnSensor_p;
+
   void setup()
   {
-    mock().expectOneCall("pinMode")
-        .withIntParameter("pin", 1)
-        .withIntParameter("mode", OUTPUT);
-    mock().expectOneCall("pinMode")
-        .withIntParameter("pin", 2)
-        .withIntParameter("mode", INPUT);
-    lawnSensor_setup(1, 2, &lawnSensor);
-
-    mock().checkExpectations();
+    mock().disable();
+    lawnSensor_p = new LawnSensor(1, 2);
+    mock().enable();
   }
 
   void teardown()
   {
+    if (lawnSensor_p)
+    {
+      delete lawnSensor_p;
+    }
     mock().clear();
   }
 };
-
-TEST(LawnSensor, Setup)
-{
-  CHECK_EQUAL(1, lawnSensor.sendPin);
-  CHECK_EQUAL(2, lawnSensor.receivePin);
-  DOUBLES_EQUAL(0.0, lawnSensor.value, 0.01);
-  DOUBLES_EQUAL(0.0, lawnSensor.valueOld, 0.01);
-}
 
 TEST(LawnSensor, measureLawnCapacity)
 {
@@ -51,16 +112,16 @@ TEST(LawnSensor, measureLawnCapacity)
       .withIntParameter("pin", 1)
       .withIntParameter("val", LOW);
 
-  CHECK_EQUAL(5, lawnSensor_measureLawnCapacity(&lawnSensor));
+  UNSIGNED_LONGS_EQUAL(5, lawnSensor_p->measureLawnCapacity());
 
   mock().checkExpectations();
 }
 
 TEST(LawnSensor, getValue)
 {
-  DOUBLES_EQUAL(0.0, lawnSensor_getValue(&lawnSensor), 0.01);
-  lawnSensor.value = 1.2f;
-  DOUBLES_EQUAL(1.2, lawnSensor_getValue(&lawnSensor), 0.01);
+  DOUBLES_EQUAL(0.0, lawnSensor_p->getValue(), 0.01);
+  lawnSensor_p->m_value = 1.2f;
+  DOUBLES_EQUAL(1.2, lawnSensor_p->getValue(), 0.01);
 }
 
 TEST(LawnSensor, readVal0)
@@ -80,8 +141,8 @@ TEST(LawnSensor, readVal0)
       .withIntParameter("pin", 1)
       .withIntParameter("val", LOW);
 
-  lawnSensor_read(&lawnSensor);
-  DOUBLES_EQUAL(accel * 5.0f, lawnSensor.value, 0.01);
+  lawnSensor_p->read();
+  DOUBLES_EQUAL(accel * 5.0f, lawnSensor_p->getValue(), 0.01);
 
   mock().checkExpectations();
 }
@@ -103,14 +164,15 @@ TEST(LawnSensor, readVal2)
       .withIntParameter("pin", 1)
       .withIntParameter("val", LOW);
 
-  lawnSensor.value = 2.0f;
-  lawnSensor_read(&lawnSensor);
-  DOUBLES_EQUAL((1.0f - accel) * 2.0f + accel * 5.0f, lawnSensor.value, 0.01);
+  lawnSensor_p->m_value = 2.0f;
+  lawnSensor_p->read();
+  DOUBLES_EQUAL((1.0f - accel) * 2.0f + accel * 5.0f, lawnSensor_p->getValue(),
+      0.01);
 
   mock().checkExpectations();
 }
 
-// LawnSensorArray ------------------------------------------------------------
+// LawnSensorsInit ------------------------------------------------------------
 
 const uint8_t LAWN_SENSORS_NUM = 2;
 const uint8_t sendPins[LAWN_SENSORS_NUM] = { 1, 3 };
@@ -118,9 +180,24 @@ const uint8_t receivePins[LAWN_SENSORS_NUM] = { 2, 4 };
 LawnSensor array[LAWN_SENSORS_NUM];
 LawnSensors lawnSensors;
 
-TEST_GROUP(LawnSensorArray)
+TEST_GROUP(LawnSensorsInit)
 {
+  LawnSensors* lawnSensors_p;
+
   void setup()
+  {
+  }
+
+  void teardown()
+  {
+    if (lawnSensors_p)
+    {
+      delete lawnSensors_p;
+    }
+    mock().clear();
+  }
+
+  void mockSetup_defaultInit_setup_and_parameterizedInit()
   {
     mock().expectOneCall("pinMode")
         .withIntParameter("pin", 1)
@@ -134,37 +211,87 @@ TEST_GROUP(LawnSensorArray)
     mock().expectOneCall("pinMode")
         .withIntParameter("pin", 4)
         .withIntParameter("mode", INPUT);
+  }
 
-    lawnSensors_setup(sendPins, receivePins, array, &lawnSensors, LAWN_SENSORS_NUM);
+  void checks_defaultInit_setup_and_parameterizedInit()
+  {
+    UNSIGNED_LONGS_EQUAL(LAWN_SENSORS_NUM, lawnSensors_p->m_len);
+    CHECK_FALSE(lawnSensors_p->m_detected);
+    UNSIGNED_LONGS_EQUAL(0, lawnSensors_p->m_counter);
+    CHECK_FALSE(lawnSensors_p->m_use);
+
+    CHECK_FALSE(nullptr == lawnSensors_p->m_lawnSensorArray_p);
+
+    UNSIGNED_LONGS_EQUAL(sendPins[0], lawnSensors_p->m_lawnSensorArray_p[0].m_sendPin);
+    UNSIGNED_LONGS_EQUAL(receivePins[0], lawnSensors_p->m_lawnSensorArray_p[0].m_receivePin);
+    UNSIGNED_LONGS_EQUAL(0, lawnSensors_p->m_lawnSensorArray_p[0].m_value);
+    UNSIGNED_LONGS_EQUAL(0, lawnSensors_p->m_lawnSensorArray_p[0].m_valueOld);
+
+    UNSIGNED_LONGS_EQUAL(sendPins[1], lawnSensors_p->m_lawnSensorArray_p[1].m_sendPin);
+    UNSIGNED_LONGS_EQUAL(receivePins[1], lawnSensors_p->m_lawnSensorArray_p[1].m_receivePin);
+    UNSIGNED_LONGS_EQUAL(0, lawnSensors_p->m_lawnSensorArray_p[1].m_value);
+    UNSIGNED_LONGS_EQUAL(0, lawnSensors_p->m_lawnSensorArray_p[1].m_valueOld);
 
     mock().checkExpectations();
+  }
+};
+
+TEST(LawnSensorsInit, defaultInit)
+{
+  lawnSensors_p = new LawnSensors();
+
+  UNSIGNED_LONGS_EQUAL(0, lawnSensors_p->m_len);
+  POINTERS_EQUAL(nullptr, lawnSensors_p->m_lawnSensorArray_p);
+  CHECK_FALSE(lawnSensors_p->m_detected);
+  UNSIGNED_LONGS_EQUAL(0, lawnSensors_p->m_counter);
+  CHECK_FALSE(lawnSensors_p->m_use);
+}
+
+
+TEST(LawnSensorsInit, defaultInit_setup)
+{
+  mockSetup_defaultInit_setup_and_parameterizedInit();
+
+  lawnSensors_p = new LawnSensors();
+  lawnSensors_p->setup(sendPins, receivePins, array, LAWN_SENSORS_NUM);
+
+  checks_defaultInit_setup_and_parameterizedInit();
+}
+
+TEST(LawnSensorsInit, parameterizedInit)
+{
+  mockSetup_defaultInit_setup_and_parameterizedInit();
+
+  lawnSensors_p = new LawnSensors(sendPins, receivePins, array, LAWN_SENSORS_NUM);
+
+  checks_defaultInit_setup_and_parameterizedInit();
+}
+
+// LawnSensors ----------------------------------------------------------------
+
+TEST_GROUP(LawnSensors)
+{
+  LawnSensors* lawnSensors_p;
+
+  void setup()
+  {
+    mock().disable();
+    lawnSensors_p =
+        new LawnSensors(sendPins, receivePins, array, LAWN_SENSORS_NUM);
+    mock().enable();
   }
 
   void teardown()
   {
+    if (lawnSensors_p)
+    {
+      delete lawnSensors_p;
+    }
     mock().clear();
   }
 };
 
-TEST(LawnSensorArray, Setup)
-{
-  CHECK_EQUAL(false, lawnSensors.use);
-  CHECK_EQUAL(LAWN_SENSORS_NUM, lawnSensors.len);
-  CHECK_EQUAL(0, lawnSensors.counter);
-  CHECK_EQUAL(false, lawnSensors.detected);
-
-  CHECK_EQUAL(1, lawnSensors.lawnSensorArray_p[0].sendPin);
-  CHECK_EQUAL(2, lawnSensors.lawnSensorArray_p[0].receivePin);
-  DOUBLES_EQUAL(false, lawnSensors.lawnSensorArray_p[0].value, 0.01);
-  DOUBLES_EQUAL(0, lawnSensors.lawnSensorArray_p[0].valueOld, 0.01);
-
-  CHECK_EQUAL(3, lawnSensors.lawnSensorArray_p[1].sendPin);
-  CHECK_EQUAL(4, lawnSensors.lawnSensorArray_p[1].receivePin);
-  DOUBLES_EQUAL(false, lawnSensors.lawnSensorArray_p[1].value, 0.01);
-  DOUBLES_EQUAL(0, lawnSensors.lawnSensorArray_p[1].valueOld, 0.01);
-}
-
-TEST(LawnSensorArray, read)
+TEST(LawnSensors, read)
 {
   const float accel = 0.03f;
 
@@ -194,108 +321,112 @@ TEST(LawnSensorArray, read)
       .withIntParameter("pin", 3)
       .withIntParameter("val", LOW);
 
-  lawnSensors_read(&lawnSensors);
-  DOUBLES_EQUAL(accel * 5.0f, lawnSensors.lawnSensorArray_p[0].value, 0.01);
-  DOUBLES_EQUAL(accel * 5.0f, lawnSensors.lawnSensorArray_p[1].value, 0.01);
+  lawnSensors_p->read();
+  DOUBLES_EQUAL(accel * 5.0f, lawnSensors_p->m_lawnSensorArray_p[0].m_value,
+      0.01);
+  DOUBLES_EQUAL(accel * 5.0f, lawnSensors_p->m_lawnSensorArray_p[1].m_value,
+      0.01);
 
   mock().checkExpectations();
 }
 
-TEST(LawnSensorArray, isDetected)
+TEST(LawnSensors, isDetected)
 {
-  CHECK_EQUAL(false, lawnSensors_isDetected(&lawnSensors));
+  CHECK_FALSE(lawnSensors_p->isDetected());
 
-  lawnSensors.detected = true;
+  lawnSensors_p->m_detected = true;
 
-  CHECK_EQUAL(true, lawnSensors_isDetected(&lawnSensors));
+  CHECK_TRUE(lawnSensors_p->isDetected());
 }
 
-TEST(LawnSensorArray, clearDetected)
+TEST(LawnSensors, clearDetected)
 {
-  lawnSensors.detected = true;
-  CHECK_EQUAL(true, lawnSensors.detected);
+  lawnSensors_p->m_detected = true;
+  CHECK_TRUE(lawnSensors_p->isDetected());
 
-  lawnSensors_clearDetected(&lawnSensors);
+  lawnSensors_p->clearDetected();
 
-  CHECK_EQUAL(false, lawnSensors.detected);
+  CHECK_FALSE(lawnSensors_p->isDetected());
 }
 
-TEST(LawnSensorArray, simDetected)
+TEST(LawnSensors, getCounter)
 {
-  CHECK_EQUAL(false, lawnSensors.detected);
-  CHECK_EQUAL(0, lawnSensors.counter);
+  UNSIGNED_LONGS_EQUAL(0, lawnSensors_p->getCounter());
 
-  lawnSensors_simDetected(&lawnSensors);
+  lawnSensors_p->m_counter = 12345;
 
-  CHECK_EQUAL(true, lawnSensors.detected);
-  CHECK_EQUAL(1, lawnSensors.counter);
+  UNSIGNED_LONGS_EQUAL(12345, lawnSensors_p->getCounter());
 }
 
-TEST(LawnSensorArray, getCounter)
+TEST(LawnSensors, simDetected)
 {
-  CHECK_EQUAL(0, lawnSensors_getCounter(&lawnSensors));
+  CHECK_FALSE(lawnSensors_p->isDetected());
+  UNSIGNED_LONGS_EQUAL(0, lawnSensors_p->getCounter());
 
-  lawnSensors.counter = 12345;
+  lawnSensors_p->simDetected();
 
-  CHECK_EQUAL(12345, lawnSensors_getCounter(&lawnSensors));
+  CHECK_TRUE(lawnSensors_p->isDetected());
+  UNSIGNED_LONGS_EQUAL(1, lawnSensors_p->getCounter());
 }
 
-TEST(LawnSensorArray, checkNoDetect)
+TEST(LawnSensors, checkNoDetect)
 {
-  lawnSensors.lawnSensorArray_p[0].value = 0.951f;
-  lawnSensors.lawnSensorArray_p[0].valueOld = 1.0f;
-  lawnSensors.lawnSensorArray_p[1].value = 0.951f * 2;
-  lawnSensors.lawnSensorArray_p[1].valueOld = 1.0f * 2;
+  lawnSensors_p->m_lawnSensorArray_p[0].m_value = 0.951f;
+  lawnSensors_p->m_lawnSensorArray_p[0].m_valueOld = 1.0f;
+  lawnSensors_p->m_lawnSensorArray_p[1].m_value = 0.951f * 2;
+  lawnSensors_p->m_lawnSensorArray_p[1].m_valueOld = 1.0f * 2;
 
-  lawnSensors_check(&lawnSensors);
+  lawnSensors_p->check();
 
-  CHECK_EQUAL(0, lawnSensors.counter);
-  CHECK_EQUAL(false, lawnSensors.detected);
-  DOUBLES_EQUAL(0.951f, lawnSensors.lawnSensorArray_p[0].valueOld, 0.01);
-  DOUBLES_EQUAL(0.951f *2, lawnSensors.lawnSensorArray_p[1].valueOld, 0.01);
+  UNSIGNED_LONGS_EQUAL(0, lawnSensors_p->getCounter());
+  CHECK_FALSE(lawnSensors_p->isDetected());
+  DOUBLES_EQUAL(0.951f, lawnSensors_p->m_lawnSensorArray_p[0].m_valueOld,
+      0.01);
+  DOUBLES_EQUAL(0.951f *2, lawnSensors_p->m_lawnSensorArray_p[1].m_valueOld,
+      0.01);
 }
 
-TEST(LawnSensorArray, check0Detect)
+TEST(LawnSensors, check0Detect)
 {
-  lawnSensors.lawnSensorArray_p[0].value = 0.949f;
-  lawnSensors.lawnSensorArray_p[0].valueOld = 1.0f;
-  lawnSensors.lawnSensorArray_p[1].value = 0.951f * 2;
-  lawnSensors.lawnSensorArray_p[1].valueOld = 1.0f * 2;
+  lawnSensors_p->m_lawnSensorArray_p[0].m_value = 0.949f;
+  lawnSensors_p->m_lawnSensorArray_p[0].m_valueOld = 1.0f;
+  lawnSensors_p->m_lawnSensorArray_p[1].m_value = 0.951f * 2;
+  lawnSensors_p->m_lawnSensorArray_p[1].m_valueOld = 1.0f * 2;
 
-  lawnSensors_check(&lawnSensors);
+  lawnSensors_p->check();
 
-  CHECK_EQUAL(1, lawnSensors.counter);
-  CHECK_EQUAL(true, lawnSensors.detected);
-  DOUBLES_EQUAL(0.949f, lawnSensors.lawnSensorArray_p[0].valueOld, 0.01);
-  DOUBLES_EQUAL(0.951f *2, lawnSensors.lawnSensorArray_p[1].valueOld, 0.01);
+  UNSIGNED_LONGS_EQUAL(1, lawnSensors_p->getCounter());
+  CHECK_TRUE(lawnSensors_p->isDetected());
+  DOUBLES_EQUAL(0.949f, lawnSensors_p->m_lawnSensorArray_p[0].m_valueOld, 0.01);
+  DOUBLES_EQUAL(0.951f *2, lawnSensors_p->m_lawnSensorArray_p[1].m_valueOld, 0.01);
 }
 
-TEST(LawnSensorArray, check1Detect)
+TEST(LawnSensors, check1Detect)
 {
-  lawnSensors.lawnSensorArray_p[0].value = 0.951f;
-  lawnSensors.lawnSensorArray_p[0].valueOld = 1.0f;
-  lawnSensors.lawnSensorArray_p[1].value = 0.949f * 2;
-  lawnSensors.lawnSensorArray_p[1].valueOld = 1.0f * 2;
+  lawnSensors_p->m_lawnSensorArray_p[0].m_value = 0.951f;
+  lawnSensors_p->m_lawnSensorArray_p[0].m_valueOld = 1.0f;
+  lawnSensors_p->m_lawnSensorArray_p[1].m_value = 0.949f * 2;
+  lawnSensors_p->m_lawnSensorArray_p[1].m_valueOld = 1.0f * 2;
 
-  lawnSensors_check(&lawnSensors);
+  lawnSensors_p->check();
 
-  CHECK_EQUAL(1, lawnSensors.counter);
-  CHECK_EQUAL(true, lawnSensors.detected);
-  DOUBLES_EQUAL(0.951f, lawnSensors.lawnSensorArray_p[0].valueOld, 0.01);
-  DOUBLES_EQUAL(0.949f *2, lawnSensors.lawnSensorArray_p[1].valueOld, 0.01);
+  UNSIGNED_LONGS_EQUAL(1, lawnSensors_p->getCounter());
+  CHECK_TRUE(lawnSensors_p->isDetected());
+  DOUBLES_EQUAL(0.951f, lawnSensors_p->m_lawnSensorArray_p[0].m_valueOld, 0.01);
+  DOUBLES_EQUAL(0.949f *2, lawnSensors_p->m_lawnSensorArray_p[1].m_valueOld, 0.01);
 }
 
-TEST(LawnSensorArray, checkBothDetect)
+TEST(LawnSensors, checkBothDetect)
 {
-  lawnSensors.lawnSensorArray_p[0].value = 0.949f;
-  lawnSensors.lawnSensorArray_p[0].valueOld = 1.0f;
-  lawnSensors.lawnSensorArray_p[1].value = 0.949f * 2;
-  lawnSensors.lawnSensorArray_p[1].valueOld = 1.0f * 2;
+  lawnSensors_p->m_lawnSensorArray_p[0].m_value = 0.949f;
+  lawnSensors_p->m_lawnSensorArray_p[0].m_valueOld = 1.0f;
+  lawnSensors_p->m_lawnSensorArray_p[1].m_value = 0.949f * 2;
+  lawnSensors_p->m_lawnSensorArray_p[1].m_valueOld = 1.0f * 2;
 
-  lawnSensors_check(&lawnSensors);
+  lawnSensors_p->check();
 
-  CHECK_EQUAL(1, lawnSensors.counter);
-  CHECK_EQUAL(true, lawnSensors.detected);
-  DOUBLES_EQUAL(0.949f, lawnSensors.lawnSensorArray_p[0].valueOld, 0.01);
-  DOUBLES_EQUAL(0.949f *2, lawnSensors.lawnSensorArray_p[1].valueOld, 0.01);
+  UNSIGNED_LONGS_EQUAL(1, lawnSensors_p->getCounter());
+  CHECK_TRUE(lawnSensors_p->isDetected());
+  DOUBLES_EQUAL(0.949f, lawnSensors_p->m_lawnSensorArray_p[0].m_valueOld, 0.01);
+  DOUBLES_EQUAL(0.949f *2, lawnSensors_p->m_lawnSensorArray_p[1].m_valueOld, 0.01);
 }

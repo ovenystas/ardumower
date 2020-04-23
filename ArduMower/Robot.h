@@ -380,6 +380,8 @@ protected:
   virtual void loadSaveUserSettingsImu(bool readflag, int& addr, Imu& imu);
   virtual void loadSaveUserSettingsOdometer(bool readflag, int& addr,
       Odometer& odometer);
+  virtual void loadSaveUserSettingsLawnSensors(bool readflag, int& addr,
+      LawnSensors& lawnSensors);
   virtual void loadUserSettings();
   virtual void checkErrorCounter();
   virtual void printSettingSerial();

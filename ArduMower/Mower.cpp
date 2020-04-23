@@ -160,8 +160,8 @@ void Mower::setup()
   {
       PIN_LAWN_FRONT_RECV, PIN_LAWN_BACK_RECV
   };
-  lawnSensors_setup(lawnSensorSendPins, lawnSensorReceivePins, m_lawnSensorArray,
-      &m_lawnSensors, LAWNSENSORS_NUM);
+  m_lawnSensors.setup(lawnSensorSendPins, lawnSensorReceivePins,
+      m_lawnSensorArray, LAWNSENSORS_NUM);
 
   // perimeter
   m_perimeters.m_perimeterArray_p[PERIMETER_LEFT].setup(PIN_PERIMETER_LEFT);
