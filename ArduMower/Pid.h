@@ -44,9 +44,17 @@ public:
   {
     setup(Kp, Ki, Kd, yMin, yMax, maxOutput);
   }
+  Pid(float Kp, float Ki, float Kd, float yMin, float yMax, float maxOutput,
+      float regConstScale, float regConstMaxValue)
+  {
+    setup(Kp, Ki, Kd, yMin, yMax, maxOutput, regConstScale, regConstMaxValue);
+  }
 
   void setup(float Kp, float Ki, float Kd, float yMin, float yMax,
       float maxOutput);
+
+  void setup(float Kp, float Ki, float Kd, float yMin, float yMax,
+      float maxOutput, float regConstScale, float regConstMaxValue);
 
   float compute(float processValue);
 
@@ -80,9 +88,9 @@ public:
 private:
   PidSettings m_settings
   {
-    { "Kp", "", 1.0, 0.0, 1.0 },
-    { "Ki", "", 1.0, 0.0, 1.0 },
-    { "Kd", "", 1.0, 0.0, 1.0 }
+    { "Kp", "", 1.0f, 0.0f, 100.0f, 0.1f },
+    { "Ki", "", 1.0f, 0.0f, 100.0f, 0.1f },
+    { "Kd", "", 1.0f, 0.0f, 100.0f, 0.1f }
   };
 
   // Shorter convenient variables for settings variables

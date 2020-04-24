@@ -36,13 +36,23 @@
 
 #include <Arduino.h>
 #include "Pid.h"
+#include "Setting.h"
 
-typedef enum
+enum class PerimeterE
 {
-  PERIMETER_LEFT,
-  PERIMETER_RIGHT,
-  PERIMETER_END
-} perimeterE;
+  LEFT,
+  RIGHT,
+  END
+};
+
+struct PerimeterSettings
+{
+  Setting<unsigned int> timedOutIfBelowSmag;
+  Setting<bool> useDifferentialPerimeterSignal;
+  Setting<bool> swapCoilPolarity;
+  Setting<unsigned int> timeOutSecIfNotInside;
+};
+
 
 class Perimeter
 {
@@ -99,15 +109,21 @@ public:
       float &quality,
       bool print);
 
+  PerimeterSettings* getSettings()
+  {
+    return &m_settings;
+  }
+
+  void setSettings(PerimeterSettings* settings_p)
+  {
+    m_settings.timedOutIfBelowSmag.value = settings_p->timedOutIfBelowSmag.value;
+    m_settings.useDifferentialPerimeterSignal.value = settings_p->useDifferentialPerimeterSignal.value;
+    m_settings.swapCoilPolarity.value = settings_p->swapCoilPolarity.value;
+    m_settings.timeOutSecIfNotInside.value = settings_p->timeOutSecIfNotInside.value;
+ }
+
 public:
   Pid m_pid;             // perimeter PID controller
-
-  unsigned int m_timedOutIfBelowSmag { 300 };
-  unsigned int m_timeOutSecIfNotInside { 8 };
-  // use differential perimeter signal as input for the matched filter?
-  bool m_useDifferentialPerimeterSignal { true };
-  // swap coil polarity?
-  bool m_swapCoilPolarity { false };
 
 private:
   uint32_t m_lastInsideTime {};
@@ -124,6 +140,25 @@ private:
 
   int16_t m_sumMaxTmp {};
   int16_t m_sumMinTmp {};
+
+  PerimeterSettings m_settings
+  {
+    { "Timeout if below smag", "", 300, 0, 2000 },
+    { "Use differential signal", "", true, false, true },
+    { "Swap coil polarity", "", false, false, true },
+    { "Timeout if not inside", "s", 8, 1, 20 },
+  };
+
+  // Shorter convenient variables for settings variables
+  unsigned int& m_timedOutIfBelowSmag = m_settings.timedOutIfBelowSmag.value;
+  bool& m_useDifferentialPerimeterSignal = m_settings.useDifferentialPerimeterSignal.value;
+  bool& m_swapCoilPolarity = m_settings.swapCoilPolarity.value;
+  unsigned int& m_timeOutSecIfNotInside = m_settings.timeOutSecIfNotInside.value;
+};
+
+struct PerimetersSettings
+{
+  Setting<bool> use;                // Use the perimeter sensors or not
 };
 
 class Perimeters
@@ -136,9 +171,25 @@ public:
 
   void printInfo(Stream &s);
 
+  PerimetersSettings* getSettings()
+  {
+    return &m_settings;
+  }
+
+  void setSettings(PerimetersSettings* settings_p)
+  {
+    m_settings.use.value = settings_p->use.value;
+ }
+
 public:
   Perimeter* m_perimeterArray_p;
-  bool m_use { false };
 
 private:
+  PerimetersSettings m_settings
+  {
+    { "Use", "", false, false, true }
+  };
+
+  // Shorter convenient variables for settings variables
+  bool& m_use = m_settings.use.value;
 };

@@ -16,11 +16,12 @@ struct Setting
   const String unit;
   T value;
   const T minValue;
-  const T maxValue;
+  T maxValue;
+  float scale;
 
-  Setting(const String _name, const String _unit,
-      T _value, T _minValue = 0, T _maxValue = 0) :
-        name(_name), unit(_unit),
-        value(_value), minValue(_minValue), maxValue(_maxValue) {}
+  Setting(const String _name, const String _unit, T _value,
+      const T _minValue = 0, const T _maxValue = 0, const float _scale = 1.0 ) :
+        name(_name), unit(_unit), value(_value),
+        minValue(_minValue), maxValue(_maxValue), scale(_scale) {}
 };
 

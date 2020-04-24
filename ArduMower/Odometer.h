@@ -89,8 +89,8 @@ class Odometer
     {
       { "Use", "", false, false, true },
       { "Ticks per revolution", "", ODOMETER_TICKS_PER_REVOLUTION, 1, 2000 },
-      { "Ticks per cm", "", ODOMETER_TICKS_PER_CM, 0.1, 30.0 },
-      { "Wheel base", "cm", ODOMETER_WHEELBASE_CM, 0.1, 50.0 }
+      { "Ticks per cm", "", ODOMETER_TICKS_PER_CM, 0.1, 30.0, 0.1 },
+      { "Wheel base", "cm", ODOMETER_WHEELBASE_CM, 0.1, 50.0, 0.1 }
     };
 
     // Shorter convenient variables for settings variables

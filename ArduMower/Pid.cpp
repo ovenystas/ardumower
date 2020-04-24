@@ -44,6 +44,15 @@ void Pid::setup(float Kp, float Ki, float Kd, float yMin, float yMax,
   m_lastControlTime = micros();
 }
 
+void Pid::setup(float Kp, float Ki, float Kd, float yMin, float yMax,
+    float maxOutput, float regConstScale, float regConstMaxValue)
+{
+  m_settings.Kp.scale = m_settings.Ki.scale = m_settings.Kd.scale = regConstScale;
+  m_settings.Kp.maxValue = m_settings.Ki.maxValue = m_settings.Kd.maxValue = regConstMaxValue;
+
+  setup(Kp, Ki, Kd, yMin, yMax, maxOutput);
+}
+
 float Pid::compute(float processValue)
 {
   unsigned long now = micros();

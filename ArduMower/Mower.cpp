@@ -41,15 +41,15 @@ Mower robot;
 Mower::Mower()
 {
   // ------ perimeter ---------------------------------
-  m_perimeters.m_perimeterArray_p[PERIMETER_LEFT].m_pid.setup(
-      51.0, 12.5, 0.8, -100.0, 100.0, 100.0);  // perimeter PID controller
-  m_perimeters.m_perimeterArray_p[PERIMETER_LEFT].m_pid.setSetPoint(0);
-  //perimeters.perimeter[Perimeter::RIGHT].pid.setup(51.0, 12.5, 0.8);  // perimeter PID controller
+  m_perimeters.m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)].m_pid.setup(
+      51.0, 12.5, 0.8, -100.0, 100.0, 100.0, 0.1, 100);  // perimeter PID controller
+  m_perimeters.m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)].m_pid.setSetPoint(0);
+  //m_perimeters.m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::RIGHT)].m_pid.setup(51.0, 12.5, 0.8, -100.0, 100.0, 100.0, 0.1, 100);  // perimeter PID controller
 
   // ------  IMU (compass/accel/gyro) ----------------------
-  m_imu.m_pid[Imu::DIR].setup(5.0, 1.0, 1.0, -100.0, 100.0, 100.0);  // direction PID controller
+  m_imu.m_pid[Imu::DIR].setup(5.0, 1.0, 1.0, -100.0, 100.0, 100.0, 0.1, 20);  // direction PID controller
   m_imu.m_pid[Imu::DIR].setSetPoint(0);
-  m_imu.m_pid[Imu::ROLL].setup(0.8, 21, 0, -80.0, 80.0, 80.0);    // roll PID controller
+  m_imu.m_pid[Imu::ROLL].setup(0.8, 21.0, 0.0, -80.0, 80.0, 80.0, 0.1, 30);    // roll PID controller
   m_imu.m_pid[Imu::ROLL].setSetPoint(0);
 
   // -----------configuration end-------------------------------------
@@ -103,7 +103,7 @@ void Mower::setup()
   // Normal control
   int16_t pwmMax = m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pwmMax;
   m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pid.setup(
-      1.5, 0.29, 0.25, -pwmMax, pwmMax, pwmMax);  // Kp, Ki, Kd
+      1.5, 0.29, 0.25, -pwmMax, pwmMax, pwmMax, 0.01, 3.0);  // Kp, Ki, Kd
   m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pid.setSetPoint(
       m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet);
   // Fast control
@@ -127,7 +127,7 @@ void Mower::setup()
   // Normal control
   pwmMax = m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pwmMax;
   m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pid.setup(
-      1.5, 0.29, 0.25, -pwmMax, pwmMax, pwmMax);  // Kp, Ki, Kd
+      1.5, 0.29, 0.25, -pwmMax, pwmMax, pwmMax, 0.01, 3.0);  // Kp, Ki, Kd
   m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pid.setSetPoint(
       m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmSet);
   // Fast control
@@ -148,7 +148,7 @@ void Mower::setup()
   m_cutter.m_motor.setScale(3.25839);
   pwmMax = m_cutter.m_motor.m_pwmMax;
   m_cutter.m_motor.m_pid.setup(
-      0.005, 0.01, 0.01, 0.0, pwmMax, pwmMax);  // Kp, Ki, Kd
+      0.005, 0.01, 0.01, 0.0, pwmMax, pwmMax, 0.01, 1.0);  // Kp, Ki, Kd
   m_cutter.m_motor.m_pid.setSetPoint(m_cutter.m_motor.m_rpmSet);
 
   // lawn sensor
@@ -156,8 +156,8 @@ void Mower::setup()
   m_lawnSensorArray[1].setup(PIN_LAWN_BACK_SEND, PIN_LAWN_BACK_RECV);
 
   // perimeter
-  m_perimeters.m_perimeterArray_p[PERIMETER_LEFT].setup(PIN_PERIMETER_LEFT);
-  m_perimeters.m_perimeterArray_p[PERIMETER_RIGHT].setup(PIN_PERIMETER_RIGHT);
+  m_perimeters.m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)].setup(PIN_PERIMETER_LEFT);
+  m_perimeters.m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::RIGHT)].setup(PIN_PERIMETER_RIGHT);
 
   // drop sensor
   const uint8_t dropSensorPins[DROPSENSORS_NUM] =

@@ -367,7 +367,7 @@ void Perimeter::printInfo(Stream &s)
 void Perimeters::printInfo(Stream &s)
 {
 //  Streamprint(s, "perL: ");
-  m_perimeterArray_p[PERIMETER_LEFT].printInfo(s);
+  m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)].printInfo(s);
 //  Streamprint(s, "perR: ");
-//  perimeterArray_p[PERIMETER_RIGHT].printInfo(s);
+//  perimeterArray_p[static_cast<uint8_t>(PerimeterE::RIGHT)].printInfo(s);
 }

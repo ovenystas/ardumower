@@ -388,6 +388,10 @@ protected:
       Sonar& sonar);
   virtual void loadSaveUserSettingsSonars(bool readflag, int& addr,
       Sonars& sonars);
+  virtual void loadSaveUserSettingsPerimeter(bool readflag, int& addr,
+      Perimeter& perimeter);
+  virtual void loadSaveUserSettingsPerimeters(bool readflag, int& addr,
+      Perimeters& perimeters);
   virtual void loadUserSettings();
   virtual void checkErrorCounter();
   virtual void printSettingSerial();

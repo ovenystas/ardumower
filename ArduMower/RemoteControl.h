@@ -72,19 +72,20 @@ private:
 
   // generic
   void sendYesNo(bool value);
+  void sendSettingYesNo(String cmd, Setting<bool>& setting);
   void sendOnOff(bool value);
 
   // PID slider
-  void sendPIDSlider(String cmd, String title, Pid& pid, float scale,
-      float maxvalue);
-  void processPIDSlider(String result, String cmd, Pid& pid, float scale,
-      float maxvalue);
+  void sendPIDSlider(String cmd, String title, Pid& pid);
+  void processPIDSlider(String result, String cmd, Pid& pid);
 
   // generic slider
   void sendSlider(String cmd, String title, float value, String unit,
       float scale, float maxvalue, float minvalue = 0);
+
   template <class T>
   void sendSettingSlider(String cmd, Setting<T>& setting);
+
   void processSlider(String result, float& value, float scale);
   void processSlider(String result, long& value, float scale);
   void processSlider(String result, unsigned long& value, float scale);
@@ -93,6 +94,9 @@ private:
   void processSlider(String result, byte& value, float scale);
   void processSlider(String result, short& value, float scale);
   void processSlider(String result, unsigned short& value, float scale);
+
+  template <class T>
+  void processSettingSlider(String result, Setting<T>& setting);
 
   // send timer menu details
   void sendTimer(ttimer_t timer);
