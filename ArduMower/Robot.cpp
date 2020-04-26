@@ -257,41 +257,56 @@ void Robot::loadSaveUserSettingsDropSensors(bool readflag, int& addr,
   eereadwrite(readflag, addr, settings_p->use.value);
 }
 
-void Robot::loadSaveUserSettings(bool readflag)
+void Robot::loadSaveUserSettingsButton(bool readflag, int& addr,
+    Button& button)
 {
-  int addr = ADDR_USER_SETTINGS + 1;
+  auto settings_p = button.getSettings();
+
+  eereadwrite(readflag, addr, settings_p->use.value);
+}
+
+void Robot::loadSaveUserSettingsWheels(bool readflag, int& addr,
+    Wheels& wheels)
+{
+  //auto settings_p = wheels.getSettings();
+
+  eereadwrite(readflag, addr, wheels.m_wheel[Wheel::LEFT].m_motor.m_acceleration);
+  eereadwrite(readflag, addr, wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmMax);
+  eereadwrite(readflag, addr, wheels.m_wheel[Wheel::LEFT].m_motor.m_pwmMax);
+  eereadwrite(readflag, addr, wheels.m_wheel[Wheel::LEFT].m_motor.m_powerMax);
+  eereadwrite(readflag, addr, wheels.m_wheel[Wheel::LEFT].m_motor.m_scale);
+  eereadwrite(readflag, addr, wheels.m_wheel[Wheel::LEFT].m_motor.m_powerIgnoreTime);
+  eereadwrite(readflag, addr, wheels.m_wheel[Wheel::LEFT].m_motor.m_swapDir);
+  eereadwrite(readflag, addr, wheels.m_wheel[Wheel::RIGHT].m_motor.m_scale);
+  eereadwrite(readflag, addr, wheels.m_wheel[Wheel::RIGHT].m_motor.m_swapDir);
+  eereadwrite(readflag, addr, wheels.m_rollTimeMax);
+  eereadwrite(readflag, addr, wheels.m_rollTimeMin);
+  eereadwrite(readflag, addr, wheels.m_reverseTime);
+  eereadwrite(readflag, addr, wheels.m_forwardTimeMax);
+  eereadwrite(readflag, addr, wheels.m_biDirSpeedRatio1);
+  eereadwrite(readflag, addr, wheels.m_biDirSpeedRatio2);
+
+  loadSaveUserSettingsPid(readflag, addr, wheels.m_wheel[Wheel::LEFT].m_motor.m_pid);
+}
+
+void Robot::loadSaveUserSettingsCutter(bool readflag, int& addr,
+    Cutter& cutter)
+{
+  //auto settings_p = wheels.getSettings();
+
+  eereadwrite(readflag, addr, cutter.m_motor.m_pwmMax);
+  eereadwrite(readflag, addr, cutter.m_motor.m_powerMax);
+  eereadwrite(readflag, addr, cutter.m_motor.m_rpmSet);
+  eereadwrite(readflag, addr, cutter.m_motor.m_scale);
+
+  loadSaveUserSettingsPid(readflag, addr, cutter.m_motor.m_pid);
+}
+
+void Robot::loadSaveUserSettingsRobot(bool readflag, int& addr)
+{
+  //auto settings_p = getSettings();
+
   eereadwrite(readflag, addr, m_developerActive);
-
-  eereadwrite(readflag, addr, m_wheels.m_wheel[Wheel::LEFT].m_motor.m_acceleration);
-  eereadwrite(readflag, addr, m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmMax);
-  eereadwrite(readflag, addr, m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pwmMax);
-  eereadwrite(readflag, addr, m_wheels.m_wheel[Wheel::LEFT].m_motor.m_powerMax);
-  eereadwrite(readflag, addr, m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_scale);
-  eereadwrite(readflag, addr, m_wheels.m_wheel[Wheel::LEFT].m_motor.m_scale);
-  eereadwrite(readflag, addr, m_wheels.m_rollTimeMax);
-  eereadwrite(readflag, addr, m_wheels.m_rollTimeMin);
-  eereadwrite(readflag, addr, m_wheels.m_reverseTime);
-  eereadwrite(readflag, addr, m_wheels.m_wheel[Wheel::LEFT].m_motor.m_powerIgnoreTime);
-  eereadwrite(readflag, addr, m_wheels.m_forwardTimeMax);
-
-  eereadwrite(readflag, addr, m_cutter.m_motor.m_pwmMax);
-  eereadwrite(readflag, addr, m_cutter.m_motor.m_powerMax);
-  eereadwrite(readflag, addr, m_cutter.m_motor.m_rpmSet);
-  eereadwrite(readflag, addr, m_cutter.m_motor.m_scale);
-
-  loadSaveUserSettingsPid(readflag, addr, m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pid);
-  loadSaveUserSettingsPid(readflag, addr, m_cutter.m_motor.m_pid);
-
-  eereadwrite(readflag, addr, m_wheels.m_biDirSpeedRatio1);
-  eereadwrite(readflag, addr, m_wheels.m_biDirSpeedRatio2);
-  eereadwrite(readflag, addr, m_wheels.m_wheel[Wheel::LEFT].m_motor.m_swapDir);
-  eereadwrite(readflag, addr, m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_swapDir);
-
-  loadSaveUserSettingsBumpers(readflag, addr, m_bumpers);
-
-  loadSaveUserSettingsSonars(readflag, addr, m_sonars);
-
-  loadSaveUserSettingsPerimeters(readflag, addr, m_perimeters);
 
   eereadwrite(readflag, addr, m_perimeterTriggerTimeout);
   eereadwrite(readflag, addr, m_perimeterOutRollTimeMax);
@@ -302,20 +317,10 @@ void Robot::loadSaveUserSettings(bool readflag)
 
   eereadwrite(readflag, addr, m_trackingBlockInnerWheelWhilePerimeterStruggling);
 
-  loadSaveUserSettingsLawnSensors(readflag, addr, m_lawnSensors);
-
-  loadSaveUserSettingsImu(readflag, addr, m_imu);
-
-  loadSaveUserSettingsBattery(readflag, addr, m_battery);
-
   eereadwrite(readflag, addr, m_stationRevTime);
   eereadwrite(readflag, addr, m_stationRollTime);
   eereadwrite(readflag, addr, m_stationForwTime);
   eereadwrite(readflag, addr, m_stationCheckTime);
-
-  loadSaveUserSettingsOdometer(readflag, addr, m_odometer);
-
-  eereadwrite(readflag, addr, m_button.m_use);
 
   eereadwrite(readflag, addr, m_userSwitch1);
   eereadwrite(readflag, addr, m_userSwitch2);
@@ -324,12 +329,27 @@ void Robot::loadSaveUserSettings(bool readflag)
   eereadwrite(readflag, addr, m_timerUse);
   eereadwrite(readflag, addr, m_timer);
 
-  loadSaveUserSettingsRainSensor(readflag, addr, m_rainSensor);
-
   eereadwrite(readflag, addr, m_gpsUse);
   eereadwrite(readflag, addr, m_stuckIfGpsSpeedBelow);
   eereadwrite(readflag, addr, m_gpsSpeedIgnoreTime);
+}
 
+void Robot::loadSaveUserSettings(bool readflag)
+{
+  int addr = ADDR_USER_SETTINGS + 1;
+
+  loadSaveUserSettingsRobot(readflag, addr);
+  loadSaveUserSettingsWheels(readflag, addr, m_wheels);
+  loadSaveUserSettingsCutter(readflag, addr, m_cutter);
+  loadSaveUserSettingsBumpers(readflag, addr, m_bumpers);
+  loadSaveUserSettingsSonars(readflag, addr, m_sonars);
+  loadSaveUserSettingsPerimeters(readflag, addr, m_perimeters);
+  loadSaveUserSettingsLawnSensors(readflag, addr, m_lawnSensors);
+  loadSaveUserSettingsImu(readflag, addr, m_imu);
+  loadSaveUserSettingsBattery(readflag, addr, m_battery);
+  loadSaveUserSettingsOdometer(readflag, addr, m_odometer);
+  loadSaveUserSettingsButton(readflag, addr, m_button);
+  loadSaveUserSettingsRainSensor(readflag, addr, m_rainSensor);
   loadSaveUserSettingsDropSensors(readflag, addr, m_dropSensors);
 
   Console.print('-');

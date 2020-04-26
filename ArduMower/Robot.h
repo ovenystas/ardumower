@@ -374,10 +374,13 @@ protected:
   virtual void saveErrorCounters();
 
   virtual void loadSaveUserSettings(bool readflag);
-  virtual void loadSaveUserSettingsPid(bool readflag, int& addr, Pid& pid);
+
+  virtual void loadSaveUserSettingsPid(bool readflag, int& addr,
+      Pid& pid);
   virtual void loadSaveUserSettingsBumpers(bool readflag, int& addr,
       Bumpers& bumpers);
-  virtual void loadSaveUserSettingsImu(bool readflag, int& addr, Imu& imu);
+  virtual void loadSaveUserSettingsImu(bool readflag, int& addr,
+      Imu& imu);
   virtual void loadSaveUserSettingsOdometer(bool readflag, int& addr,
       Odometer& odometer);
   virtual void loadSaveUserSettingsLawnSensors(bool readflag, int& addr,
@@ -396,6 +399,14 @@ protected:
       Battery& battery);
   virtual void loadSaveUserSettingsDropSensors(bool readflag, int& addr,
       DropSensors& dropSensor);
+  virtual void loadSaveUserSettingsButton(bool readflag, int& addr,
+      Button& button);
+  virtual void loadSaveUserSettingsWheels(bool readflag, int& addr,
+      Wheels& wheels);
+  virtual void loadSaveUserSettingsCutter(bool readflag, int& addr,
+      Cutter& cutter);
+  virtual void loadSaveUserSettingsRobot(bool readflag, int& addr);
+
   virtual void loadUserSettings();
   virtual void checkErrorCounter();
   virtual void printSettingSerial();
