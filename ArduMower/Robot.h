@@ -394,6 +394,8 @@ protected:
       Perimeters& perimeters);
   virtual void loadSaveUserSettingsBattery(bool readflag, int& addr,
       Battery& battery);
+  virtual void loadSaveUserSettingsDropSensors(bool readflag, int& addr,
+      DropSensors& dropSensor);
   virtual void loadUserSettings();
   virtual void checkErrorCounter();
   virtual void printSettingSerial();

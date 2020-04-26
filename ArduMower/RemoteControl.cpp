@@ -708,17 +708,32 @@ void RemoteControl::sendBumperMenu(bool update)
   {
     Bluetooth.print(F("{.Bumper`1000"));
   }
-  Bluetooth.print(F("|b00~Use "));
-  sendYesNo(m_robot_p->m_bumpers.isUsed());
+
+  auto bumperLeft_p = &m_robot_p->m_bumperArray[LEFT];
+  auto bumperRight_p = &m_robot_p->m_bumperArray[RIGHT];
+
+  sendSettingYesNo("b00", m_robot_p->m_bumpers.getSettings()->use);
+
   Bluetooth.println(F("|b01~Counter l, r "));
-  Bluetooth.print(m_robot_p->m_bumperArray[LEFT].getCounter());
+  Bluetooth.print(bumperLeft_p->getCounter());
   Bluetooth.print(", ");
-  Bluetooth.print(m_robot_p->m_bumperArray[RIGHT].getCounter());
+  Bluetooth.print(bumperRight_p->getCounter());
+
   Bluetooth.println(F("|b02~Value l, r "));
-  Bluetooth.print(m_robot_p->m_bumperArray[LEFT].isHit());
+  Bluetooth.print(bumperLeft_p->isHit());
   Bluetooth.print(", ");
-  Bluetooth.print(m_robot_p->m_bumperArray[RIGHT].isHit());
+  Bluetooth.print(bumperRight_p->isHit());
+
   Bluetooth.println("}");
+}
+
+void RemoteControl::processBumperMenu(String pfodCmd)
+{
+  if (pfodCmd == "b00")
+  {
+    TOGGLE(m_robot_p->m_bumpers.getSettings()->use.value);
+  }
+  sendBumperMenu(true);
 }
 
 void RemoteControl::sendDropMenu(bool update)
@@ -732,38 +747,29 @@ void RemoteControl::sendDropMenu(bool update)
     Bluetooth.print(F("{.Drop`1000"));
   }
 
-  DropSensor* dropSensorLeft_p =
-      &m_robot_p->m_dropSensors.m_dropSensorArray_p[LEFT];
-  DropSensor* dropSensorRight_p =
-      &m_robot_p->m_dropSensors.m_dropSensorArray_p[RIGHT];
+  auto dropSensorLeft_p = &m_robot_p->m_dropSensors.m_dropSensorArray_p[LEFT];
+  auto dropSensorRight_p = &m_robot_p->m_dropSensors.m_dropSensorArray_p[RIGHT];
 
-  Bluetooth.print(F("|u00~Use "));
-  sendYesNo(m_robot_p->m_dropSensors.m_use);
+  sendSettingYesNo("u00", m_robot_p->m_dropSensors.getSettings()->use);
+
   Bluetooth.println(F("|u01~Counter l, r "));
   Bluetooth.print(dropSensorLeft_p->getCounter());
   Bluetooth.print(", ");
   Bluetooth.print(dropSensorRight_p->getCounter());
+
   Bluetooth.println(F("|u02~Value l, r "));
   Bluetooth.print(dropSensorLeft_p->isDetected());
   Bluetooth.print(", ");
   Bluetooth.print(dropSensorRight_p->isDetected());
-  Bluetooth.println("}");
-}
 
-void RemoteControl::processBumperMenu(String pfodCmd)
-{
-  if (pfodCmd == "b00")
-  {
-    TOGGLE(m_robot_p->m_bumpers.getSettings()->use.value);
-  }
-  sendBumperMenu(true);
+  Bluetooth.println("}");
 }
 
 void RemoteControl::processDropMenu(String pfodCmd)
 {
   if (pfodCmd == "u00")
   {
-    TOGGLE(m_robot_p->m_dropSensors.m_use);
+    TOGGLE(m_robot_p->m_dropSensors.getSettings()->use.value);
   }
   sendDropMenu(true);
 }

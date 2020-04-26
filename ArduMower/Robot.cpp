@@ -49,16 +49,21 @@ const char *Robot::mowPatternName()
 void Robot::loadRobotStats()
 {
   int addr = ADDR_ROBOT_STATS;
+
   Console.print(F("Loading RobotStats, address="));
   Console.print(addr);
+
   uint8_t magic = EEPROM.read(addr);
   addr++;
+
   if (magic != MAGIC)
   {
     Console.println(F("PLEASE CHECK IF YOUR ROBOT STATS ARE CORRECT"));
   }
+
   EEPROM.get(addr, m_stats);
   addr += sizeof(m_stats);
+
   Console.print('-');
   Console.println(addr);
 }
@@ -66,12 +71,16 @@ void Robot::loadRobotStats()
 void Robot::saveRobotStats()
 {
   int addr = ADDR_ROBOT_STATS;
+
   Console.println(F("Saving RobotStats, address="));
   Console.print(addr);
+
   EEPROM.update(addr, MAGIC);
   addr++;
+
   EEPROM.put(addr, m_stats);
   addr += sizeof(m_stats);
+
   Console.print('-');
   Console.println(addr);
 }
@@ -79,33 +88,42 @@ void Robot::saveRobotStats()
 void Robot::loadErrorCounters()
 {
   int addr = ADDR_ERROR_COUNTERS;
+
   Console.println(F("Loading ErrorCounters, address="));
   Console.print(addr);
+
   uint8_t magic = EEPROM.read(addr);
   addr++;
-  if (magic != MAGIC)
+
+  if (magic == MAGIC)
+  {
+    EEPROM.get(addr, m_errorCounterMax);
+    addr += sizeof(m_errorCounterMax);
+    Console.print('-');
+    Console.println(addr);
+  }
+  else
   {
     Console.println(F("EEPROM ERR COUNTERS: NO EEPROM ERROR DATA"));
     Console.println(F("PLEASE CHECK AND SAVE YOUR SETTINGS"));
     incErrorCounter(ERR_EEPROM_DATA);
     setNextState(StateMachine::STATE_ERROR);
-    return;
   }
-  EEPROM.get(addr, m_errorCounterMax);
-  addr += sizeof(m_errorCounterMax);
-  Console.print('-');
-  Console.println(addr);
 }
 
 void Robot::saveErrorCounters()
 {
   int addr = ADDR_ERROR_COUNTERS;
+
   Console.println(F("Saving ErrorCounters, address="));
   Console.print(addr);
+
   EEPROM.update(addr, MAGIC);
   addr++;
+
   EEPROM.put(addr, m_errorCounterMax);
   addr += sizeof(m_errorCounterMax);
+
   Console.print('-');
   Console.println(addr);
 }
@@ -231,6 +249,14 @@ void Robot::loadSaveUserSettingsBattery(bool readflag, int& addr,
   eereadwrite(readflag, addr, settings_p->startChargingIfBelow.value);
 }
 
+void Robot::loadSaveUserSettingsDropSensors(bool readflag, int& addr,
+    DropSensors& dropSensor)
+{
+  auto settings_p = dropSensor.getSettings();
+
+  eereadwrite(readflag, addr, settings_p->use.value);
+}
+
 void Robot::loadSaveUserSettings(bool readflag)
 {
   int addr = ADDR_USER_SETTINGS + 1;
@@ -304,7 +330,7 @@ void Robot::loadSaveUserSettings(bool readflag)
   eereadwrite(readflag, addr, m_stuckIfGpsSpeedBelow);
   eereadwrite(readflag, addr, m_gpsSpeedIgnoreTime);
 
-  eereadwrite(readflag, addr, m_dropSensors.m_use);
+  loadSaveUserSettingsDropSensors(readflag, addr, m_dropSensors);
 
   Console.print('-');
   Console.println(addr);
@@ -313,37 +339,49 @@ void Robot::loadSaveUserSettings(bool readflag)
 void Robot::loadUserSettings()
 {
   int addr = ADDR_USER_SETTINGS;
+
   Console.println(F("USER SETTINGS ARE LOADED, address="));
   Console.print(addr);
+
   uint8_t magic = EEPROM.read(addr);
   addr++;
-  if (magic != MAGIC)
+
+  if (magic == MAGIC)
+  {
+    loadSaveUserSettings(true);
+  }
+  else
   {
     Console.println(F("EEPROM USERDATA: NO EEPROM USER DATA"));
     Console.println(F("PLEASE CHECK AND SAVE YOUR SETTINGS"));
     incErrorCounter(ERR_EEPROM_DATA);
     setNextState(StateMachine::STATE_ERROR);
-    return;
   }
-  loadSaveUserSettings(true);
 }
 
 void Robot::saveUserSettings()
 {
   int addr = ADDR_USER_SETTINGS;
+
   Console.println(F("USER SETTINGS ARE SAVED, address="));
   Console.print(addr);
+
   EEPROM.update(addr, MAGIC);
   addr++;
+
   loadSaveUserSettings(false);
 }
 
 void Robot::deleteUserSettings()
 {
   loadRobotStats();
+
   int addr = ADDR_USER_SETTINGS;
+
   Console.println(F("ALL USER SETTINGS ARE DELETED"));
+
   EEPROM.update(addr, 0); // clear magic
+
   saveRobotStats();
 }
 
@@ -374,23 +412,26 @@ void Robot::printSettingSerial()
 {
   // ------- wheel motors -----------------------------
   {
+    auto motorLeft_p = &m_wheels.m_wheel[Wheel::LEFT].m_motor;
+    auto motorRight_p = &m_wheels.m_wheel[Wheel::RIGHT].m_motor;
+
     Console.println(F("== Wheels motors =="));
     Console.print(F("acceleration : "));
-    Console.println(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_acceleration);
+    Console.println(motorLeft_p->m_acceleration);
     Console.print(F("rpmMax : "));
-    Console.println(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmMax);
+    Console.println(motorLeft_p->m_rpmMax);
     Console.print(F("pwmMax : "));
-    Console.println(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pwmMax);
+    Console.println(motorLeft_p->m_pwmMax);
     Console.print(F("powerMax : "));
-    Console.println(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_powerMax);
+    Console.println(motorLeft_p->m_powerMax);
     Console.print(F("LEFT.scale : "));
-    Console.println(m_wheels.m_wheel[Wheel::LEFT].m_motor.getScale());
+    Console.println(motorLeft_p->getScale());
     Console.print(F("RIGHT.scale : "));
-    Console.println(m_wheels.m_wheel[Wheel::RIGHT].m_motor.getScale());
+    Console.println(motorRight_p->getScale());
     Console.print(F("powerIgnoreTime : "));
-    Console.println(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_powerIgnoreTime);
+    Console.println(motorLeft_p->m_powerIgnoreTime);
     Console.print(F("zeroSettleTime : "));
-    Console.println(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_zeroSettleTime);
+    Console.println(motorLeft_p->m_zeroSettleTime);
 
     Console.print(F("rollTimeMax : "));
     Console.println(m_wheels.m_rollTimeMax);
@@ -405,16 +446,13 @@ void Robot::printSettingSerial()
     Console.print(F("biDirSpeedRatio2 : "));
     Console.println(m_wheels.m_biDirSpeedRatio2);
 
-    printSettingSerialPid(F("LEFT.pid."),
-        m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pid.getSettings());
-
-    printSettingSerialPid(F("RIGHT.pid."),
-        m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pid.getSettings());
+    printSettingSerialPid(F("LEFT.pid."), motorLeft_p->m_pid.getSettings());
+    printSettingSerialPid(F("RIGHT.pid."), motorRight_p->m_pid.getSettings());
 
     Console.print(F("LEFT.swapDir : "));
-    Console.println(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_swapDir);
+    Console.println(motorLeft_p->m_swapDir);
     Console.print(F("RIGHT.swapDir : "));
-    Console.println(m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_swapDir);
+    Console.println(motorRight_p->m_swapDir);
   }
 
   // ------ cutter motor -------------------------------

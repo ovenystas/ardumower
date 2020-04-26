@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include "Setting.h"
 
 enum class DropSensor_Contact
 {
@@ -52,6 +53,11 @@ private:
   uint16_t m_counter {};
 };
 
+struct DropSensorsSettings
+{
+  Setting<bool> use;                // Use the drop sensors or not
+};
+
 class DropSensors
 {
 public:
@@ -78,12 +84,29 @@ public:
     return m_use;
   }
 
+  DropSensorsSettings* getSettings()
+  {
+    return &m_settings;
+  }
+
+  void setSettings(DropSensorsSettings* settings_p)
+  {
+    m_settings.use.value = settings_p->use.value;
+ }
+
 public:
-  bool m_use {};
   DropSensor* m_dropSensorArray_p { nullptr };
 
 private:
   DropSensor_Contact m_contactType {}; // contact 1=NC 0=NO against GND
   unsigned long m_lastRun {};
   uint8_t m_len {};
+
+  DropSensorsSettings m_settings
+  {
+    { "Use", "", false, false, true }
+  };
+
+  // Shorter convenient variables for settings variables
+  bool& m_use = m_settings.use.value;
 };
