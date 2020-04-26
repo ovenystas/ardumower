@@ -125,6 +125,7 @@ void RemoteControl::sendSlider(String cmd, String title, float value,
   Bluetooth.print(((int)(minvalue / scale)));
   Bluetooth.print("~ ~");
 
+  // TODO: Refactor float comparisons
   if (scale == 10)
   {
     Bluetooth.print("10");
@@ -217,52 +218,8 @@ void RemoteControl::processSlider(String result, float& value, float scale)
   value = v * scale;
 }
 
-void RemoteControl::processSlider(String result, long &value, float scale)
-{
-  float v;
-  processSlider(result, v, scale);
-  value = v;
-}
-
-void RemoteControl::processSlider(String result, unsigned short& value,
-    float scale)
-{
-  float v;
-  processSlider(result, v, scale);
-  value = v;
-}
-
-void RemoteControl::processSlider(String result, unsigned long& value,
-    float scale)
-{
-  float v;
-  processSlider(result, v, scale);
-  value = v;
-}
-
-void RemoteControl::processSlider(String result, int &value, float scale)
-{
-  float v;
-  processSlider(result, v, scale);
-  value = v;
-}
-
-void RemoteControl::processSlider(String result, unsigned int &value,
-    float scale)
-{
-  float v;
-  processSlider(result, v, scale);
-  value = v;
-}
-
-void RemoteControl::processSlider(String result, byte &value, float scale)
-{
-  float v;
-  processSlider(result, v, scale);
-  value = v;
-}
-
-void RemoteControl::processSlider(String result, short &value, float scale)
+template <class T>
+void RemoteControl::processSlider(String result, T& value, float scale)
 {
   float v;
   processSlider(result, v, scale);
@@ -1182,87 +1139,90 @@ void RemoteControl::sendBatteryMenu(bool update)
   {
     Bluetooth.print(F("{.Battery`1000"));
   }
+
+  auto settings_p = m_robot_p->m_battery.getSettings();
+
   Bluetooth.print(F("|j00~Battery "));
+
   Bluetooth.print(m_robot_p->m_battery.getVoltage());
   Bluetooth.print(" V");
-  Bluetooth.print(F("|j01~Monitor "));
-  sendYesNo(m_robot_p->m_battery.isMonitored());
+
+  sendSettingYesNo("j01", settings_p->monitored);
+
   if (m_robot_p->m_developerActive)
   {
-    sendSlider("j05", F("Calibrate batFactor "), m_robot_p->m_battery.m_batFactor, "",
-               0.01, 1.0);
+    sendSettingSlider("j05", settings_p->batFactor);
   }
+
   //Console.print("batFactor=");
   //Console.println(robot->batFactor);
-  sendSlider("j02", F("Go home if below Volt"),
-             m_robot_p->m_battery.m_batGoHomeIfBelow, "", 0.1, m_robot_p->m_battery.m_batFull,
-             (m_robot_p->m_battery.m_batFull * 0.72)); // for Sony Konion cells 4.2V * 0,72= 3.024V which is pretty safe to use
-  sendSlider("j12", F("Switch off if idle minutes"),
-             m_robot_p->m_battery.m_batSwitchOffIfIdle, "", 1, 300, 1);
-  sendSlider("j03", F("Switch off if below Volt"),
-             m_robot_p->m_battery.m_batSwitchOffIfBelow, "", 0.1, m_robot_p->m_battery.m_batFull,
-             (m_robot_p->m_battery.m_batFull * 0.72));
+
+  sendSettingSlider("j02", settings_p->batGoHomeIfBelow); // for Sony Konion cells 4.2V * 0,72= 3.024V which is pretty safe to use
+  sendSettingSlider("j12", settings_p->batSwitchOffIfIdle);
+  sendSettingSlider("j03", settings_p->batSwitchOffIfBelow);
+
   Bluetooth.print(F("|j04~Charge "));
   Bluetooth.print(m_robot_p->m_battery.getChargeVoltage());
   Bluetooth.print("V ");
   Bluetooth.print(m_robot_p->m_battery.getChargeCurrent());
   Bluetooth.print("A");
-  sendSlider("j09", F("Calibrate batChgFactor"),
-             m_robot_p->m_battery.m_batChgFactor, "", 0.01, 1.0);
-  sendSlider("j06", F("Charge sense zero"),
-             m_robot_p->m_battery.m_chgSenseZero, "", 1, 600, 400);
-  sendSlider("j08", F("Charge factor"), m_robot_p->m_battery.m_chgFactor, "", 0.01, 80);
-  sendSlider("j10", F("charging starts if Voltage is below"),
-             m_robot_p->m_battery.m_startChargingIfBelow, "", 0.1, m_robot_p->m_battery.m_batFull);
-  sendSlider("j11", F("Battery is fully charged if current is below"),
-             m_robot_p->m_battery.m_batFullCurrent, "", 0.1, m_robot_p->m_battery.m_batChargingCurrentMax);
+
+  sendSettingSlider("j09", settings_p->batChgFactor);
+  sendSettingSlider("j06", settings_p->chgSenseZero);
+  sendSettingSlider("j08", settings_p->chgFactor);
+  sendSettingSlider("j10", settings_p->startChargingIfBelow);
+  sendSettingSlider("j11", settings_p->batFullCurrent);
+
   Bluetooth.println("}");
 }
 
 void RemoteControl::processBatteryMenu(String pfodCmd)
 {
+  auto settings_p = m_robot_p->m_battery.getSettings();
+
   if (pfodCmd == "j01")
   {
-    TOGGLE(m_robot_p->m_battery.m_monitored);
+    TOGGLE(settings_p->monitored.value);
   }
   else if (pfodCmd.startsWith("j02"))
   {
-    processSlider(pfodCmd, m_robot_p->m_battery.m_batGoHomeIfBelow, 0.1);
+    processSettingSlider(pfodCmd, settings_p->batGoHomeIfBelow);
     //Console.print("gohomeifbelow=");
     //Console.println(robot->batGoHomeIfBelow);
   }
   else if (pfodCmd.startsWith("j03"))
   {
-    processSlider(pfodCmd, m_robot_p->m_battery.m_batSwitchOffIfBelow, 0.1);
+    processSettingSlider(pfodCmd, settings_p->batSwitchOffIfBelow);
   }
   else if (pfodCmd.startsWith("j05"))
   {
-    processSlider(pfodCmd, m_robot_p->m_battery.m_batFactor, 0.01);
+    processSettingSlider(pfodCmd, settings_p->batFactor);
   }
   else if (pfodCmd.startsWith("j06"))
   {
-    processSlider(pfodCmd, m_robot_p->m_battery.m_chgSenseZero, 1);
+    processSettingSlider(pfodCmd, settings_p->chgSenseZero);
   }
   else if (pfodCmd.startsWith("j08"))
   {
-    processSlider(pfodCmd, m_robot_p->m_battery.m_chgFactor, 0.01);
+    processSettingSlider(pfodCmd, settings_p->chgFactor);
   }
   else if (pfodCmd.startsWith("j09"))
   {
-    processSlider(pfodCmd, m_robot_p->m_battery.m_batChgFactor, 0.01);
+    processSettingSlider(pfodCmd, settings_p->batChgFactor);
   }
   else if (pfodCmd.startsWith("j10"))
   {
-    processSlider(pfodCmd, m_robot_p->m_battery.m_startChargingIfBelow, 0.1);
+    processSettingSlider(pfodCmd, settings_p->startChargingIfBelow);
   }
   else if (pfodCmd.startsWith("j11"))
   {
-    processSlider(pfodCmd, m_robot_p->m_battery.m_batFullCurrent, 0.1);
+    processSettingSlider(pfodCmd, settings_p->batFullCurrent);
   }
   else if (pfodCmd.startsWith("j12"))
   {
-    processSlider(pfodCmd, m_robot_p->m_battery.m_batSwitchOffIfIdle, 1.0);
+    processSettingSlider(pfodCmd, settings_p->batSwitchOffIfIdle);
   }
+
   sendBatteryMenu(true);
 }
 

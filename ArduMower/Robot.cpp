@@ -112,27 +112,27 @@ void Robot::saveErrorCounters()
 
 void Robot::loadSaveUserSettingsPid(bool readflag, int& addr, Pid& pid)
 {
-  auto pidSettings_p = pid.getSettings();
+  auto settings_p = pid.getSettings();
 
-  eereadwrite(readflag, addr, pidSettings_p->Kp.value);
-  eereadwrite(readflag, addr, pidSettings_p->Ki.value);
-  eereadwrite(readflag, addr, pidSettings_p->Kd.value);
+  eereadwrite(readflag, addr, settings_p->Kp.value);
+  eereadwrite(readflag, addr, settings_p->Ki.value);
+  eereadwrite(readflag, addr, settings_p->Kd.value);
 }
 
 void Robot::loadSaveUserSettingsBumpers(bool readflag, int& addr,
     Bumpers& bumpers)
 {
-  auto bumpersSettings_p = bumpers.getSettings();
+  auto settings_p = bumpers.getSettings();
 
-  eereadwrite(readflag, addr, bumpersSettings_p->use.value);
+  eereadwrite(readflag, addr, settings_p->use.value);
 }
 
 void Robot::loadSaveUserSettingsImu(bool readflag, int& addr, Imu& imu)
 {
-  auto imuSettings_p = imu.getSettings();
+  auto settings_p = imu.getSettings();
 
-  eereadwrite(readflag, addr, imuSettings_p->use.value);
-  eereadwrite(readflag, addr, imuSettings_p->correctDir.value);
+  eereadwrite(readflag, addr, settings_p->use.value);
+  eereadwrite(readflag, addr, settings_p->correctDir.value);
 
   loadSaveUserSettingsPid(readflag, addr, imu.m_pid[Imu::DIR]);
   loadSaveUserSettingsPid(readflag, addr, imu.m_pid[Imu::ROLL]);
@@ -141,12 +141,12 @@ void Robot::loadSaveUserSettingsImu(bool readflag, int& addr, Imu& imu)
 void Robot::loadSaveUserSettingsOdometer(bool readflag, int& addr,
     Odometer& odometer)
 {
-  auto odometerSettings_p = odometer.getSettings();
+  auto settings_p = odometer.getSettings();
 
-  eereadwrite(readflag, addr, odometerSettings_p->use.value);
-  eereadwrite(readflag, addr, odometerSettings_p->ticksPerRevolution.value);
-  eereadwrite(readflag, addr, odometerSettings_p->ticksPerCm.value);
-  eereadwrite(readflag, addr, odometerSettings_p->wheelBaseCm.value);
+  eereadwrite(readflag, addr, settings_p->use.value);
+  eereadwrite(readflag, addr, settings_p->ticksPerRevolution.value);
+  eereadwrite(readflag, addr, settings_p->ticksPerCm.value);
+  eereadwrite(readflag, addr, settings_p->wheelBaseCm.value);
 
   eereadwrite(readflag, addr, odometer.m_encoder.left_p->m_swapDir);
   eereadwrite(readflag, addr, odometer.m_encoder.right_p->m_swapDir);
@@ -155,34 +155,34 @@ void Robot::loadSaveUserSettingsOdometer(bool readflag, int& addr,
 void Robot::loadSaveUserSettingsLawnSensors(bool readflag, int& addr,
     LawnSensors& lawnSensors)
 {
-  auto lawnSensorsSettings_p = lawnSensors.getSettings();
+  auto settings_p = lawnSensors.getSettings();
 
-  eereadwrite(readflag, addr, lawnSensorsSettings_p->use.value);
+  eereadwrite(readflag, addr, settings_p->use.value);
 }
 
 void Robot::loadSaveUserSettingsRainSensor(bool readflag, int& addr,
     RainSensor& rainSensor)
 {
-  auto rainSensorSettings_p = rainSensor.getSettings();
+  auto settings_p = rainSensor.getSettings();
 
-  eereadwrite(readflag, addr, rainSensorSettings_p->use.value);
+  eereadwrite(readflag, addr, settings_p->use.value);
 }
 
 void Robot::loadSaveUserSettingsSonar(bool readflag, int& addr,
     Sonar& sonar)
 {
-  auto sonarSettings_p = sonar.getSettings();
+  auto settings_p = sonar.getSettings();
 
-  eereadwrite(readflag, addr, sonarSettings_p->use.value);
+  eereadwrite(readflag, addr, settings_p->use.value);
 }
 
 void Robot::loadSaveUserSettingsSonars(bool readflag, int& addr,
     Sonars& sonars)
 {
-  auto sonarsSettings_p = sonars.getSettings();
+  auto settings_p = sonars.getSettings();
 
-  eereadwrite(readflag, addr, sonarsSettings_p->use.value);
-  eereadwrite(readflag, addr, sonarsSettings_p->triggerBelow.value);
+  eereadwrite(readflag, addr, settings_p->use.value);
+  eereadwrite(readflag, addr, settings_p->triggerBelow.value);
 
   for (uint8_t i = 0; i < SONARS_NUM; i++)
   {
@@ -193,12 +193,12 @@ void Robot::loadSaveUserSettingsSonars(bool readflag, int& addr,
 void Robot::loadSaveUserSettingsPerimeter(bool readflag, int& addr,
     Perimeter& perimeter)
 {
-  auto perimeterSettings_p = perimeter.getSettings();
+  auto settings_p = perimeter.getSettings();
 
-  eereadwrite(readflag, addr, perimeterSettings_p->timedOutIfBelowSmag.value);
-  eereadwrite(readflag, addr, perimeterSettings_p->useDifferentialPerimeterSignal.value);
-  eereadwrite(readflag, addr, perimeterSettings_p->swapCoilPolarity.value);
-  eereadwrite(readflag, addr, perimeterSettings_p->timeOutSecIfNotInside.value);
+  eereadwrite(readflag, addr, settings_p->timedOutIfBelowSmag.value);
+  eereadwrite(readflag, addr, settings_p->useDifferentialPerimeterSignal.value);
+  eereadwrite(readflag, addr, settings_p->swapCoilPolarity.value);
+  eereadwrite(readflag, addr, settings_p->timeOutSecIfNotInside.value);
 
   loadSaveUserSettingsPid(readflag, addr, perimeter.m_pid);
 }
@@ -206,12 +206,29 @@ void Robot::loadSaveUserSettingsPerimeter(bool readflag, int& addr,
 void Robot::loadSaveUserSettingsPerimeters(bool readflag, int& addr,
     Perimeters& perimeters)
 {
-  auto perimetersSettings_p = perimeters.getSettings();
+  auto settings_p = perimeters.getSettings();
 
-  eereadwrite(readflag, addr, perimetersSettings_p->use.value);
+  eereadwrite(readflag, addr, settings_p->use.value);
 
   loadSaveUserSettingsPerimeter(readflag, addr,
       perimeters.m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)]);
+}
+
+void Robot::loadSaveUserSettingsBattery(bool readflag, int& addr,
+    Battery& battery)
+{
+  auto settings_p = battery.getSettings();
+
+  eereadwrite(readflag, addr, settings_p->monitored.value);
+  eereadwrite(readflag, addr, settings_p->batGoHomeIfBelow.value);
+  eereadwrite(readflag, addr, settings_p->batSwitchOffIfBelow.value);
+  eereadwrite(readflag, addr, settings_p->batSwitchOffIfIdle.value);
+  eereadwrite(readflag, addr, settings_p->batFactor.value);
+  eereadwrite(readflag, addr, settings_p->batChgFactor.value);
+  eereadwrite(readflag, addr, settings_p->chgSenseZero.value);
+  eereadwrite(readflag, addr, settings_p->chgFactor.value);
+  eereadwrite(readflag, addr, settings_p->batFullCurrent.value);
+  eereadwrite(readflag, addr, settings_p->startChargingIfBelow.value);
 }
 
 void Robot::loadSaveUserSettings(bool readflag)
@@ -263,16 +280,7 @@ void Robot::loadSaveUserSettings(bool readflag)
 
   loadSaveUserSettingsImu(readflag, addr, m_imu);
 
-  eereadwrite(readflag, addr, m_battery.m_monitored);
-  eereadwrite(readflag, addr, m_battery.m_batGoHomeIfBelow);
-  eereadwrite(readflag, addr, m_battery.m_batSwitchOffIfBelow);
-  eereadwrite(readflag, addr, m_battery.m_batSwitchOffIfIdle);
-  eereadwrite(readflag, addr, m_battery.m_batFactor);
-  eereadwrite(readflag, addr, m_battery.m_batChgFactor);
-  eereadwrite(readflag, addr, m_battery.m_chgSenseZero);
-  eereadwrite(readflag, addr, m_battery.m_chgFactor);
-  eereadwrite(readflag, addr, m_battery.m_batFullCurrent);
-  eereadwrite(readflag, addr, m_battery.m_startChargingIfBelow);
+  loadSaveUserSettingsBattery(readflag, addr, m_battery);
 
   eereadwrite(readflag, addr, m_stationRevTime);
   eereadwrite(readflag, addr, m_stationRollTime);
@@ -365,238 +373,283 @@ void Robot::printSettingSerialPid(const __FlashStringHelper* prefixStr,
 void Robot::printSettingSerial()
 {
   // ------- wheel motors -----------------------------
-  Console.println(F("== Wheels motors =="));
-  Console.print(F("acceleration : "));
-  Console.println(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_acceleration);
-  Console.print(F("rpmMax : "));
-  Console.println(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmMax);
-  Console.print(F("pwmMax : "));
-  Console.println(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pwmMax);
-  Console.print(F("powerMax : "));
-  Console.println(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_powerMax);
-  Console.print(F("LEFT.scale : "));
-  Console.println(m_wheels.m_wheel[Wheel::LEFT].m_motor.getScale());
-  Console.print(F("RIGHT.scale : "));
-  Console.println(m_wheels.m_wheel[Wheel::RIGHT].m_motor.getScale());
-  Console.print(F("powerIgnoreTime : "));
-  Console.println(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_powerIgnoreTime);
-  Console.print(F("zeroSettleTime : "));
-  Console.println(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_zeroSettleTime);
+  {
+    Console.println(F("== Wheels motors =="));
+    Console.print(F("acceleration : "));
+    Console.println(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_acceleration);
+    Console.print(F("rpmMax : "));
+    Console.println(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmMax);
+    Console.print(F("pwmMax : "));
+    Console.println(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pwmMax);
+    Console.print(F("powerMax : "));
+    Console.println(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_powerMax);
+    Console.print(F("LEFT.scale : "));
+    Console.println(m_wheels.m_wheel[Wheel::LEFT].m_motor.getScale());
+    Console.print(F("RIGHT.scale : "));
+    Console.println(m_wheels.m_wheel[Wheel::RIGHT].m_motor.getScale());
+    Console.print(F("powerIgnoreTime : "));
+    Console.println(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_powerIgnoreTime);
+    Console.print(F("zeroSettleTime : "));
+    Console.println(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_zeroSettleTime);
 
-  Console.print(F("rollTimeMax : "));
-  Console.println(m_wheels.m_rollTimeMax);
-  Console.print(F("rollTimeMin : "));
-  Console.println(m_wheels.m_rollTimeMin);
-  Console.print(F("reverseTime : "));
-  Console.println(m_wheels.m_reverseTime);
-  Console.print(F("forwardTimeMax : "));
-  Console.println(m_wheels.m_forwardTimeMax);
-  Console.print(F("biDirSpeedRatio1 : "));
-  Console.println(m_wheels.m_biDirSpeedRatio1);
-  Console.print(F("biDirSpeedRatio2 : "));
-  Console.println(m_wheels.m_biDirSpeedRatio2);
+    Console.print(F("rollTimeMax : "));
+    Console.println(m_wheels.m_rollTimeMax);
+    Console.print(F("rollTimeMin : "));
+    Console.println(m_wheels.m_rollTimeMin);
+    Console.print(F("reverseTime : "));
+    Console.println(m_wheels.m_reverseTime);
+    Console.print(F("forwardTimeMax : "));
+    Console.println(m_wheels.m_forwardTimeMax);
+    Console.print(F("biDirSpeedRatio1 : "));
+    Console.println(m_wheels.m_biDirSpeedRatio1);
+    Console.print(F("biDirSpeedRatio2 : "));
+    Console.println(m_wheels.m_biDirSpeedRatio2);
 
-  printSettingSerialPid(F("LEFT.pid."),
-      m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pid.getSettings());
-  printSettingSerialPid(F("RIGHT.pid."),
-      m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pid.getSettings());
+    printSettingSerialPid(F("LEFT.pid."),
+        m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pid.getSettings());
 
-  Console.print(F("LEFT.swapDir : "));
-  Console.println(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_swapDir);
-  Console.print(F("RIGHT.swapDir : "));
-  Console.println(m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_swapDir);
+    printSettingSerialPid(F("RIGHT.pid."),
+        m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pid.getSettings());
+
+    Console.print(F("LEFT.swapDir : "));
+    Console.println(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_swapDir);
+    Console.print(F("RIGHT.swapDir : "));
+    Console.println(m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_swapDir);
+  }
 
   // ------ cutter motor -------------------------------
-  Console.println(F("== Cutter motor =="));
-  Console.print(F("acceleration : "));
-  Console.println(m_cutter.m_motor.m_acceleration);
-  Console.print(F("pwmMax : "));
-  Console.println(m_cutter.m_motor.m_pwmMax);
-  Console.print(F("powerMax : "));
-  Console.println(m_cutter.m_motor.m_powerMax);
-  Console.print(F("regulate : "));
-  Console.println(m_cutter.m_motor.m_regulate);
-  Console.print(F("rpmSet : "));
-  Console.println(m_cutter.m_motor.m_rpmSet);
-  Console.print(F("scale : "));
-  Console.println(m_cutter.m_motor.getScale());
+  {
+    Console.println(F("== Cutter motor =="));
+    Console.print(F("acceleration : "));
+    Console.println(m_cutter.m_motor.m_acceleration);
+    Console.print(F("pwmMax : "));
+    Console.println(m_cutter.m_motor.m_pwmMax);
+    Console.print(F("powerMax : "));
+    Console.println(m_cutter.m_motor.m_powerMax);
+    Console.print(F("regulate : "));
+    Console.println(m_cutter.m_motor.m_regulate);
+    Console.print(F("rpmSet : "));
+    Console.println(m_cutter.m_motor.m_rpmSet);
+    Console.print(F("scale : "));
+    Console.println(m_cutter.m_motor.getScale());
 
-  printSettingSerialPid(F("pid."), m_cutter.m_motor.m_pid.getSettings());
+    printSettingSerialPid(F("pid."), m_cutter.m_motor.m_pid.getSettings());
+  }
 
   // ------ bumper ------------------------------------
-  Console.println(F("== Bumpers =="));
-  printSettingNameColonValue(m_bumpers.getSettings()->use);
+  {
+    Console.println(F("== Bumpers =="));
+    printSettingNameColonValue(m_bumpers.getSettings()->use);
+  }
 
   // ------ drop ------------------------------------
-  Console.println(F("== Drop sensors =="));
-  Console.print(F("use : "));
-  Console.println(m_dropSensors.isUsed());
-  Console.print(F("contactType : "));
-  Console.println(m_dropSensors.getContactType() == DropSensor_Contact::NC ?
-          F("NC") : F("NO"));
+  {
+    Console.println(F("== Drop sensors =="));
+    Console.print(F("use : "));
+    Console.println(m_dropSensors.isUsed());
+    Console.print(F("contactType : "));
+    Console.println(m_dropSensors.getContactType() == DropSensor_Contact::NC ?
+            F("NC") : F("NO"));
+  }
 
   // ------ rain ------------------------------------
-  Console.println(F("== Rain sensor =="));
-  printSettingNameColonValue(m_rainSensor.getSettings()->use);
+  {
+    Console.println(F("== Rain sensor =="));
+    printSettingNameColonValue(m_rainSensor.getSettings()->use);
+  }
 
   // ------ sonar ------------------------------------
-  Console.println(F("== Sonars =="));
-  auto sonarsSettings_p = m_sonars.getSettings();
-  printSettingNameColonValue(sonarsSettings_p->use);
-  Console.print(F("LEFT."));
-  printSettingNameColonValue(
-      m_sonars.m_sonarArray_p[static_cast<uint8_t>(SonarE::LEFT)].
-      getSettings()->use);
-  Console.print(F("CENTER."));
-  printSettingNameColonValue(
-      m_sonars.m_sonarArray_p[static_cast<uint8_t>(SonarE::CENTER)].
-      getSettings()->use);
-  Console.print(F("RIGHT."));
-  printSettingNameColonValue(
-      m_sonars.m_sonarArray_p[static_cast<uint8_t>(SonarE::RIGHT)].
-      getSettings()->use);
-  printSettingNameColonValue(sonarsSettings_p->triggerBelow);
+  {
+    Console.println(F("== Sonars =="));
+
+    auto settings_p = m_sonars.getSettings();
+
+    printSettingNameColonValue(settings_p->use);
+
+    Console.print(F("LEFT."));
+    printSettingNameColonValue(
+        m_sonars.m_sonarArray_p[static_cast<uint8_t>(SonarE::LEFT)].
+        getSettings()->use);
+
+    Console.print(F("CENTER."));
+    printSettingNameColonValue(
+        m_sonars.m_sonarArray_p[static_cast<uint8_t>(SonarE::CENTER)].
+        getSettings()->use);
+
+    Console.print(F("RIGHT."));
+    printSettingNameColonValue(
+        m_sonars.m_sonarArray_p[static_cast<uint8_t>(SonarE::RIGHT)].
+        getSettings()->use);
+
+    printSettingNameColonValue(settings_p->triggerBelow);
+  }
 
   // ------ perimeter ---------------------------------
-  Console.println(F("== Perimeter =="));
-  Console.print(F("use : "));
-  Console.println(m_perimeters.isUsed());
-  Console.print(F("triggerTimeout : "));
-  Console.println(m_perimeterTriggerTimeout);
-  Console.print(F("outRollTimeMax : "));
-  Console.println(m_perimeterOutRollTimeMax);
-  Console.print(F("outRollTimeMin : "));
-  Console.println(m_perimeterOutRollTimeMin);
-  Console.print(F("outRevTime : "));
-  Console.println(m_perimeterOutRevTime);
-  Console.print(F("trackRollTime : "));
-  Console.println(m_perimeterTrackRollTime);
-  Console.print(F("trackRevTime : "));
-  Console.println(m_perimeterTrackRevTime);
+  {
+    Console.println(F("== Perimeter =="));
 
-  printSettingSerialPid(F("pid."),
-      m_perimeters.m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)].m_pid.getSettings());
+    printSettingNameColonValue(m_perimeters.getSettings()->use);
 
-  Console.print(F("trackingPerimeterTransitionTimeOut : "));
-  Console.println(m_trackingPerimeterTransitionTimeOut);
-  Console.print(F("trackingErrorTimeOut : "));
-  Console.println(m_trackingErrorTimeOut);
-  Console.print(F("trackingBlockInnerWheelWhilePerimeterStruggling : "));
-  Console.println(m_trackingBlockInnerWheelWhilePerimeterStruggling);
+    Console.print(F("triggerTimeout : "));
+    Console.println(m_perimeterTriggerTimeout);
+    Console.print(F("outRollTimeMax : "));
+    Console.println(m_perimeterOutRollTimeMax);
+    Console.print(F("outRollTimeMin : "));
+    Console.println(m_perimeterOutRollTimeMin);
+    Console.print(F("outRevTime : "));
+    Console.println(m_perimeterOutRevTime);
+    Console.print(F("trackRollTime : "));
+    Console.println(m_perimeterTrackRollTime);
+    Console.print(F("trackRevTime : "));
+    Console.println(m_perimeterTrackRevTime);
+
+    printSettingSerialPid(F("pid."),
+        m_perimeters.m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)].m_pid.getSettings());
+
+    Console.print(F("trackingPerimeterTransitionTimeOut : "));
+    Console.println(m_trackingPerimeterTransitionTimeOut);
+    Console.print(F("trackingErrorTimeOut : "));
+    Console.println(m_trackingErrorTimeOut);
+    Console.print(F("trackingBlockInnerWheelWhilePerimeterStruggling : "));
+    Console.println(m_trackingBlockInnerWheelWhilePerimeterStruggling);
+  }
 
   // ------ lawn sensor --------------------------------
-  Console.println(F("== Lawn sensor =="));
-  LawnSensorsSettings* lawnSensorSettings_p = m_lawnSensors.getSettings();
-  printSettingNameColonValue(lawnSensorSettings_p->use);
+  {
+    Console.println(F("== Lawn sensor =="));
+
+    auto settings_p = m_lawnSensors.getSettings();
+
+    printSettingNameColonValue(settings_p->use);
+  }
 
   // ------  IMU (compass/accel/gyro) ----------------------
-  Console.println(F("== IMU =="));
-  ImuSettings* imuSettings_p = m_imu.getSettings();
-  printSettingNameColonValue(imuSettings_p->use);
-  printSettingNameColonValue(imuSettings_p->correctDir);
-  printSettingSerialPid(F("pid[DIR]."), m_imu.m_pid[Imu::DIR].getSettings());
-  printSettingSerialPid(F("pid[ROLL]."), m_imu.m_pid[Imu::ROLL].getSettings());
+  {
+    Console.println(F("== IMU =="));
+
+    auto settings_p = m_imu.getSettings();
+
+    printSettingNameColonValue(settings_p->use);
+    printSettingNameColonValue(settings_p->correctDir);
+
+    printSettingSerialPid(F("pid[DIR]."), m_imu.m_pid[Imu::DIR].getSettings());
+    printSettingSerialPid(F("pid[ROLL]."), m_imu.m_pid[Imu::ROLL].getSettings());
+  }
 
   // ------ battery -------------------------------------
-  Console.println(F("== Battery =="));
-  Console.print(F("batMonitor : "));
-  Console.println(m_battery.m_monitored);
-  Console.print(F("batGoHomeIfBelow : "));
-  Console.println(m_battery.m_batGoHomeIfBelow);
-  Console.print(F("batSwitchOffIfBelow : "));
-  Console.println(m_battery.m_batSwitchOffIfBelow);
-  Console.print(F("batSwitchOffIfIdle : "));
-  Console.println(m_battery.m_batSwitchOffIfIdle);
-  Console.print(F("batFactor : "));
-  Console.println(m_battery.m_batFactor);
-  Console.print(F("batChgFactor : "));
-  Console.println(m_battery.m_batChgFactor);
-  Console.print(F("batFull : "));
-  Console.println(m_battery.m_batFull);
-  Console.print(F("batChargingCurrentMax : "));
-  Console.println(m_battery.m_batChargingCurrentMax);
-  Console.print(F("batFullCurrent : "));
-  Console.println(m_battery.m_batFullCurrent);
-  Console.print(F("startChargingIfBelow : "));
-  Console.println(m_battery.m_startChargingIfBelow);
-  Console.print(F("chargingTimeout : "));
-  Console.println(m_battery.m_chargingTimeout);
-  Console.print(F("chgSenseZero : "));
-  Console.println(m_battery.m_chgSenseZero);
-  Console.print(F("chgFactor : "));
-  Console.println(m_battery.m_chgFactor);
-  Console.print(F("chgSense : "));
-  Console.println(m_battery.m_chgSense);
-  Console.print(F("chgChange : "));
-  Console.println(m_battery.m_chgChange);
-  Console.print(F("chgNull : "));
-  Console.println(m_battery.m_chgNull);
+  {
+    Console.println(F("== Battery =="));
+
+    auto* settings_p = m_battery.getSettings();
+
+    printSettingNameColonValue(settings_p->monitored);
+    printSettingNameColonValue(settings_p->batGoHomeIfBelow);
+    printSettingNameColonValue(settings_p->batSwitchOffIfBelow);
+    printSettingNameColonValue(settings_p->batSwitchOffIfIdle);
+    printSettingNameColonValue(settings_p->batFactor);
+    printSettingNameColonValue(settings_p->batChgFactor);
+    printSettingNameColonValue(settings_p->batFull);
+    printSettingNameColonValue(settings_p->batChargingCurrentMax);
+    printSettingNameColonValue(settings_p->batFullCurrent);
+    printSettingNameColonValue(settings_p->startChargingIfBelow);
+
+    Console.print(F("chargingTimeout : "));
+    Console.println(m_battery.m_chargingTimeout);
+
+    printSettingNameColonValue(settings_p->chgSenseZero);
+    printSettingNameColonValue(settings_p->chgFactor);
+
+    Console.print(F("chgSense : "));
+    Console.println(m_battery.m_chgSense);
+    Console.print(F("chgChange : "));
+    Console.println(m_battery.m_chgChange);
+    Console.print(F("chgNull : "));
+    Console.println(m_battery.m_chgNull);
+  }
 
   // ------  charging station ---------------------------
-  Console.println(F("== Station =="));
-  Console.print(F("reverseTime : "));
-  Console.println(m_stationRevTime);
-  Console.print(F("rollTime : "));
-  Console.println(m_stationRollTime);
-  Console.print(F("forwardTime : "));
-  Console.println(m_stationForwTime);
-  Console.print(F("checkTime : "));
-  Console.println(m_stationCheckTime);
+  {
+    Console.println(F("== Station =="));
+    Console.print(F("reverseTime : "));
+    Console.println(m_stationRevTime);
+    Console.print(F("rollTime : "));
+    Console.println(m_stationRollTime);
+    Console.print(F("forwardTime : "));
+    Console.println(m_stationForwTime);
+    Console.print(F("checkTime : "));
+    Console.println(m_stationCheckTime);
+  }
 
   // ------ odometer ------------------------------------
-  Console.println(F("== Odometer =="));
-  OdometerSettings* odometerSettings_p = m_odometer.getSettings();
-  printSettingNameColonValue(odometerSettings_p->use);
-  printSettingNameColonValue(odometerSettings_p->ticksPerRevolution);
-  printSettingNameColonValue(odometerSettings_p->ticksPerCm);
-  printSettingNameColonValue(odometerSettings_p->wheelBaseCm);
-  Console.print(F("LEFT.swapDir : "));
-  Console.println(m_odometer.m_encoder.left_p->m_swapDir);
-  Console.print(F("RIGHT.swapDir : "));
-  Console.println(m_odometer.m_encoder.right_p->m_swapDir);
+  {
+    Console.println(F("== Odometer =="));
+
+    auto settings_p = m_odometer.getSettings();
+
+    printSettingNameColonValue(settings_p->use);
+    printSettingNameColonValue(settings_p->ticksPerRevolution);
+    printSettingNameColonValue(settings_p->ticksPerCm);
+    printSettingNameColonValue(settings_p->wheelBaseCm);
+
+    Console.print(F("LEFT.swapDir : "));
+    Console.println(m_odometer.m_encoder.left_p->m_swapDir);
+
+    Console.print(F("RIGHT.swapDir : "));
+    Console.println(m_odometer.m_encoder.right_p->m_swapDir);
+  }
 
   // ----- GPS -------------------------------------------
-  Console.println(F("== GPS =="));
-  Console.print(F("use : "));
-  Console.println(m_gpsUse);
-  Console.print(F("stuckIfGpsSpeedBelow : "));
-  Console.println(m_stuckIfGpsSpeedBelow);
-  Console.print(F("gpsSpeedIgnoreTime : "));
-  Console.println(m_gpsSpeedIgnoreTime);
+  {
+    Console.println(F("== GPS =="));
+    Console.print(F("use : "));
+    Console.println(m_gpsUse);
+    Console.print(F("stuckIfGpsSpeedBelow : "));
+    Console.println(m_stuckIfGpsSpeedBelow);
+    Console.print(F("gpsSpeedIgnoreTime : "));
+    Console.println(m_gpsSpeedIgnoreTime);
+  }
 
   // ----- other -----------------------------------------
-  Console.println(F("== Button =="));
-  Console.print(F("use : "));
-  Console.println(m_button.isUsed());
+  {
+    Console.println(F("== Button =="));
+    Console.print(F("use : "));
+    Console.println(m_button.isUsed());
+  }
 
   // ----- user-defined switch ---------------------------
-  Console.println(F("== User switches =="));
-  Console.print(F("userSwitch1 : "));
-  Console.println(m_userSwitch1);
-  Console.print(F("userSwitch2 : "));
-  Console.println(m_userSwitch2);
-  Console.print(F("userSwitch3 : "));
-  Console.println(m_userSwitch3);
+  {
+    Console.println(F("== User switches =="));
+    Console.print(F("userSwitch1 : "));
+    Console.println(m_userSwitch1);
+    Console.print(F("userSwitch2 : "));
+    Console.println(m_userSwitch2);
+    Console.print(F("userSwitch3 : "));
+    Console.println(m_userSwitch3);
+  }
 
   // ----- timer -----------------------------------------
-  Console.println(F("== Timer =="));
-  Console.print(F("use : "));
-  Console.println(m_timerUse);
+  {
+    Console.println(F("== Timer =="));
+    Console.print(F("use : "));
+    Console.println(m_timerUse);
+  }
 
   // -------robot stats------------------------------------
-  Console.println(F("== Robot status =="));
-  Console.print(F("Mowing time, trip [min] : "));
-  Console.println(m_stats.mowTimeMinutesTrip);
-  Console.print(F("Mowing time, total [min] : "));
-  Console.println(m_stats.mowTimeMinutesTotal);
-  Console.print(F("batteryChargingCounterTotal : "));
-  Console.println(m_stats.batteryChargingCounterTotal);
-  Console.print(F("batteryChargingCapacityTrip [mAh] : "));
-  Console.println(m_stats.batteryChargingCapacityTrip);
-  Console.print(F("batteryChargingCapacityTotal [Ah] : "));
-  Console.println(m_stats.batteryChargingCapacityTotal / 1000);
-  Console.print(F("batteryChargingCapacityAverage [mAh] : "));
-  Console.println(m_stats.batteryChargingCapacityAverage);
+  {
+    Console.println(F("== Robot status =="));
+    Console.print(F("Mowing time, trip [min] : "));
+    Console.println(m_stats.mowTimeMinutesTrip);
+    Console.print(F("Mowing time, total [min] : "));
+    Console.println(m_stats.mowTimeMinutesTotal);
+    Console.print(F("batteryChargingCounterTotal : "));
+    Console.println(m_stats.batteryChargingCounterTotal);
+    Console.print(F("batteryChargingCapacityTrip [mAh] : "));
+    Console.println(m_stats.batteryChargingCapacityTrip);
+    Console.print(F("batteryChargingCapacityTotal [Ah] : "));
+    Console.println(m_stats.batteryChargingCapacityTotal / 1000);
+    Console.print(F("batteryChargingCapacityAverage [mAh] : "));
+    Console.println(m_stats.batteryChargingCapacityAverage);
+  }
 }
 
 void Robot::deleteRobotStats()
@@ -611,12 +664,12 @@ void Robot::incErrorCounter(const enum errorE errType)
   // increase error counters (both temporary and maximum error counters)
   if (m_errorCounter[errType] < 255)
   {
-    m_errorCounter[errType]++;
+    ++m_errorCounter[errType];
   }
 
   if (m_errorCounterMax[errType] < 255)
   {
-    m_errorCounterMax[errType]++;
+    ++m_errorCounterMax[errType];
   }
 }
 
@@ -1842,7 +1895,7 @@ void Robot::checkBattery()
 {
   if (m_battery.isMonitored())
   {
-    if (m_battery.getVoltage() < m_battery.m_batSwitchOffIfBelow &&
+    if (m_battery.isVoltageBelowSwitchOffLimit() &&
         !m_stateMachine.isCurrentState(StateMachine::STATE_ERROR) &&
         !m_stateMachine.isCurrentState(StateMachine::STATE_OFF) &&
         !m_stateMachine.isCurrentState(StateMachine::STATE_STATION) &&
@@ -1853,14 +1906,14 @@ void Robot::checkBattery()
       m_buzzer.beepShort(2);
       setNextState(StateMachine::STATE_OFF);
     }
-    else if (m_battery.getVoltage() < m_battery.m_batGoHomeIfBelow &&
+    else if (m_battery.isVoltageBelowGoHomeLimit() &&
+             m_perimeters.isUsed() &&
              !m_stateMachine.isCurrentState(StateMachine::STATE_OFF) &&
              !m_stateMachine.isCurrentState(StateMachine::STATE_MANUAL) &&
              !m_stateMachine.isCurrentState(StateMachine::STATE_STATION) &&
              !m_stateMachine.isCurrentState(StateMachine::STATE_STATION_CHARGING) &&
              !m_stateMachine.isCurrentState(StateMachine::STATE_ERROR) &&
-             !m_stateMachine.isCurrentState(StateMachine::STATE_PERI_TRACK) &&
-             m_perimeters.isUsed())
+             !m_stateMachine.isCurrentState(StateMachine::STATE_PERI_TRACK))
     {
       Console.println(F("Triggered batGoHomeIfBelow"));
       m_buzzer.beepShort(2);
@@ -1875,8 +1928,7 @@ void Robot::checkBattery()
     if (m_idleTimeSec != BATTERY_SW_OFF)
     {
       // battery already switched off?
-      m_idleTimeSec++; // add one second idle time
-      if (m_idleTimeSec > m_battery.m_batSwitchOffIfIdle * 60)
+      if (m_battery.hasIdleTimePassedSwitchOffLimit(++m_idleTimeSec))
       {
         Console.println(F("Triggered batSwitchOffIfIdle"));
         m_buzzer.beepShort(1);
@@ -2720,7 +2772,7 @@ void Robot::runStateMachine()
       {
         if (m_battery.getChargeVoltage() > 5.0 && m_battery.getVoltage() > 8)
         {
-          if (m_battery.getVoltage() < m_battery.m_startChargingIfBelow &&
+          if (m_battery.isVoltageBelowStartChargingLimit() &&
               m_stateMachine.getStateTime() > 2000)
           {
             setNextState(StateMachine::STATE_STATION_CHARGING);
@@ -2745,7 +2797,7 @@ void Robot::runStateMachine()
       // waiting until charging completed
       if (m_battery.isMonitored())
       {
-        if (m_battery.getChargeCurrent() < m_battery.m_batFullCurrent &&
+        if (m_battery.isChargeCurrentBelowBatFullLimit() &&
             m_stateMachine.getStateTime() > 2000)
         {
           setNextState(StateMachine::STATE_STATION);

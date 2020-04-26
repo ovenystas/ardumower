@@ -86,6 +86,14 @@ public:
   }
 
 private:
+  float m_setPoint {};
+  float m_yMin {};
+  float m_yMax {};
+  float m_maxOutput {};
+  float m_errorOld {};
+  float m_errorSum {};
+  unsigned long m_lastControlTime {};
+
   PidSettings m_settings
   {
     { "Kp", "", 1.0f, 0.0f, 100.0f, 0.1f },
@@ -97,12 +105,4 @@ private:
   float& m_kp = m_settings.Kp.value;
   float& m_ki = m_settings.Ki.value;
   float& m_kd = m_settings.Kd.value;
-
-  float m_setPoint {};
-  float m_yMin {};
-  float m_yMax {};
-  float m_maxOutput {};
-  float m_errorOld {};
-  float m_errorSum {};
-  unsigned long m_lastControlTime {};
 };

@@ -87,13 +87,8 @@ private:
   void sendSettingSlider(String cmd, Setting<T>& setting);
 
   void processSlider(String result, float& value, float scale);
-  void processSlider(String result, long& value, float scale);
-  void processSlider(String result, unsigned long& value, float scale);
-  void processSlider(String result, int& value, float scale);
-  void processSlider(String result, unsigned int& value, float scale);
-  void processSlider(String result, byte& value, float scale);
-  void processSlider(String result, short& value, float scale);
-  void processSlider(String result, unsigned short& value, float scale);
+  template <class T>
+  void processSlider(String result, T& value, float scale);
 
   template <class T>
   void processSettingSlider(String result, Setting<T>& setting);
