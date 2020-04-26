@@ -67,6 +67,7 @@ public:
   void run();
 
 private:
+  bool approximatelyEqual(float a, float b, float epsilon);
   float stringToFloat(const String& s);
   void parsePfodCmd();
 
