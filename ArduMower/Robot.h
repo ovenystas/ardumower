@@ -54,7 +54,7 @@
  */
 
 // code version
-#define VERSION "0.1"
+#define VERSION F("0.1")
 
 // error types
 typedef enum errorE
@@ -415,7 +415,7 @@ protected:
   virtual void readPerimeters();
   virtual void readRtc();
   virtual void readImu();
-  virtual void readCutterMotorCurrent();
+  virtual void readMotorCurrents();
   virtual void measureCutterMotorRpm();
 
   // read serial

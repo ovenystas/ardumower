@@ -670,8 +670,7 @@ void Robot::printSettingSerial()
   // ----- other -----------------------------------------
   {
     Console.println(F("== Button =="));
-    Console.print(F("use : "));
-    Console.println(m_button.isUsed());
+    printSettingNameColonValue(m_button.getSettings()->use);
   }
 
   // ----- user-defined switch ---------------------------
@@ -1077,10 +1076,10 @@ void Robot::setup()
   Console.print(F("Ardumower "));
   Console.println(VERSION);
 #ifdef USE_DEVELOPER_TEST
-  Console.println("Warning: USE_DEVELOPER_TEST activated");
+  Console.println(F("Warning: USE_DEVELOPER_TEST activated"));
 #endif
 #ifdef USE_BARKER_CODE
-  Console.println("Warning: USE_BARKER_CODE activated");
+  Console.println(F("Warning: USE_BARKER_CODE activated"));
 #endif
   Console.print(F("Config: "));
   Console.println(m_name);
@@ -1120,18 +1119,24 @@ void Robot::printInfo_sensorValues(Stream &s)
               m_wheels.m_wheel[Wheel::LEFT].m_motor.getPowerMeas(),
               m_wheels.m_wheel[Wheel::RIGHT].m_motor.getPowerMeas(),
               m_cutter.m_motor.getPowerMeas());
+
   Streamprint(s, "bum %4d %4d ",
               m_bumperArray[LEFT].isHit(),
               m_bumperArray[RIGHT].isHit());
+
   Streamprint(s, "dro %4d %4d ",
       m_dropSensorArray[LEFT].isDetected(),
       m_dropSensorArray[RIGHT].isDetected());
+
   Streamprint(s, "son %4u %4u %4u ",
       m_sonars.m_sonarArray_p[static_cast<uint8_t>(SonarE::LEFT)].getDistance_us(),
       m_sonars.m_sonarArray_p[static_cast<uint8_t>(SonarE::CENTER)].getDistance_us(),
       m_sonars.m_sonarArray_p[static_cast<uint8_t>(SonarE::RIGHT)].getDistance_us());
+
   Streamprint(s, "yaw %3d ", (int)(m_imu.getYawDeg()));
+
   Streamprint(s, "pit %3d ", (int)(m_imu.getPitchDeg()));
+
   Streamprint(s, "rol %3d ", (int)(m_imu.getRollDeg()));
 
   if (m_perimeters.isUsed())
@@ -1153,16 +1158,23 @@ void Robot::printInfo_sensorCounters(Stream &s)
               m_wheels.m_wheel[Wheel::LEFT].m_motor.getOverloadCounter(),
               m_wheels.m_wheel[Wheel::RIGHT].m_motor.getOverloadCounter(),
               m_cutter.m_motor.getOverloadCounter());
+
   Streamprint(s, "bum %4d %4d ",
               m_bumperArray[LEFT].getCounter(),
               m_bumperArray[RIGHT].getCounter());
+
   Streamprint(s, "dro %4d %4d ",
       m_dropSensorArray[LEFT].getCounter(),
       m_dropSensorArray[RIGHT].getCounter());
+
   Streamprint(s, "son %3d ", m_sonars.getDistanceCounter());
+
   Streamprint(s, "yaw %3d ", (int)(m_imu.getYawDeg()));
+
   Streamprint(s, "pit %3d ", (int)(m_imu.getPitchDeg()));
+
   Streamprint(s, "rol %3d ", (int)(m_imu.getRollDeg()));
+
   //Streamprint(s, "per %3d ", perimeterLeft);
 
   if (m_perimeters.isUsed())
@@ -1189,9 +1201,13 @@ void Robot::printInfo(Stream &s)
   }
 
   Streamprint(s, "t%4u ", (millis() - m_stateMachine.getStateStartTime()) / 1000);
+
   Streamprint(s, "l%5u ", m_loopsPerSec);
+
   //Streamprint(s, "r%4u ", freeRam());
+
   Streamprint(s, "v%1d ", m_consoleMode);
+
   Streamprint(s, "%8s ", m_stateMachine.getCurrentStateName());
 
   if (m_consoleMode == CONSOLE_PERIMETER)
@@ -1229,13 +1245,17 @@ void Robot::printInfo(Stream &s)
 
     float chgVolt = m_battery.getChargeVoltage();
     float chgCurr = m_battery.getChargeCurrent();
+
     Streamprint(s, "chg %2d.%01d %2d.%01d ",
                 (int)chgVolt,
                 (int)((chgVolt * 10) - ((int)chgVolt * 10)),
                 (int)chgCurr,
                 (int)((abs(chgCurr) * 10) - ((int)abs(chgCurr) * 10)));
+
     Streamprint(s, "imu %3d ", m_imu.getCallCounter());
+
     Streamprint(s, "adc %3d\r\n", ADCMan.getCapturedChannels());
+
     //Streamprint(s, "%s\r\n", name.c_str());
   }
 }
@@ -1263,6 +1283,7 @@ void Robot::printMenu()
 void Robot::delayInfo(const int ms)
 {
   unsigned long endtime = millis() + ms;
+
   while (millis() < endtime)
   {
     printInfo(Console);
@@ -1272,21 +1293,26 @@ void Robot::delayInfo(const int ms)
 
 void Robot::testOdometer()
 {
-  int16_t leftPwm = m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pwmMax / 2;
-  int16_t rightPwm = m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pwmMax / 2;
+  auto motorLeft_p = &m_wheels.m_wheel[Wheel::LEFT].m_motor;
+  auto motorRight_p = &m_wheels.m_wheel[Wheel::RIGHT].m_motor;
 
-  m_wheels.m_wheel[Wheel::LEFT].m_motor.setPwmCur(leftPwm);
-  m_wheels.m_wheel[Wheel::RIGHT].m_motor.setPwmCur(rightPwm);
-  setMotorPWMs(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pwmCur,
-               m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pwmCur);
+  int16_t leftPwm = motorLeft_p->m_pwmMax / 2;
+  int16_t rightPwm = motorRight_p->m_pwmMax / 2;
+
+  motorLeft_p->setPwmCur(leftPwm);
+  motorRight_p->setPwmCur(rightPwm);
+  setMotorPWMs(motorLeft_p->m_pwmCur, motorRight_p->m_pwmCur);
 
   int lastLeft = 0;
   int lastRight = 0;
+
   for (;;)
   {
     resetIdleTime();
+
     int odoCountLeft = m_odometer.m_encoder.left_p->getCounter();
     int odoCountRight = m_odometer.m_encoder.right_p->getCounter();
+
     if (odoCountLeft != lastLeft || odoCountRight != lastRight)
     {
       Console.print(F("Press 'f' forward, 'r' reverse, 'z' reset  "));
@@ -1294,10 +1320,13 @@ void Robot::testOdometer()
       Console.print(odoCountLeft);
       Console.print(F("  right="));
       Console.println(odoCountRight);
+
       lastLeft = odoCountLeft;
       lastRight = odoCountRight;
     }
+
     delay(100);
+
     if (Console.available() > 0)
     {
       char ch;
@@ -1309,18 +1338,16 @@ void Robot::testOdometer()
 
       if (ch == 'f')
       {
-        m_wheels.m_wheel[Wheel::LEFT].m_motor.setPwmCur(leftPwm);
-        m_wheels.m_wheel[Wheel::RIGHT].m_motor.setPwmCur(rightPwm);
-        setMotorPWMs(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pwmCur,
-                     m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pwmCur);
+        motorLeft_p->setPwmCur(leftPwm);
+        motorRight_p->setPwmCur(rightPwm);
+        setMotorPWMs(motorLeft_p->m_pwmCur, motorRight_p->m_pwmCur);
       }
 
       if (ch == 'r')
       {
-        m_wheels.m_wheel[Wheel::LEFT].m_motor.setPwmCur(-leftPwm);
-        m_wheels.m_wheel[Wheel::RIGHT].m_motor.setPwmCur(-rightPwm);
-        setMotorPWMs(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pwmCur,
-                     m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pwmCur);
+        motorLeft_p->setPwmCur(-leftPwm);
+        motorRight_p->setPwmCur(-rightPwm);
+        setMotorPWMs(motorLeft_p->m_pwmCur, motorRight_p->m_pwmCur);
       }
 
       if (ch == 'z')
@@ -1331,75 +1358,86 @@ void Robot::testOdometer()
     }
   }
 
-  m_wheels.m_wheel[Wheel::LEFT].m_motor.setPwmCur(0);
-  m_wheels.m_wheel[Wheel::RIGHT].m_motor.setPwmCur(0);
-  setMotorPWMs(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pwmCur,
-               m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pwmCur);
+  motorLeft_p->setPwmCur(0);
+  motorRight_p->setPwmCur(0);
+  setMotorPWMs(motorLeft_p->m_pwmCur, motorRight_p->m_pwmCur);
 }
 
 void Robot::testMotors()
 {
-  m_wheels.m_wheel[Wheel::LEFT].m_motor.setPwmCur(0);
-  m_wheels.m_wheel[Wheel::RIGHT].m_motor.setPwmCur(0);
+  auto motorLeft_p = &m_wheels.m_wheel[Wheel::LEFT].m_motor;
+  auto motorRight_p = &m_wheels.m_wheel[Wheel::RIGHT].m_motor;
+
+  motorLeft_p->setPwmCur(0);
+  motorRight_p->setPwmCur(0);
   setMotorPWMs(0, 0);
 
-  Console.println(F("testing left motor (forward) full speed..."));
-  delay(1000);
-  m_wheels.m_wheel[Wheel::LEFT].m_motor.setPwmCur(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pwmMax);
-  m_wheels.m_wheel[Wheel::RIGHT].m_motor.setPwmCur(0);
-  setMotorPWMs(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pwmCur,
-               m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pwmCur);
-  delayInfo(5000);
-  m_wheels.m_wheel[Wheel::LEFT].m_motor.setPwmCur(0);
-  m_wheels.m_wheel[Wheel::RIGHT].m_motor.setPwmCur(0);
-  setMotorPWMs(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pwmCur,
-               m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pwmCur);
+  Console.println(F("Testing left motor (forward) full speed..."));
 
-  Console.println(F("testing left motor (reverse) full speed..."));
   delay(1000);
-  m_wheels.m_wheel[Wheel::LEFT].m_motor.setPwmCur(-m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pwmMax);
-  m_wheels.m_wheel[Wheel::RIGHT].m_motor.setPwmCur(0);
-  setMotorPWMs(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pwmCur,
-               m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pwmCur);
-  delayInfo(5000);
-  m_wheels.m_wheel[Wheel::LEFT].m_motor.setPwmCur(0);
-  m_wheels.m_wheel[Wheel::RIGHT].m_motor.setPwmCur(0);
-  setMotorPWMs(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pwmCur,
-               m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pwmCur);
 
-  Console.println(F("testing right motor (forward) full speed..."));
-  delay(1000);
-  m_wheels.m_wheel[Wheel::LEFT].m_motor.setPwmCur(0);
-  m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pwmCur = m_wheels.m_wheel[Wheel::LEFT].m_motor
-      .m_pwmMax;
-  setMotorPWMs(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pwmCur,
-               m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pwmCur);
-  delayInfo(5000);
-  m_wheels.m_wheel[Wheel::LEFT].m_motor.setPwmCur(0);
-  m_wheels.m_wheel[Wheel::RIGHT].m_motor.setPwmCur(0);
-  setMotorPWMs(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pwmCur,
-               m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pwmCur);
+  motorLeft_p->setPwmCur(motorLeft_p->m_pwmMax);
+  motorRight_p->setPwmCur(0);
+  setMotorPWMs(motorLeft_p->m_pwmCur, motorRight_p->m_pwmCur);
 
-  Console.println(F("testing right motor (reverse) full speed..."));
-  delay(1000);
-  m_wheels.m_wheel[Wheel::LEFT].m_motor.setPwmCur(0);
-  m_wheels.m_wheel[Wheel::RIGHT].m_motor.setPwmCur(-m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pwmMax);
-  setMotorPWMs(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pwmCur,
-               m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pwmCur);
   delayInfo(5000);
-  m_wheels.m_wheel[Wheel::LEFT].m_motor.setPwmCur(0);
-  m_wheels.m_wheel[Wheel::RIGHT].m_motor.setPwmCur(0);
-  setMotorPWMs(m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pwmCur,
-               m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pwmCur);
+
+  motorLeft_p->setPwmCur(0);
+  motorRight_p->setPwmCur(0);
+  setMotorPWMs(motorLeft_p->m_pwmCur, motorRight_p->m_pwmCur);
+
+  Console.println(F("Testing left motor (reverse) full speed..."));
+
+  delay(1000);
+
+  motorLeft_p->setPwmCur(-motorLeft_p->m_pwmMax);
+  motorRight_p->setPwmCur(0);
+  setMotorPWMs(motorLeft_p->m_pwmCur, motorRight_p->m_pwmCur);
+
+  delayInfo(5000);
+
+  motorLeft_p->setPwmCur(0);
+  motorRight_p->setPwmCur(0);
+  setMotorPWMs(motorLeft_p->m_pwmCur, motorRight_p->m_pwmCur);
+
+  Console.println(F("Testing right motor (forward) full speed..."));
+
+  delay(1000);
+
+  motorLeft_p->setPwmCur(0);
+  motorRight_p->m_pwmCur = motorLeft_p->m_pwmMax;
+  setMotorPWMs(motorLeft_p->m_pwmCur, motorRight_p->m_pwmCur);
+
+  delayInfo(5000);
+
+  motorLeft_p->setPwmCur(0);
+  motorRight_p->setPwmCur(0);
+  setMotorPWMs(motorLeft_p->m_pwmCur, motorRight_p->m_pwmCur);
+
+  Console.println(F("Testing right motor (reverse) full speed..."));
+
+  delay(1000);
+
+  motorLeft_p->setPwmCur(0);
+  motorRight_p->setPwmCur(-motorLeft_p->m_pwmMax);
+  setMotorPWMs(motorLeft_p->m_pwmCur, motorRight_p->m_pwmCur);
+
+  delayInfo(5000);
+
+  motorLeft_p->setPwmCur(0);
+  motorRight_p->setPwmCur(0);
+  setMotorPWMs(motorLeft_p->m_pwmCur, motorRight_p->m_pwmCur);
 }
 
 void Robot::menu()
 {
   printMenu();
+
   for (;;)
   {
     resetIdleTime();
     m_imu.update();
+
     if (Console.available() > 0)
     {
       char ch = (char)Console.read();
@@ -1553,8 +1591,8 @@ void Robot::readSerial()
 
       case 'i': // toggle imu.use
         {
-          ImuSettings* imuSettings_p = m_imu.getSettings();
-          imuSettings_p->use.value = !imuSettings_p->use.value;
+          auto settings_p = m_imu.getSettings();
+          settings_p->use.value = !settings_p->use.value;
           break;
         }
 
@@ -1587,7 +1625,8 @@ void Robot::checkButton()
     }
     else
     {
-      if ((!m_stateMachine.isCurrentState(StateMachine::STATE_OFF) || m_stateMachine.isCurrentState(StateMachine::STATE_ERROR)) &&
+      if ((!m_stateMachine.isCurrentState(StateMachine::STATE_OFF) ||
+           m_stateMachine.isCurrentState(StateMachine::STATE_ERROR)) &&
           !m_stateMachine.isCurrentState(StateMachine::STATE_STATION))
       {
         setNextState(StateMachine::STATE_OFF);
@@ -1645,17 +1684,21 @@ void Robot::checkButton()
   }
 }
 
-void Robot::readCutterMotorCurrent()
+void Robot::readMotorCurrents()
 {
-  m_wheels.m_wheel[Wheel::LEFT].m_motor.readCurrent();
-  m_wheels.m_wheel[Wheel::RIGHT].m_motor.readCurrent();
-  m_cutter.m_motor.readCurrent();
+  auto motorLeft_p = &m_wheels.m_wheel[Wheel::LEFT].m_motor;
+  auto motorRight_p = &m_wheels.m_wheel[Wheel::RIGHT].m_motor;
+  auto motorCutter_p = &m_cutter.m_motor;
+
+  motorLeft_p->readCurrent();
+  motorRight_p->readCurrent();
+  motorCutter_p->readCurrent();
 
   // Conversion to power in Watts
   float batV = m_battery.getVoltage();
-  m_wheels.m_wheel[Wheel::RIGHT].m_motor.calcPower(batV);
-  m_wheels.m_wheel[Wheel::LEFT].m_motor.calcPower(batV);
-  m_cutter.m_motor.calcPower(batV);
+  motorLeft_p->calcPower(batV);
+  motorRight_p->calcPower(batV);
+  motorCutter_p->calcPower(batV);
 }
 
 void Robot::measureCutterMotorRpm()
@@ -1664,7 +1707,9 @@ void Robot::measureCutterMotorRpm()
   unsigned long curMillis = millis();
   unsigned long timeSinceLast = curMillis - timeLastMeasure;
   timeLastMeasure = curMillis;;
-  if ((m_cutter.m_motor.getRpmMeas() == 0) && (m_cutter.m_motor.getRpmCounter() != 0))
+
+  if ((m_cutter.m_motor.getRpmMeas() == 0) &&
+      (m_cutter.m_motor.getRpmCounter() != 0))
   {
     // rpm may be updated via interrupt
     m_cutter.m_motor.setRpmMeas(
@@ -1672,6 +1717,7 @@ void Robot::measureCutterMotorRpm()
             * 60000.0));
     m_cutter.m_motor.clearRpmCounter();
   }
+
   if (!ADCMan.calibrationDataAvail())
   {
     Console.println(F("Error: Missing ADC calibration data"));
@@ -1684,8 +1730,12 @@ void Robot::readPerimeters()
 {
   unsigned long curMillis = millis();
 
-  m_perimeterMag = m_perimeters.m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)].calcMagnitude();
-  bool inside = m_perimeters.m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)].isInside();
+  auto perimeterLeft_p = &m_perimeters.m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)];
+  //auto perimeterRight_p = &m_perimeters.m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::RIGHT)];
+
+  m_perimeterMag = perimeterLeft_p->calcMagnitude();
+  bool inside = perimeterLeft_p->isInside();
+
   if (inside != m_perimeterInside)
   {
     m_perimeterCounter++;
@@ -1709,7 +1759,7 @@ void Robot::readPerimeters()
     }
   }
 
-  if (m_perimeters.m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)].signalTimedOut())
+  if (perimeterLeft_p->signalTimedOut())
   {
     if (!m_stateMachine.isCurrentState(StateMachine::STATE_OFF) &&
         !m_stateMachine.isCurrentState(StateMachine::STATE_MANUAL) &&
@@ -1863,10 +1913,9 @@ void Robot::setNextState(StateMachine::stateE stateNew, int dir)
   {
     m_speed = 0;
     m_steer = (dir == LEFT) ? -75: +75;
-    m_stateMachine.setEndTime(curMillis +
-                            random(m_perimeterOutRollTimeMin,
-                                   m_perimeterOutRollTimeMax) +
-                            zeroSettleTime);
+    m_stateMachine.setEndTime(
+        curMillis + random(m_perimeterOutRollTimeMin, m_perimeterOutRollTimeMax)
+            + zeroSettleTime);
   }
   else if (stateNew == StateMachine::STATE_FORWARD)
   {
@@ -1878,7 +1927,8 @@ void Robot::setNextState(StateMachine::stateE stateNew, int dir)
   {
     m_speed = -75;
     m_steer = 0;
-    m_stateMachine.setEndTime(curMillis + m_wheels.m_reverseTime + zeroSettleTime);
+    m_stateMachine.setEndTime(
+        curMillis + m_wheels.m_reverseTime + zeroSettleTime);
   }
   else if (stateNew == StateMachine::STATE_ROLL)
   {
@@ -1895,9 +1945,9 @@ void Robot::setNextState(StateMachine::stateE stateNew, int dir)
     }
     m_speed = 0;
     m_steer = (dir == LEFT) ? -75: +75;
-    m_stateMachine.setEndTime(curMillis +
-                            random(m_wheels.m_rollTimeMin, m_wheels.m_rollTimeMax) +
-                            zeroSettleTime);
+    m_stateMachine.setEndTime(
+        curMillis + random(m_wheels.m_rollTimeMin, m_wheels.m_rollTimeMax)
+            + zeroSettleTime);
   }
   else if (stateNew == StateMachine::STATE_STATION)
   {
@@ -2038,6 +2088,7 @@ void Robot::receiveGPSTime()
   unsigned long age;
   m_gps.crack_datetime(&year, &month, &day, &hour, &minute, &second, &hundredths,
                      &age);
+
   if (age != Gps::GPS_INVALID_AGE)
   {
     Console.print(F("GPS date received: "));
@@ -2230,13 +2281,15 @@ void Robot::checkCutterMotorPower()
 
 void Robot::checkWheelMotorPower(Wheel::wheelE side)
 {
-  bool hasPassedPowerIgnoreTime =
-      millis() > (m_stateMachine.getStateStartTime() + m_wheels.m_wheel[side].m_motor.m_powerIgnoreTime);
+  auto motor_p = &m_wheels.m_wheel[side].m_motor;
 
-  if (m_wheels.m_wheel[side].m_motor.isOverpowered() && hasPassedPowerIgnoreTime)
+  bool hasPassedPowerIgnoreTime =
+      millis() > (m_stateMachine.getStateStartTime() + motor_p->m_powerIgnoreTime);
+
+  if (motor_p->isOverpowered() && hasPassedPowerIgnoreTime)
   {
     //m_buzzer.beepLong(1);
-    m_wheels.m_wheel[side].m_motor.incOverloadCounter();
+    motor_p->incOverloadCounter();
     setMotorPWMs(0, 0);
     // TODO: wheels.stop();
 
@@ -2378,7 +2431,8 @@ void Robot::checkPerimeterFind()
   {
     if (m_perimeters.m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)].isInside())
     {
-      if (m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet != m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmSet)
+      if (m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet !=
+          m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmSet)
       {
         // We just made an 'outside to inside' rotation, now track
         setNextState(StateMachine::STATE_PERI_TRACK);
@@ -2415,6 +2469,7 @@ void Robot::checkRain()
   if (m_rainSensor.isRaining())
   {
     Console.println(F("RAIN"));
+
     if (m_perimeters.isUsed())
     {
       setNextState(StateMachine::STATE_PERI_FIND);
@@ -2489,8 +2544,7 @@ void Robot::checkSonar()
     reverseOrChangeDirection(!m_rollDir); // toggle roll dir
   }
 
-  distanceUs =
-      m_sonars.m_sonarArray_p[static_cast<uint8_t>(SonarE::RIGHT)].
+  distanceUs = m_sonars.m_sonarArray_p[static_cast<uint8_t>(SonarE::RIGHT)].
       getDistance_us();
   if (distanceUs < triggerBelow)
   {
@@ -2668,28 +2722,38 @@ void Robot::runStateMachine()
       // driving forward
       if (m_mowPatternCurr == MOW_BIDIR)
       {
-        float ratio = m_wheels.m_biDirSpeedRatio1;
+        float ratio;
+
         if (m_stateMachine.getStateTime() > 4000)
         {
           ratio = m_wheels.m_biDirSpeedRatio2;
         }
+        else
+        {
+          ratio = m_wheels.m_biDirSpeedRatio1;
+        }
+
+        auto motorLeft_p = &m_wheels.m_wheel[Wheel::LEFT].m_motor;
+        auto motorRight_p = &m_wheels.m_wheel[Wheel::RIGHT].m_motor;
+
         if (m_rollDir == RIGHT)
         {
-          m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmSet =
-              ((float)m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet) * ratio;
+          motorRight_p->m_rpmSet = (float)motorLeft_p->m_rpmSet * ratio;
         }
         else
         {
-          m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet =
-              ((float)m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmSet) * ratio;
+          motorLeft_p->m_rpmSet = (float)motorRight_p->m_rpmSet * ratio;
         }
       }
+
       checkErrorCounter();
       checkTimer();
+
       if (m_rainSensor.isUsed())
       {
         checkRain();
       }
+
       checkMotorPower();
       checkBumpers();
       checkDrop();
@@ -2745,21 +2809,29 @@ void Robot::runStateMachine()
 
       if (m_mowPatternCurr == MOW_BIDIR)
       {
-        float ratio = m_wheels.m_biDirSpeedRatio1;
+        float ratio;
+
         if (m_stateMachine.getStateTime() > 4000)
         {
           ratio = m_wheels.m_biDirSpeedRatio2;
         }
+        else
+        {
+          ratio = m_wheels.m_biDirSpeedRatio1;
+        }
+
+        auto motorLeft_p = &m_wheels.m_wheel[Wheel::LEFT].m_motor;
+        auto motorRight_p = &m_wheels.m_wheel[Wheel::RIGHT].m_motor;
+
         if (m_rollDir == RIGHT)
         {
-          m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmSet =
-              ((float)m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet) * ratio;
+          motorRight_p->m_rpmSet = (float)motorLeft_p->m_rpmSet * ratio;
         }
         else
         {
-          m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet =
-              ((float)m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmSet) * ratio;
+          motorLeft_p->m_rpmSet = (float)motorRight_p->m_rpmSet * ratio;
         }
+
         if (m_stateMachine.getStateTime() > m_wheels.m_forwardTimeMax)
         {
           // timeout
@@ -2939,10 +3011,12 @@ void Robot::tasks_continuous()
 {
   ADCMan.run();
   readSerial();
+
   if (m_rc.readSerial())
   {
     resetIdleTime();
   }
+
   checkOdometerFaults();
 
   if (m_imu.isUsed())
@@ -2961,7 +3035,8 @@ void Robot::tasks_continuous()
 void Robot::tasks_50ms()
 {
   checkButton();
-  readCutterMotorCurrent();
+  readMotorCurrents();
+
   if (m_perimeters.isUsed())
   {
     readPerimeters();
@@ -2974,10 +3049,12 @@ void Robot::tasks_100ms()
   {
     m_bumpers.check();
   }
+
   if (m_lawnSensors.isUsed())
   {
     m_lawnSensors.read();
   }
+
   if (m_dropSensors.isUsed())
   {
     m_dropSensors.check();
@@ -3016,10 +3093,12 @@ void Robot::tasks_100ms()
 void Robot::tasks_200ms()
 {
   m_rc.run();
+
   if (m_sonars.isUsed())
   {
     checkSonar();
   }
+
   if (m_imu.isUsed())
   {
     readImu();
@@ -3042,6 +3121,7 @@ void Robot::tasks_300ms()
   {
     m_odometer.calc();
   }
+
   if (m_stateMachine.isCurrentState(StateMachine::STATE_ERROR))
   {
     m_buzzer.beepShort(1);
@@ -3056,6 +3136,7 @@ void Robot::tasks_500ms()
 void Robot::tasks_1s()
 {
   checkBattery();
+
   if (m_gpsUse)
   {
     m_gps.feed();
