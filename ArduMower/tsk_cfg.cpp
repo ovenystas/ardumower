@@ -5,7 +5,7 @@
  */
 
 #include "tsk_cfg.h"
-#include "Mower.h"      // Where the tasks to run are declared
+#include "Robot.h"      // Where the tasks to run are declared
 #include "scheduler.h"  // For task interval definitions
 
 void run_task_continuous(void)

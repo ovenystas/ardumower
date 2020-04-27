@@ -33,6 +33,7 @@
 
 #include "AdcManager.h"
 #include "Battery.h"
+#include "BluetoothConfig.h"
 #include "Bumper.h"
 #include "Button.h"
 #include "Buzzer.h"
@@ -45,11 +46,14 @@
 #include "Led.h"
 #include "Odometer.h"
 #include "Perimeter.h"
+#include "Pid.h"
 #include "RainSensor.h"
 #include "RemoteControl.h"
 #include "Sonar.h"
 #include "Wheel.h"
 #include "StateMachine.h"
+
+extern Robot robot;
 
 /*
  Generic robot class - subclass to implement concrete hardware!
@@ -185,12 +189,215 @@ struct RobotSettings
 class Robot
 {
 public:
-  // sensors
-  typedef enum sensorE
-  {
-    SEN_RTC,
-  } sensorE;
+  Robot();
 
+  // robot setup
+  void setup();
+
+  // Tasks
+  void tasks_continuous();
+  void tasks_50ms();
+  void tasks_100ms();
+  void tasks_200ms();
+  void tasks_250ms();
+  void tasks_300ms();
+  void tasks_500ms();
+  void tasks_1s();
+  void tasks_2s();
+  void tasks_5s();
+  void tasks_1m();
+
+  // state machine
+  void setNextState(StateMachine::stateE stateNew, int dir = LEFT);
+
+  // settings
+  void deleteUserSettings();
+  void saveUserSettings();
+
+  // other
+  void setUserSwitches();
+  void resetErrorCounters();
+
+  // RTC
+  void setRtc();
+
+  float getGpsX() const
+  {
+    return m_gpsX;
+  }
+
+  float getGpsY() const
+  {
+    return m_gpsY;
+  }
+
+  int getPerimeterCounter() const
+  {
+    return m_perimeterCounter;
+  }
+
+  int getPerimeterMag() const
+  {
+    return m_perimeterMag;
+  }
+
+  float getStatsMowTimeHoursTotal() const
+  {
+    return m_statsMowTimeHoursTotal;
+  }
+
+  void setSpeed(int8_t speed)
+  {
+    m_speed = speed;
+  }
+
+  void setSteer(int8_t steer)
+  {
+    m_steer = steer;
+  }
+
+  bool isDeveloper() const
+  {
+    return m_developer;
+  }
+
+  RobotSettings* getSettings()
+  {
+    return &m_settings;
+  }
+
+private:
+  // Error counters
+  void loadErrorCounters();
+  void saveErrorCounters();
+  void checkErrorCounter();
+  void incErrorCounter(const enum errorE errType);
+
+  // User settings
+  void loadSaveUserSettings(bool readflag);
+
+  void loadSaveUserSettingsPid(bool readflag, int& addr,
+      Pid& pid);
+  void loadSaveUserSettingsBumpers(bool readflag, int& addr,
+      Bumpers& bumpers);
+  void loadSaveUserSettingsImu(bool readflag, int& addr,
+      Imu& imu);
+  void loadSaveUserSettingsOdometer(bool readflag, int& addr,
+      Odometer& odometer);
+  void loadSaveUserSettingsLawnSensors(bool readflag, int& addr,
+      LawnSensors& lawnSensors);
+  void loadSaveUserSettingsRainSensor(bool readflag, int& addr,
+      RainSensor& rainSensor);
+  void loadSaveUserSettingsSonar(bool readflag, int& addr,
+      Sonar& sonar);
+  void loadSaveUserSettingsSonars(bool readflag, int& addr,
+      Sonars& sonars);
+  void loadSaveUserSettingsPerimeter(bool readflag, int& addr,
+      Perimeter& perimeter);
+  void loadSaveUserSettingsPerimeters(bool readflag, int& addr,
+      Perimeters& perimeters);
+  void loadSaveUserSettingsBattery(bool readflag, int& addr,
+      Battery& battery);
+  void loadSaveUserSettingsDropSensors(bool readflag, int& addr,
+      DropSensors& dropSensor);
+  void loadSaveUserSettingsButton(bool readflag, int& addr,
+      Button& button);
+  void loadSaveUserSettingsWheels(bool readflag, int& addr,
+      Wheels& wheels);
+  void loadSaveUserSettingsCutter(bool readflag, int& addr,
+      Cutter& cutter);
+  void loadSaveUserSettingsRobot(bool readflag, int& addr);
+
+  void loadUserSettings();
+
+  // Print settings
+  void printSettingSerial();
+
+  template <class T>
+  void printSettingNameColonValue(const Setting<T>& K);
+
+  void printSettingSerialPidK(const __FlashStringHelper* prefixStr,
+      Setting<float> K);
+  void printSettingSerialPid(const __FlashStringHelper* prefixStr,
+      PidSettings* pidSettings_p);
+
+  // read serial
+  void readSerial();
+
+  // Read sensors
+  void readPerimeters();
+  void readImu();
+  void readMotorCurrents();
+  void measureCutterMotorRpm();
+
+  // Check sensors
+  void checkButton();
+  void checkBattery();
+  void checkTimer();
+  void checkMotorPower();
+  void checkCutterMotorPower();
+  void checkWheelMotorPower(Wheel::wheelE side);
+  void checkBumpers();
+  void checkDrop();
+  void checkBumpersPerimeter();
+  void checkPerimeterBoundary();
+  void checkPerimeterFind();
+  void checkLawn();
+  void checkSonar();
+  void checkTilt();
+  void checkRain();
+  void checkTimeout();
+  void checkOdometerFaults();
+  void checkIfStuck();
+  void checkRobotStats_mowTime();
+  void checkRobotStats_battery();
+
+  // Motor
+  void wheelControl_normal();
+  void wheelControl_imuRoll();
+  void wheelControl_perimeter();
+  void wheelControl_imuDir();
+  void cutterControl();
+  void setMotorPWMs(const int pwmLeft, const int pwmRight,
+      const bool useAccel = false);
+  void setMotorPWM(int pwm, const uint8_t motor, const bool useAccel);
+
+  // Date & time
+  void setDefaultTime();
+  void readRtc();
+
+  // GPS
+  void processGPSData();
+  void receiveGPSTime();
+
+  // Set reverse
+  void reverseOrChangeDirection(const byte aRollDir);
+
+  // Other
+  void printOdometer();
+  void printMenu();
+  void printInfo(Stream& s);
+  void printInfo_perimeter(Stream& s);
+  void printInfo_odometer(Stream& s);
+  void printInfo_sensorValues(Stream& s);
+  void printInfo_sensorCounters(Stream& s);
+  void delayInfo(const int ms);
+  void testOdometer();
+  void testMotors();
+  void setDefaults();
+  void menu();
+  void configureBluetooth(bool quick);
+  void resetIdleTime();
+
+  // Robot statistics
+  void loadRobotStats();
+  void saveRobotStats();
+  void deleteRobotStats();
+
+  // State machine
+  void runStateMachine();
+
+public:
   String m_name { "Ardumower" };
 
   // --------- state machine --------------------------
@@ -279,223 +486,6 @@ public:
   // ------------robot stats---------------------------
   Stats m_stats {};
 
-  // --------------------------------------------------
-  Robot() {};
-  virtual ~Robot() {};
-
-  // robot setup
-  virtual void setup();
-
-  virtual void tasks_continuous();
-  virtual void tasks_50ms();
-  virtual void tasks_100ms();
-  virtual void tasks_200ms();
-  virtual void tasks_250ms();
-  virtual void tasks_300ms();
-  virtual void tasks_500ms();
-  virtual void tasks_1s();
-  virtual void tasks_2s();
-  virtual void tasks_5s();
-  virtual void tasks_1m();
-
-  virtual void resetIdleTime();
-
-  // state machine
-  virtual void setNextState(StateMachine::stateE stateNew, int dir = LEFT);
-
-  // motor
-  virtual void setMotorPWMs(const int pwmLeft, const int pwmRight,
-      const bool useAccel = false);
-
-  // GPS
-  virtual void processGPSData();
-
-  // read hardware sensor (HAL)
-  virtual int readSensor(Robot::sensorE type)
-  {
-    (void)type;
-    return 0;
-  }
-
-  // settings
-  virtual void deleteUserSettings();
-  virtual void saveUserSettings();
-  virtual void deleteRobotStats();
-
-  // other
-  virtual void printInfo(Stream& s);
-  virtual void printInfo_perimeter(Stream& s);
-  virtual void printInfo_odometer(Stream& s);
-  virtual void printInfo_sensorValues(Stream& s);
-  virtual void printInfo_sensorCounters(Stream& s);
-  virtual void setUserSwitches();
-  virtual void incErrorCounter(const enum errorE errType);
-  virtual void resetErrorCounters();
-
-  // RTC
-  virtual void setRtc();
-  virtual void readRtc();
-
-  float getGpsX() const
-  {
-    return m_gpsX;
-  }
-
-  float getGpsY() const
-  {
-    return m_gpsY;
-  }
-
-  int getPerimeterCounter() const
-  {
-    return m_perimeterCounter;
-  }
-
-  int getPerimeterMag() const
-  {
-    return m_perimeterMag;
-  }
-
-  float getStatsMowTimeHoursTotal() const
-  {
-    return m_statsMowTimeHoursTotal;
-  }
-
-  int8_t getSpeed() const
-  {
-    return m_speed;
-  }
-
-  void setSpeed(int8_t speed)
-  {
-    m_speed = speed;
-  }
-
-  int8_t getSteer() const
-  {
-    return m_steer;
-  }
-
-  void setSteer(int8_t steer)
-  {
-    m_steer = steer;
-  }
-
-  bool isDeveloper() const
-  {
-    return m_developer;
-  }
-
-  RobotSettings* getSettings()
-  {
-    return &m_settings;
-  }
-
-  void setSettings(RobotSettings* settings_p)
-  {
-    m_settings.developer.value = settings_p->developer.value;
- }
-
-protected:
-  virtual void loadErrorCounters();
-  virtual void saveErrorCounters();
-
-  virtual void loadSaveUserSettings(bool readflag);
-
-  virtual void loadSaveUserSettingsPid(bool readflag, int& addr,
-      Pid& pid);
-  virtual void loadSaveUserSettingsBumpers(bool readflag, int& addr,
-      Bumpers& bumpers);
-  virtual void loadSaveUserSettingsImu(bool readflag, int& addr,
-      Imu& imu);
-  virtual void loadSaveUserSettingsOdometer(bool readflag, int& addr,
-      Odometer& odometer);
-  virtual void loadSaveUserSettingsLawnSensors(bool readflag, int& addr,
-      LawnSensors& lawnSensors);
-  virtual void loadSaveUserSettingsRainSensor(bool readflag, int& addr,
-      RainSensor& rainSensor);
-  virtual void loadSaveUserSettingsSonar(bool readflag, int& addr,
-      Sonar& sonar);
-  virtual void loadSaveUserSettingsSonars(bool readflag, int& addr,
-      Sonars& sonars);
-  virtual void loadSaveUserSettingsPerimeter(bool readflag, int& addr,
-      Perimeter& perimeter);
-  virtual void loadSaveUserSettingsPerimeters(bool readflag, int& addr,
-      Perimeters& perimeters);
-  virtual void loadSaveUserSettingsBattery(bool readflag, int& addr,
-      Battery& battery);
-  virtual void loadSaveUserSettingsDropSensors(bool readflag, int& addr,
-      DropSensors& dropSensor);
-  virtual void loadSaveUserSettingsButton(bool readflag, int& addr,
-      Button& button);
-  virtual void loadSaveUserSettingsWheels(bool readflag, int& addr,
-      Wheels& wheels);
-  virtual void loadSaveUserSettingsCutter(bool readflag, int& addr,
-      Cutter& cutter);
-  virtual void loadSaveUserSettingsRobot(bool readflag, int& addr);
-
-  virtual void loadUserSettings();
-  virtual void checkErrorCounter();
-  virtual void printSettingSerial();
-
-  // read sensors
-  virtual void readPerimeters();
-  virtual void readImu();
-  virtual void readMotorCurrents();
-  virtual void measureCutterMotorRpm();
-
-  // read serial
-  virtual void readSerial();
-
-  // check sensor
-  virtual void checkButton();
-  virtual void checkBattery();
-  virtual void checkTimer();
-  virtual void checkMotorPower();
-  virtual void checkCutterMotorPower();
-  virtual void checkWheelMotorPower(Wheel::wheelE side);
-  virtual void checkBumpers();
-  virtual void checkDrop();
-  virtual void checkBumpersPerimeter();
-  virtual void checkPerimeterBoundary();
-  virtual void checkPerimeterFind();
-  virtual void checkLawn();
-  virtual void checkSonar();
-  virtual void checkTilt();
-  virtual void checkRain();
-  virtual void checkTimeout();
-  virtual void checkOdometerFaults();
-  virtual void checkIfStuck();
-  virtual void checkRobotStats_mowTime();
-  virtual void checkRobotStats_battery();
-
-  // motor controllers
-  virtual void wheelControl_normal();
-  virtual void wheelControl_imuRoll();
-  virtual void wheelControl_perimeter();
-  virtual void wheelControl_imuDir();
-  virtual void cutterControl();
-
-  // date & time
-  virtual void setDefaultTime();
-
-  // set reverse
-  virtual void reverseOrChangeDirection(const byte aRollDir);
-
-  // other
-  virtual void printOdometer();
-  virtual void printMenu();
-  virtual void delayInfo(const int ms);
-  virtual void testOdometer();
-  virtual void testMotors();
-  virtual void setDefaults();
-  virtual void receiveGPSTime();
-  virtual void menu();
-  virtual void configureBluetooth(bool quick)
-  {
-    (void)quick;
-  }
-
 private:
   // --------- state machine ----------------------------
   int m_idleTimeSec {};
@@ -541,19 +531,6 @@ private:
   unsigned int m_statsMowTimeMinutesTripCounter {};
   float m_statsMowTimeHoursTotal {};
   unsigned int m_statsBatteryChargingCounter {};
-
-  void setMotorPWM(int pwm, const uint8_t motor, const bool useAccel);
-  void loadRobotStats();
-  void saveRobotStats();
-  void runStateMachine();
-
-  template <class T>
-  void printSettingNameColonValue(const Setting<T>& K);
-
-  void printSettingSerialPidK(const __FlashStringHelper* prefixStr,
-      Setting<float> K);
-  void printSettingSerialPid(const __FlashStringHelper* prefixStr,
-      PidSettings* pidSettings_p);
 
   RobotSettings m_settings
   {

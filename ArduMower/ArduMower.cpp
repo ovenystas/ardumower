@@ -45,7 +45,7 @@
 
 #include <Wire.h>
 #include <EEPROM.h>
-#include "Mower.h"
+#include "Robot.h"
 #include "tsk_cfg.h"
 
 
@@ -56,6 +56,23 @@ static unsigned long tick = 0;      // System tick
 static TaskType *Task_ptr;          // Task pointer
 static byte NumTasks = 0;           // Number of tasks
 //------------------------------------------------------------------------------
+
+Robot robot;
+
+// odometer signal change interrupt
+// mower motor speed sensor interrupt
+// NOTE: when choosing a higher perimeter sample rate (38 kHz) and using odometer interrupts,
+// the Arduino Mega cannot handle all ADC interrupts anymore - the result will be a 'noisy'
+// perimeter filter output (mag value) which disappears when disabling odometer interrupts.
+// SOLUTION: allow odometer interrupt handler nesting (see odometer interrupt function)
+// http://www.nongnu.org/avr-libc/user-manual/group__avr__interrupts.html
+ISR(PCINT2_vect, ISR_NOBLOCK)
+{
+  robot.m_odometer.read();
+
+  // TODO: Move this elsewhere
+  robot.m_cutter.m_motor.setRpmState();
+}
 
 void setup()
 {
