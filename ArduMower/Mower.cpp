@@ -85,7 +85,7 @@ void Mower::setup()
   // ------- wheel motors -----------------------------
   m_wheels.m_rollTimeMax = 1500;      // max. roll time (ms)
   m_wheels.m_rollTimeMin = 750;       // min. roll time (ms) should be smaller than motorRollTimeMax
-  m_wheels.m_reverseTime = 1200;      // max. reverse time (ms)
+  m_wheels.m_reverseTime = WHEELS_MAX_REVERSE_TIME_MS;      // max. reverse time (ms)
   m_wheels.m_forwardTimeMax = 80000;  // max. forward time (ms) / timeout
   m_wheels.m_biDirSpeedRatio1 = 0.3;  // bidir mow pattern speed ratio 1
   m_wheels.m_biDirSpeedRatio2 = 0.92; // bidir mow pattern speed ratio 2
@@ -253,37 +253,6 @@ int Mower::readSensor(Robot::sensorE type)
       break;
   }
   return 0;
-}
-
-void Mower::setActuator(Robot::actuatorE type, int value)
-{
-  switch (type)
-  {
-    case ACT_USER_SW1:
-      digitalWrite(PIN_USER_SWITCH_1, value);
-      break;
-
-    case ACT_USER_SW2:
-      digitalWrite(PIN_USER_SWITCH_2, value);
-      break;
-
-    case ACT_USER_SW3:
-      digitalWrite(PIN_USER_SWITCH_3, value);
-      break;
-
-    case ACT_RTC:
-      if (!setDS1307(m_datetime))
-      {
-        Console.println("RTC comm error!");
-        incErrorCounter(ERR_RTC_COMM);
-        setNextState(StateMachine::STATE_ERROR);
-      }
-      break;
-
-    case ACT_BATTERY_SW:
-      digitalWrite(PIN_BATTERY_SWITCH, value);
-      break;
-  }
 }
 
 void Mower::configureBluetooth(bool quick)

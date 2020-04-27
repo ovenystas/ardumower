@@ -29,6 +29,8 @@
 #include <EEPROM.h>
 
 #include "Config.h"
+#include "Setting.h"
+
 #include "AdcManager.h"
 #include "Battery.h"
 #include "Bumper.h"
@@ -136,6 +138,50 @@ struct Stats
 #define LAWNSENSORS_NUM 2
 #define SONARS_NUM 3
 
+struct SettingTimerTime
+{
+  Setting<uint8_t> hour;
+  Setting<uint8_t> minute;
+};
+
+struct SettingTimer
+{
+  Setting<bool> active;
+  SettingTimerTime startTime;
+  SettingTimerTime stopTime;
+  Setting<uint8_t> daysOfWeek;
+};
+
+struct RobotSettings
+{
+  Setting<bool> developer;              // Developer mode enables a few advanced settings
+
+  Setting<int> perimeterTriggerTimeout; // Perimeter trigger timeout when escaping from inside (ms)
+  Setting<int> perimeterOutRollTimeMax; // Roll time max after perimeter out (ms)
+  Setting<int> perimeterOutRollTimeMin; // Roll time min after perimeter out (ms)
+  Setting<int> perimeterOutRevTime;     // Reverse time after perimeter out (ms)
+  Setting<int> perimeterTrackRollTime;  // Perimeter tracking roll time (ms)
+  Setting<int> perimeterTrackRevTime;   // Perimeter tracking reverse time (ms)
+
+  Setting<bool> trackingBlockInnerWheelWhilePerimeterStruggling;
+
+  Setting<int> stationRevTime;          // Charge station reverse time (ms)
+  Setting<int> stationRollTime;         // Charge station roll time (ms)
+  Setting<int> stationForwTime;         // Charge station forward time (ms)
+  Setting<int> stationCheckTime;        // Charge station reverse check time (ms)
+
+  Setting<bool> userSwitch1;            // User-defined switch 1 (default value)
+  Setting<bool> userSwitch2;            // User-defined switch 2 (default value)
+  Setting<bool> userSwitch3;            // User-defined switch 3 (default value)
+
+  Setting<bool> timerUse;               // Use RTC and timer?
+  SettingTimer timer[MAX_TIMERS];
+
+  Setting<bool> gpsUse;                 // Use GPS?
+  Setting<float> stuckIfGpsSpeedBelow;  // If GPS speed is below given value the mower is considered stuck
+  Setting<int> gpsSpeedIgnoreTime;      // How long gpsSpeed is ignored when robot switches into a new STATE (in ms)
+};
+
 class Robot
 {
 public:
@@ -145,26 +191,13 @@ public:
     SEN_RTC,
   } sensorE;
 
-  // actuators
-  typedef enum actuatorE
-  {
-    ACT_USER_SW1,
-    ACT_USER_SW2,
-    ACT_USER_SW3,
-    ACT_RTC,
-    ACT_BATTERY_SW,
-  } actuatorE;
-
   String m_name { "Ardumower" };
-  bool m_developerActive { false };
 
   // --------- state machine --------------------------
   StateMachine m_stateMachine;
 
   // --------- timer ----------------------------------
-  ttimer_t m_timer[MAX_TIMERS];
   datetime_t m_datetime;
-  bool m_timerUse { false }; // Use RTC and timer?
 
   // -------- mow pattern -----------------------------
   byte m_mowPatternCurr { MOW_RANDOM };
@@ -172,9 +205,6 @@ public:
 
   // -------- gps state -------------------------------
   Gps m_gps;
-  bool m_gpsUse { false };       // use GPS?
-  float m_stuckIfGpsSpeedBelow { 0.2 }; // if Gps speed is below given value the mower is stuck
-  int m_gpsSpeedIgnoreTime { 5000 }; // how long gpsSpeed is ignored when robot switches into a new STATE (in ms)
 
   // -------- odometer state --------------------------
   Odometer m_odometer;
@@ -210,15 +240,8 @@ public:
   // ------- perimeter state --------------------------
   Perimeters m_perimeters;
   bool m_perimeterUse { false }; // use perimeter?
-  int m_perimeterOutRollTimeMax { 2000 }; // roll time max after perimeter out (ms)
-  int m_perimeterOutRollTimeMin { 750 }; // roll time min after perimeter out (ms)
-  int m_perimeterOutRevTime { 2200 }; // reverse time after perimeter out (ms)
-  int m_perimeterTrackRollTime { 1500 }; // perimeter tracking roll time (ms)
-  int m_perimeterTrackRevTime { 2200 }; // perimeter tracking reverse time (ms)
-  int m_perimeterTriggerTimeout {};   // perimeter trigger timeout when escaping from inside (ms)
   int m_trackingErrorTimeOut { 10000 };
   int m_trackingPerimeterTransitionTimeOut { 2000 };
-  bool m_trackingBlockInnerWheelWhilePerimeterStruggling { true };
 
   //  --------- lawn state ----------------------------
   LawnSensor m_lawnSensorArray[LAWNSENSORS_NUM];
@@ -239,9 +262,6 @@ public:
   Button m_button { PIN_BUTTON };
 
   // ----- user-defined switch ---------------------------
-  bool m_userSwitch1 { false }; // user-defined switch 1 (default value)
-  bool m_userSwitch2 { false }; // user-defined switch 2 (default value)
-  bool m_userSwitch3 { false }; // user-defined switch 3 (default value)
 
   // --------- charging -------------------------------
   Battery m_battery
@@ -252,11 +272,6 @@ public:
     PIN_CHARGE_RELAY,
     PIN_BATTERY_SWITCH
   };
-
-  int m_stationRevTime { 1800 };    // charge station reverse time (ms)
-  int m_stationRollTime { 1000 };    // charge station roll time (ms)
-  int m_stationForwTime { 1500 };    // charge station forward time (ms)
-  int m_stationCheckTime { 1700 };    // charge station reverse check time (ms)
 
   // --------- error counters --------------------------
   byte m_errorCounterMax[ERR_ENUM_COUNT] {};
@@ -302,13 +317,6 @@ public:
     return 0;
   }
 
-  // set hardware actuator (HAL)
-  virtual void setActuator(Robot::actuatorE type, int value)
-  {
-    (void)type;
-    (void)value;
-  }
-
   // settings
   virtual void deleteUserSettings();
   virtual void saveUserSettings();
@@ -323,6 +331,10 @@ public:
   virtual void setUserSwitches();
   virtual void incErrorCounter(const enum errorE errType);
   virtual void resetErrorCounters();
+
+  // RTC
+  virtual void setRtc();
+  virtual void readRtc();
 
   float getGpsX() const
   {
@@ -369,6 +381,21 @@ public:
     m_steer = steer;
   }
 
+  bool isDeveloper() const
+  {
+    return m_developer;
+  }
+
+  RobotSettings* getSettings()
+  {
+    return &m_settings;
+  }
+
+  void setSettings(RobotSettings* settings_p)
+  {
+    m_settings.developer.value = settings_p->developer.value;
+ }
+
 protected:
   virtual void loadErrorCounters();
   virtual void saveErrorCounters();
@@ -413,7 +440,6 @@ protected:
 
   // read sensors
   virtual void readPerimeters();
-  virtual void readRtc();
   virtual void readImu();
   virtual void readMotorCurrents();
   virtual void measureCutterMotorRpm();
@@ -528,4 +554,124 @@ private:
       Setting<float> K);
   void printSettingSerialPid(const __FlashStringHelper* prefixStr,
       PidSettings* pidSettings_p);
+
+  RobotSettings m_settings
+  {
+    { "Developer", "", false, false, true },
+
+    { "Trigger timeout", "ms", 0, 0, 2000, 1.0f },
+    { "Perimeter out roll time max", "ms", 2000, 0, 8000, 1.0f },
+    { "Perimeter out roll time min", "ms", 750, 0, 8000, 1.0f },
+    { "Perimeter out reverse time", "ms", 2200, 0, 8000, 1.0f },
+    { "Perimeter tracking roll time", "ms", 1500, 0, 8000, 1.0f },
+    { "Perimeter tracking reverse time", "ms", 2200, 0, 8000, 1.0f },
+
+    { "Block inner wheel", "", true, false, true },
+
+    { "Reverse time", "ms", 1800, 0, 8000, 1.0f },
+    { "Roll time", "ms", 1000, 0, 8000, 1.0f },
+    { "Forward time", "ms", 1500, 0, 8000, 1.0f },
+    { "Station reverse check time", "ms", 1700, 0, 8000, 1.0f },
+
+    { "User switch 1 is", "", false, false, true  },
+    { "User switch 2 is", "", false, false, true  },
+    { "User switch 3 is", "", false, false, true  },
+
+    { "Use", "", false, false, true  }, // timerUse
+    {
+      {
+        { "Use", "", false, false, true  }, // timer[i].active
+        {
+            { "Start hour", "", 9, 0, 23, 1.0f },  // timer[i].startTime.hour
+            { "Start minute", "", 0, 0, 59, 1.0f }, // timer[i].startTime.minute
+        },
+        {
+            { "Stop hour", "", 11, 0, 23, 1.0f },  // timer[i].stopTime.hour
+            { "Stop minute", "", 0, 0, 59, 1.0f }, // timer[i].stopTime.minute
+        },
+        { "DaysOfWeek", "", B01111110, 0, 0x7F, 1.0f }, // timer[i].daysOfWeek
+      },
+      {
+        { "Use", "", false, false, true  }, // timer[i].active
+        {
+            { "Start hour", "", 9, 0, 23, 1.0f },  // timer[i].startTime.hour
+            { "Start minute", "", 0, 0, 59, 1.0f }, // timer[i].startTime.minute
+        },
+        {
+            { "Stop hour", "", 11, 0, 23, 1.0f },  // timer[i].stopTime.hour
+            { "Stop minute", "", 0, 0, 59, 1.0f }, // timer[i].stopTime.minute
+        },
+        { "DaysOfWeek", "", B01111110, 0, 0x7F, 1.0f }, // timer[i].daysOfWeek
+      },
+      {
+        { "Use", "", false, false, true  }, // timer[i].active
+        {
+            { "Start hour", "", 9, 0, 23, 1.0f },  // timer[i].startTime.hour
+            { "Start minute", "", 0, 0, 59, 1.0f }, // timer[i].startTime.minute
+        },
+        {
+            { "Stop hour", "", 11, 0, 23, 1.0f },  // timer[i].stopTime.hour
+            { "Stop minute", "", 0, 0, 59, 1.0f }, // timer[i].stopTime.minute
+        },
+        { "DaysOfWeek", "", B01111110, 0, 0x7F, 1.0f }, // timer[i].daysOfWeek
+      },
+      {
+        { "Use", "", false, false, true  }, // timer[i].active
+        {
+            { "Start hour", "", 9, 0, 23, 1.0f },  // timer[i].startTime.hour
+            { "Start minute", "", 0, 0, 59, 1.0f }, // timer[i].startTime.minute
+        },
+        {
+            { "Stop hour", "", 11, 0, 23, 1.0f },  // timer[i].stopTime.hour
+            { "Stop minute", "", 0, 0, 59, 1.0f }, // timer[i].stopTime.minute
+        },
+        { "DaysOfWeek", "", B01111110, 0, 0x7F, 1.0f }, // timer[i].daysOfWeek
+      },
+      {
+        { "Use", "", false, false, true  }, // timer[i].active
+        {
+            { "Start hour", "", 9, 0, 23, 1.0f },  // timer[i].startTime.hour
+            { "Start minute", "", 0, 0, 59, 1.0f }, // timer[i].startTime.minute
+        },
+        {
+            { "Stop hour", "", 11, 0, 23, 1.0f },  // timer[i].stopTime.hour
+            { "Stop minute", "", 0, 0, 59, 1.0f }, // timer[i].stopTime.minute
+        },
+        { "DaysOfWeek", "", B01111110, 0, 0x7F, 1.0f }, // timer[i].daysOfWeek
+      },
+    },
+
+    { "Use", "", false, false, true  },
+    { "Stuck if GPS speed is below", "", 0.2f, 0.0f, 3.0f, 0.1f },
+    { "GPS speed ignore time", "ms", 5000, WHEELS_MAX_REVERSE_TIME_MS, 10000, 1.0f },
+  };
+
+  // Shorter convenient variables for settings variables
+  bool& m_developer = m_settings.developer.value;
+
+  int& m_perimeterTriggerTimeout = m_settings.perimeterTriggerTimeout.value;
+  int& m_perimeterOutRollTimeMax = m_settings.perimeterOutRollTimeMax.value;
+  int& m_perimeterOutRollTimeMin = m_settings.perimeterOutRollTimeMin.value;
+  int& m_perimeterOutRevTime = m_settings.perimeterOutRevTime.value;
+  int& m_perimeterTrackRollTime = m_settings.perimeterTrackRollTime.value;
+  int& m_perimeterTrackRevTime = m_settings.perimeterTrackRevTime.value;
+
+  bool& m_trackingBlockInnerWheelWhilePerimeterStruggling =
+      m_settings.trackingBlockInnerWheelWhilePerimeterStruggling.value;
+
+  int& m_stationRevTime = m_settings.stationRevTime.value;
+  int& m_stationRollTime = m_settings.stationRollTime.value;
+  int& m_stationForwTime = m_settings.stationForwTime.value;
+  int& m_stationCheckTime = m_settings.stationCheckTime.value;
+
+  bool& m_userSwitch1 = m_settings.userSwitch1.value;
+  bool& m_userSwitch2 = m_settings.userSwitch2.value;
+  bool& m_userSwitch3 = m_settings.userSwitch3.value;
+
+  bool& m_timerUse = m_settings.timerUse.value;
+  //ttimer_t& m_timer:
+
+  bool& m_gpsUse = m_settings.gpsUse.value;
+  float& m_stuckIfGpsSpeedBelow = m_settings.stuckIfGpsSpeedBelow.value;
+  int& m_gpsSpeedIgnoreTime = m_settings.gpsSpeedIgnoreTime.value;
 };

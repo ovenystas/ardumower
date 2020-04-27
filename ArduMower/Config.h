@@ -89,3 +89,5 @@
 #define ODOMETER_SWAP_DIR_LEFT true         // inverse left encoder direction?
 #define ODOMETER_SWAP_DIR_RIGHT false       // inverse right encoder direction?
 
+// ------- Wheels ---------------------------------
+#define WHEELS_MAX_REVERSE_TIME_MS 1200       // max. reverse time (ms)

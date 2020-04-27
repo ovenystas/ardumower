@@ -80,7 +80,8 @@ typedef struct ttimer_t
 // ---- other ----------------------------------
 
 // returns sign of variable (-1, 0, +1)
-template<typename T> int8_t sign(T val)
+template <typename T>
+int8_t sign(T val)
 {
   return (T(0) < val) - (val < T(0));
 }
@@ -88,44 +89,30 @@ template<typename T> int8_t sign(T val)
 
 // ---------- EEPROM helpers ----------------------------------
 
-template<class T> int eewrite(int &ee, const T& value)
+template <class T>
+void eewrite(int &eeIdx, const T& value)
 {
-  const byte* p = (const byte*) (const void*) &value;
-  unsigned int i;
-  for (i = 0; i < sizeof(value); i++)
+  const uint8_t* p = reinterpret_cast<const uint8_t*>(&value);
+  for (int count = sizeof(value); count; --count)
   {
-    EEPROM.write(ee++, *p++);
+    EEPROM.write(eeIdx++, *p++);
   }
-  return i;
 }
 
-template<class T> int eeread(int &ee, T& value)
+template <class T>
+void eeread(int &eeIdx, T& value)
 {
-  byte* p = (byte*) (void*) &value;
-  unsigned int i;
-  for (i = 0; i < sizeof(value); i++)
+  uint8_t* p = reinterpret_cast<uint8_t*>(&value);
+  for (int count = sizeof(value); count; --count)
   {
-    *p++ = EEPROM.read(ee++);
+    *p++ = EEPROM.read(eeIdx++);
   }
-  return i;
 }
 
-template<class T> int eereadwrite(bool readflag, int& ee, T& value)
+template <class T>
+void eereadwrite(const bool readflag, int& eeIdx, T& value)
 {
-  byte* p = (byte*) (void*) &value;
-  unsigned int i;
-  for (i = 0; i < sizeof(value); i++)
-  {
-    if (readflag)
-    {
-      *p++ = EEPROM.read(ee++);
-    }
-    else
-    {
-      EEPROM.write(ee++, *p++);
-    }
-  }
-  return i;
+  readflag ? eeread(eeIdx, value) : eewrite(eeIdx, value);
 }
 
 

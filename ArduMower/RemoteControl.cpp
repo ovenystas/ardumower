@@ -108,6 +108,16 @@ void RemoteControl::sendSettingYesNo(String cmd, Setting<bool>& setting)
   sendYesNo(setting.value);
 }
 
+void RemoteControl::sendSettingOnOff(String cmd, Setting<bool>& setting)
+{
+  Bluetooth.print("|");
+  Bluetooth.print(cmd);
+  Bluetooth.print("~");
+  Bluetooth.print(setting.name);
+  Bluetooth.print(' ');
+  sendOnOff(setting.value);
+}
+
 bool RemoteControl::approximatelyEqual(float a, float b, float epsilon)
 {
     return fabs(a - b) <= ( (fabs(a) < fabs(b) ? fabs(b) : fabs(a)) * epsilon);
@@ -657,7 +667,7 @@ void RemoteControl::sendMowMenu(bool update)
   sendSlider("o05", F("Speed max"), m_robot_p->m_cutter.m_motor.m_pwmMax,
       "", 1, 255);
 
-  if (m_robot_p->m_developerActive)
+  if (m_robot_p->isDeveloper())
   {
     Bluetooth.print(F("|o06~Modulate "));
     sendYesNo(m_robot_p->m_cutter.m_motor.m_regulate);
@@ -917,30 +927,25 @@ void RemoteControl::sendPerimeterMenu(bool update)
     Bluetooth.print(" (outside)");
   }
 
-  auto settings_p = m_robot_p->m_perimeters.
+  auto perimeterSettings_p = m_robot_p->m_perimeters.
       m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)].getSettings();
+  auto robotSettings_p = m_robot_p->getSettings();
 
-  sendSettingSlider("e08", settings_p->timedOutIfBelowSmag);
+  sendSettingSlider("e08", perimeterSettings_p->timedOutIfBelowSmag);
 
-  sendSettingSlider("e14", settings_p->timeOutSecIfNotInside);
+  sendSettingSlider("e14", perimeterSettings_p->timeOutSecIfNotInside);
 
-  sendSlider("e04", F("Trigger timeout"),
-             m_robot_p->m_perimeterTriggerTimeout, "", 1, 2000);
+  sendSettingSlider("e04", robotSettings_p->perimeterTriggerTimeout);
 
-  sendSlider("e05", F("Perimeter out roll time max"),
-             m_robot_p->m_perimeterOutRollTimeMax, "", 1, 8000);
+  sendSettingSlider("e05", robotSettings_p->perimeterOutRollTimeMax);
 
-  sendSlider("e06", F("Perimeter out roll time min"),
-             m_robot_p->m_perimeterOutRollTimeMin, "", 1, 8000);
+  sendSettingSlider("e06", robotSettings_p->perimeterOutRollTimeMin);
 
-  sendSlider("e15", F("Perimeter out reverse time"),
-             m_robot_p->m_perimeterOutRevTime, "", 1, 8000);
+  sendSettingSlider("e15", robotSettings_p->perimeterOutRevTime);
 
-  sendSlider("e16", F("Perimeter tracking roll time"),
-             m_robot_p->m_perimeterTrackRollTime, "", 1, 8000);
+  sendSettingSlider("e16", robotSettings_p->perimeterTrackRollTime);
 
-  sendSlider("e17", F("Perimeter tracking reverse time"),
-             m_robot_p->m_perimeterTrackRevTime, "", 1, 8000);
+  sendSettingSlider("e17", robotSettings_p->perimeterTrackRevTime);
 
   sendSlider("e11", F("Transition timeout"),
              m_robot_p->m_trackingPerimeterTransitionTimeOut, "", 1, 5000);
@@ -951,12 +956,12 @@ void RemoteControl::sendPerimeterMenu(bool update)
   sendPIDSlider("e07", F("Track"), m_robot_p->m_perimeters.
       m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)].m_pid);
 
-  sendSettingYesNo("e09", settings_p->useDifferentialPerimeterSignal);
+  sendSettingYesNo("e09", perimeterSettings_p->useDifferentialPerimeterSignal);
 
-  sendSettingYesNo("e10", settings_p->swapCoilPolarity);
+  sendSettingYesNo("e10", perimeterSettings_p->swapCoilPolarity);
 
-  Bluetooth.print(F("|e13~Block inner wheel  "));
-  sendYesNo(m_robot_p->m_trackingBlockInnerWheelWhilePerimeterStruggling);
+  sendSettingYesNo("e13",
+      robotSettings_p->trackingBlockInnerWheelWhilePerimeterStruggling);
 
   Bluetooth.println("}");
 }
@@ -965,6 +970,7 @@ void RemoteControl::processPerimeterMenu(String pfodCmd)
 {
   auto perimeterSettings_p = m_robot_p->m_perimeters.
       m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)].getSettings();
+  auto robotSettings_p = m_robot_p->getSettings();
 
   if (pfodCmd == "e00")
   {
@@ -972,27 +978,27 @@ void RemoteControl::processPerimeterMenu(String pfodCmd)
   }
   else if (pfodCmd.startsWith("e04"))
   {
-    processSlider(pfodCmd, m_robot_p->m_perimeterTriggerTimeout, 1.0);
+    processSettingSlider(pfodCmd, robotSettings_p->perimeterTriggerTimeout);
   }
   else if (pfodCmd.startsWith("e05"))
   {
-    processSlider(pfodCmd, m_robot_p->m_perimeterOutRollTimeMax, 1.0);
+    processSettingSlider(pfodCmd, robotSettings_p->perimeterOutRollTimeMax);
   }
   else if (pfodCmd.startsWith("e06"))
   {
-    processSlider(pfodCmd, m_robot_p->m_perimeterOutRollTimeMin, 1.0);
+    processSettingSlider(pfodCmd, robotSettings_p->perimeterOutRollTimeMin);
   }
   else if (pfodCmd.startsWith("e15"))
   {
-    processSlider(pfodCmd, m_robot_p->m_perimeterOutRevTime, 1.0);
+    processSettingSlider(pfodCmd, robotSettings_p->perimeterOutRevTime);
   }
   else if (pfodCmd.startsWith("e16"))
   {
-    processSlider(pfodCmd, m_robot_p->m_perimeterTrackRollTime, 1.0);
+    processSettingSlider(pfodCmd, robotSettings_p->perimeterTrackRollTime);
   }
   else if (pfodCmd.startsWith("e17"))
   {
-    processSlider(pfodCmd, m_robot_p->m_perimeterTrackRevTime, 1.0);
+    processSettingSlider(pfodCmd, robotSettings_p->perimeterTrackRevTime);
   }
   else if (pfodCmd.startsWith("e07"))
   {
@@ -1021,7 +1027,7 @@ void RemoteControl::processPerimeterMenu(String pfodCmd)
   }
   else if (pfodCmd.startsWith("e13"))
   {
-    TOGGLE(m_robot_p->m_trackingBlockInnerWheelWhilePerimeterStruggling);
+    TOGGLE(robotSettings_p->trackingBlockInnerWheelWhilePerimeterStruggling.value);
   }
   else if (pfodCmd.startsWith("e14"))
   {
@@ -1109,32 +1115,30 @@ void RemoteControl::sendGPSMenu(bool update)
     Bluetooth.print(F("{.GPS`1000"));
   }
 
-  Bluetooth.print(F("|q00~Use "));
-  sendYesNo(m_robot_p->m_gpsUse);
+  auto settings_p = m_robot_p->getSettings();
 
-  sendSlider("q01", F("Stuck if GPS speed is below"),
-             m_robot_p->m_stuckIfGpsSpeedBelow, "", 0.1, 3);
-
-  sendSlider("q02", F("GPS speed ignore time"),
-             m_robot_p->m_gpsSpeedIgnoreTime,
-             "", 1, 10000, m_robot_p->m_wheels.m_reverseTime);
+  sendSettingYesNo("q00", settings_p->gpsUse);
+  sendSettingSlider("q01", settings_p->stuckIfGpsSpeedBelow);
+  sendSettingSlider("q02", settings_p->gpsSpeedIgnoreTime);
 
   Bluetooth.println("}");
 }
 
 void RemoteControl::processGPSMenu(String pfodCmd)
 {
+  auto settings_p = m_robot_p->getSettings();
+
   if (pfodCmd == "q00")
   {
-    TOGGLE(m_robot_p->m_gpsUse);
+    TOGGLE(settings_p->gpsUse.value);
   }
   else if (pfodCmd.startsWith("q01"))
   {
-    processSlider(pfodCmd, m_robot_p->m_stuckIfGpsSpeedBelow, 0.1);
+    processSettingSlider(pfodCmd, settings_p->stuckIfGpsSpeedBelow);
   }
   else if (pfodCmd.startsWith("q02"))
   {
-    processSlider(pfodCmd, m_robot_p->m_gpsSpeedIgnoreTime, 1.0);
+    processSettingSlider(pfodCmd, settings_p->gpsSpeedIgnoreTime);
   }
 
   sendGPSMenu(true);
@@ -1240,7 +1244,7 @@ void RemoteControl::sendBatteryMenu(bool update)
 
   sendSettingYesNo("j01", settings_p->monitored);
 
-  if (m_robot_p->m_developerActive)
+  if (m_robot_p->isDeveloper())
   {
     sendSettingSlider("j05", settings_p->batFactor);
   }
@@ -1334,35 +1338,35 @@ void RemoteControl::sendStationMenu(bool update)
     Bluetooth.print(F("{.Station`1000"));
   }
 
-  sendSlider("k00", F("Reverse time"), m_robot_p->m_stationRevTime, "", 1, 8000);
+  auto settings_p = m_robot_p->getSettings();
 
-  sendSlider("k01", F("Roll time"), m_robot_p->m_stationRollTime, "", 1, 8000);
-
-  sendSlider("k02", F("Forw time"), m_robot_p->m_stationForwTime, "", 1, 8000);
-
-  sendSlider("k03", F("Station reverse check time"),
-             m_robot_p->m_stationCheckTime, "", 1, 8000);
+  sendSettingSlider("k00", settings_p->stationRevTime);
+  sendSettingSlider("k01", settings_p->stationRollTime);
+  sendSettingSlider("k02", settings_p->stationForwTime);
+  sendSettingSlider("k03", settings_p->stationCheckTime);
 
   Bluetooth.println("}");
 }
 
 void RemoteControl::processStationMenu(String pfodCmd)
 {
+  auto settings_p = m_robot_p->getSettings();
+
   if (pfodCmd.startsWith("k00"))
   {
-    processSlider(pfodCmd, m_robot_p->m_stationRevTime, 1.0);
+    processSettingSlider(pfodCmd, settings_p->stationRevTime);
   }
   else if (pfodCmd.startsWith("k01"))
   {
-    processSlider(pfodCmd, m_robot_p->m_stationRollTime, 1.0);
+    processSettingSlider(pfodCmd, settings_p->stationRollTime);
   }
   else if (pfodCmd.startsWith("k02"))
   {
-    processSlider(pfodCmd, m_robot_p->m_stationForwTime, 1.0);
+    processSettingSlider(pfodCmd, settings_p->stationForwTime);
   }
   else if (pfodCmd.startsWith("k03"))
   {
-    processSlider(pfodCmd, m_robot_p->m_stationCheckTime, 1.0);
+    processSettingSlider(pfodCmd, settings_p->stationCheckTime);
   }
 
   sendStationMenu(true);
@@ -1464,7 +1468,7 @@ void RemoteControl::sendDateTimeMenu(bool update)
 
   sendSlider("t03", "Month ", m_robot_p->m_datetime.date.month, "", 1, 12, 1);
 
-  sendSlider("t04", "Year ", m_robot_p->m_datetime.date.year, "", 1, 2020, 2013);
+  sendSlider("t04", "Year ", m_robot_p->m_datetime.date.year, "", 1, 2040, 2010);
 
   sendSlider("t05", "Hour ", m_robot_p->m_datetime.time.hour, "", 1, 23, 0);
 
@@ -1502,10 +1506,7 @@ void RemoteControl::processDateTimeMenu(String pfodCmd)
 
   sendDateTimeMenu(true);
 
-  Console.print(F("setting RTC datetime: "));
-  Console.println(date2str(m_robot_p->m_datetime.date));
-
-  m_robot_p->setActuator(Robot::ACT_RTC, 0);
+  m_robot_p->setRtc();
 }
 
 void RemoteControl::sendTimerDetailMenu(int timerIdx, bool update)
@@ -1519,24 +1520,15 @@ void RemoteControl::sendTimerDetailMenu(int timerIdx, bool update)
     Bluetooth.print(F("{.Details"));
   }
 
-  Bluetooth.print("|p0");
-  Bluetooth.print(timerIdx);
-  Bluetooth.print("~Use ");
-  sendYesNo(m_robot_p->m_timer[timerIdx].active);
+  auto settings_p = m_robot_p->getSettings();
 
   String sidx = String(timerIdx);
 
-  sendSlider("p1" + sidx, F("Start hour "),
-             m_robot_p->m_timer[timerIdx].startTime.hour, "", 1, 23, 0);
-
-  sendSlider("p2" + sidx, F("Start minute "),
-             m_robot_p->m_timer[timerIdx].startTime.minute, "", 1, 59, 0);
-
-  sendSlider("p3" + sidx, F("Stop hour "),
-             m_robot_p->m_timer[timerIdx].stopTime.hour, "", 1, 23, 0);
-
-  sendSlider("p4" + sidx, F("Stop minute "),
-             m_robot_p->m_timer[timerIdx].stopTime.minute, "", 1, 59, 0);
+  sendSettingYesNo("p0" + sidx, settings_p->timer[timerIdx].active);
+  sendSettingSlider("p1" + sidx, settings_p->timer[timerIdx].startTime.hour);
+  sendSettingSlider("p2" + sidx, settings_p->timer[timerIdx].startTime.minute);
+  sendSettingSlider("p3" + sidx, settings_p->timer[timerIdx].stopTime.hour);
+  sendSettingSlider("p4" + sidx, settings_p->timer[timerIdx].stopTime.minute);
 
   for (int i = 0; i < 7; i++)
   {
@@ -1545,7 +1537,7 @@ void RemoteControl::sendTimerDetailMenu(int timerIdx, bool update)
     Bluetooth.print(i);
     Bluetooth.print("~");
 
-    if ((m_robot_p->m_timer[timerIdx].daysOfWeek >> i) & 1)
+    if ((settings_p->timer[timerIdx].daysOfWeek.value >> i) & 1)
     {
       Bluetooth.print(F("(X)  "));
     }
@@ -1565,8 +1557,6 @@ void RemoteControl::sendTimerDetailMenu(int timerIdx, bool update)
 
 void RemoteControl::processTimerDetailMenu(String pfodCmd)
 {
-  timehm_t time;
-
   bool checkStop = false;
   bool checkStart = false;
 
@@ -1575,66 +1565,90 @@ void RemoteControl::processTimerDetailMenu(String pfodCmd)
 
   int timerIdx = pfodCmd[2] - '0';
 
+  auto settings_p = m_robot_p->getSettings();
+
   if (pfodCmd.startsWith("p0"))
   {
-    TOGGLE(m_robot_p->m_timer[timerIdx].active);
+    TOGGLE(settings_p->timer[timerIdx].active.value);
   }
   else if (pfodCmd.startsWith("p1"))
   {
-    processSlider(pfodCmd, m_robot_p->m_timer[timerIdx].startTime.hour, 1.0);
+    processSettingSlider(pfodCmd, settings_p->timer[timerIdx].startTime.hour);
     checkStop = true;
   }
   else if (pfodCmd.startsWith("p2"))
   {
-    processSlider(pfodCmd, m_robot_p->m_timer[timerIdx].startTime.minute, 1.0);
+    processSettingSlider(pfodCmd, settings_p->timer[timerIdx].startTime.minute);
     checkStop = true;
   }
   else if (pfodCmd.startsWith("p3"))
   {
-    processSlider(pfodCmd, m_robot_p->m_timer[timerIdx].stopTime.hour, 1.0);
+    processSettingSlider(pfodCmd, settings_p->timer[timerIdx].stopTime.hour);
     checkStart = true;
   }
   else if (pfodCmd.startsWith("p4"))
   {
-    processSlider(pfodCmd, m_robot_p->m_timer[timerIdx].stopTime.minute, 1.0);
+    processSettingSlider(pfodCmd, settings_p->timer[timerIdx].stopTime.minute);
     checkStart = true;
   }
   else if (pfodCmd.startsWith("p9"))
   {
-    m_robot_p->m_timer[timerIdx].startTime = m_robot_p->m_datetime.time;
+    settings_p->timer[timerIdx].startTime.hour.value =
+        m_robot_p->m_datetime.time.hour;
+    settings_p->timer[timerIdx].startTime.minute.value =
+        m_robot_p->m_datetime.time.minute;
+
     checkStop = true;
-    m_robot_p->m_timer[timerIdx].daysOfWeek =
+
+    settings_p->timer[timerIdx].daysOfWeek.value =
         (1 << m_robot_p->m_datetime.date.dayOfWeek);
   }
   else if (pfodCmd.startsWith("p5"))
   {
     int day = pfodCmd[3] - '0';
-    m_robot_p->m_timer[timerIdx].daysOfWeek =
-        m_robot_p->m_timer[timerIdx].daysOfWeek ^ (1 << day);
+    settings_p->timer[timerIdx].daysOfWeek.value ^= (1 << day);
   }
+
+  timehm_t time;
+
+  // TODO: Improve this
   if (checkStop)
   {
     // adjust start time
-    startmin = min(1434, time2minutes(m_robot_p->m_timer[timerIdx].startTime));
+    time.hour = settings_p->timer[timerIdx].startTime.hour.value;
+    time.minute = settings_p->timer[timerIdx].startTime.minute.value;
+    startmin = min(1434, time2minutes(time));
     minutes2time(startmin, time);
-    m_robot_p->m_timer[timerIdx].startTime = time;
+    settings_p->timer[timerIdx].startTime.hour.value = time.hour;
+    settings_p->timer[timerIdx].startTime.minute.value = time.minute;
+
     // check stop time
-    stopmin = time2minutes(m_robot_p->m_timer[timerIdx].stopTime);
+    time.hour = settings_p->timer[timerIdx].stopTime.hour.value;
+    time.minute = settings_p->timer[timerIdx].stopTime.minute.value;
+    stopmin = time2minutes(time);
     stopmin = max(stopmin, startmin + 5);
     minutes2time(stopmin, time);
-    m_robot_p->m_timer[timerIdx].stopTime = time;
+    settings_p->timer[timerIdx].stopTime.hour.value = time.hour;
+    settings_p->timer[timerIdx].stopTime.minute.value = time.minute;
   }
   else if (checkStart)
   {
     // adjust stop time
-    stopmin = max(5, time2minutes(m_robot_p->m_timer[timerIdx].stopTime));
+    time.hour = settings_p->timer[timerIdx].stopTime.hour.value;
+    time.minute = settings_p->timer[timerIdx].stopTime.minute.value;
+    stopmin = max(5, time2minutes(time));
     minutes2time(stopmin, time);
-    m_robot_p->m_timer[timerIdx].stopTime = time;
+    settings_p->timer[timerIdx].stopTime.hour.value = time.hour;
+    settings_p->timer[timerIdx].stopTime.minute.value = time.minute;
+
     // check start time
-    startmin = time2minutes(m_robot_p->m_timer[timerIdx].startTime);
+    time.hour = settings_p->timer[timerIdx].startTime.hour.value;
+    time.minute = settings_p->timer[timerIdx].startTime.minute.value;
+    startmin = time2minutes(time);
     startmin = min(startmin, stopmin - 5);
     minutes2time(startmin, time);
-    m_robot_p->m_timer[timerIdx].startTime = time;
+    settings_p->timer[timerIdx].startTime.hour.value = time.hour;
+    settings_p->timer[timerIdx].startTime.minute.value = time.minute;
   }
 
   sendTimerDetailMenu(timerIdx, true);
@@ -1651,15 +1665,26 @@ void RemoteControl::sendTimerMenu(bool update)
     Bluetooth.print(F("{.Timer"));
   }
 
-  Bluetooth.print(F("|i99~Use "));
-  sendYesNo(m_robot_p->m_timerUse);
+  auto settings_p = m_robot_p->getSettings();
+
+  sendSettingYesNo("i99", settings_p->timerUse);
 
   for (int i = 0; i < MAX_TIMERS; i++)
   {
     Bluetooth.print("|i0");
     Bluetooth.print(i);
     Bluetooth.print("~");
-    sendTimer(m_robot_p->m_timer[i]);
+
+    ttimer_t timer;
+    auto settingsTimer_p = &settings_p->timer[i];
+    timer.active = settingsTimer_p->active.value;
+    timer.startTime.hour = settingsTimer_p->startTime.hour.value;
+    timer.startTime.minute = settingsTimer_p->startTime.minute.value;
+    timer.stopTime.hour = settingsTimer_p->stopTime.hour.value;
+    timer.stopTime.minute = settingsTimer_p->stopTime.minute.value;
+    timer.daysOfWeek = settingsTimer_p->daysOfWeek.value;
+
+    sendTimer(timer);
   }
 
   Bluetooth.println("}");
@@ -1676,7 +1701,7 @@ void RemoteControl::processTimerMenu(String pfodCmd)
   {
     if (pfodCmd.startsWith("i99"))
     {
-      TOGGLE(m_robot_p->m_timerUse);
+      TOGGLE(m_robot_p->getSettings()->timerUse.value);
     }
     sendTimerMenu(true);
   }
@@ -1720,8 +1745,7 @@ void RemoteControl::sendInfoMenu(bool update)
   Bluetooth.print(F("|v00~Ardumower "));
   Bluetooth.print(VERSION);
 
-  Bluetooth.print(F("|v01~Developer "));
-  sendYesNo(m_robot_p->m_developerActive);
+  sendSettingYesNo("v01", m_robot_p->getSettings()->developer);
 
   Bluetooth.print(F("|v02~Mowing time trip (min) "));
   Bluetooth.print(m_robot_p->m_stats.mowTimeMinutesTrip);
@@ -1757,7 +1781,7 @@ void RemoteControl::processInfoMenu(String pfodCmd)
 {
   if (pfodCmd == "v01")
   {
-    TOGGLE(m_robot_p->m_developerActive);
+    TOGGLE(m_robot_p->getSettings()->developer.value);
   }
   m_robot_p->saveUserSettings();
 
@@ -1775,6 +1799,8 @@ void RemoteControl::sendCommandMenu(bool update)
     Bluetooth.print(F("{.Commands`5000"));
   }
 
+  auto settings_p = m_robot_p->getSettings();
+
   Bluetooth.print(F("|ro~OFF|ra~Auto mode|"));
   Bluetooth.print(F("rm~Mowing is "));
   sendOnOff(m_robot_p->m_cutter.isEnabled());
@@ -1788,14 +1814,9 @@ void RemoteControl::sendCommandMenu(bool update)
   Bluetooth.print(F("|rr~Auto rotate is "));
   Bluetooth.print(m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.getPwmCur());
 
-  Bluetooth.print(F("|r1~User switch 1 is "));
-  sendOnOff(m_robot_p->m_userSwitch1);
-
-  Bluetooth.print(F("|r2~User switch 2 is "));
-  sendOnOff(m_robot_p->m_userSwitch2);
-
-  Bluetooth.print(F("|r3~User switch 3 is "));
-  sendOnOff(m_robot_p->m_userSwitch3);
+  sendSettingOnOff("r1", settings_p->userSwitch1);
+  sendSettingOnOff("r2", settings_p->userSwitch2);
+  sendSettingOnOff("r3", settings_p->userSwitch3);
 
   Bluetooth.println("}");
 }
@@ -1864,19 +1885,19 @@ void RemoteControl::processCommandMenu(String pfodCmd)
   }
   else if (pfodCmd == "r1")
   {
-    TOGGLE(m_robot_p->m_userSwitch1);
+    TOGGLE(m_robot_p->getSettings()->userSwitch1.value);
     m_robot_p->setUserSwitches();
     sendCommandMenu(true);
   }
   else if (pfodCmd == "r2")
   {
-    TOGGLE(m_robot_p->m_userSwitch2);
+    TOGGLE(m_robot_p->getSettings()->userSwitch2.value);
     m_robot_p->setUserSwitches();
     sendCommandMenu(true);
   }
   else if (pfodCmd == "r3")
   {
-    TOGGLE(m_robot_p->m_userSwitch3);
+    TOGGLE(m_robot_p->getSettings()->userSwitch3.value);
     m_robot_p->setUserSwitches();
     sendCommandMenu(true);
   }

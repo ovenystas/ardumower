@@ -304,34 +304,41 @@ void Robot::loadSaveUserSettingsCutter(bool readflag, int& addr,
 
 void Robot::loadSaveUserSettingsRobot(bool readflag, int& addr)
 {
-  //auto settings_p = getSettings();
+  eereadwrite(readflag, addr, m_settings.developer.value);
 
-  eereadwrite(readflag, addr, m_developerActive);
+  eereadwrite(readflag, addr, m_settings.perimeterTriggerTimeout.value);
+  eereadwrite(readflag, addr, m_settings.perimeterOutRollTimeMax.value);
+  eereadwrite(readflag, addr, m_settings.perimeterOutRollTimeMin.value);
+  eereadwrite(readflag, addr, m_settings.perimeterOutRevTime.value);
+  eereadwrite(readflag, addr, m_settings.perimeterTrackRollTime.value);
+  eereadwrite(readflag, addr, m_settings.perimeterTrackRevTime.value);
 
-  eereadwrite(readflag, addr, m_perimeterTriggerTimeout);
-  eereadwrite(readflag, addr, m_perimeterOutRollTimeMax);
-  eereadwrite(readflag, addr, m_perimeterOutRollTimeMin);
-  eereadwrite(readflag, addr, m_perimeterOutRevTime);
-  eereadwrite(readflag, addr, m_perimeterTrackRollTime);
-  eereadwrite(readflag, addr, m_perimeterTrackRevTime);
+  eereadwrite(readflag, addr,
+      m_settings.trackingBlockInnerWheelWhilePerimeterStruggling.value);
 
-  eereadwrite(readflag, addr, m_trackingBlockInnerWheelWhilePerimeterStruggling);
+  eereadwrite(readflag, addr, m_settings.stationRevTime.value);
+  eereadwrite(readflag, addr, m_settings.stationRollTime.value);
+  eereadwrite(readflag, addr, m_settings.stationForwTime.value);
+  eereadwrite(readflag, addr, m_settings.stationCheckTime.value);
 
-  eereadwrite(readflag, addr, m_stationRevTime);
-  eereadwrite(readflag, addr, m_stationRollTime);
-  eereadwrite(readflag, addr, m_stationForwTime);
-  eereadwrite(readflag, addr, m_stationCheckTime);
+  eereadwrite(readflag, addr, m_settings.userSwitch1.value);
+  eereadwrite(readflag, addr, m_settings.userSwitch2.value);
+  eereadwrite(readflag, addr, m_settings.userSwitch3.value);
 
-  eereadwrite(readflag, addr, m_userSwitch1);
-  eereadwrite(readflag, addr, m_userSwitch2);
-  eereadwrite(readflag, addr, m_userSwitch3);
+  eereadwrite(readflag, addr, m_settings.timerUse.value);
+  for (uint8_t i = 0; i < MAX_TIMERS; i++)
+  {
+    eereadwrite(readflag, addr, m_settings.timer[i].active.value);
+    eereadwrite(readflag, addr, m_settings.timer[i].startTime.hour.value);
+    eereadwrite(readflag, addr, m_settings.timer[i].startTime.minute.value);
+    eereadwrite(readflag, addr, m_settings.timer[i].stopTime.hour.value);
+    eereadwrite(readflag, addr, m_settings.timer[i].stopTime.minute.value);
+    eereadwrite(readflag, addr, m_settings.timer[i].daysOfWeek.value);
+  }
 
-  eereadwrite(readflag, addr, m_timerUse);
-  eereadwrite(readflag, addr, m_timer);
-
-  eereadwrite(readflag, addr, m_gpsUse);
-  eereadwrite(readflag, addr, m_stuckIfGpsSpeedBelow);
-  eereadwrite(readflag, addr, m_gpsSpeedIgnoreTime);
+  eereadwrite(readflag, addr, m_settings.gpsUse.value);
+  eereadwrite(readflag, addr, m_settings.stuckIfGpsSpeedBelow.value);
+  eereadwrite(readflag, addr, m_settings.gpsSpeedIgnoreTime.value);
 }
 
 void Robot::loadSaveUserSettings(bool readflag)
@@ -548,16 +555,12 @@ void Robot::printSettingSerial()
 
     printSettingNameColonValue(m_perimeters.getSettings()->use);
 
-    Console.print(F("triggerTimeout : "));
-    Console.println(m_perimeterTriggerTimeout);
-    Console.print(F("outRollTimeMax : "));
-    Console.println(m_perimeterOutRollTimeMax);
+    printSettingNameColonValue(m_settings.perimeterTriggerTimeout);
+    printSettingNameColonValue(m_settings.perimeterOutRollTimeMax);
     Console.print(F("outRollTimeMin : "));
     Console.println(m_perimeterOutRollTimeMin);
-    Console.print(F("outRevTime : "));
-    Console.println(m_perimeterOutRevTime);
-    Console.print(F("trackRollTime : "));
-    Console.println(m_perimeterTrackRollTime);
+    printSettingNameColonValue(m_settings.perimeterOutRevTime);
+    printSettingNameColonValue(m_settings.perimeterTrackRollTime);
     Console.print(F("trackRevTime : "));
     Console.println(m_perimeterTrackRevTime);
 
@@ -659,8 +662,7 @@ void Robot::printSettingSerial()
   // ----- GPS -------------------------------------------
   {
     Console.println(F("== GPS =="));
-    Console.print(F("use : "));
-    Console.println(m_gpsUse);
+    printSettingNameColonValue(m_settings.gpsUse);
     Console.print(F("stuckIfGpsSpeedBelow : "));
     Console.println(m_stuckIfGpsSpeedBelow);
     Console.print(F("gpsSpeedIgnoreTime : "));
@@ -687,8 +689,7 @@ void Robot::printSettingSerial()
   // ----- timer -----------------------------------------
   {
     Console.println(F("== Timer =="));
-    Console.print(F("use : "));
-    Console.println(m_timerUse);
+    printSettingNameColonValue(m_settings.timerUse);
   }
 
   // -------robot stats------------------------------------
@@ -1033,24 +1034,19 @@ void Robot::resetIdleTime()
 
 void Robot::setUserSwitches()
 {
-  setActuator(ACT_USER_SW1, m_userSwitch1);
-  setActuator(ACT_USER_SW2, m_userSwitch2);
-  setActuator(ACT_USER_SW3, m_userSwitch3);
+  digitalWrite(PIN_USER_SWITCH_1, m_userSwitch1);
+  digitalWrite(PIN_USER_SWITCH_2, m_userSwitch1);
+  digitalWrite(PIN_USER_SWITCH_3, m_userSwitch1);
 }
 
 void Robot::setDefaultTime()
 {
-  m_datetime.time.hour = 12;
+  m_datetime.time.hour = 0;
   m_datetime.time.minute = 0;
-  m_datetime.date.dayOfWeek = 0;
+  m_datetime.date.dayOfWeek = 3;
   m_datetime.date.day = 1;
   m_datetime.date.month = 1;
-  m_datetime.date.year = 2016;
-
-  m_timer[0].active = false;
-  m_timer[0].daysOfWeek = B01111110;
-  m_timer[0].startTime.hour = 9;
-  m_timer[0].stopTime.hour = 11;
+  m_datetime.date.year = 2020;
 }
 
 void Robot::setup()
@@ -1780,13 +1776,6 @@ void Robot::readPerimeters()
   }
 }
 
-void Robot::readRtc()
-{
-  readSensor(SEN_RTC);
-  Console.print(F("RTC date received: "));
-  Console.println(date2str(m_datetime.date));
-}
-
 void Robot::readImu()
 {
   if (m_imu.getErrorCounter() > 0)
@@ -2104,10 +2093,38 @@ void Robot::receiveGPSTime()
     if (m_timerUse)
     {
       // set RTC using GPS data
-      Console.print(F("RTC date set: "));
-      Console.println(date2str(m_datetime.date));
-      setActuator(ACT_RTC, 0);
+      setRtc();
     }
+  }
+}
+
+void Robot::readRtc()
+{
+  if (!readDS1307(m_datetime))
+  {
+    Console.println("RTC data error!");
+    //addErrorCounter(ERR_RTC_DATA);
+    //setNextState(STATE_ERROR, 0);
+  }
+  else
+  {
+    Console.print(F("RTC datetime read: "));
+    Console.println(date2str(m_datetime.date));
+  }
+}
+
+void Robot::setRtc()
+{
+  if (!setDS1307(m_datetime))
+  {
+    Console.println("RTC comm error!");
+    incErrorCounter(ERR_RTC_COMM);
+    setNextState(StateMachine::STATE_ERROR);
+  }
+  else
+  {
+    Console.print(F("RTC datetime set: "));
+    Console.println(date2str(m_datetime.date));
   }
 }
 
@@ -2190,16 +2207,26 @@ void Robot::checkTimer()
   bool stopTimerTriggered = true;
   for (uint8_t i = 0; i < MAX_TIMERS; i++)
   {
-    if (!m_timer[i].active)
+    auto timerSettings_p = &m_settings.timer[i];
+
+    if (!timerSettings_p->active.value)
     {
       continue;
     }
 
-    if (m_timer[i].daysOfWeek & (1 << m_datetime.date.dayOfWeek))
+    if (timerSettings_p->daysOfWeek.value & (1 << m_datetime.date.dayOfWeek))
     {
       // Matched dayOfWeek
-      int startMinute = time2minutes(m_timer[i].startTime);
-      int stopMinute = time2minutes(m_timer[i].stopTime);
+      // TODO: Improve this
+      timehm_t time;
+      time.hour = timerSettings_p->startTime.hour.value;
+      time.minute = timerSettings_p->startTime.minute.value;
+      int startMinute = time2minutes(time);
+
+      time.hour = timerSettings_p->stopTime.hour.value;
+      time.minute = timerSettings_p->stopTime.minute.value;
+      int stopMinute = time2minutes(time);
+
       int currMinute = time2minutes(m_datetime.time);
 
       if (currMinute >= startMinute && currMinute < stopMinute)

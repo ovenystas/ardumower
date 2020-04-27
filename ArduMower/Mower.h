@@ -40,7 +40,6 @@ public:
   virtual void setup(void) override;
   virtual void configureBluetooth(bool quick) override;
   virtual int readSensor(Robot::sensorE type) override;
-  virtual void setActuator(Robot::actuatorE type, int value) override;
 };
 
 extern Mower robot;

@@ -73,8 +73,10 @@ private:
 
   // generic
   void sendYesNo(bool value);
-  void sendSettingYesNo(String cmd, Setting<bool>& setting);
   void sendOnOff(bool value);
+
+  void sendSettingYesNo(String cmd, Setting<bool>& setting);
+  void sendSettingOnOff(String cmd, Setting<bool>& setting);
 
   // PID slider
   void sendPIDSlider(String cmd, String title, Pid& pid);
