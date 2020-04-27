@@ -4,9 +4,10 @@
  *  tasks that will not be used in an application.
  */
 
-#include "tsk_cfg.h"
+#include "TaskConfig.h"
+
 #include "Robot.h"      // Where the tasks to run are declared
-#include "scheduler.h"  // For task interval definitions
+#include "Scheduler.h"  // For task interval definitions
 
 void run_task_continuous(void)
 {
@@ -68,27 +69,27 @@ void run_task_1m(void)
  * the function to be executed. A continuous task is defined as a task with
  * an interval of 0. Last time executed is set to 0.
  */
-static TaskType Tasks[] =
+static TaskType taskTable[] =
 {
-  { 0,              0, run_task_continuous },
-  { INTERVAL_50MS,  0, run_task_50ms },
-  { INTERVAL_100MS, 0, run_task_100ms },
-  { INTERVAL_200MS, 0, run_task_200ms },
-  { INTERVAL_250MS, 0, run_task_250ms },
-  { INTERVAL_300MS, 0, run_task_300ms },
-  { INTERVAL_500MS, 0, run_task_500ms },
-  { INTERVAL_1S,    0, run_task_1s },
-  { INTERVAL_2S,    0, run_task_2s },
-  { INTERVAL_5S,    0, run_task_5s },
-  { INTERVAL_1M,    0, run_task_1m },
+  { INTERVAL_CONTINUOUS,  0, run_task_continuous },
+  { INTERVAL_50MS,        0, run_task_50ms },
+  { INTERVAL_100MS,       0, run_task_100ms },
+  { INTERVAL_200MS,       0, run_task_200ms },
+  { INTERVAL_250MS,       0, run_task_250ms },
+  { INTERVAL_300MS,       0, run_task_300ms },
+  { INTERVAL_500MS,       0, run_task_500ms },
+  { INTERVAL_1S,          0, run_task_1s },
+  { INTERVAL_2S,          0, run_task_2s },
+  { INTERVAL_5S,          0, run_task_5s },
+  { INTERVAL_1M,          0, run_task_1m },
 };
 
-TaskType *Tsk_GetConfig(void)
+TaskType* Task_getConfig(void)
 {
-  return Tasks;
+  return taskTable;
 }
 
-byte Tsk_GetNumTasks(void)
+byte Task_getNumTasks(void)
 {
-  return sizeof(Tasks) / sizeof(*Tasks);
+  return sizeof(taskTable) / sizeof(*taskTable);
 }

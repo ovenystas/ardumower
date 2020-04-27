@@ -6,7 +6,8 @@
 #pragma once
 
 #include <Arduino.h>
-#include "scheduler.h"
 
-TaskType *Tsk_GetConfig(void);
-byte Tsk_GetNumTasks(void);
+#include "Scheduler.h"
+
+TaskType* Task_getConfig(void);
+uint8_t Task_getNumTasks(void);

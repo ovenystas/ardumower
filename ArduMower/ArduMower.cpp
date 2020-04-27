@@ -45,16 +45,17 @@
 
 #include <Wire.h>
 #include <EEPROM.h>
+
 #include "Robot.h"
-#include "tsk_cfg.h"
+#include "TaskConfig.h"
 
 
 // requires: Arduino Mega
 
 // Cooperative scheduler -------------------------------------------------------
-static unsigned long tick = 0;      // System tick
-static TaskType *Task_ptr;          // Task pointer
-static byte NumTasks = 0;           // Number of tasks
+static uint32_t tick = 0;          // System tick
+static TaskType* task_p = nullptr; // Task pointer
+static uint8_t numTasks = 0;       // Number of tasks
 //------------------------------------------------------------------------------
 
 Robot robot;
@@ -76,8 +77,8 @@ ISR(PCINT2_vect, ISR_NOBLOCK)
 
 void setup()
 {
-  Task_ptr = Tsk_GetConfig();   // Get a pointer to the task configuration
-  NumTasks = Tsk_GetNumTasks();
+  task_p = Task_getConfig();   // Get a pointer to the task configuration
+  numTasks = Task_getNumTasks();
 
   robot.setup();
 }
@@ -90,18 +91,17 @@ void loop()
   // Loop through all tasks. First, run all continuous tasks.
   // Then, if the number of ticks since the last time the task was run is
   //  greater than or equal to the task interval, execute the task.
-  for (uint8_t TaskIndex = 0; TaskIndex < NumTasks; TaskIndex++)
+  for (uint8_t idx = 0; idx < numTasks; idx++)
   {
-    if (Task_ptr[TaskIndex].interval == 0)
+    if (task_p[idx].interval == 0)
     {
       // Run continuous tasks.
-      (*Task_ptr[TaskIndex].func)();
+      (*task_p[idx].func)();
     }
-    else if ((tick - Task_ptr[TaskIndex].lastTick) >=
-             Task_ptr[TaskIndex].interval)
+    else if ((tick - task_p[idx].lastTick) >= task_p[idx].interval)
     {
-      (*Task_ptr[TaskIndex].func)();        // Execute Task
-      Task_ptr[TaskIndex].lastTick = tick;  // Save last tick the task was ran.
+      (*task_p[idx].func)();        // Execute Task
+      task_p[idx].lastTick = tick;  // Save last tick the task was ran.
     }
   }
 }
