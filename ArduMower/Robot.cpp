@@ -714,17 +714,17 @@ void Robot::printSettingSerial()
   {
     Console.println(F("== Robot status =="));
     Console.print(F("Mowing time, trip [min] : "));
-    Console.println(m_stats.mowTimeMinutesTrip);
+    Console.println(m_stats.mowTimeTrip_min);
     Console.print(F("Mowing time, total [min] : "));
-    Console.println(m_stats.mowTimeMinutesTotal);
+    Console.println(m_stats.mowTimeTotal_min);
     Console.print(F("batteryChargingCounterTotal : "));
     Console.println(m_stats.batteryChargingCounterTotal);
     Console.print(F("batteryChargingCapacityTrip [mAh] : "));
-    Console.println(m_stats.batteryChargingCapacityTrip);
+    Console.println(m_stats.batteryChargingCapacityTrip_mAh);
     Console.print(F("batteryChargingCapacityTotal [Ah] : "));
-    Console.println(m_stats.batteryChargingCapacityTotal / 1000);
+    Console.println(m_stats.batteryChargingCapacityTotal_mAh / 1000);
     Console.print(F("batteryChargingCapacityAverage [mAh] : "));
-    Console.println(m_stats.batteryChargingCapacityAverage);
+    Console.println(m_stats.batteryChargingCapacityAverage_mAh);
   }
 }
 
@@ -735,7 +735,7 @@ void Robot::deleteRobotStats()
   Console.println(F("ALL ROBOT STATS ARE DELETED"));
 }
 
-void Robot::incErrorCounter(const enum errorE errType)
+void Robot::incErrorCounter(const enum ErrorE errType)
 {
   // increase error counters (both temporary and maximum error counters)
   if (m_errorCounter[errType] < 255)
@@ -1984,7 +1984,7 @@ void Robot::setDefaults()
 // set state machine new state
 // http://wiki.ardumower.de/images/f/ff/Ardumower_states.png
 // called *ONCE* to set to a *NEW* state
-void Robot::setNextState(StateMachine::stateE stateNew, int dir)
+void Robot::setNextState(StateMachine::stateE stateNew, RollDirE rollDir)
 {
   if (m_stateMachine.isCurrentState(stateNew))
   {
@@ -2028,7 +2028,7 @@ void Robot::setNextState(StateMachine::stateE stateNew, int dir)
 
   // evaluate new state
   m_stateMachine.setNextState(stateNew);
-  m_rollDir = dir;
+  m_rollDir = rollDir;
   int zeroSettleTime = m_wheels.m_wheel[Wheel::LEFT].m_motor.m_zeroSettleTime;
 
   if (stateNew == StateMachine::STATE_STATION_REV)
@@ -2059,7 +2059,7 @@ void Robot::setNextState(StateMachine::stateE stateNew, int dir)
   else if (stateNew == StateMachine::STATE_PERI_ROLL)
   {
     m_speed = 0;
-    m_steer = (dir == LEFT) ? -25: +25;
+    m_steer = (rollDir == LEFT) ? -25: +25;
     m_stateMachine.setEndTime(curMillis + m_perimeterTrackRollTime + zeroSettleTime);
   }
   else if (stateNew == StateMachine::STATE_PERI_REV)
@@ -2083,7 +2083,7 @@ void Robot::setNextState(StateMachine::stateE stateNew, int dir)
   else if (stateNew == StateMachine::STATE_PERI_OUT_ROLL)
   {
     m_speed = 0;
-    m_steer = (dir == LEFT) ? -75: +75;
+    m_steer = (rollDir == LEFT) ? -75: +75;
     m_stateMachine.setEndTime(
         curMillis + random(m_perimeterOutRollTimeMin, m_perimeterOutRollTimeMax)
             + zeroSettleTime);
@@ -2115,7 +2115,7 @@ void Robot::setNextState(StateMachine::stateE stateNew, int dir)
       m_imuRollDir = LEFT;
     }
     m_speed = 0;
-    m_steer = (dir == LEFT) ? -75: +75;
+    m_steer = (rollDir == LEFT) ? -75: +75;
     m_stateMachine.setEndTime(
         curMillis + random(m_wheels.m_rollTimeMin, m_wheels.m_rollTimeMax)
             + zeroSettleTime);
@@ -2312,12 +2312,12 @@ void Robot::setRtc()
 
 void Robot::checkRobotStats_mowTime()
 {
-  m_statsMowTimeHoursTotal = float(m_stats.mowTimeMinutesTotal) / 60;
+  m_statsMowTimeHoursTotal = float(m_stats.mowTimeTotal_min) / 60;
   if (m_statsMowTimeTotalStart)
   {
     m_statsMowTimeMinutesTripCounter++;
-    m_stats.mowTimeMinutesTrip = m_statsMowTimeMinutesTripCounter;
-    m_stats.mowTimeMinutesTotal++;
+    m_stats.mowTimeTrip_min = m_statsMowTimeMinutesTripCounter;
+    m_stats.mowTimeTotal_min++;
   }
   else
   {
@@ -2336,9 +2336,9 @@ void Robot::checkRobotStats_battery()
     {
       m_stats.batteryChargingCounterTotal++;
     }
-    m_stats.batteryChargingCapacityTrip = m_battery.getCapacity();
+    m_stats.batteryChargingCapacityTrip_mAh = m_battery.getCapacity();
     // Sum up only the difference between actual batCapacity and last batCapacity
-    m_stats.batteryChargingCapacityTotal += (m_battery.getCapacity() - m_battery.getLastTimeCapacity());
+    m_stats.batteryChargingCapacityTotal_mAh += (m_battery.getCapacity() - m_battery.getLastTimeCapacity());
     m_battery.updateLastTimeCapacity();
   }
   else
@@ -2348,25 +2348,25 @@ void Robot::checkRobotStats_battery()
     m_battery.clearCapacity();
   }
 
-  if (isnan(m_stats.batteryChargingCapacityTrip))
+  if (isnan(m_stats.batteryChargingCapacityTrip_mAh))
   {
-    m_stats.batteryChargingCapacityTrip = 0;
+    m_stats.batteryChargingCapacityTrip_mAh = 0;
   }
 
-  if (isnan(m_stats.batteryChargingCapacityTotal))
+  if (isnan(m_stats.batteryChargingCapacityTotal_mAh))
   {
-    m_stats.batteryChargingCapacityTotal = 0;
+    m_stats.batteryChargingCapacityTotal_mAh = 0;
   }
 
-  if (m_stats.batteryChargingCapacityTotal <= 0 ||
+  if (m_stats.batteryChargingCapacityTotal_mAh <= 0 ||
       m_stats.batteryChargingCounterTotal == 0)
   {
-    m_stats.batteryChargingCapacityAverage = 0; // Avoid divide by zero
+    m_stats.batteryChargingCapacityAverage_mAh = 0; // Avoid divide by zero
   }
   else
   {
-    m_stats.batteryChargingCapacityAverage =
-        m_stats.batteryChargingCapacityTotal / m_stats.batteryChargingCounterTotal;
+    m_stats.batteryChargingCapacityAverage_mAh =
+        m_stats.batteryChargingCapacityTotal_mAh / m_stats.batteryChargingCounterTotal;
   }
 }
 
@@ -2440,7 +2440,7 @@ void Robot::checkTimer()
   }
 }
 
-void Robot::reverseOrChangeDirection(const byte aRollDir)
+void Robot::reverseOrChangeDirection(const RollDirE rollDir)
 {
   if (m_mowPatternCurr == MOW_BIDIR)
   {
@@ -2455,7 +2455,7 @@ void Robot::reverseOrChangeDirection(const byte aRollDir)
   }
   else
   {
-    setNextState(StateMachine::STATE_REVERSE, aRollDir);
+    setNextState(StateMachine::STATE_REVERSE, rollDir);
   }
 }
 
@@ -2488,7 +2488,7 @@ void Robot::checkCutterMotorPower()
   }
 }
 
-void Robot::checkWheelMotorPower(Wheel::wheelE side)
+void Robot::checkWheelMotorPower(Wheel::WheelE side)
 {
   auto motor_p = &m_wheels.m_wheel[side].m_motor;
 
@@ -2510,7 +2510,7 @@ void Robot::checkWheelMotorPower(Wheel::wheelE side)
     }
     else if (m_stateMachine.isCurrentState(StateMachine::STATE_REVERSE))
     {
-      setNextState(StateMachine::STATE_ROLL, (bool)!side);
+      setNextState(StateMachine::STATE_ROLL, static_cast<RollDirE>(!side));
     }
     else if (m_stateMachine.isCurrentState(StateMachine::STATE_ROLL))
     {
@@ -2600,7 +2600,7 @@ void Robot::checkPerimeterBoundary()
 
   if (m_wheels.isTimeToRotationChange())
   {
-    m_wheels.m_rotateDir = (Wheel::wheelE)!m_wheels.m_rotateDir; // Toggle rotation direction
+    m_wheels.m_rotateDir = (Wheel::WheelE)!m_wheels.m_rotateDir; // Toggle rotation direction
   }
 
   if (m_mowPatternCurr == MOW_BIDIR)
@@ -2611,7 +2611,7 @@ void Robot::checkPerimeterBoundary()
     }
     if (!m_perimeterInside)
     {
-      reverseOrChangeDirection(rand() % 2); // Random direction
+      reverseOrChangeDirection(RollDirE(rand() % 2)); // Random direction
     }
   }
   else
@@ -2621,13 +2621,15 @@ void Robot::checkPerimeterBoundary()
       m_perimeterTriggerTime = 0;
       if (m_stateMachine.isCurrentState(StateMachine::STATE_FORWARD))
       {
-        setNextState(StateMachine::STATE_PERI_OUT_REV, m_wheels.m_rotateDir);
+        setNextState(StateMachine::STATE_PERI_OUT_REV,
+            RollDirE(m_wheels.m_rotateDir));
       }
       else if (m_stateMachine.isCurrentState(StateMachine::STATE_ROLL))
       {
         m_speed = 0;
         m_steer = 0;
-        setNextState(StateMachine::STATE_PERI_OUT_FORW, m_wheels.m_rotateDir);
+        setNextState(StateMachine::STATE_PERI_OUT_FORW,
+            RollDirE(m_wheels.m_rotateDir));
       }
     }
   }
@@ -2664,7 +2666,7 @@ void Robot::checkLawn()
     if (m_lawnSensors.isDetected() &&
         millis() - m_stateMachine.getStateStartTime() >= 3000)
     {
-      reverseOrChangeDirection(!m_rollDir); // Toggle roll direction
+      reverseOrChangeDirection(RollDirE(!m_rollDir)); // Toggle roll direction
     }
     else
     {
@@ -2750,7 +2752,7 @@ void Robot::checkSonar()
   if (distanceUs < triggerBelow)
   {
     m_sonars.incDistanceCounter();
-    reverseOrChangeDirection(!m_rollDir); // toggle roll dir
+    reverseOrChangeDirection(RollDirE(!m_rollDir)); // toggle roll dir
   }
 
   distanceUs = m_sonars.m_sonarArray_p[static_cast<uint8_t>(SonarE::RIGHT)].
@@ -2893,7 +2895,7 @@ void Robot::checkTimeout()
 {
   if (m_stateMachine.getStateTime() > m_wheels.m_forwardTimeMax)
   {
-    setNextState(StateMachine::STATE_REVERSE, !m_rollDir); // Toggle roll direction
+    setNextState(StateMachine::STATE_REVERSE, RollDirE(!m_rollDir));
   }
 }
 
@@ -2913,7 +2915,8 @@ void Robot::runStateMachine()
 
     case StateMachine::STATE_OFF:
       // robot is turned off
-      if (m_battery.isMonitored() && curMillis - m_stateMachine.getStateStartTime() > 2000)
+      if (m_battery.isMonitored() &&
+          curMillis - m_stateMachine.getStateStartTime() > 2000)
       {
         if (m_battery.getChargeVoltage() > 5.0 && m_battery.getVoltage() > 8)
         {
@@ -3044,14 +3047,7 @@ void Robot::runStateMachine()
         if (m_stateMachine.getStateTime() > m_wheels.m_forwardTimeMax)
         {
           // timeout
-          if (m_rollDir == RIGHT)
-          {
-            setNextState(StateMachine::STATE_FORWARD, LEFT); // toggle roll dir
-          }
-          else
-          {
-            setNextState(StateMachine::STATE_FORWARD, RIGHT);
-          }
+          setNextState(StateMachine::STATE_FORWARD, RollDirE(!m_rollDir));
         }
       }
       else

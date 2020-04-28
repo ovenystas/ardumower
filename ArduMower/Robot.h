@@ -61,9 +61,16 @@ extern Robot robot;
 
 // code version
 #define VERSION F("0.1")
+#define MOW 2
+#define MAX_TIMERS 5
+#define BATTERY_SW_OFF -1
+#define BUMPERS_NUM 2
+#define DROPSENSORS_NUM 2
+#define LAWNSENSORS_NUM 2
+#define SONARS_NUM 3
 
 // error types
-typedef enum errorE
+enum ErrorE
 {
   ERR_MOTOR_LEFT,
   ERR_MOTOR_RIGHT,
@@ -87,15 +94,12 @@ typedef enum errorE
   ERR_STUCK,
   // <---- add new error types here (NOTE: increase MAGIC to avoid corrupt EEPROM error data!)
   ERR_ENUM_COUNT,
-} errorE;
+};
 
-#define MOW 2
-
-enum
+enum RollDirE
 {
   LEFT,
-  RIGHT,
-  CENTER
+  RIGHT
 };
 
 enum
@@ -113,7 +117,7 @@ enum
 };
 
 // console mode
-enum consoleE
+enum ConsoleE
 {
   CONSOLE_SENSOR_COUNTERS,
   CONSOLE_SENSOR_VALUES,
@@ -123,24 +127,15 @@ enum consoleE
   CONSOLE_END
 };
 
-#define MAX_TIMERS 5
-
-#define BATTERY_SW_OFF -1
-
 struct Stats
 {
-  unsigned long mowTimeMinutesTotal {};
-  unsigned int mowTimeMinutesTrip {};
-  unsigned int batteryChargingCounterTotal {};
-  float batteryChargingCapacityTrip {};
-  float batteryChargingCapacityTotal {};
-  float batteryChargingCapacityAverage {};
+  uint32_t mowTimeTotal_min {};
+  uint16_t mowTimeTrip_min {};
+  uint16_t batteryChargingCounterTotal {};
+  float batteryChargingCapacityTrip_mAh {};
+  float batteryChargingCapacityTotal_mAh {};
+  float batteryChargingCapacityAverage_mAh {};
 };
-
-#define BUMPERS_NUM 2
-#define DROPSENSORS_NUM 2
-#define LAWNSENSORS_NUM 2
-#define SONARS_NUM 3
 
 struct SettingTimerTime
 {
@@ -208,7 +203,7 @@ public:
   void tasks_1m();
 
   // state machine
-  void setNextState(StateMachine::stateE stateNew, int dir = LEFT);
+  void setNextState(StateMachine::stateE stateNew, RollDirE rollDir = LEFT);
 
   // settings
   void deleteUserSettings();
@@ -271,7 +266,7 @@ private:
   void loadErrorCounters();
   void saveErrorCounters();
   void checkErrorCounter();
-  void incErrorCounter(const enum errorE errType);
+  void incErrorCounter(const ErrorE errType);
 
   // User settings
   void loadSaveUserSettings(bool readflag);
@@ -336,7 +331,7 @@ private:
   void checkTimer();
   void checkMotorPower();
   void checkCutterMotorPower();
-  void checkWheelMotorPower(Wheel::wheelE side);
+  void checkWheelMotorPower(Wheel::WheelE side);
   void checkBumpers();
   void checkDrop();
   void checkBumpersPerimeter();
@@ -371,7 +366,7 @@ private:
   void receiveGPSTime();
 
   // Set reverse
-  void reverseOrChangeDirection(const byte aRollDir);
+  void reverseOrChangeDirection(const RollDirE rollDir);
 
   // Other
   void printOdometer();
@@ -522,7 +517,7 @@ private:
   int m_loopsPerSec {};  // main loops per second
   int m_loopsPerSecCounter {};
   byte m_consoleMode { CONSOLE_SENSOR_COUNTERS };
-  int m_rollDir { LEFT };
+  RollDirE m_rollDir { LEFT };
   unsigned long m_nextTimeErrorCounterReset {};
   unsigned long m_nextTimeErrorBeep {};
 

@@ -13,12 +13,12 @@
 class Wheel
 {
   public:
-    typedef enum wheelE
+    enum WheelE
     {
       LEFT,
       RIGHT,
       END
-    } wheelE;
+    };
 
     MotorShield m_motor;
     Encoder m_encoder;
@@ -36,7 +36,7 @@ class Wheels
     unsigned long m_forwardTimeMax {};     // max. forward time (ms) / timeout
     float m_biDirSpeedRatio1 {};  // bidir mow pattern speed ratio 1
     float m_biDirSpeedRatio2 {};  // bidir mow pattern speed ratio 2
-    Wheel::wheelE m_rotateDir {Wheel::LEFT};
+    Wheel::WheelE m_rotateDir { Wheel::LEFT };
 
     bool isTimeToRotationChange(void);
     void control(void);

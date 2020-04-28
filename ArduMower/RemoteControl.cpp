@@ -409,7 +409,7 @@ void RemoteControl::processErrorMenu(String pfodCmd)
   if (pfodCmd == "z00")
   {
     m_robot_p->resetErrorCounters();
-    m_robot_p->setNextState(StateMachine::STATE_OFF, 0);
+    m_robot_p->setNextState(StateMachine::STATE_OFF);
   }
 
   sendErrorMenu(true);
@@ -607,13 +607,13 @@ void RemoteControl::processMotorMenu(String pfodCmd)
     switch (m_testmode)
     {
       case 0:
-        m_robot_p->setNextState(StateMachine::STATE_OFF, 0);
+        m_robot_p->setNextState(StateMachine::STATE_OFF);
         m_robot_p->setSpeed(0);
         m_robot_p->setSteer(0);
         break;
 
       case 1:
-        m_robot_p->setNextState(StateMachine::STATE_MANUAL, 0);
+        m_robot_p->setNextState(StateMachine::STATE_MANUAL);
         m_robot_p->setSpeed(+50);
         m_robot_p->setSteer(+50);
 //        robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmSet = 0;
@@ -622,7 +622,7 @@ void RemoteControl::processMotorMenu(String pfodCmd)
         break;
 
       case 2:
-        m_robot_p->setNextState(StateMachine::STATE_MANUAL, 0);
+        m_robot_p->setNextState(StateMachine::STATE_MANUAL);
         m_robot_p->setSpeed(+50);
         m_robot_p->setSteer(-50);
 //        robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet = 0;
@@ -735,13 +735,13 @@ void RemoteControl::processMowMenu(String pfodCmd)
     switch (m_testmode)
     {
       case 0:
-        m_robot_p->setNextState(StateMachine::STATE_OFF, 0);
+        m_robot_p->setNextState(StateMachine::STATE_OFF);
         m_robot_p->m_cutter.m_motor.setRpmMeas(0);
         m_robot_p->m_cutter.disable();
         break;
 
       case 1:
-        m_robot_p->setNextState(StateMachine::STATE_MANUAL, 0);
+        m_robot_p->setNextState(StateMachine::STATE_MANUAL);
         m_robot_p->m_cutter.enable();
         break;
     }
@@ -1748,7 +1748,7 @@ void RemoteControl::sendInfoMenu(bool update)
   sendSettingYesNo("v01", m_robot_p->getSettings()->developer);
 
   Bluetooth.print(F("|v02~Mowing time trip (min) "));
-  Bluetooth.print(m_robot_p->m_stats.mowTimeMinutesTrip);
+  Bluetooth.print(m_robot_p->m_stats.mowTimeTrip_min);
 
   Bluetooth.print(F("|v03~Mowing time total (hrs) "));
   Bluetooth.print(m_robot_p->getStatsMowTimeHoursTotal());
@@ -1757,13 +1757,13 @@ void RemoteControl::sendInfoMenu(bool update)
   Bluetooth.print(m_robot_p->m_stats.batteryChargingCounterTotal);
 
   Bluetooth.print(F("|v06~Battery recharged capacity trip (mAh)"));
-  Bluetooth.print(m_robot_p->m_stats.batteryChargingCapacityTrip);
+  Bluetooth.print(m_robot_p->m_stats.batteryChargingCapacityTrip_mAh);
 
   Bluetooth.print(F("|v07~Battery recharged capacity total (Ah)"));
-  Bluetooth.print(m_robot_p->m_stats.batteryChargingCapacityTotal / 1000);
+  Bluetooth.print(m_robot_p->m_stats.batteryChargingCapacityTotal_mAh / 1000);
 
   Bluetooth.print(F("|v08~Battery recharged capacity average (mAh)"));
-  Bluetooth.print(m_robot_p->m_stats.batteryChargingCapacityAverage);
+  Bluetooth.print(m_robot_p->m_stats.batteryChargingCapacityAverage_mAh);
 
   //Bluetooth.print("|d01~Perimeter v");
   //Bluetooth.print(verToString(readPerimeterVer()));
@@ -1826,18 +1826,18 @@ void RemoteControl::processCommandMenu(String pfodCmd)
   if (pfodCmd == "ro")
   {
     // cmd: off
-    m_robot_p->setNextState(StateMachine::STATE_OFF, 0);
+    m_robot_p->setNextState(StateMachine::STATE_OFF);
     sendCommandMenu(true);
   }
   else if (pfodCmd == "rh")
   {
     // cmd: home
-    m_robot_p->setNextState(StateMachine::STATE_PERI_FIND, 0);
+    m_robot_p->setNextState(StateMachine::STATE_PERI_FIND);
     sendCommandMenu(true);
   }
   else if (pfodCmd == "rr")
   {
-    m_robot_p->setNextState(StateMachine::STATE_MANUAL, 0);
+    m_robot_p->setNextState(StateMachine::STATE_MANUAL);
     m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet += 10;
     m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmSet =
         -m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet;
@@ -1846,14 +1846,14 @@ void RemoteControl::processCommandMenu(String pfodCmd)
   else if (pfodCmd == "rk")
   {
     // cmd: track perimeter
-    m_robot_p->setNextState(StateMachine::STATE_PERI_TRACK, 0);
+    m_robot_p->setNextState(StateMachine::STATE_PERI_TRACK);
     sendCommandMenu(true);
   }
   else if (pfodCmd == "ra")
   {
     // cmd: start auto mowing
     m_robot_p->m_cutter.enable();
-    m_robot_p->setNextState(StateMachine::STATE_FORWARD, 0);
+    m_robot_p->setNextState(StateMachine::STATE_FORWARD);
     sendCommandMenu(true);
   }
   else if (pfodCmd == "rm")
@@ -1880,7 +1880,7 @@ void RemoteControl::processCommandMenu(String pfodCmd)
   {
     // cmd: pattern
     m_robot_p->m_mowPatternCurr = (m_robot_p->m_mowPatternCurr + 1) % 3;
-    m_robot_p->setNextState(StateMachine::STATE_OFF, 0);
+    m_robot_p->setNextState(StateMachine::STATE_OFF);
     sendCommandMenu(true);
   }
   else if (pfodCmd == "r1")
@@ -1961,25 +1961,25 @@ void RemoteControl::processCompassMenu(String pfodCmd)
   else if (pfodCmd == "cn")
   {
     m_robot_p->m_imuRollHeading = 0;
-    m_robot_p->setNextState(StateMachine::STATE_ROLL_WAIT, 0);
+    m_robot_p->setNextState(StateMachine::STATE_ROLL_WAIT);
     sendCompassMenu(true);
   }
   else if (pfodCmd == "cs")
   {
     m_robot_p->m_imuRollHeading = PI;
-    m_robot_p->setNextState(StateMachine::STATE_ROLL_WAIT, 0);
+    m_robot_p->setNextState(StateMachine::STATE_ROLL_WAIT);
     sendCompassMenu(true);
   }
   else if (pfodCmd == "cw")
   {
     m_robot_p->m_imuRollHeading = -PI / 2;
-    m_robot_p->setNextState(StateMachine::STATE_ROLL_WAIT, 0);
+    m_robot_p->setNextState(StateMachine::STATE_ROLL_WAIT);
     sendCompassMenu(true);
   }
   else if (pfodCmd == "ce")
   {
     m_robot_p->m_imuRollHeading = PI / 2;
-    m_robot_p->setNextState(StateMachine::STATE_ROLL_WAIT, 0);
+    m_robot_p->setNextState(StateMachine::STATE_ROLL_WAIT);
     sendCompassMenu(true);
   }
 }
@@ -1992,7 +1992,7 @@ void RemoteControl::processManualMenu(String pfodCmd)
   if (pfodCmd == "nl")
   {
     // manual: left
-    m_robot_p->setNextState(StateMachine::STATE_MANUAL, 0);
+    m_robot_p->setNextState(StateMachine::STATE_MANUAL);
     int signVal = 1;
     if (motorLeft_p->m_rpmSet < 0)
     {
@@ -2013,7 +2013,7 @@ void RemoteControl::processManualMenu(String pfodCmd)
   else if (pfodCmd == "nr")
   {
     // manual: right
-    m_robot_p->setNextState(StateMachine::STATE_MANUAL, 0);
+    m_robot_p->setNextState(StateMachine::STATE_MANUAL);
     int signVal = 1;
     if (motorRight_p->m_rpmSet < 0)
     {
@@ -2034,7 +2034,7 @@ void RemoteControl::processManualMenu(String pfodCmd)
   else if (pfodCmd == "nf")
   {
     // manual: forward
-    m_robot_p->setNextState(StateMachine::STATE_MANUAL, 0);
+    m_robot_p->setNextState(StateMachine::STATE_MANUAL);
     motorLeft_p->m_rpmSet = motorLeft_p->m_rpmMax;
     motorRight_p->m_rpmSet = motorLeft_p->m_rpmMax;
     sendManualMenu(true);
@@ -2042,7 +2042,7 @@ void RemoteControl::processManualMenu(String pfodCmd)
   else if (pfodCmd == "nb")
   {
     // manual: reverse
-    m_robot_p->setNextState(StateMachine::STATE_MANUAL, 0);
+    m_robot_p->setNextState(StateMachine::STATE_MANUAL);
     motorLeft_p->m_rpmSet = -motorLeft_p->m_rpmMax;
     motorRight_p->m_rpmSet = -motorLeft_p->m_rpmMax;
     sendManualMenu(true);
@@ -2056,7 +2056,7 @@ void RemoteControl::processManualMenu(String pfodCmd)
   else if (pfodCmd == "ns")
   {
     // manual: stop
-    //setNextState(STATE_OFF, 0);
+    //setNextState(STATE_OFF);
     motorLeft_p->m_rpmSet = motorRight_p->m_rpmSet = 0;
     sendManualMenu(true);
   }
