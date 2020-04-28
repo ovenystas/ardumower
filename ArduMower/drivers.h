@@ -90,7 +90,7 @@ int8_t sign(T val)
 // ---------- EEPROM helpers ----------------------------------
 
 template <class T>
-void eewrite(int &eeIdx, const T& value)
+void eewrite(uint16_t &eeIdx, const T& value)
 {
   const uint8_t* p = reinterpret_cast<const uint8_t*>(&value);
   for (int count = sizeof(value); count; --count)
@@ -100,7 +100,7 @@ void eewrite(int &eeIdx, const T& value)
 }
 
 template <class T>
-void eeread(int &eeIdx, T& value)
+void eeread(uint16_t &eeIdx, T& value)
 {
   uint8_t* p = reinterpret_cast<uint8_t*>(&value);
   for (int count = sizeof(value); count; --count)
@@ -110,7 +110,7 @@ void eeread(int &eeIdx, T& value)
 }
 
 template <class T>
-void eereadwrite(const bool readflag, int& eeIdx, T& value)
+void eereadwrite(const bool readflag, uint16_t& eeIdx, T& value)
 {
   readflag ? eeread(eeIdx, value) : eewrite(eeIdx, value);
 }

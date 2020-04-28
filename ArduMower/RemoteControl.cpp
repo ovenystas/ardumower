@@ -1879,7 +1879,7 @@ void RemoteControl::processCommandMenu(String pfodCmd)
   else if (pfodCmd == "rp")
   {
     // cmd: pattern
-    m_robot_p->m_mowPatternCurr = (m_robot_p->m_mowPatternCurr + 1) % 3;
+    m_robot_p->m_mowPattern = (m_robot_p->m_mowPattern + 1) % 3;
     m_robot_p->setNextState(StateMachine::STATE_OFF);
     sendCommandMenu(true);
   }

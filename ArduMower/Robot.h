@@ -109,7 +109,7 @@ enum
 };
 
 // mow patterns
-enum
+enum MowPatternE
 {
   MOW_RANDOM,
   MOW_LANES,
@@ -184,7 +184,7 @@ struct RobotSettings
 class Robot
 {
 public:
-  Robot();
+  Robot() {};
 
   // robot setup
   void setup();
@@ -203,7 +203,7 @@ public:
   void tasks_1m();
 
   // state machine
-  void setNextState(StateMachine::stateE stateNew, RollDirE rollDir = LEFT);
+  void setNextState(StateMachine::stateE stateNew, uint8_t rollDir = LEFT);
 
   // settings
   void deleteUserSettings();
@@ -212,6 +212,7 @@ public:
   // other
   void setUserSwitches();
   void resetErrorCounters();
+  const char* mowPatternName();
 
   // RTC
   void setRtc();
@@ -271,42 +272,60 @@ private:
   // User settings
   void loadSaveUserSettings(bool readflag);
 
-  void loadSaveUserSettingsPid(bool readflag, int& addr,
+  void loadSaveUserSettingsPid(bool readflag, uint16_t& addr,
       Pid& pid);
-  void loadSaveUserSettingsBumpers(bool readflag, int& addr,
+  void loadSaveUserSettingsBumpers(bool readflag, uint16_t& addr,
       Bumpers& bumpers);
-  void loadSaveUserSettingsImu(bool readflag, int& addr,
+  void loadSaveUserSettingsImu(bool readflag, uint16_t& addr,
       Imu& imu);
-  void loadSaveUserSettingsOdometer(bool readflag, int& addr,
+  void loadSaveUserSettingsOdometer(bool readflag, uint16_t& addr,
       Odometer& odometer);
-  void loadSaveUserSettingsLawnSensors(bool readflag, int& addr,
+  void loadSaveUserSettingsLawnSensors(bool readflag, uint16_t& addr,
       LawnSensors& lawnSensors);
-  void loadSaveUserSettingsRainSensor(bool readflag, int& addr,
+  void loadSaveUserSettingsRainSensor(bool readflag, uint16_t& addr,
       RainSensor& rainSensor);
-  void loadSaveUserSettingsSonar(bool readflag, int& addr,
+  void loadSaveUserSettingsSonar(bool readflag, uint16_t& addr,
       Sonar& sonar);
-  void loadSaveUserSettingsSonars(bool readflag, int& addr,
+  void loadSaveUserSettingsSonars(bool readflag, uint16_t& addr,
       Sonars& sonars);
-  void loadSaveUserSettingsPerimeter(bool readflag, int& addr,
+  void loadSaveUserSettingsPerimeter(bool readflag, uint16_t& addr,
       Perimeter& perimeter);
-  void loadSaveUserSettingsPerimeters(bool readflag, int& addr,
+  void loadSaveUserSettingsPerimeters(bool readflag, uint16_t& addr,
       Perimeters& perimeters);
-  void loadSaveUserSettingsBattery(bool readflag, int& addr,
+  void loadSaveUserSettingsBattery(bool readflag, uint16_t& addr,
       Battery& battery);
-  void loadSaveUserSettingsDropSensors(bool readflag, int& addr,
+  void loadSaveUserSettingsDropSensors(bool readflag, uint16_t& addr,
       DropSensors& dropSensor);
-  void loadSaveUserSettingsButton(bool readflag, int& addr,
+  void loadSaveUserSettingsButton(bool readflag, uint16_t& addr,
       Button& button);
-  void loadSaveUserSettingsWheels(bool readflag, int& addr,
+  void loadSaveUserSettingsWheels(bool readflag, uint16_t& addr,
       Wheels& wheels);
-  void loadSaveUserSettingsCutter(bool readflag, int& addr,
+  void loadSaveUserSettingsCutter(bool readflag, uint16_t& addr,
       Cutter& cutter);
-  void loadSaveUserSettingsRobot(bool readflag, int& addr);
+  void loadSaveUserSettingsRobot(bool readflag, uint16_t& addr);
 
   void loadUserSettings();
 
   // Print settings
   void printSettingSerial();
+
+  void printSettingSerialWheelMotors();
+  void printSettingSerialCutterMotor();
+  void printSettingSerialBumper();
+  void printSettingSerialDropSensors();
+  void printSettingSerialRainSensor();
+  void printSettingSerialSonars();
+  void printSettingSerialPerimeters();
+  void printSettingSerialLawnSensor();
+  void printSettingSerialImu();
+  void printSettingSerialBattery();
+  void printSettingSerialStation();
+  void printSettingSerialOdometer();
+  void printSettingSerialGps();
+  void printSettingSerialother();
+  void printSettingSerialUserSwitches();
+  void printSettingSerialTimer();
+  void printSettingSerialStatus();
 
   template <class T>
   void printSettingNameColonValue(const Setting<T>& K);
@@ -366,7 +385,7 @@ private:
   void receiveGPSTime();
 
   // Set reverse
-  void reverseOrChangeDirection(const RollDirE rollDir);
+  void reverseOrChangeDirection(const uint8_t rollDir);
 
   // Other
   void printOdometer();
@@ -383,6 +402,7 @@ private:
   void menu();
   void configureBluetooth(bool quick);
   void resetIdleTime();
+  const char* consoleModeName();
 
   // Robot statistics
   void loadRobotStats();
@@ -402,8 +422,7 @@ public:
   datetime_t m_datetime;
 
   // -------- mow pattern -----------------------------
-  byte m_mowPatternCurr { MOW_RANDOM };
-  const char* mowPatternName();
+  uint8_t m_mowPattern { MOW_RANDOM };
 
   // -------- gps state -------------------------------
   Gps m_gps;
@@ -516,8 +535,8 @@ private:
   // --------- other ------------------------------------
   int m_loopsPerSec {};  // main loops per second
   int m_loopsPerSecCounter {};
-  byte m_consoleMode { CONSOLE_SENSOR_COUNTERS };
-  RollDirE m_rollDir { LEFT };
+  uint8_t m_consoleMode { CONSOLE_SENSOR_COUNTERS };
+  uint8_t m_rollDir { LEFT };
   unsigned long m_nextTimeErrorCounterReset {};
   unsigned long m_nextTimeErrorBeep {};
 

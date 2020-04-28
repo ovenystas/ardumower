@@ -394,9 +394,9 @@ int8_t* AdcManager::getCapture(const uint8_t pin)
 
 void AdcManager::loadSaveCalibration(const bool readflag)
 {
-  int addr = ADDR;
-  short magic = MAGIC;
-  eereadwrite(readflag, addr, magic); // magic
+  uint16_t addr = ADDR;
+  uint8_t magic = MAGIC;
+  eereadwrite(readflag, addr, magic);
   for (uint8_t ch = 0; ch < CHANNELS; ch++)
   {
     eereadwrite(readflag, addr, zeroOffset[ch]);
@@ -405,8 +405,8 @@ void AdcManager::loadSaveCalibration(const bool readflag)
 
 bool AdcManager::loadCalibration(void)
 {
-  short magic = 0;
-  int addr = ADDR;
+  uint8_t magic = 0;
+  uint16_t addr = ADDR;
   eeread(addr, magic);
   if (magic != MAGIC)
   {
