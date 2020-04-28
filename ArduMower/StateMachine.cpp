@@ -14,7 +14,7 @@ const char* StateMachine::getCurrentStateName()
   return stateNames[m_stateCurr];
 }
 
-bool StateMachine::isCurrentState(stateE state)
+bool StateMachine::isCurrentState(uint8_t state)
 {
   return m_stateCurr == state;
 }

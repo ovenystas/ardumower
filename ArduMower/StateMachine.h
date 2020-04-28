@@ -11,9 +11,9 @@
 class StateMachine
 {
   public:
-	StateMachine() {};
+    StateMachine() {};
 
-    typedef enum stateE
+    enum stateE
     {
       STATE_OFF,              // off
       STATE_FORWARD,          // drive forward
@@ -36,7 +36,7 @@ class StateMachine
       STATE_PERI_OUT_FORW,    // outside perimeter forward driving without checkPerimeterBoundary()
       STATE_PERI_OUT_REV,     // outside perimeter reverse driving without checkPerimeterBoundary()
       STATE_PERI_OUT_ROLL,    // outside perimeter rolling driving without checkPerimeterBoundary()
-    } stateE;
+    };
 
     const char* getCurrentStateName();
 
@@ -47,26 +47,26 @@ class StateMachine
       return m_stateStartTime;
     }
 
-    bool isCurrentState(stateE state);
+    bool isCurrentState(uint8_t state);
 
-    stateE getCurrentState() const
+    uint8_t getCurrentState() const
     {
       return m_stateCurr;
     }
 
-    unsigned long getEndTime() const
+    uint32_t getEndTime() const
     {
       return m_stateEndTime;
     }
 
-    void setEndTime(unsigned long endTime)
+    void setEndTime(uint32_t endTime)
     {
       m_stateEndTime = endTime;
     }
 
     void changeState();
 
-    void setNextState(stateE state)
+    void setNextState(uint8_t state)
     {
       m_stateNext = state;
     }
@@ -84,10 +84,10 @@ class StateMachine
       "POUTREV", "POUTROLL"
     };
 
-    stateE m_stateCurr { STATE_OFF };
-    stateE m_stateLast { STATE_OFF };
-    stateE m_stateNext { STATE_OFF };
-    unsigned long m_stateTime {};
-    unsigned long m_stateStartTime;
-    unsigned long m_stateEndTime;
+    uint8_t m_stateCurr { STATE_OFF };
+    uint8_t m_stateLast { STATE_OFF };
+    uint8_t m_stateNext { STATE_OFF };
+    uint32_t m_stateTime {};
+    uint32_t m_stateStartTime {};
+    uint32_t m_stateEndTime {};
 };

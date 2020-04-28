@@ -95,6 +95,7 @@ enum ErrorE
   // <---- add new error types here (NOTE: increase MAGIC to avoid corrupt EEPROM error data!)
   ERR_ENUM_COUNT,
 };
+static_assert(sizeof(ErrorE) == 1, "Enums shall be 1 byte in size");
 
 enum RollDirE
 {
@@ -203,7 +204,7 @@ public:
   void tasks_1m();
 
   // state machine
-  void setNextState(StateMachine::stateE stateNew, uint8_t rollDir = LEFT);
+  void setNextState(uint8_t stateNew, uint8_t rollDir = LEFT);
 
   // settings
   void deleteUserSettings();

@@ -28,44 +28,48 @@
 
 #include "drivers.h"
 
+const uint16_t AdcRefSettleTime = 500;
+const int16_t calibMinValue = -9999;
+const int16_t calibMaxValue = +9999;
+
 volatile uint8_t position = 0;
 volatile uint8_t channel = 0;
 volatile bool busy = false;
-uint8_t captureSize[CHANNELS] = {0};      // ADC capture buffer size (ADC0-ADC15)
-bool captureComplete[CHANNELS] = {false}; // ADC buffer filled?
-int16_t* sample[CHANNELS] = {0};          // ADC one sample (ADC0-ADC15) - 10 bit unsigned
-int8_t* capture[CHANNELS] = {0};          // ADC capture buffer (ADC0-ADC15) - 8 bit signed (signed: zero = ADC/2)
-int16_t zeroOffset[CHANNELS] = {0};       // ADC zero offset (ADC0-ADC15)
-int16_t AdcMin[CHANNELS] = {9999};        // ADC min sample value (ADC-ADC15)
-int16_t AdcMax[CHANNELS] = {-9999};       // ADC max sample value (ADC-ADC15)
+uint8_t captureSize[CHANNELS] = { 0 };        // ADC capture buffer size (ADC0-ADC15)
+bool captureComplete[CHANNELS] = { false };   // ADC buffer filled?
+int16_t* sample[CHANNELS] = { 0 };            // ADC one sample (ADC0-ADC15) - 10 bit unsigned
+int8_t* capture[CHANNELS] = { 0 };            // ADC capture buffer (ADC0-ADC15) - 8 bit signed (signed: zero = ADC/2)
+int16_t zeroOffset[CHANNELS] = { 0 };         // ADC zero offset (ADC0-ADC15)
+int16_t AdcMin[CHANNELS] = { calibMaxValue }; // ADC min sample value (ADC-ADC15)
+int16_t AdcMax[CHANNELS] = { calibMinValue }; // ADC max sample value (ADC-ADC15)
 
 AdcManager ADCMan;
 
 void AdcManager::init(void)
 {
-  delay(500); // wait for ADCRef to settle (stable ADCRef required for later calibration)
+  delay(AdcRefSettleTime); // wait for ADCRef to settle (stable ADCRef required for later calibration)
   if (loadCalibration())
   {
     printCalibration();
   }
 }
 
-void AdcManager::setCapture(const uint8_t pin,
-                            const uint8_t samplecount,
-                            const bool autoCalibrate)
+void AdcManager::setCapture(const uint8_t pin, const uint8_t samplecount,
+    const bool autoCalibrate)
 {
   const uint8_t ch = pin - A0;
   captureSize[ch] = samplecount;
   capture[ch] = new int8_t[samplecount];
   sample[ch] = new int16_t[samplecount];
-  this->m_autoCalibrate[ch] = autoCalibrate;
+  m_autoCalibrate[ch] = autoCalibrate;
+
   Console.print("ADC setCapture:");
   Console.print(" pin=");
   Console.print(pin);
   Console.print(" samplecount=");
   Console.print(samplecount);
   Console.print(" autoCalibrate=");
-  Console.print(this->m_autoCalibrate[ch]);
+  Console.print(m_autoCalibrate[ch]);
   Console.print(" ch=");
   Console.println(ch);
 }
@@ -75,8 +79,8 @@ void AdcManager::calibrate(void)
   Console.println("ADC calibration...");
   for (uint8_t ch = 0; ch < CHANNELS; ch++)
   {
-    AdcMax[ch] = -9999;
-    AdcMin[ch] = 9999;
+    AdcMax[ch] = calibMinValue;
+    AdcMin[ch] = calibMaxValue;
     zeroOffset[ch] = 0;
     if (m_autoCalibrate[ch])
     {
@@ -99,8 +103,8 @@ void AdcManager::calibrateZeroOffset(const uint8_t ch)
       run();
     }
   }
-  const int16_t center = AdcMin[ch] + (AdcMax[ch] - AdcMin[ch]) / 2;
-  zeroOffset[ch] = center;
+
+  zeroOffset[ch] = AdcMin[ch] + (AdcMax[ch] - AdcMin[ch]) / 2;
 
   Console.print(F("ADC calibration ch"));
   Console.print(ch);
@@ -117,14 +121,21 @@ void AdcManager::printCalibration(void)
     case SRATE_38462:
       Console.println(F("38462"));
       break;
+
     case SRATE_19231:
       Console.println(F("19231"));
       break;
+
     case SRATE_9615:
       Console.println(F("9615"));
       break;
+
+    default:
+      Console.println(F("Unknown"));
+      break;
   }
-  for (int ch = 0; ch < CHANNELS; ch++)
+
+  for (uint8_t ch = 0; ch < CHANNELS; ch++)
   {
     Console.print(F("AD"));
     Console.print(ch);
@@ -190,6 +201,10 @@ void AdcManager::startADC(void)
         ADCSRA = _BV(ADSC) | _BV(ADEN)  | _BV(ADATE) | _BV(ADIE) |
                  _BV(ADPS2) | _BV(ADPS1) | _BV(ADPS0);
         break; // prescaler 128 : 9615 Hz
+
+      default:
+        // Unknown SAMPLE_RATE
+        break;
     }
   }
 
@@ -233,7 +248,7 @@ ISR(ADC_vect)
   }
   value -= zeroOffset[channel];
   // convert to signed (zero = ADC/2)
-  capture[channel][position] = min(SCHAR_MAX, max(SCHAR_MIN, value / 4));
+  capture[channel][position] = min(INT8_MAX, max(INT8_MIN, value / 4));
   sample[channel][position] = value;
 
   // determine min/max
@@ -271,7 +286,7 @@ void AdcManager::run(void)
     return;
   }
 
-  if (position != 0)
+  if (position > 0)
   {
     // Stop free running
     stopCapture();
@@ -396,7 +411,9 @@ void AdcManager::loadSaveCalibration(const bool readflag)
 {
   uint16_t addr = ADDR;
   uint8_t magic = MAGIC;
+
   eereadwrite(readflag, addr, magic);
+
   for (uint8_t ch = 0; ch < CHANNELS; ch++)
   {
     eereadwrite(readflag, addr, zeroOffset[ch]);
@@ -405,17 +422,21 @@ void AdcManager::loadSaveCalibration(const bool readflag)
 
 bool AdcManager::loadCalibration(void)
 {
-  uint8_t magic = 0;
   uint16_t addr = ADDR;
+  uint8_t magic = 0;
+
   eeread(addr, magic);
+
   if (magic != MAGIC)
   {
     Console.println(F("ADCMan Error: No calibration data"));
     return false;
   }
+
   m_calibrationAvailable = true;
   Console.println(F("ADCMan: Found calibration data"));
   loadSaveCalibration(true);
+
   return true;
 }
 
