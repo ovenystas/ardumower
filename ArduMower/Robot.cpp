@@ -1196,14 +1196,6 @@ void Robot::setup()
   m_lawnSensorArray[0].setup(PIN_LAWN_FRONT_SEND, PIN_LAWN_FRONT_RECV);
   m_lawnSensorArray[1].setup(PIN_LAWN_BACK_SEND, PIN_LAWN_BACK_RECV);
 
-  // drop sensor
-  const uint8_t dropSensorPins[DROPSENSORS_NUM] =
-  {
-      PIN_DROP_LEFT, PIN_DROP_RIGHT
-  };
-  m_dropSensors.setup(dropSensorPins,
-      DropSensor_Contact::NO, m_dropSensorArray, DROPSENSORS_NUM);
-
   // sonar
   m_sonarArray[static_cast<uint8_t>(SonarE::LEFT)].setup(
       PIN_SONAR_LEFT_TRIGGER,

@@ -53,4 +53,9 @@ INCLUDE_DIRS = \
 
 CPPUTEST_CPPFLAGS += -std=gnu++11	# This is what Arduino 1.8.12 is using
 
+gcovr: gcov
+	$(SILENCE)mkdir -p gcov/report
+	$(SILENCE)gcovr --html-detail -o gcov/report/gcov_report.html
+	@echo "See gcov/report/gcov_report.html for details"
+
 include $(CPPUTEST_HOME)/build/MakefileWorker.mk

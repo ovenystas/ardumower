@@ -175,8 +175,6 @@ TEST(LawnSensor, readVal2)
 // LawnSensorsInit ------------------------------------------------------------
 
 const uint8_t LAWN_SENSORS_NUM = 2;
-const uint8_t sendPins[LAWN_SENSORS_NUM] = { 1, 3 };
-const uint8_t receivePins[LAWN_SENSORS_NUM] = { 2, 4 };
 
 TEST_GROUP(LawnSensorsInit)
 {

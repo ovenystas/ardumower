@@ -446,8 +446,12 @@ public:
   Bumpers m_bumpers { bumperPins, m_bumperArray, BUMPERS_NUM };
 
   // --------- drop state ---------------------------
-  DropSensor m_dropSensorArray[DROPSENSORS_NUM];
-  DropSensors m_dropSensors;
+  // drop sensor
+  DropSensor m_dropSensorArray[DROPSENSORS_NUM] {
+    PIN_DROP_LEFT, PIN_DROP_RIGHT
+  };
+  DropSensors m_dropSensors { DropSensor_Contact::NO,
+    m_dropSensorArray, DROPSENSORS_NUM };
 
   // --------- Buzzer ---------------------------
   Buzzer m_buzzer { PIN_BUZZER , true };

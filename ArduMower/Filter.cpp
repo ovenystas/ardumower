@@ -10,7 +10,7 @@
 void FilterEmaI32::addValue(int32_t in)
 {
   //calculations must be done in 64-bit math to avoid overflow
-  int64_t tmp = static_cast<int64_t>(in) * (m_alpha) +
+  int64_t tmp = static_cast<int64_t>(in) * m_alpha +
       static_cast<int64_t>(m_average) * (UINT16_MAX - m_alpha);
 
   //scale back to 32-bit (with rounding)
@@ -21,7 +21,7 @@ void FilterEmaI32::addValue(int32_t in)
 void FilterEmaI16::addValue(int16_t in)
 {
   //calculations must be done in 32-bit math to avoid overflow
-  int32_t tmp = static_cast<int32_t>(in) * (m_alpha) +
+  int32_t tmp = static_cast<int32_t>(in) * m_alpha +
       static_cast<int32_t>(m_average) * (UINT8_MAX - m_alpha);
 
   //scale back to 16-bit (with rounding)

@@ -13,9 +13,9 @@ class DropSensor
 {
 public:
   DropSensor() = default;
-  DropSensor(uint8_t pin)
+  DropSensor(uint8_t pin) : m_pin(pin)
   {
-    setup(pin);
+    pinMode(m_pin, INPUT_PULLUP);
   }
 
   void setup(uint8_t pin);
@@ -62,14 +62,11 @@ class DropSensors
 {
 public:
   DropSensors() = default;
-  DropSensors(const uint8_t* pins_p, DropSensor_Contact contactType,
-      DropSensor* dropSensorArray_p, uint8_t len)
-  {
-    setup(pins_p, contactType, dropSensorArray_p, len);
-  }
-
-  void setup(const uint8_t* pins, DropSensor_Contact contactType,
-      DropSensor* dropSensorArray_p, uint8_t len);
+  DropSensors(DropSensor_Contact contactType, DropSensor* dropSensorArray_p,
+      uint8_t len) :
+        m_dropSensorArray_p(dropSensorArray_p),
+        m_contactType(contactType),
+        m_len(len) {};
 
   DropSensor_Contact getContactType()
   {
