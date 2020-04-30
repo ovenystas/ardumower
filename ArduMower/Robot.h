@@ -92,6 +92,7 @@ enum ErrorE
   ERR_IMU_CALIB,
   ERR_EEPROM_DATA,
   ERR_STUCK,
+  ERR_STATE_MACHINE,
   // <---- add new error types here (NOTE: increase MAGIC to avoid corrupt EEPROM error data!)
   ERR_ENUM_COUNT,
 };
@@ -134,7 +135,7 @@ struct Stats
   uint16_t mowTimeTrip_min {};
   uint16_t batteryChargingCounterTotal {};
   float batteryChargingCapacityTrip_mAh {};
-  float batteryChargingCapacityTotal_mAh {};
+  uint16_t batteryChargingCapacityTotal_mAh {};
   float batteryChargingCapacityAverage_mAh {};
 };
 
@@ -503,7 +504,7 @@ public:
 
 private:
   // --------- state machine ----------------------------
-  int m_idleTimeSec {};
+  int16_t m_idleTimeSec {};
 
   // --------- timer ------------------------------------
 

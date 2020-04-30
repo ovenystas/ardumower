@@ -243,15 +243,15 @@ void Robot::loadSaveUserSettingsBattery(bool readflag, uint16_t& addr,
   auto settings_p = battery.getSettings();
 
   eereadwrite(readflag, addr, settings_p->monitored.value);
-  eereadwrite(readflag, addr, settings_p->batGoHomeIfBelow.value);
-  eereadwrite(readflag, addr, settings_p->batSwitchOffIfBelow.value);
-  eereadwrite(readflag, addr, settings_p->batSwitchOffIfIdle.value);
-  eereadwrite(readflag, addr, settings_p->batFactor.value);
-  eereadwrite(readflag, addr, settings_p->batChgFactor.value);
+  eereadwrite(readflag, addr, settings_p->batGoHomeIfBelow_mV.value);
+  eereadwrite(readflag, addr, settings_p->batSwitchOffIfBelow_mV.value);
+  eereadwrite(readflag, addr, settings_p->batSwitchOffIfIdle_min.value);
+  eereadwrite(readflag, addr, settings_p->batFactor_mV_per_LSB.value);
+  eereadwrite(readflag, addr, settings_p->batChargeFactor_mV_per_LSB.value);
   eereadwrite(readflag, addr, settings_p->chgSenseZero.value);
   eereadwrite(readflag, addr, settings_p->chgFactor.value);
-  eereadwrite(readflag, addr, settings_p->batFullCurrent.value);
-  eereadwrite(readflag, addr, settings_p->startChargingIfBelow.value);
+  eereadwrite(readflag, addr, settings_p->batFullCurrent_mA.value);
+  eereadwrite(readflag, addr, settings_p->startChargingIfBelow_mV.value);
 }
 
 void Robot::loadSaveUserSettingsDropSensors(bool readflag, uint16_t& addr,
@@ -607,28 +607,21 @@ void Robot::printSettingSerialBattery()
   auto* settings_p = m_battery.getSettings();
 
   printSettingNameColonValue(settings_p->monitored);
-  printSettingNameColonValue(settings_p->batGoHomeIfBelow);
-  printSettingNameColonValue(settings_p->batSwitchOffIfBelow);
-  printSettingNameColonValue(settings_p->batSwitchOffIfIdle);
-  printSettingNameColonValue(settings_p->batFactor);
-  printSettingNameColonValue(settings_p->batChgFactor);
-  printSettingNameColonValue(settings_p->batFull);
-  printSettingNameColonValue(settings_p->batChargingCurrentMax);
-  printSettingNameColonValue(settings_p->batFullCurrent);
-  printSettingNameColonValue(settings_p->startChargingIfBelow);
+  printSettingNameColonValue(settings_p->batGoHomeIfBelow_mV);
+  printSettingNameColonValue(settings_p->batSwitchOffIfBelow_mV);
+  printSettingNameColonValue(settings_p->batSwitchOffIfIdle_min);
+  printSettingNameColonValue(settings_p->batFactor_mV_per_LSB);
+  printSettingNameColonValue(settings_p->batChargeFactor_mV_per_LSB);
+  printSettingNameColonValue(settings_p->batFull_mV);
+  printSettingNameColonValue(settings_p->batChargingCurrentMax_mA);
+  printSettingNameColonValue(settings_p->batFullCurrent_mA);
+  printSettingNameColonValue(settings_p->startChargingIfBelow_mV);
 
   Console.print(F("chargingTimeout : "));
-  Console.println(m_battery.m_chargingTimeout);
+  Console.println(m_battery.m_chargingTimeout_ms);
 
   printSettingNameColonValue(settings_p->chgSenseZero);
   printSettingNameColonValue(settings_p->chgFactor);
-
-  Console.print(F("chgSense : "));
-  Console.println(m_battery.m_chgSense);
-  Console.print(F("chgChange : "));
-  Console.println(m_battery.m_chgChange);
-  Console.print(F("chgNull : "));
-  Console.println(m_battery.m_chgNull);
 }
 
 void Robot::printSettingSerialStation()
@@ -1089,7 +1082,7 @@ void Robot::setup()
 
   delay(2000);
   m_stateMachine.init();
-  m_buzzer.beepLong(1);
+  m_buzzer.beepLong();
 
   Console.println(F("START"));
   Console.print(F("Ardumower "));
@@ -1434,19 +1427,15 @@ void Robot::printInfo(Stream &s)
       printInfo_sensorCounters(s);
     }
 
-    float batVolt = m_battery.getVoltage();
-    Streamprint(s, "bat %2d.%01d ",
-                (int)batVolt,
-                (int)((batVolt * 10) - ((int)batVolt * 10)));
+    int16_t batVolt_mV = m_battery.getBatVoltage_mV() + 50;
+    Streamprint(s, "bat %2d.%01d V",
+        batVolt_mV / 1000, (batVolt_mV % 1000) / 100);
 
-    float chgVolt = m_battery.getChargeVoltage();
-    float chgCurr = m_battery.getChargeCurrent();
+    int16_t chgVolt_mV = m_battery.getChargeVoltage_mV() + 50;
+    int16_t chgCurr_mA = m_battery.getChargeCurrent_mA();
 
-    Streamprint(s, "chg %2d.%01d %2d.%01d ",
-                (int)chgVolt,
-                (int)((chgVolt * 10) - ((int)chgVolt * 10)),
-                (int)chgCurr,
-                (int)((abs(chgCurr) * 10) - ((int)abs(chgCurr) * 10)));
+    Streamprint(s, "chg %2d.%01d V @ %4d mA",
+        chgVolt_mV / 1000, (chgVolt_mV % 1000) / 100, chgCurr_mA);
 
     Streamprint(s, "imu %3d ", m_imu.getCallCounter());
 
@@ -1815,7 +1804,7 @@ void Robot::checkButton()
     if (buttonPressed)
     {
       Console.println(F("Button is pressed"));
-      m_buzzer.beepLong(1);
+      m_buzzer.beepLong();
       m_button.incCounter();
       resetIdleTime();
     }
@@ -1891,17 +1880,18 @@ void Robot::readMotorCurrents()
   motorCutter_p->readCurrent();
 
   // Conversion to power in Watts
-  float batV = m_battery.getVoltage();
-  motorLeft_p->calcPower(batV);
-  motorRight_p->calcPower(batV);
-  motorCutter_p->calcPower(batV);
+  int16_t bat_mV = m_battery.getBatVoltage_mV();
+  motorLeft_p->calcPower(bat_mV);
+  motorRight_p->calcPower(bat_mV);
+  motorCutter_p->calcPower(bat_mV);
 }
 
 void Robot::measureCutterMotorRpm()
 {
-  static unsigned long timeLastMeasure = 0;
-  unsigned long curMillis = millis();
-  unsigned long timeSinceLast = curMillis - timeLastMeasure;
+  static uint32_t timeLastMeasure = 0;
+
+  uint32_t curMillis = millis();
+  uint32_t timeSinceLast = curMillis - timeLastMeasure;
   timeLastMeasure = curMillis;;
 
   if ((m_cutter.m_motor.getRpmMeas() == 0) &&
@@ -2228,7 +2218,7 @@ void Robot::checkBattery()
       if (m_battery.hasIdleTimePassedSwitchOffLimit(++m_idleTimeSec))
       {
         Console.println(F("Triggered batSwitchOffIfIdle"));
-        m_buzzer.beepShort(1);
+        m_buzzer.beepShort();
         saveErrorCounters();
         saveRobotStats();
         m_idleTimeSec = BATTERY_SW_OFF; // flag to remember that battery is switched off
@@ -2354,9 +2344,11 @@ void Robot::checkRobotStats_battery()
     {
       m_stats.batteryChargingCounterTotal++;
     }
-    m_stats.batteryChargingCapacityTrip_mAh = m_battery.getCapacity();
+    m_stats.batteryChargingCapacityTrip_mAh = m_battery.getCapacity_mAh();
     // Sum up only the difference between actual batCapacity and last batCapacity
-    m_stats.batteryChargingCapacityTotal_mAh += (m_battery.getCapacity() - m_battery.getLastTimeCapacity());
+    m_stats.batteryChargingCapacityTotal_mAh +=
+        (m_battery.getCapacity_mAh() - m_battery.getLastTimeCapacity_mAh());
+
     m_battery.updateLastTimeCapacity();
   }
   else
@@ -2934,7 +2926,8 @@ void Robot::runStateMachine()
       if (m_battery.isMonitored() &&
           curMillis - m_stateMachine.getStateStartTime() > 2000)
       {
-        if (m_battery.getChargeVoltage() > 5.0 && m_battery.getVoltage() > 8)
+        if (m_battery.getChargeVoltage_mV() > 5000 &&
+            m_battery.getBatVoltage_mV() > 8000)
         {
           m_buzzer.beepShort(2);
           setNextState(StateMachine::STATE_STATION);
@@ -3110,7 +3103,7 @@ void Robot::runStateMachine()
       //checkSonar();
       if (m_battery.isMonitored())
       {
-        if (m_battery.getChargeVoltage() > 5.0)
+        if (m_battery.getChargeVoltage_mV() > 5000)
         {
           setNextState(StateMachine::STATE_STATION);
         }
@@ -3121,7 +3114,8 @@ void Robot::runStateMachine()
       // waiting until auto-start by user or timer triggered
       if (m_battery.isMonitored())
       {
-        if (m_battery.getChargeVoltage() > 5.0 && m_battery.getVoltage() > 8)
+        if (m_battery.getChargeVoltage_mV() > 5000 &&
+            m_battery.getBatVoltage_mV() > 8000)
         {
           if (m_battery.isVoltageBelowStartChargingLimit() &&
               m_stateMachine.getStateTime() > 2000)
@@ -3153,7 +3147,7 @@ void Robot::runStateMachine()
         {
           setNextState(StateMachine::STATE_STATION);
         }
-        else if (curMillis - m_stateMachine.getStateStartTime() > m_battery.m_chargingTimeout)
+        else if (curMillis - m_stateMachine.getStateStartTime() > m_battery.m_chargingTimeout_ms)
         {
           incErrorCounter(ERR_BATTERY);
           setNextState(StateMachine::STATE_ERROR);
@@ -3190,7 +3184,7 @@ void Robot::runStateMachine()
       // check for charging voltage disappearing before leaving charging station
       if (m_stateMachine.isStateEndTimeReached())
       {
-        if (m_battery.getChargeVoltage() > 5)
+        if (m_battery.getChargeVoltage_mV() > 5000)
         {
           incErrorCounter(ERR_CHARGER);
           setNextState(StateMachine::STATE_ERROR);
@@ -3224,6 +3218,11 @@ void Robot::runStateMachine()
       {
         setNextState(StateMachine::STATE_FORWARD);
       }
+      break;
+
+    default:
+      incErrorCounter(ERR_STATE_MACHINE);
+      setNextState(StateMachine::STATE_ERROR);
       break;
   } // end switch
 }
@@ -3345,7 +3344,7 @@ void Robot::tasks_300ms()
 
   if (m_stateMachine.isCurrentState(StateMachine::STATE_ERROR))
   {
-    m_buzzer.beepShort(1);
+    m_buzzer.beepShort();
   }
 }
 

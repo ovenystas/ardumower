@@ -396,10 +396,12 @@ void RemoteControl::sendErrorMenu(bool update)
   Bluetooth.print(m_robot_p->m_errorCounterMax[ERR_GPS_COMM]);
   Bluetooth.print(F("|zz~GPS data "));
   Bluetooth.print(m_robot_p->m_errorCounterMax[ERR_GPS_DATA]);
-  Bluetooth.print(F("|zz~Robot stucked "));
-  Bluetooth.print(m_robot_p->m_errorCounterMax[ERR_STUCK]);
   Bluetooth.print(F("|zz~EEPROM data "));
   Bluetooth.print(m_robot_p->m_errorCounterMax[ERR_EEPROM_DATA]);
+  Bluetooth.print(F("|zz~Robot stucked "));
+  Bluetooth.print(m_robot_p->m_errorCounterMax[ERR_STUCK]);
+  Bluetooth.print(F("|zz~State machine "));
+  Bluetooth.print(m_robot_p->m_errorCounterMax[ERR_STATE_MACHINE]);
 
   Bluetooth.println("}");
 }
@@ -1239,40 +1241,40 @@ void RemoteControl::sendBatteryMenu(bool update)
 
   Bluetooth.print(F("|j00~Battery "));
 
-  Bluetooth.print(m_robot_p->m_battery.getVoltage());
+  Bluetooth.print(m_robot_p->m_battery.getBatVoltage_V());
   Bluetooth.print(" V");
 
   sendSettingYesNo("j01", settings_p->monitored);
 
   if (m_robot_p->isDeveloper())
   {
-    sendSettingSlider("j05", settings_p->batFactor);
+    sendSettingSlider("j05", settings_p->batFactor_mV_per_LSB);
   }
 
   //Console.print("batFactor=");
   //Console.println(robot->batFactor);
 
-  sendSettingSlider("j02", settings_p->batGoHomeIfBelow); // for Sony Konion cells 4.2V * 0,72= 3.024V which is pretty safe to use
+  sendSettingSlider("j02", settings_p->batGoHomeIfBelow_mV); // for Sony Konion cells 4.2V * 0,72= 3.024V which is pretty safe to use
 
-  sendSettingSlider("j12", settings_p->batSwitchOffIfIdle);
+  sendSettingSlider("j12", settings_p->batSwitchOffIfIdle_min);
 
-  sendSettingSlider("j03", settings_p->batSwitchOffIfBelow);
+  sendSettingSlider("j03", settings_p->batSwitchOffIfBelow_mV);
 
   Bluetooth.print(F("|j04~Charge "));
-  Bluetooth.print(m_robot_p->m_battery.getChargeVoltage());
+  Bluetooth.print(m_robot_p->m_battery.getChargeVoltage_V());
   Bluetooth.print("V ");
-  Bluetooth.print(m_robot_p->m_battery.getChargeCurrent());
-  Bluetooth.print("A");
+  Bluetooth.print(m_robot_p->m_battery.getChargeCurrent_mA());
+  Bluetooth.print("mA");
 
-  sendSettingSlider("j09", settings_p->batChgFactor);
+  sendSettingSlider("j09", settings_p->batChargeFactor_mV_per_LSB);
 
   sendSettingSlider("j06", settings_p->chgSenseZero);
 
   sendSettingSlider("j08", settings_p->chgFactor);
 
-  sendSettingSlider("j10", settings_p->startChargingIfBelow);
+  sendSettingSlider("j10", settings_p->startChargingIfBelow_mV);
 
-  sendSettingSlider("j11", settings_p->batFullCurrent);
+  sendSettingSlider("j11", settings_p->batFullCurrent_mA);
 
   Bluetooth.println("}");
 }
@@ -1287,17 +1289,17 @@ void RemoteControl::processBatteryMenu(String pfodCmd)
   }
   else if (pfodCmd.startsWith("j02"))
   {
-    processSettingSlider(pfodCmd, settings_p->batGoHomeIfBelow);
+    processSettingSlider(pfodCmd, settings_p->batGoHomeIfBelow_mV);
     //Console.print("gohomeifbelow=");
     //Console.println(robot->batGoHomeIfBelow);
   }
   else if (pfodCmd.startsWith("j03"))
   {
-    processSettingSlider(pfodCmd, settings_p->batSwitchOffIfBelow);
+    processSettingSlider(pfodCmd, settings_p->batSwitchOffIfBelow_mV);
   }
   else if (pfodCmd.startsWith("j05"))
   {
-    processSettingSlider(pfodCmd, settings_p->batFactor);
+    processSettingSlider(pfodCmd, settings_p->batFactor_mV_per_LSB);
   }
   else if (pfodCmd.startsWith("j06"))
   {
@@ -1309,19 +1311,19 @@ void RemoteControl::processBatteryMenu(String pfodCmd)
   }
   else if (pfodCmd.startsWith("j09"))
   {
-    processSettingSlider(pfodCmd, settings_p->batChgFactor);
+    processSettingSlider(pfodCmd, settings_p->batChargeFactor_mV_per_LSB);
   }
   else if (pfodCmd.startsWith("j10"))
   {
-    processSettingSlider(pfodCmd, settings_p->startChargingIfBelow);
+    processSettingSlider(pfodCmd, settings_p->startChargingIfBelow_mV);
   }
   else if (pfodCmd.startsWith("j11"))
   {
-    processSettingSlider(pfodCmd, settings_p->batFullCurrent);
+    processSettingSlider(pfodCmd, settings_p->batFullCurrent_mA);
   }
   else if (pfodCmd.startsWith("j12"))
   {
-    processSettingSlider(pfodCmd, settings_p->batSwitchOffIfIdle);
+    processSettingSlider(pfodCmd, settings_p->batSwitchOffIfIdle_min);
   }
 
   sendBatteryMenu(true);
@@ -2220,13 +2222,13 @@ void RemoteControl::run()
       m_nextPlotTime = curMillis + 60000;
       Bluetooth.print(curMillis / 60000);
       Bluetooth.print(",");
-      Bluetooth.print(m_robot_p->m_battery.getVoltage());
+      Bluetooth.print(m_robot_p->m_battery.getBatVoltage_V());
       Bluetooth.print(",");
-      Bluetooth.print(m_robot_p->m_battery.getChargeVoltage());
+      Bluetooth.print(m_robot_p->m_battery.getChargeVoltage_V());
       Bluetooth.print(",");
-      Bluetooth.print(m_robot_p->m_battery.getChargeCurrent());
+      Bluetooth.print(m_robot_p->m_battery.getChargeCurrent_A());
       Bluetooth.print(",");
-      Bluetooth.println(m_robot_p->m_battery.getCapacity());
+      Bluetooth.println(m_robot_p->m_battery.getCapacity_Ah());
     }
   }
   else if (m_pfodState == PfodState::PLOT_ODO2D)

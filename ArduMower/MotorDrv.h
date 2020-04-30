@@ -28,6 +28,7 @@ public:
 
   int16_t getAverageCurrent();   // Get average motor current in mA
   void calcPower(float batV);
+  void calcPower(int16_t bat_mV);
 
   void setFilterAlpha(float alpha)
   {

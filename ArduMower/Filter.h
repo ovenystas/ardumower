@@ -39,7 +39,7 @@ public:
 
   void addValue(int32_t in);
 
-  int32_t getAverage()
+  int32_t getAverage() const
   {
     return m_average;
   }
@@ -49,7 +49,7 @@ public:
     m_alpha = FILTER_EMA_I32_ALPHA(alpha);
   }
 
-  float getAlpha()
+  float getAlpha() const
   {
     return FILTER_EMA_I32_ALPHA_REVERSE(m_alpha);
   }
@@ -68,7 +68,7 @@ public:
 
   void addValue(int16_t in);
 
-  int16_t getAverage()
+  int16_t getAverage() const
   {
     return m_average;
   }
@@ -78,7 +78,7 @@ public:
     m_alpha = FILTER_EMA_I16_ALPHA(alpha);
   }
 
-  float getAlpha()
+  float getAlpha() const
   {
     return FILTER_EMA_I16_ALPHA_REVERSE(m_alpha);
   }

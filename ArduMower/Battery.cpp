@@ -8,96 +8,102 @@
 #include "Battery.h"
 #include "AdcManager.h"
 
-#define OFF 0
-#define ON  1
-
-void Battery::setup(uint8_t pinVoltage, uint8_t pinChargeVoltage,
-    uint8_t pinChargeCurrent, uint8_t pinChargeRelay, uint8_t pinBatterySwitch)
+Battery::Battery(const uint8_t pinBatVoltage, const uint8_t pinChargeVoltage,
+    const uint8_t pinChargeCurrent, const uint8_t pinChargeRelay,
+    const uint8_t pinBatterySwitch) :
+      m_pinBatVoltage(pinBatVoltage),
+      m_pinChargeVoltage(pinChargeVoltage),
+      m_pinChargeCurrent(pinChargeCurrent),
+      m_pinChargeRelay(pinChargeRelay),
+      m_pinBatterySwitch(pinBatterySwitch)
 {
-  m_pinVoltage = pinVoltage;
-  m_pinChargeVoltage = pinChargeVoltage;
-  m_pinChargeCurrent = pinChargeCurrent;
-  m_pinChargeRelay = pinChargeRelay;
-  m_pinBatterySwitch = pinBatterySwitch;
-
-  pinMode(m_pinVoltage, INPUT);
+  pinMode(m_pinBatVoltage, INPUT);
   pinMode(m_pinChargeVoltage, INPUT);
   pinMode(m_pinChargeCurrent, INPUT);
   pinMode(m_pinChargeRelay, OUTPUT);
   pinMode(m_pinBatterySwitch, OUTPUT);
 
-  digitalWrite(m_pinChargeRelay, OFF);
-  digitalWrite(m_pinBatterySwitch, OFF);
+  digitalWrite(m_pinChargeRelay, LOW);
+  digitalWrite(m_pinBatterySwitch, LOW);
 
   ADCMan.setCapture(m_pinChargeCurrent, 1, true);
-  ADCMan.setCapture(m_pinVoltage, 1, false);
+  ADCMan.setCapture(m_pinBatVoltage, 1, false);
   ADCMan.setCapture(m_pinChargeVoltage, 1, false);
 }
 
+void Battery::readBatVoltage()
+{
+  int16_t batVoltage_ad = ADCMan.read(m_pinBatVoltage);
+  int16_t batvoltage_mV =
+      static_cast<int16_t>(batVoltage_ad * m_batFactor_mV_per_LSB);
+
+  // Low-pass filter small variations but react fast to big changes
+  if (abs(m_batVoltage_mV - batvoltage_mV) > 5000)
+  {
+    m_batVoltage_mV = batvoltage_mV;
+  }
+  else
+  {
+    m_batVoltLpFilter.addValue(batvoltage_mV);
+    m_batVoltage_mV = m_batVoltLpFilter.getAverage();
+  }
+}
+
+void Battery::readChargeVoltage()
+{
+  int16_t chargeVoltage_ad = ADCMan.read(m_pinChargeVoltage);
+  int16_t chargeVoltage_mV =
+      static_cast<int16_t>(chargeVoltage_ad * m_batChargeFactor_mV_per_LSB);
+
+  // Low-pass filter small variations but react fast to big changes
+  if (abs(m_chargeVoltage_mV - chargeVoltage_mV) > 5000)
+  {
+    m_chargeVoltage_mV = chargeVoltage_mV;
+  }
+  else
+  {
+    m_chargeVoltLpFilter.addValue(chargeVoltage_mV);
+    m_chargeVoltage_mV = m_chargeVoltLpFilter.getAverage();
+  }
+}
+
+void Battery::readChargeCurrent()
+{
+  // Read AD converter
+  int16_t chargeCurrent_ad = ADCMan.read(m_pinChargeCurrent);
+
+  // Current sensor ACS712 5A
+  int16_t chargeCurrent_ad_adj = static_cast<int16_t>(chargeCurrent_ad - (1023 / 2));
+  int16_t chargeCurrent_mA = static_cast<int16_t>(
+      (chargeCurrent_ad_adj * (1000L * 1000 * 5)) /
+      (1023L * currentSensorSensitivity_mV_per_A));
+
+  // TODO: Does this need LP filtering?
+
+  if (chargeCurrent_mA < 0)
+  {
+    m_chargeCurrent_mA = 0;
+  }
+  else
+  {
+    m_chargeCurrent_mA = chargeCurrent_mA;
+  }
+}
+
+void Battery::updateCapacity()
+{
+  if (m_chargeCurrent_mA > 40 && m_chargeVoltage_mV > 5000)
+  {
+    m_batCapacity_mAs += (m_chargeCurrent_mA  + 5) / 10;
+  }
+}
+
+// Expected to be called at 100 ms interval.
 void Battery::read()
 {
-  // read battery
-  if (abs(m_chgCurrent) > 0.04 && m_chgVoltage > 5)
-  {
-    // charging
-    m_batCapacity += (m_chgCurrent / 36.0f); //TODO: What is 36.0?
-  }
+  readBatVoltage();
+  readChargeVoltage();
+  readChargeCurrent();
 
-  // convert to float
-  int16_t batADC = ADCMan.read(m_pinVoltage);
-  float batvolt = (float)batADC * m_batFactor;
-  int chgADC = ADCMan.read(m_pinChargeVoltage);
-  float chgvolt = (float)chgADC * m_batChgFactor;
-  float current = (float)ADCMan.read(m_pinChargeCurrent);
-
-  // low-pass filter
-  const float accel = 0.01f;
-
-  if (abs(m_voltage - batvolt) > 5)
-  {
-    m_voltage = batvolt;
-  }
-  else
-  {
-    m_voltage = (1.0f - accel) * m_voltage + accel * batvolt;
-  }
-
-  if (abs(m_chgVoltage - chgvolt) > 5)
-  {
-    m_chgVoltage = chgvolt;
-  }
-  else
-  {
-    m_chgVoltage = (1.0f - accel) * m_chgVoltage + accel * chgvolt;
-  }
-
-  //Deaktiviert für Ladestromsensor berechnung
-//    if (abs(chgCurrent - current) > 0.4)
-//    {
-//      chgCurrent = current;
-//    }
-//    else
-//    {
-//      chgCurrent = (1.0 - accel) * chgCurrent + accel * current;
-//    }
-
-  // Berechnung für Ladestromsensor ACS712 5A
-  float chgAMP = current;              //Sensorwert übergabe vom Ladestrompin
-  float vcc = 3.30f / m_chgSenseZero * 1023.0f; // Versorgungsspannung ermitteln!  chgSenseZero=511  ->Die Genauigkeit kann erhöt werden wenn der 3.3V Pin an ein Analogen Pin eingelesen wird. Dann ist vcc = (float) 3.30 / analogRead(X) * 1023.0;
-  float asensor = chgAMP * vcc / 1023.0f;              // Messwert auslesen
-  asensor = asensor - (vcc / (float)m_chgNull); // Nulldurchgang (vcc/2) abziehen
-  m_chgSense = m_chgSense - ((5.00f - vcc) * m_chgFactor); // Korrekturfactor für Vcc!  chgFactor=39
-  float amp = asensor / m_chgSense * 1000;               // Ampere berechnen
-  if (m_chgChange == 1)
-  {
-    amp = -amp;                 //Lade Strom Messwertumkehr von - nach +
-  }
-  if (amp < 0.0)
-  {
-    m_chgCurrent = 0.0;
-  }
-  else
-  {
-    m_chgCurrent = amp; // Messwertrückgabe in chgCurrent   (Wenn Messwert kleiner als 0 dann Messwert =0 anssonsten messwertau8sgabe in Ampere)
-  }
+  updateCapacity();
 }
