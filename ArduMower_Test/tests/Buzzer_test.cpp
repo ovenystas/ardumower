@@ -124,6 +124,23 @@ TEST(Buzzer, beepShort_0Beeps)
   mock().checkExpectations();
 }
 
+// Default is to make one beep
+TEST(Buzzer, beepShort_default)
+{
+  buzzer_p->setEnabled(true);
+
+  mock().expectOneCall("tone")
+      .withParameter("_pin", 1)
+      .withParameter("frequency", frequency_hz)
+      .withParameter("duration", durationShort_ms);
+  mock().expectOneCall("delay")
+      .withParameter("ms", delayShort_ms);
+
+  buzzer_p->beepShort();
+
+  mock().checkExpectations();
+}
+
 TEST(Buzzer, beepShort_1Beep)
 {
   buzzer_p->setEnabled(true);
@@ -176,6 +193,23 @@ TEST(Buzzer, beepLong_0Beeps)
   mock().expectNoCall("delay");
 
   buzzer_p->beepLong(0);
+
+  mock().checkExpectations();
+}
+
+// Default is to make one beep
+TEST(Buzzer, beepLong_default)
+{
+  buzzer_p->setEnabled(true);
+
+  mock().expectOneCall("tone")
+      .withParameter("_pin", 1)
+      .withParameter("frequency", frequency_hz)
+      .withParameter("duration", durationLong_ms);
+  mock().expectOneCall("delay")
+      .withParameter("ms", delayLong_ms);
+
+  buzzer_p->beepLong();
 
   mock().checkExpectations();
 }

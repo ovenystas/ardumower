@@ -37,8 +37,8 @@ public:
     m_enabled = enabled;
   }
 
-  void beepShort(uint8_t numberOfBeeps);
-  void beepLong(uint8_t numberOfBeeps);
+  void beepShort(uint8_t numberOfBeeps = 1);
+  void beepLong(uint8_t numberOfBeeps = 1);
 
   void beep(uint16_t frequency, uint32_t duration_ms = 0)
   {
