@@ -278,8 +278,8 @@ private:
 
   ImuSettings m_settings
   {
-    { "Use", "", false, false, true },
-    { "Correct dir", "", false, false, true } // Correct direction by magnetometer?
+    { "Use", false },
+    { "Correct dir", false } // Correct direction by magnetometer?
   };
 
   // Shorter convenient variables for settings variables

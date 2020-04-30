@@ -204,7 +204,7 @@ private:
     { "Battery full", "mV", batFullVoltage_mV, 12000, 15000, 100.0f },
     { "Max charger current", "mA", batChargingCurrentMaxValue_mA, 0, 5000, 100.0f },
     { "Switch off if idle for", "min", 1, 0, 240, 1.0f },
-    { "Monitor", "", false, false, true },
+    { "Monitor", false },
   };
 
   // Shorter convenient variables for settings variables

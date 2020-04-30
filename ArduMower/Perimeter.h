@@ -144,8 +144,8 @@ private:
   PerimeterSettings m_settings
   {
     { "Timeout if below smag", "", 300, 0, 2000 },
-    { "Use differential signal", "", true, false, true },
-    { "Swap coil polarity", "", false, false, true },
+    { "Use differential signal", true },
+    { "Swap coil polarity", false },
     { "Timeout if not inside", "s", 8, 1, 20 },
   };
 
@@ -187,7 +187,7 @@ public:
 private:
   PerimetersSettings m_settings
   {
-    { "Use", "", false, false, true }
+    { "Use", false }
   };
 
   // Shorter convenient variables for settings variables

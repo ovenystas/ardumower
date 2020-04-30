@@ -12,11 +12,11 @@
 #include "Setting.h"
 #include "Config.h"
 
-typedef struct encoderS
+struct EncoderS
 {
   Encoder* left_p { nullptr };
   Encoder* right_p { nullptr };
-} encoderS;
+};
 
 struct OdometerSettings
 {
@@ -74,7 +74,7 @@ class Odometer
       m_settings.wheelBaseCm.value = settings_p->wheelBaseCm.value;
     }
 
-    encoderS m_encoder;
+    EncoderS m_encoder;
     Imu* m_imu_p;
 
   private:
@@ -87,7 +87,7 @@ class Odometer
 
     OdometerSettings m_settings
     {
-      { "Use", "", false, false, true },
+      { "Use", false },
       { "Ticks per revolution", "", ODOMETER_TICKS_PER_REVOLUTION, 1, 2000 },
       { "Ticks per cm", "", ODOMETER_TICKS_PER_CM, 0.1, 30.0, 0.1 },
       { "Wheel base", "cm", ODOMETER_WHEELBASE_CM, 0.1, 50.0, 0.1 }

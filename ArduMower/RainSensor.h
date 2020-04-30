@@ -59,7 +59,7 @@ private:
 
   RainSensorSettings m_settings
   {
-    { "Use", "", false, false, true }
+    { "Use", false }
   };
 
   // Shorter convenient variables for settings variables

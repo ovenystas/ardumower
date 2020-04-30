@@ -67,7 +67,7 @@ private:
 
   ButtonSettings m_settings
   {
-    { "Use", "", true, false, true }
+    { "Use", true }
   };
 
   // Shorter convenient variables for settings variables

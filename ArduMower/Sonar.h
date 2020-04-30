@@ -106,7 +106,7 @@ private:
 
   SonarSettings m_settings
   {
-    { "Use", "", false, false, true }
+    { "Use", false }
   };
 
   // Shorter convenient variables for settings variables
@@ -203,7 +203,7 @@ private:
 
   SonarsSettings m_settings
   {
-    { "Use", "", false, false, true },
+    { "Use", false },
     { "Trigger below", "us", 1050, 1, 3000 }
   };
 

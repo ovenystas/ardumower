@@ -550,7 +550,7 @@ private:
 
   RobotSettings m_settings
   {
-    { "Developer", "", false, false, true },
+    { "Developer", false },
 
     { "Trigger timeout", "ms", 0, 0, 2000, 1.0f },
     { "Perimeter out roll time max", "ms", 2000, 0, 8000, 1.0f },
@@ -559,21 +559,21 @@ private:
     { "Perimeter tracking roll time", "ms", 1500, 0, 8000, 1.0f },
     { "Perimeter tracking reverse time", "ms", 2200, 0, 8000, 1.0f },
 
-    { "Block inner wheel", "", true, false, true },
+    { "Block inner wheel", true },
 
     { "Reverse time", "ms", 1800, 0, 8000, 1.0f },
     { "Roll time", "ms", 1000, 0, 8000, 1.0f },
     { "Forward time", "ms", 1500, 0, 8000, 1.0f },
     { "Station reverse check time", "ms", 1700, 0, 8000, 1.0f },
 
-    { "User switch 1 is", "", false, false, true  },
-    { "User switch 2 is", "", false, false, true  },
-    { "User switch 3 is", "", false, false, true  },
+    { "User switch 1 is", false },
+    { "User switch 2 is", false },
+    { "User switch 3 is", false },
 
-    { "Use", "", false, false, true  }, // timerUse
+    { "Use", false }, // timerUse
     {
       {
-        { "Use", "", false, false, true  }, // timer[i].active
+        { "Use", false }, // timer[i].active
         {
             { "Start hour", "", 9, 0, 23, 1.0f },  // timer[i].startTime.hour
             { "Start minute", "", 0, 0, 59, 1.0f }, // timer[i].startTime.minute
@@ -585,7 +585,7 @@ private:
         { "DaysOfWeek", "", B01111110, 0, 0x7F, 1.0f }, // timer[i].daysOfWeek
       },
       {
-        { "Use", "", false, false, true  }, // timer[i].active
+        { "Use", false }, // timer[i].active
         {
             { "Start hour", "", 9, 0, 23, 1.0f },  // timer[i].startTime.hour
             { "Start minute", "", 0, 0, 59, 1.0f }, // timer[i].startTime.minute
@@ -597,7 +597,7 @@ private:
         { "DaysOfWeek", "", B01111110, 0, 0x7F, 1.0f }, // timer[i].daysOfWeek
       },
       {
-        { "Use", "", false, false, true  }, // timer[i].active
+        { "Use", false }, // timer[i].active
         {
             { "Start hour", "", 9, 0, 23, 1.0f },  // timer[i].startTime.hour
             { "Start minute", "", 0, 0, 59, 1.0f }, // timer[i].startTime.minute
@@ -609,7 +609,7 @@ private:
         { "DaysOfWeek", "", B01111110, 0, 0x7F, 1.0f }, // timer[i].daysOfWeek
       },
       {
-        { "Use", "", false, false, true  }, // timer[i].active
+        { "Use", false }, // timer[i].active
         {
             { "Start hour", "", 9, 0, 23, 1.0f },  // timer[i].startTime.hour
             { "Start minute", "", 0, 0, 59, 1.0f }, // timer[i].startTime.minute
@@ -621,7 +621,7 @@ private:
         { "DaysOfWeek", "", B01111110, 0, 0x7F, 1.0f }, // timer[i].daysOfWeek
       },
       {
-        { "Use", "", false, false, true  }, // timer[i].active
+        { "Use", false }, // timer[i].active
         {
             { "Start hour", "", 9, 0, 23, 1.0f },  // timer[i].startTime.hour
             { "Start minute", "", 0, 0, 59, 1.0f }, // timer[i].startTime.minute
@@ -634,7 +634,7 @@ private:
       },
     },
 
-    { "Use", "", false, false, true  },
+    { "Use", false },
     { "Stuck if GPS speed is below", "", 0.2f, 0.0f, 3.0f, 0.1f },
     { "GPS speed ignore time", "ms", 5000, WHEELS_MAX_REVERSE_TIME_MS, 10000, 1.0f },
   };
