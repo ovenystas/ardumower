@@ -126,27 +126,45 @@ public:
   {
     return m_ypr.yaw;
   }
+
   float getYawDeg()
   {
     return degrees(m_ypr.yaw);
+  }
+
+  int16_t getYawDegInt()
+  {
+    return static_cast<int16_t>(round(degrees(m_ypr.yaw)));
   }
 
   float getPitch() const
   {
     return m_ypr.pitch;
   }
+
   float getPitchDeg()
   {
     return degrees(m_ypr.pitch);
+  }
+
+  int16_t getPitchDegInt()
+  {
+    return static_cast<int16_t>(round(degrees(m_ypr.pitch)));
   }
 
   float getRoll() const
   {
     return m_ypr.roll;
   }
+
   float getRollDeg()
   {
     return degrees(m_ypr.roll);
+  }
+
+  int16_t getRollDegInt()
+  {
+    return static_cast<int16_t>(round(degrees(m_ypr.roll)));
   }
 
   // --------- gyro state -----------------------------

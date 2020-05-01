@@ -205,7 +205,7 @@ public:
   void tasks_1m();
 
   // state machine
-  void setNextState(uint8_t stateNew, uint8_t rollDir = LEFT);
+  void setNextState(StateMachine::StateE stateNew, uint8_t rollDir = LEFT);
 
   // settings
   void deleteUserSettings();

@@ -11,10 +11,10 @@ class BuzzerConst
 {
 public:
   static const uint16_t frequency_hz = 4200;
-  static const uint32_t durationShort_ms = 50;
-  static const uint32_t durationLong_ms = 500;
-  static const uint32_t delayShort_ms = 250;
-  static const uint32_t delayLong_ms = 500;
+  static const uint16_t durationShort_ms = 50;
+  static const uint16_t durationLong_ms = 500;
+  static const uint16_t delayShort_ms = 250;
+  static const uint16_t delayLong_ms = 500;
 };
 
 void Buzzer::beepShort(uint8_t numberOfBeeps)

@@ -45,36 +45,36 @@ enum class CalendarSystem
   Gregorian = 1
 };
 
-typedef struct timehm_t
+struct timehm_t
 {
   uint8_t hour;
   uint8_t minute;
-} timehm_t;
+};
 
-typedef struct date_t
+struct date_t
 {
   uint8_t dayOfWeek;
   uint8_t day;
   uint8_t month;
   uint16_t year;
-} date_t;
+};
 
-typedef struct datetime_t
+struct datetime_t
 {
   timehm_t time;
   date_t date;
-} datetime_t;
+};
 
 
 // ---------- timers --------------------------------------
 
-typedef struct ttimer_t
+struct ttimer_t
 {
   bool active;
   timehm_t startTime;
   timehm_t stopTime;
   uint8_t daysOfWeek; // Bit-field b7=unused, b6=Saturday, b0=Sunday
-} ttimer_t;
+};
 
 
 // ---- other ----------------------------------

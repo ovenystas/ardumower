@@ -1314,11 +1314,9 @@ void Robot::printInfo_sensorValues(Stream &s)
       m_sonars.m_sonarArray_p[static_cast<uint8_t>(SonarE::CENTER)].getDistance_us(),
       m_sonars.m_sonarArray_p[static_cast<uint8_t>(SonarE::RIGHT)].getDistance_us());
 
-  Streamprint(s, "yaw %3d ", (int)(m_imu.getYawDeg()));
-
-  Streamprint(s, "pit %3d ", (int)(m_imu.getPitchDeg()));
-
-  Streamprint(s, "rol %3d ", (int)(m_imu.getRollDeg()));
+  Streamprint(s, "yaw %3d ", m_imu.getYawDegInt());
+  Streamprint(s, "pit %3d ", m_imu.getPitchDegInt());
+  Streamprint(s, "rol %3d ", m_imu.getRollDeg());
 
   if (m_perimeters.isUsed())
   {
@@ -1350,11 +1348,9 @@ void Robot::printInfo_sensorCounters(Stream &s)
 
   Streamprint(s, "son %3d ", m_sonars.getDistanceCounter());
 
-  Streamprint(s, "yaw %3d ", (int)(m_imu.getYawDeg()));
-
-  Streamprint(s, "pit %3d ", (int)(m_imu.getPitchDeg()));
-
-  Streamprint(s, "rol %3d ", (int)(m_imu.getRollDeg()));
+  Streamprint(s, "yaw %3d ", m_imu.getYawDegInt());
+  Streamprint(s, "pit %3d ", m_imu.getPitchDegInt());
+  Streamprint(s, "rol %3d ", m_imu.getRollDegInt());
 
   //Streamprint(s, "per %3d ", perimeterLeft);
 
@@ -1984,7 +1980,7 @@ void Robot::setDefaults()
 // set state machine new state
 // http://wiki.ardumower.de/images/f/ff/Ardumower_states.png
 // called *ONCE* to set to a *NEW* state
-void Robot::setNextState(uint8_t stateNew, uint8_t rollDir)
+void Robot::setNextState(StateMachine::StateE stateNew, uint8_t rollDir)
 {
   if (m_stateMachine.isCurrentState(stateNew))
   {

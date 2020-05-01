@@ -13,7 +13,7 @@ class StateMachine
   public:
     StateMachine() {};
 
-    enum stateE
+    enum StateE
     {
       STATE_OFF,              // off
       STATE_FORWARD,          // drive forward
@@ -38,7 +38,7 @@ class StateMachine
       STATE_PERI_OUT_ROLL,    // outside perimeter rolling driving without checkPerimeterBoundary()
     };
 
-    const char* getCurrentStateName();
+    const char* getCurrentStateName() const;
 
     void init();
 
@@ -47,16 +47,15 @@ class StateMachine
       return m_stateStartTime;
     }
 
-    bool isCurrentState(uint8_t state);
-
-    uint8_t getCurrentState() const
+    bool isCurrentState(StateE state) const
     {
-      return m_stateCurr;
+      return m_stateCurr == state;
     }
 
-    uint32_t getEndTime() const
+
+    StateE getCurrentState() const
     {
-      return m_stateEndTime;
+      return m_stateCurr;
     }
 
     void setEndTime(uint32_t endTime)
@@ -66,27 +65,27 @@ class StateMachine
 
     void changeState();
 
-    void setNextState(uint8_t state)
+    void setNextState(StateE state)
     {
       m_stateNext = state;
     }
 
-    unsigned long getStateTime();
+    unsigned long getStateTime() const;
 
-    bool isStateEndTimeReached();
+    bool isStateEndTimeReached() const;
 
   private:
     static const constexpr char* const stateNames[] =
     {
-      "OFF ", "RC  ", "FORW", "ROLL", "REV ", "CIRC", "ERR ",
+      "OFF ", "FORW", "ROLL", "REV ", "CIRC", "ERR ",
       "PFND", "PTRK", "PROL", "PREV", "STAT", "CHARG", "STCHK",
       "STREV", "STROL", "STFOR", "MANU", "ROLW", "POUTFOR",
       "POUTREV", "POUTROLL"
     };
 
-    uint8_t m_stateCurr { STATE_OFF };
-    uint8_t m_stateLast { STATE_OFF };
-    uint8_t m_stateNext { STATE_OFF };
+    StateE m_stateCurr { STATE_OFF };
+    StateE m_stateLast { STATE_OFF };
+    StateE m_stateNext { STATE_OFF };
     uint32_t m_stateTime {};
     uint32_t m_stateStartTime {};
     uint32_t m_stateEndTime {};

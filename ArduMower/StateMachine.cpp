@@ -9,14 +9,9 @@
 
 constexpr const char* const StateMachine::stateNames[];
 
-const char* StateMachine::getCurrentStateName()
+const char* StateMachine::getCurrentStateName() const
 {
   return stateNames[m_stateCurr];
-}
-
-bool StateMachine::isCurrentState(uint8_t state)
-{
-  return m_stateCurr == state;
 }
 
 void StateMachine::init()
@@ -31,12 +26,12 @@ void StateMachine::changeState()
   m_stateCurr = m_stateNext;
 }
 
-unsigned long StateMachine::getStateTime()
+unsigned long StateMachine::getStateTime() const
 {
   return millis() - m_stateStartTime;
 }
 
-bool StateMachine::isStateEndTimeReached()
+bool StateMachine::isStateEndTimeReached() const
 {
   return millis() >= m_stateEndTime;
 }

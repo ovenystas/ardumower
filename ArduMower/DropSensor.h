@@ -18,7 +18,6 @@ public:
     pinMode(m_pin, INPUT_PULLUP);
   }
 
-  void setup(uint8_t pin);
   void check(DropSensor_Contact contactType);
 
   void simDetected()

@@ -60,12 +60,14 @@ class Bumpers
 {
 public:
   Bumpers() = default;
-  Bumpers(const uint8_t* pins, Bumper* bumperArray_p, uint8_t len)
+  Bumpers(const uint8_t* pins, Bumper* bumperArray_p, uint8_t len) :
+    m_len(len), m_bumperArray_p(bumperArray_p)
   {
-    setup(pins, bumperArray_p, len);
+    for (uint8_t i = 0; i < len; i++)
+    {
+      m_bumperArray_p[i].setup(pins[i]);
+    }
   }
-
-  void setup(const uint8_t* pins, Bumper* bumperArray_p, uint8_t len);
 
   void check() const;
   bool isAnyHit() const;
@@ -95,6 +97,6 @@ private:
   // Shorter convenient variables for settings variables
   bool& m_use = m_settings.use.value;
 
-  uint8_t m_len { 0 };
-  Bumper* m_bumperArray_p { nullptr };
+  uint8_t m_len {};
+  Bumper* m_bumperArray_p {};
 };

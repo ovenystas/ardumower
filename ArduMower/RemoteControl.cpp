@@ -502,6 +502,9 @@ void RemoteControl::sendMotorMenu(bool update)
     case 2:
       Bluetooth.print(F("Right motor forw"));
       break;
+
+    default:
+      break;
   }
 
   Bluetooth.print(F("|a14~for config file:"));
@@ -606,6 +609,7 @@ void RemoteControl::processMotorMenu(String pfodCmd)
   else if (pfodCmd == "a10")
   {
     m_testmode = (m_testmode + 1) % 3;
+
     switch (m_testmode)
     {
       case 0:
@@ -618,18 +622,15 @@ void RemoteControl::processMotorMenu(String pfodCmd)
         m_robot_p->setNextState(StateMachine::STATE_MANUAL);
         m_robot_p->setSpeed(+50);
         m_robot_p->setSteer(+50);
-//        robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmSet = 0;
-//        robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet =
-//            robot_p->wheels.wheel[Wheel::LEFT].motor.rpmMax;
         break;
 
       case 2:
         m_robot_p->setNextState(StateMachine::STATE_MANUAL);
         m_robot_p->setSpeed(+50);
         m_robot_p->setSteer(-50);
-//        robot_p->wheels.wheel[Wheel::LEFT].motor.rpmSet = 0;
-//        robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmSet =
-//            robot_p->wheels.wheel[Wheel::RIGHT].motor.rpmMax;
+        break;
+
+      default:
         break;
     }
   }
@@ -693,6 +694,9 @@ void RemoteControl::sendMowMenu(bool update)
     case 1:
       Bluetooth.print(F("Motor ON"));
       break;
+
+    default:
+      break;
   }
 
   Bluetooth.println(F("|o04~for config file:"));
@@ -713,7 +717,7 @@ void RemoteControl::processMowMenu(String pfodCmd)
     float currentMeas = m_robot_p->m_cutter.m_motor.getAverageCurrent();
     processSlider(pfodCmd, currentMeas, 1);
     m_robot_p->m_cutter.m_motor.setScale(currentMeas /
-        max(0, (float )m_robot_p->m_cutter.m_motor.getAverageSenseAdc()));
+        max(0, static_cast<float>(m_robot_p->m_cutter.m_motor.getAverageSenseAdc())));
   }
   else if (pfodCmd.startsWith("o05"))
   {
@@ -734,6 +738,7 @@ void RemoteControl::processMowMenu(String pfodCmd)
   else if (pfodCmd == "o10")
   {
     m_testmode = (m_testmode + 1) % 2;
+
     switch (m_testmode)
     {
       case 0:
@@ -745,6 +750,9 @@ void RemoteControl::processMowMenu(String pfodCmd)
       case 1:
         m_robot_p->setNextState(StateMachine::STATE_MANUAL);
         m_robot_p->m_cutter.enable();
+        break;
+
+      default:
         break;
     }
   }
@@ -2140,8 +2148,8 @@ void RemoteControl::processSettingsMenu(String pfodCmd)
 // process pfodState
 void RemoteControl::run()
 {
-  unsigned long curMillis = millis();
-  float elapsedSeconds = float(curMillis) / 1000.0f;
+  uint32_t curMillis = millis();
+  float elapsedSeconds = static_cast<float>(curMillis) / 1000.0f;
 
   if (m_pfodState == PfodState::LOG_SENSORS)
   {
@@ -2198,7 +2206,7 @@ void RemoteControl::run()
     Bluetooth.print(",");
 
     float lat, lon;
-    unsigned long age;
+    uint32_t age;
     m_robot_p->m_gps.f_get_position(&lat, &lon, &age);
     Bluetooth.print(m_robot_p->m_gps.hdop());
     Bluetooth.print(",");

@@ -29,15 +29,6 @@ class Wheel
 class Wheels
 {
   public:
-    Wheel m_wheel[Wheel::END];
-    int m_rollTimeMax {};         // max. roll time (ms)
-    int m_rollTimeMin {};         // min. roll time (ms)
-    int m_reverseTime {};         // max. reverse time (ms)
-    unsigned long m_forwardTimeMax {};     // max. forward time (ms) / timeout
-    float m_biDirSpeedRatio1 {};  // bidir mow pattern speed ratio 1
-    float m_biDirSpeedRatio2 {};  // bidir mow pattern speed ratio 2
-    Wheel::WheelE m_rotateDir { Wheel::LEFT };
-
     bool isTimeToRotationChange(void);
     void control(void);
 
@@ -61,8 +52,18 @@ class Wheels
       m_steer = steer;
     }
 
+public:
+    Wheel m_wheel[Wheel::END];
+    int16_t m_rollTimeMax {};         // max. roll time (ms)
+    int16_t m_rollTimeMin {};         // min. roll time (ms)
+    int16_t m_reverseTime {};         // max. reverse time (ms)
+    uint32_t m_forwardTimeMax {};     // max. forward time (ms) / timeout
+    float m_biDirSpeedRatio1 {};  // bidir mow pattern speed ratio 1
+    float m_biDirSpeedRatio2 {};  // bidir mow pattern speed ratio 2
+    Wheel::WheelE m_rotateDir { Wheel::LEFT };
+
   private:
-    const uint16_t TIME_BETWEEN_ROTATION_CHANGE {60000};
+    const uint16_t TIME_BETWEEN_ROTATION_CHANGE_ms { 60000 };
 
     unsigned long m_nextTimeRotationChange {};
     int8_t m_speed {}; // Range -100..+100, - = reverse, + = forward
