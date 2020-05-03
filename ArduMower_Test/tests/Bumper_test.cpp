@@ -213,33 +213,6 @@ TEST(BumpersInit, defaultInit)
   POINTERS_EQUAL(nullptr, bumpers_p->m_bumperArray_p);
 }
 
-TEST(BumpersInit, defaultInit_setup)
-{
-  mock().expectOneCall("pinMode")
-      .withParameter("pin", 1)
-      .withParameter("mode", INPUT_PULLUP);
-  mock().expectOneCall("pinMode")
-      .withParameter("pin", 2)
-      .withParameter("mode", INPUT_PULLUP);
-
-  bumpers_p = new Bumpers;
-  bumpers_p->setup(bumperPins, bumperArray, BUMPERS_NUM);
-
-  CHECK(!bumpers_p->m_use);
-  BYTES_EQUAL(BUMPERS_NUM, bumpers_p->m_len);
-  CHECK(bumpers_p->m_bumperArray_p != nullptr);
-
-  BYTES_EQUAL(1, bumpers_p->m_bumperArray_p[0].m_pin);
-  CHECK(!bumpers_p->m_bumperArray_p[0].m_hit);
-  UNSIGNED_LONGS_EQUAL(0, bumpers_p->m_bumperArray_p[0].m_counter);
-
-  BYTES_EQUAL(2, bumpers_p->m_bumperArray_p[1].m_pin);
-  CHECK(!bumpers_p->m_bumperArray_p[1].m_hit);
-  UNSIGNED_LONGS_EQUAL(0, bumpers_p->m_bumperArray_p[1].m_counter);
-
-  mock().checkExpectations();
-}
-
 TEST(BumpersInit, parameterizedInit)
 {
   mock().expectOneCall("pinMode")
