@@ -11,6 +11,14 @@
 
 // Mocked functions -----------------------------------------------------------
 
+void HardwareSerial::begin(uint32_t baud, uint8_t config)
+{
+  mock().actualCall("begin")
+      .onObject(this)
+      .withParameter("baud", baud)
+      .withParameter("config", config);
+}
+
 int16_t HardwareSerial::available(void)
 {
   mock().actualCall("available")

@@ -60,7 +60,7 @@ void BluetoothConfig::writeReadBT(String s)
     writeBT(s);
     delay(2000);
     readBT();
-  } while (m_btResult.startsWith("ERROR") && counter++ < 4);
+  } while (m_btResult.startsWith("ERROR") && ++counter < 4);
 
   Console.println();
 }
@@ -108,7 +108,7 @@ void BluetoothConfig::setName(String name, BluetoothType btType)
   }
 }
 
-void BluetoothConfig::setPinCode(uint16_t pinCode, BluetoothType btType)
+void BluetoothConfig::setPinCode(uint32_t pinCode, BluetoothType btType)
 {
   Console.println();
   Console.print(F("Setting pin code "));
@@ -313,10 +313,11 @@ BluetoothType BluetoothConfig::detectModuleType()
     return BluetoothType::FBT06_MBTV4;
   }
 
+  Console.println(F("=>unknown"));
   return BluetoothType::UNKNOWN;
 }
 
-void BluetoothConfig::setParams(String name, uint16_t pinCode, uint32_t baudrate,
+void BluetoothConfig::setParams(String name, uint32_t pinCode, uint32_t baudrate,
     bool quickBaudScan)
 {
   Console.println(F("HC-03/04/05/06/linvor/ModiaTek "

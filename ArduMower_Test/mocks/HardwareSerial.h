@@ -32,11 +32,7 @@
 class HardwareSerial : public Stream
 {
   public:
-    void begin(uint32_t baud, uint8_t config)
-    {
-      mBaud = baud;
-      mConfig = config;
-    }
+    void begin(uint32_t baud, uint8_t config);
 
     void begin(uint32_t baud)
     {

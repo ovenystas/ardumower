@@ -49,7 +49,7 @@ class BluetoothConfig
 {
 public:
   BluetoothConfig() {};
-  void setParams(String name, uint16_t pinCode, uint32_t baudrate,
+  void setParams(String name, uint32_t pinCode, uint32_t baudrate,
       bool quickBaudScan);
 
 private:
@@ -57,7 +57,7 @@ private:
   void readBT();
   void writeReadBT(String s);
   void setName(String name, BluetoothType btType);
-  void setPinCode(uint16_t pinCode, BluetoothType btType);
+  void setPinCode(uint32_t pinCode, BluetoothType btType);
   uint8_t baudrateToN(uint32_t baudrate);
   void printSuccess();
   void setBaudrate(uint32_t baudrate, BluetoothType btType);
