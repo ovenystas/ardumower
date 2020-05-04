@@ -1,3 +1,3 @@
 #include "HardwareSerial.h"
 
-HardwareSerial Serial3;
+HardwareSerial Serial;

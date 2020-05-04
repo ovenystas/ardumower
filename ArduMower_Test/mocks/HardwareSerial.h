@@ -1,7 +1,7 @@
-#ifndef HARDWARESERIAL_H
-#define HARDWARESERIAL_H
+#pragma once
 
 #include <inttypes.h>
+#include "Stream.h"
 
 // Define config for Serial.begin(baud, config);
 #define SERIAL_5N1 0x00
@@ -29,7 +29,7 @@
 #define SERIAL_7O2 0x3C
 #define SERIAL_8O2 0x3E
 
-class HardwareSerial
+class HardwareSerial : public Stream
 {
   public:
     void begin(uint32_t baud, uint8_t config)
@@ -43,15 +43,9 @@ class HardwareSerial
       mBaud = baud;
     }
 
-    int16_t available(void)
-    {
-      return 0;
-    }
+    int16_t available(void);
 
-    int16_t read(void)
-    {
-      return 0;
-    }
+    int16_t read(void);
 
     // Extra helper functions.
     uint32_t getBaud()
@@ -69,6 +63,7 @@ class HardwareSerial
     uint8_t mConfig;
 };
 
+extern HardwareSerial Serial;
+extern HardwareSerial Serial1;
+extern HardwareSerial Serial2;
 extern HardwareSerial Serial3;
-
-#endif // HARDWARESERIAL_H

@@ -29,6 +29,7 @@ CPP_PLATFORM = Gcc
 
 SRC_FILES = \
 	../ArduMower/Battery.cpp \
+	../ArduMower/BluetoothConfig.cpp \
 	../ArduMower/Bumper.cpp \
 	../ArduMower/Button.cpp \
 	../ArduMower/Buzzer.cpp \

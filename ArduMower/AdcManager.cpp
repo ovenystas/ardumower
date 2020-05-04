@@ -26,7 +26,7 @@
 
 #include "AdcManager.h"
 
-#include "drivers.h"
+#include "Drivers.h"
 
 const uint16_t AdcRefSettleTime = 500;
 const int16_t calibMinValue = -9999;

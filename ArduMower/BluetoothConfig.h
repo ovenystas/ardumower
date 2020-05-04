@@ -33,7 +33,8 @@
 
  NOTE for HC05:           Connect KEY pin to 3.3V!
  NOTE for HC06/linvor:    Do NOT pair/connect (LED must be blinking)
- NOTE for FBT06/MBTV4:    First you have to solder the PIO11 pin to VCC (PIN 12) which is 3.3 Volts using a thin wire.
+ NOTE for FBT06/MBTV4:    First you have to solder the PIO11 pin to VCC (PIN 12)
+                          which is 3.3 Volts using a thin wire.
  */
 
 enum class BluetoothType
@@ -48,15 +49,17 @@ class BluetoothConfig
 {
 public:
   BluetoothConfig() {};
-  void setParams(String name, int pin, uint32_t baudrate, bool quickBaudScan);
+  void setParams(String name, uint16_t pinCode, uint32_t baudrate,
+      bool quickBaudScan);
 
 private:
-  void setConfigs(byte* config);
   void writeBT(String s);
   void readBT();
   void writeReadBT(String s);
   void setName(String name, BluetoothType btType);
-  void setPin(int pin, BluetoothType btType);
+  void setPinCode(uint16_t pinCode, BluetoothType btType);
+  uint8_t baudrateToN(uint32_t baudrate);
+  void printSuccess();
   void setBaudrate(uint32_t baudrate, BluetoothType btType);
   bool detectBaudrate(bool quickBaudScan);
   BluetoothType detectModuleType();

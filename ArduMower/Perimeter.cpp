@@ -26,8 +26,8 @@
 #include <limits.h>
 
 #include "AdcManager.h"
-#include "drivers.h"
 #include "Config.h"
+#include "Drivers.h"
 
 // developer test to be activated in mower.cpp:
 #if PERIMETER_USE_DEVELOPER_TEST

@@ -14,6 +14,8 @@
 #include <string.h>
 #include <math.h>
 
+#include <pgmspace.h>
+
 #include "binary.h"
 
 void yield(void);
