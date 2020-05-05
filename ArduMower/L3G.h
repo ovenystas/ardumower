@@ -4,15 +4,11 @@
 #pragma once
 
 #include <Arduino.h> // for byte data type
+#include "Vector.h"
 
 class L3G
 {
   public:
-    template <typename T> struct vector
-    {
-      T x, y, z;
-    };
-
     enum deviceTypeE
     {
       DEVICE_4200D,
@@ -87,7 +83,7 @@ class L3G
        LOW_ODR        = 0x39  // D20H
     };
 
-    vector<int16_t> m_g {}; // gyro angular velocity readings
+    Vector<int16_t> m_g {}; // gyro angular velocity readings
 
     byte m_last_status {}; // status of last I2C transmission
 
@@ -118,15 +114,6 @@ class L3G
 
     bool timeoutOccurred(void);
 
-    // vector functions
-    template<typename Ta, typename Tb, typename To> static void vectorCross(
-        const vector<Ta> *a, const vector<Tb> *b, vector<To> *out);
-
-    template<typename Ta, typename Tb> static float vectorDot(
-        const vector<Ta> *a, const vector<Tb> *b);
-
-    static void vectorNormalize(vector<float> *a);
-
   private:
       deviceTypeE m_deviceType { DEVICE_AUTO }; // chip type (D20H, D20, or 4200D)
       byte m_address {};
@@ -136,17 +123,3 @@ class L3G
 
       int testReg(const byte address, const regAddrE reg);
 };
-
-template<typename Ta, typename Tb, typename To> void L3G::vectorCross(
-    const vector<Ta> *a, const vector<Tb> *b, vector<To> *out)
-{
-  out->x = (a->y * b->z) - (a->z * b->y);
-  out->y = (a->z * b->x) - (a->x * b->z);
-  out->z = (a->x * b->y) - (a->y * b->x);
-}
-
-template <typename Ta, typename Tb> float L3G::vectorDot(
-    const vector<Ta> *a, const vector<Tb> *b)
-{
-  return (a->x * b->x) + (a->y * b->y) + (a->z * b->z);
-}

@@ -191,18 +191,18 @@ void L3G::read()
   uint8_t zhg = Wire.read();
 
   // combine high and low bytes
-  m_g.x = (int16_t)(xhg << 8 | xlg);
-  m_g.y = (int16_t)(yhg << 8 | ylg);
-  m_g.z = (int16_t)(zhg << 8 | zlg);
+  m_g.x = static_cast<int16_t>(xhg << 8 | xlg);
+  m_g.y = static_cast<int16_t>(yhg << 8 | ylg);
+  m_g.z = static_cast<int16_t>(zhg << 8 | zlg);
 }
 
-void L3G::vectorNormalize(vector<float> *a)
-{
-  float mag = sqrt(vectorDot(a, a));
-  a->x /= mag;
-  a->y /= mag;
-  a->z /= mag;
-}
+//void L3G::vectorNormalize(vector<float> *a)
+//{
+//  float mag = sqrt(vectorDot(a, a));
+//  a->x /= mag;
+//  a->y /= mag;
+//  a->z /= mag;
+//}
 
 // Private Methods //////////////////////////////////////////////////////////////
 
