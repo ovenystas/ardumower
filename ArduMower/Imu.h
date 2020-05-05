@@ -45,40 +45,40 @@ enum
   IMU_CAL_COM
 };
 
-typedef struct point_int_t
+struct XyzInt16_t
 {
-  int x;
-  int y;
-  int z;
-} point_int_t;
+  int16_t x;
+  int16_t y;
+  int16_t z;
+};
 
-typedef struct point_longt_t
+struct XyzInt32_t
 {
-  long x;
-  long y;
-  long z;
-} point_long_t;
+  int32_t x;
+  int32_t y;
+  int32_t z;
+};
 
-typedef struct point_float_t
+struct XyzFloat_t
 {
   float x;
   float y;
   float z;
-} point_float_t;
+};
 
-typedef struct ypr_t
+struct YawPitchRoll_t
 {
   float yaw;
   float pitch;
   float roll;
-} ypr_t;
+};
 
 typedef struct calibrationData_t
 {
-  point_float_t accelOffset;
-  point_float_t accelScale;
-  point_int_t magnetometerOffset;
-  point_int_t magnetometerScale;
+  XyzFloat_t accelOffset;
+  XyzFloat_t accelScale;
+  XyzInt16_t magnetometerOffset;
+  XyzInt16_t magnetometerScale;
 } calibrationData_t;
 
 struct ImuSettings
@@ -111,8 +111,8 @@ public:
   }
 
   void update(void);
-  int getCallCounter(void);
-  int getErrorCounter(void);
+  int16_t getCallCounter(void);
+  int16_t getErrorCounter(void);
   void deleteCalibrationData(void);
   bool isCalibrationAvailable(void) const
   {
@@ -174,8 +174,8 @@ public:
   bool calibrateAccelerometerNextAxis();
 
   // --------- accelerometer/magnetometer state -------
-  point_float_t m_acc { 0.0, 0.0, 0.0 };
-  point_float_t m_mag { 0.0, 0.0, 0.0 };
+  XyzFloat_t m_acc { 0.0, 0.0, 0.0 };
+  XyzFloat_t m_mag { 0.0, 0.0, 0.0 };
   bool getUseAccelCalibration(void) const
   {
     return m_useAccelCalibration;
@@ -207,10 +207,10 @@ private:
   void loadCalibrationData(void);
 
   // print IMU values
-  void printPoint(const point_int_t point);
-  void printPointln(const point_int_t point);
-  void printPoint(const point_float_t point);
-  void printPointln(const point_float_t point);
+  void printPoint(const XyzInt16_t point);
+  void printPointln(const XyzInt16_t point);
+  void printPoint(const XyzFloat_t point);
+  void printPointln(const XyzFloat_t point);
   void printCalibrationData(void);
   void saveCalibrationData(void);
 
@@ -236,25 +236,25 @@ private:
 
   // Filter
   float Complementary(const float newAngle, const float newRate,
-      const int looptime, float angle);
+      const int16_t looptime, float angle);
   float Complementary2(const float newAngle, const float newRate,
-      const int looptime, float angle);
-  float Kalman(const float newAngle, const float newRate, const int looptime,
+      const int16_t looptime, float angle);
+  float Kalman(const float newAngle, const float newRate, const int16_t looptime,
       float x_angle);
 
-  unsigned long m_nextTime {};
-  unsigned long m_nextTimeControl {};
-  unsigned int m_timeBetweenRuns { 200 }; // 5 Hz
-  unsigned int m_timeBetweenControl { 100 }; // 10 Hz
+  uint32_t m_nextTime {};
+  uint32_t m_nextTimeControl {};
+  uint16_t m_timeBetweenRuns { 200 }; // 5 Hz
+  uint16_t m_timeBetweenControl { 100 }; // 10 Hz
 
   bool m_foundNewMinMax { false };
   Buzzer* m_buzzer_p;
-  int m_callCounter {};
-  int m_errorCounter {};
+  int16_t m_callCounter {};
+  int16_t m_errorCounter {};
   bool m_hardwareInitialized { false };
   bool m_calibrationAvailable { false };
-  byte m_state { IMU_RUN };
-  unsigned long m_lastAHRSTime {};
+  uint8_t m_state { IMU_RUN };
+  uint32_t m_lastAHRSTime {};
   calibrationData_t m_calibrationData
   {
     { 0, 0, 0 },
@@ -265,21 +265,21 @@ private:
 
   // --------- acceleration state ---------------------
   LSM303 m_accMag;
-  point_float_t m_accMin { 0.0, 0.0, 0.0 };
-  point_float_t m_accMax { 0.0, 0.0, 0.0 };
-  int m_calibAccelAxisCounter {};
+  XyzFloat_t m_accMin { 0.0, 0.0, 0.0 };
+  XyzFloat_t m_accMax { 0.0, 0.0, 0.0 };
+  int16_t m_calibAccelAxisCounter {};
   bool m_useAccelCalibration { true };
 
   // --------- gyro state -----------------------------
-  point_int_t m_gyroOffset { 0, 0, 0 }; // gyro calibration data
-  int m_gyroNoise {};          // gyro noise
+  XyzInt16_t m_gyroOffset { 0, 0, 0 }; // gyro calibration data
+  int16_t m_gyroNoise {};          // gyro noise
   bool m_useGyroCalibration { true }; // gyro calibration flag
-  ypr_t m_ypr { 0.0, 0.0, 0.0 };  // gyro yaw,pitch,roll
+  YawPitchRoll_t m_ypr { 0.0, 0.0, 0.0 };  // gyro yaw,pitch,roll
 
   // --------- magnetometer state --------------------------
-  point_int_t m_magLast { 0, 0, 0 };
-  point_int_t m_magMin { 0, 0, 0 }; // magnetometer sensor data (raw)
-  point_int_t m_magMax { 0, 0, 0 }; // magnetometer sensor data (raw)
+  XyzInt16_t m_magLast { 0, 0, 0 };
+  XyzInt16_t m_magMin { 0, 0, 0 }; // magnetometer sensor data (raw)
+  XyzInt16_t m_magMax { 0, 0, 0 }; // magnetometer sensor data (raw)
   bool m_useMagnetometerCalibration { true };
 
   float m_accPitch {};
@@ -292,7 +292,7 @@ private:
   float m_scaledYaw {};
   float m_scaled2Yaw {};
   float m_filtYaw {};
-  point_float_t m_magTilt { 0.0, 0.0, 0.0 };
+  XyzFloat_t m_magTilt { 0.0, 0.0, 0.0 };
 
   ImuSettings m_settings
   {

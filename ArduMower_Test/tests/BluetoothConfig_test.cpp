@@ -88,13 +88,14 @@ TEST_GROUP(BluetoothConfig)
         mock().expectOneCall("read")
             .onObject(&Bluetooth)
             .andReturnValue(s[i]);
-        mock().expectOneCall("print")
-            .onObject(&Console)
-            .withParameter("val", s[i]);
         mock().expectOneCall("available")
             .onObject(&Bluetooth)
             .andReturnValue(static_cast<int>(s.length() - i - 1));
       }
+
+      mock().expectOneCall("println")
+          .onObject(&Console)
+          .withParameter("val", s);
     }
   }
 

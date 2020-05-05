@@ -124,17 +124,18 @@ float Imu::distancePI(const float x, const float w)
 float Imu::fusionPI(const float w, const float a, const float b)
 {
   float c;
+
   if ((b >= PI / 2) && (a <= -PI / 2))
   {
-    c = w * a + (1.0 - w) * (b - 2 * PI);
+    c = w * a + (1.0f - w) * (b - 2 * PI);
   }
   else if ((b <= -PI / 2) && (a >= PI / 2))
   {
-    c = w * (a - 2 * PI) + (1.0 - w) * b;
+    c = w * (a - 2 * PI) + (1.0f - w) * b;
   }
   else
   {
-    c = w * a + (1.0 - w) * b;
+    c = w * a + (1.0f - w) * b;
   }
   return scalePI(c);
 }
@@ -168,7 +169,7 @@ void Imu::deleteCalibrationData(void)
   Console.println(F("IMU calibration deleted"));
 }
 
-void Imu::printPoint(const point_float_t point)
+void Imu::printPoint(const XyzFloat_t point)
 {
   Console.print(point.x);
   Console.print(",");
@@ -176,13 +177,13 @@ void Imu::printPoint(const point_float_t point)
   Console.print(",");
   Console.print(point.z);
 }
-void Imu::printPointln(const point_float_t point)
+void Imu::printPointln(const XyzFloat_t point)
 {
   printPoint(point);
   Console.println();
 }
 
-void Imu::printPoint(const point_int_t point)
+void Imu::printPoint(const XyzInt16_t point)
 {
   Console.print(point.x);
   Console.print(",");
@@ -190,7 +191,7 @@ void Imu::printPoint(const point_int_t point)
   Console.print(",");
   Console.print(point.z);
 }
-void Imu::printPointln(const point_int_t point)
+void Imu::printPointln(const XyzInt16_t point)
 {
   printPoint(point);
   Console.println();
@@ -217,7 +218,7 @@ void Imu::calibrateGyro(void)
   Console.println(F("---calibGyro---"));
   m_useGyroCalibration = false;
   m_gyroOffset = { 0, 0, 0 };
-  point_int_t offset;
+  XyzInt16_t offset;
   for (;;)
   {
     int16_t zmin = INT16_MAX;
@@ -232,18 +233,18 @@ void Imu::calibrateGyro(void)
       zmin = min(zmin, m_gyro.m_g.z);
       zmax = max(zmax, m_gyro.m_g.z);
 
-      offset.x += m_gyro.m_g.x;
-      offset.y += m_gyro.m_g.y;
-      offset.z += m_gyro.m_g.z;
-      noise += sq(m_gyro.m_g.z - m_gyroOffset.z); // noise is computed with last offset calculation
+      offset.x = static_cast<int16_t>(offset.x + m_gyro.m_g.x);
+      offset.y = static_cast<int16_t>(offset.y + m_gyro.m_g.y);
+      offset.z = static_cast<int16_t>(offset.z + m_gyro.m_g.z);
+      noise = static_cast<int16_t>(noise + sq(m_gyro.m_g.z - m_gyroOffset.z)); // noise is computed with last offset calculation
 
       delay(10);
     }
 
-    offset.x = roundDivision(offset.x, numberOfSamples);
-    offset.y = roundDivision(offset.y, numberOfSamples);;
-    offset.z = roundDivision(offset.z, numberOfSamples);;
-    noise = roundDivision(noise, numberOfSamples);;
+    offset.x = static_cast<int16_t>(roundDivision(offset.x, numberOfSamples));
+    offset.y = static_cast<int16_t>(roundDivision(offset.y, numberOfSamples));
+    offset.z = static_cast<int16_t>(roundDivision(offset.z, numberOfSamples));
+    noise = static_cast<int16_t>(roundDivision(noise, numberOfSamples));
 
     Console.print(F("gyro calib min="));
     Console.print(zmin);
@@ -276,10 +277,10 @@ void Imu::initAccelerometer()
   Console.print(F("deviceType="));
   Console.print(m_accMag.getDeviceType());
 
-  int retry = 0;
+  int16_t retry = 0;
   for (;;)
   {
-	uint8_t devId = m_accMag.readReg(LSM303::WHO_AM_I_M);
+	  uint8_t devId = m_accMag.readReg(LSM303::WHO_AM_I_M);
     Console.print(F(" devId="));
     Console.println(devId);
     if (devId != LSM303::DEV_ID_LSM303DLM)
@@ -305,11 +306,19 @@ void Imu::initAccelerometer()
     case LSM303::DEVICE_D:
       m_accMag.writeReg(LSM303::CTRL2, 0x18); // 8 g full scale: AFS = 011
       break;
+
     case LSM303::DEVICE_DLHC:
       m_accMag.writeReg(LSM303::CTRL_REG4_A, 0x28); // 8 g full scale: FS = 10; high resolution output mode
       break;
-    default: // DLM, DLH
+
+    case LSM303::DEVICE_DLM:
+    case LSM303::DEVICE_DLH:
       m_accMag.writeReg(LSM303::CTRL_REG4_A, 0x30); // 8 g full scale: FS = 11
+      break;
+
+    case LSM303::DEVICE_AUTO:
+    default:
+      break;
   }
 }
 
@@ -319,15 +328,15 @@ void Imu::readAccelerometer()
 
   if (m_useAccelCalibration)
   {
-    m_acc.x = ((float)m_accMag.m_acc.x - m_calibrationData.accelOffset.x) / m_calibrationData.accelScale.x;
-    m_acc.y = ((float)m_accMag.m_acc.y - m_calibrationData.accelOffset.y) / m_calibrationData.accelScale.y;
-    m_acc.z = ((float)m_accMag.m_acc.z - m_calibrationData.accelOffset.z) / m_calibrationData.accelScale.z;
+    m_acc.x = (static_cast<float>(m_accMag.m_acc.x) - m_calibrationData.accelOffset.x) / m_calibrationData.accelScale.x;
+    m_acc.y = (static_cast<float>(m_accMag.m_acc.y) - m_calibrationData.accelOffset.y) / m_calibrationData.accelScale.y;
+    m_acc.z = (static_cast<float>(m_accMag.m_acc.z) - m_calibrationData.accelOffset.z) / m_calibrationData.accelScale.z;
   }
   else
   {
-    m_acc.x = (float)m_accMag.m_acc.x;
-    m_acc.y = (float)m_accMag.m_acc.y;
-    m_acc.z = (float)m_accMag.m_acc.z;
+    m_acc.x = static_cast<float>(m_accMag.m_acc.x);
+    m_acc.y = static_cast<float>(m_accMag.m_acc.y);
+    m_acc.z = static_cast<float>(m_accMag.m_acc.z);
   }
 }
 
@@ -339,7 +348,7 @@ bool Imu::initGyroscope()
   Console.print(F("deviceType="));
   Console.print(m_gyro.getDeviceType());
 
-  int retry = 0;
+  int16_t retry = 0;
   for (;;)
   {
     uint8_t devId = m_gyro.readReg(L3G::WHO_AM_I);
@@ -376,9 +385,9 @@ void Imu::readGyroscope(void)
   if (m_useGyroCalibration)
   {
     // Compensate for offset
-    m_gyro.m_g.x -= m_gyroOffset.x;
-    m_gyro.m_g.y -= m_gyroOffset.y;
-    m_gyro.m_g.z -= m_gyroOffset.z;
+    m_gyro.m_g.x = static_cast<int16_t>(m_gyro.m_g.x - m_gyroOffset.x);
+    m_gyro.m_g.y = static_cast<int16_t>(m_gyro.m_g.y - m_gyroOffset.y);
+    m_gyro.m_g.z = static_cast<int16_t>(m_gyro.m_g.z - m_gyroOffset.z);
   }
 }
 
@@ -398,12 +407,12 @@ void Imu::readMagnetometer()
 
   if (m_useMagnetometerCalibration)
   {
-    m_mag.x = (float)(m_accMag.m_acc.x - m_calibrationData.magnetometerOffset.x) /
-            (float)m_calibrationData.magnetometerScale.x;
-    m_mag.y = (float)(m_accMag.m_acc.y - m_calibrationData.magnetometerOffset.y) /
-            (float)m_calibrationData.magnetometerScale.y;
-    m_mag.z = (float)(m_accMag.m_acc.z - m_calibrationData.magnetometerOffset.z) /
-            (float)m_calibrationData.magnetometerScale.z;
+    m_mag.x = static_cast<float>(m_accMag.m_acc.x - m_calibrationData.magnetometerOffset.x) /
+            static_cast<float>(m_calibrationData.magnetometerScale.x);
+    m_mag.y = static_cast<float>(m_accMag.m_acc.y - m_calibrationData.magnetometerOffset.y) /
+            static_cast<float>(m_calibrationData.magnetometerScale.y);
+    m_mag.z = static_cast<float>(m_accMag.m_acc.z - m_calibrationData.magnetometerOffset.z) /
+            static_cast<float>(m_calibrationData.magnetometerScale.z);
   }
   else
   {
@@ -437,18 +446,24 @@ void Imu::calibrateMagnetometerStartStop(void)
     Console.println(F("Magnetometer calibration completed"));
     m_calibrationAvailable = true;
 
-    point_int_t range;
-    range.x = m_magMax.x - m_magMin.x;
-    range.y = m_magMax.y - m_magMin.y;
-    range.z = m_magMax.z - m_magMin.z;
+    XyzInt16_t range;
+    range.x = static_cast<int16_t>(m_magMax.x - m_magMin.x);
+    range.y = static_cast<int16_t>(m_magMax.y - m_magMin.y);
+    range.z = static_cast<int16_t>(m_magMax.z - m_magMin.z);
 
-    m_calibrationData.magnetometerScale.x = roundDivision(range.x, 2);
-    m_calibrationData.magnetometerScale.y = roundDivision(range.y, 2);
-    m_calibrationData.magnetometerScale.z = roundDivision(range.z, 2);
+    m_calibrationData.magnetometerScale.x =
+        static_cast<int16_t>(roundDivision(range.x, 2));
+    m_calibrationData.magnetometerScale.y =
+        static_cast<int16_t>(roundDivision(range.y, 2));
+    m_calibrationData.magnetometerScale.z =
+        static_cast<int16_t>(roundDivision(range.z, 2));
 
-    m_calibrationData.magnetometerOffset.x = m_calibrationData.magnetometerScale.x + m_magMin.x;
-    m_calibrationData.magnetometerOffset.y = m_calibrationData.magnetometerScale.y + m_magMin.y;
-    m_calibrationData.magnetometerOffset.z = m_calibrationData.magnetometerScale.z + m_magMin.z;
+    m_calibrationData.magnetometerOffset.x =
+        static_cast<int16_t>(m_calibrationData.magnetometerScale.x + m_magMin.x);
+    m_calibrationData.magnetometerOffset.y =
+        static_cast<int16_t>(m_calibrationData.magnetometerScale.y + m_magMin.y);
+    m_calibrationData.magnetometerOffset.z =
+        static_cast<int16_t>(m_calibrationData.magnetometerScale.z + m_magMin.z);
 
     saveCalibrationData();
     printCalibrationData();
@@ -561,14 +576,14 @@ bool Imu::calibrateAccelerometerNextAxis(void)
   }
 
   // Get sample values from accelerometer
-  point_int_t acc = { 0, 0, 0 };
+  XyzInt16_t acc = { 0, 0, 0 };
   for (uint8_t i = 0; i < numberOfSamples; i++)
   {
     readAccelerometer();
 
-    acc.x += m_accMag.m_acc.x;
-    acc.y += m_accMag.m_acc.y;
-    acc.z += m_accMag.m_acc.z;
+    acc.x = static_cast<int16_t>(acc.x + m_accMag.m_acc.x);
+    acc.y = static_cast<int16_t>(acc.y + m_accMag.m_acc.y);
+    acc.z = static_cast<int16_t>(acc.z + m_accMag.m_acc.z);
 
     Console.print(m_accMag.m_acc.x);
     Console.print(",");
@@ -580,10 +595,10 @@ bool Imu::calibrateAccelerometerNextAxis(void)
   }
 
   // Average values
-  point_float_t average;
-  average.x = (float)acc.x / numberOfSamples;
-  average.y = (float)acc.y / numberOfSamples;
-  average.z = (float)acc.z / numberOfSamples;
+  XyzFloat_t average;
+  average.x = static_cast<float>(acc.x) / numberOfSamples;
+  average.y = static_cast<float>(acc.y) / numberOfSamples;
+  average.z = static_cast<float>(acc.z) / numberOfSamples;
 
   // Update min & max values
   m_accMin.x = min(m_accMin.x, average.x);
@@ -626,7 +641,7 @@ bool Imu::calibrateAccelerometerNextAxis(void)
   if (m_calibAccelAxisCounter == 6)
   {
     // all axis complete
-    point_float_t range;
+    XyzFloat_t range;
     range.x = m_accMax.x - m_accMin.x;
     range.y = m_accMax.y - m_accMin.y;
     range.z = m_accMax.z - m_accMin.z;
@@ -658,10 +673,10 @@ bool Imu::calibrateAccelerometerNextAxis(void)
 // newRate = angle measured using the gyro
 // looptime = loop time in millis()
 float Imu::Complementary(const float newAngle, const float newRate,
-                         const int looptime, float angle)
+                         const int16_t looptime, float angle)
 {
-  const float tau = 0.075;
-  const float dtC = float(looptime) / 1000.0;
+  const float tau = 0.075f;
+  const float dtC = static_cast<float>(looptime) / 1000.0f;
   const float a = tau / (tau + dtC);
 
   angle = a * (angle + newRate * dtC) + (1 - a) * newAngle;
@@ -674,10 +689,10 @@ float Imu::Complementary(const float newAngle, const float newRate,
 // newRate = angle measured using the gyro
 // looptime = loop time in millis()
 float Imu::Complementary2(const float newAngle, const float newRate,
-                          const int looptime, float angle)
+                          const int16_t looptime, float angle)
 {
   const float k = 10;
-  const float dtc2 = float(looptime) / 1000.0;
+  const float dtc2 = static_cast<float>(looptime) / 1000.0f;
   const float x1 = (newAngle - angle) * k * k;
   static float y1 = dtc2 * x1 + y1;  // FIXME: y1?
   const float x2 = y1 + (newAngle - angle) * 2 * k + newRate;
@@ -692,11 +707,11 @@ float Imu::Complementary2(const float newAngle, const float newRate,
 // newRate = angle measured using the gyro
 // looptime = loop time in millis()
 float Imu::Kalman(const float newAngle, const float newRate,
-                  const int looptime, float x_angle)
+                  const int16_t looptime, float x_angle)
 {
-  const float Q_angle = 0.01; //0.001
-  const float Q_gyro = 0.0003;  //0.003
-  const float R_angle = 0.01;  //0.03
+  const float Q_angle = 0.01f; //0.001
+  const float Q_gyro = 0.0003f;  //0.003
+  const float R_angle = 0.01f;  //0.03
 
   static float x_bias = 0;
   static float P_00 = 0;
@@ -704,7 +719,7 @@ float Imu::Kalman(const float newAngle, const float newRate,
   static float P_10 = 0;
   static float P_11 = 0;
 
-  const float dt = (float)looptime / 1000;
+  const float dt = static_cast<float>(looptime) / 1000;
   x_angle += dt * (newRate - x_bias);
   P_00 += -dt * (P_10 + P_01) + Q_angle * dt;
   P_01 += -dt * P_11;
@@ -746,8 +761,8 @@ float Imu::scalePIangles(const float setAngle, const float currAngle)
 void Imu::update(void)
 {
   read();
-  unsigned long curMillis = millis();
-  int looptime = (curMillis - m_lastAHRSTime);
+  uint32_t curMillis = millis();
+  int16_t looptime = static_cast<int16_t>(curMillis - m_lastAHRSTime);
   m_lastAHRSTime = curMillis;
 
   if (m_state == IMU_RUN)
@@ -782,7 +797,8 @@ void Imu::update(void)
     m_scaled2Yaw = scalePIangles(m_scaledYaw, m_ypr.yaw);
 
     // Complementary filter
-    m_filtYaw = Complementary2(m_scaled2Yaw, -m_gyro.m_g.z, looptime, m_ypr.yaw);
+    m_filtYaw = Complementary2(m_scaled2Yaw, static_cast<float>(-m_gyro.m_g.z),
+        looptime, m_ypr.yaw);
     m_ypr.yaw = scalePI(m_filtYaw);
   }
   else if (m_state == IMU_CAL_COM)
@@ -794,34 +810,34 @@ void Imu::update(void)
 void Imu::printInfo(Stream &s)
 {
   Streamprint(s, "imu a=%s%2d.%02d %s%2d.%02d %s%2d.%02d",
-              m_acc.x >= 0.0 ? "+" : "-", abs((int)m_acc.x), abs((int)(m_acc.x * 100) - ((int)m_acc.x * 100)),
-              m_acc.y >= 0.0 ? "+" : "-", abs((int)m_acc.y), abs((int)(m_acc.y * 100) - ((int)m_acc.y * 100)),
-              m_acc.z >= 0.0 ? "+" : "-", abs((int)m_acc.z), abs((int)(m_acc.z * 100) - ((int)m_acc.z * 100)));
+              m_acc.x >= 0.0 ? "+" : "-", abs((int16_t)m_acc.x), abs((int16_t)(m_acc.x * 100) - ((int16_t)m_acc.x * 100)),
+              m_acc.y >= 0.0 ? "+" : "-", abs((int16_t)m_acc.y), abs((int16_t)(m_acc.y * 100) - ((int16_t)m_acc.y * 100)),
+              m_acc.z >= 0.0 ? "+" : "-", abs((int16_t)m_acc.z), abs((int16_t)(m_acc.z * 100) - ((int16_t)m_acc.z * 100)));
   Streamprint(s, " m=%s%2d.%02d %s%2d.%02d %s%2d.%02d",
-              m_mag.x >= 0.0 ? "+" : "-", abs((int)m_mag.x), abs((int)(m_mag.x * 100) - ((int)m_mag.x * 100)),
-              m_mag.y >= 0.0 ? "+" : "-", abs((int)m_mag.y), abs((int)(m_mag.y * 100) - ((int)m_mag.y * 100)),
-              m_mag.z >= 0.0 ? "+" : "-", abs((int)m_mag.z), abs((int)(m_mag.z * 100) - ((int)m_mag.z * 100)));
+              m_mag.x >= 0.0 ? "+" : "-", abs((int16_t)m_mag.x), abs((int16_t)(m_mag.x * 100) - ((int16_t)m_mag.x * 100)),
+              m_mag.y >= 0.0 ? "+" : "-", abs((int16_t)m_mag.y), abs((int16_t)(m_mag.y * 100) - ((int16_t)m_mag.y * 100)),
+              m_mag.z >= 0.0 ? "+" : "-", abs((int16_t)m_mag.z), abs((int16_t)(m_mag.z * 100) - ((int16_t)m_mag.z * 100)));
   Streamprint(s, " g=%4d %4d %4d", m_gyro.m_g.x, m_gyro.m_g.y, m_gyro.m_g.z);
   Streamprint(s, " P=%s%2d.%02d %s%2d.%02d %s%2d.%02d %s%2d.%02d",
-              m_accPitch >= 0.0 ? "+" : "-", abs((int)m_accPitch), abs((int)(m_accPitch * 100) - ((int)m_accPitch * 100)),
-              m_scaledPitch >= 0.0 ? "+" : "-", abs((int)m_scaledPitch), abs((int)(m_scaledPitch * 100) - ((int)m_scaledPitch * 100)),
-              m_filtPitch >= 0.0 ? "+" : "-", abs((int)m_filtPitch), abs((int)(m_filtPitch * 100) - ((int)m_filtPitch * 100)),
-              m_ypr.pitch >= 0.0 ? "+" : "-", abs((int)m_ypr.pitch), abs((int)(m_ypr.pitch * 100) - ((int)m_ypr.pitch * 100)));
+              m_accPitch >= 0.0 ? "+" : "-", abs((int16_t)m_accPitch), abs((int16_t)(m_accPitch * 100) - ((int16_t)m_accPitch * 100)),
+              m_scaledPitch >= 0.0 ? "+" : "-", abs((int16_t)m_scaledPitch), abs((int16_t)(m_scaledPitch * 100) - ((int16_t)m_scaledPitch * 100)),
+              m_filtPitch >= 0.0 ? "+" : "-", abs((int16_t)m_filtPitch), abs((int16_t)(m_filtPitch * 100) - ((int16_t)m_filtPitch * 100)),
+              m_ypr.pitch >= 0.0 ? "+" : "-", abs((int16_t)m_ypr.pitch), abs((int16_t)(m_ypr.pitch * 100) - ((int16_t)m_ypr.pitch * 100)));
   Streamprint(s, " R=%s%2d.%02d %s%2d.%02d %s%2d.%02d %s%2d.%02d",
-              m_accRoll >= 0.0 ? "+" : "-", abs((int)m_accRoll), abs((int)(m_accRoll * 100) - ((int)m_accRoll * 100)),
-              m_scaledRoll >= 0.0 ? "+" : "-", abs((int)m_scaledRoll), abs((int)(m_scaledRoll * 100) - ((int)m_scaledRoll * 100)),
-              m_filtRoll >= 0.0 ? "+" : "-", abs((int)m_filtRoll), abs((int)(m_filtRoll * 100) - ((int)m_filtRoll * 100)),
-              m_ypr.roll >= 0.0 ? "+" : "-", abs((int)m_ypr.roll), abs((int)(m_ypr.roll * 100) - ((int)m_ypr.roll * 100)));
+              m_accRoll >= 0.0 ? "+" : "-", abs((int16_t)m_accRoll), abs((int16_t)(m_accRoll * 100) - ((int16_t)m_accRoll * 100)),
+              m_scaledRoll >= 0.0 ? "+" : "-", abs((int16_t)m_scaledRoll), abs((int16_t)(m_scaledRoll * 100) - ((int16_t)m_scaledRoll * 100)),
+              m_filtRoll >= 0.0 ? "+" : "-", abs((int16_t)m_filtRoll), abs((int16_t)(m_filtRoll * 100) - ((int16_t)m_filtRoll * 100)),
+              m_ypr.roll >= 0.0 ? "+" : "-", abs((int16_t)m_ypr.roll), abs((int16_t)(m_ypr.roll * 100) - ((int16_t)m_ypr.roll * 100)));
   Streamprint(s, " T=%s%2d.%02d %s%2d.%02d %s%2d.%02d",
-              m_magTilt.x >= 0.0 ? "+" : "-", abs((int)m_magTilt.x), abs((int)(m_magTilt.x * 100) - ((int)m_magTilt.x * 100)),
-              m_magTilt.y >= 0.0 ? "+" : "-", abs((int)m_magTilt.y), abs((int)(m_magTilt.y * 100) - ((int)m_magTilt.y * 100)),
-              m_magTilt.z >= 0.0 ? "+" : "-", abs((int)m_magTilt.z), abs((int)(m_magTilt.z * 100) - ((int)m_magTilt.z * 100)));
+              m_magTilt.x >= 0.0 ? "+" : "-", abs((int16_t)m_magTilt.x), abs((int16_t)(m_magTilt.x * 100) - ((int16_t)m_magTilt.x * 100)),
+              m_magTilt.y >= 0.0 ? "+" : "-", abs((int16_t)m_magTilt.y), abs((int16_t)(m_magTilt.y * 100) - ((int16_t)m_magTilt.y * 100)),
+              m_magTilt.z >= 0.0 ? "+" : "-", abs((int16_t)m_magTilt.z), abs((int16_t)(m_magTilt.z * 100) - ((int16_t)m_magTilt.z * 100)));
   Streamprint(s, " Y=%s%2d.%02d %s%2d.%02d %s%2d.%02d\r\n",
-              m_yaw >= 0.0 ? "+" : "-", abs((int)m_yaw), abs((int)(m_yaw * 100) - ((int)m_yaw * 100)),
-              m_scaledYaw >= 0.0 ? "+" : "-", abs((int)m_scaledYaw), abs((int)(m_scaledYaw * 100) - ((int)m_scaledYaw * 100)),
-              m_scaled2Yaw >= 0.0 ? "+" : "-", abs((int)m_scaled2Yaw), abs((int)(m_scaled2Yaw * 100) - ((int)m_scaled2Yaw * 100)),
-              m_filtYaw >= 0.0 ? "+" : "-", abs((int)m_filtYaw), abs((int)(m_filtYaw * 100) - ((int)m_filtYaw * 100)),
-              m_ypr.yaw >= 0.0 ? "+" : "-", abs((int)m_ypr.yaw), abs((int)(m_ypr.yaw * 100) - ((int)m_ypr.yaw * 100)));
+              m_yaw >= 0.0 ? "+" : "-", abs((int16_t)m_yaw), abs((int16_t)(m_yaw * 100) - ((int16_t)m_yaw * 100)),
+              m_scaledYaw >= 0.0 ? "+" : "-", abs((int16_t)m_scaledYaw), abs((int16_t)(m_scaledYaw * 100) - ((int16_t)m_scaledYaw * 100)),
+              m_scaled2Yaw >= 0.0 ? "+" : "-", abs((int16_t)m_scaled2Yaw), abs((int16_t)(m_scaled2Yaw * 100) - ((int16_t)m_scaled2Yaw * 100)),
+              m_filtYaw >= 0.0 ? "+" : "-", abs((int16_t)m_filtYaw), abs((int16_t)(m_filtYaw * 100) - ((int16_t)m_filtYaw * 100)),
+              m_ypr.yaw >= 0.0 ? "+" : "-", abs((int16_t)m_ypr.yaw), abs((int16_t)(m_ypr.yaw * 100) - ((int16_t)m_ypr.yaw * 100)));
 }
 
 bool Imu::init(Buzzer* buzzer_p)
@@ -839,16 +855,16 @@ bool Imu::init(Buzzer* buzzer_p)
   return true;
 }
 
-int Imu::getCallCounter(void)
+int16_t Imu::getCallCounter(void)
 {
-  int res = m_callCounter;
+  int16_t res = m_callCounter;
   m_callCounter = 0;
   return res;
 }
 
-int Imu::getErrorCounter(void)
+int16_t Imu::getErrorCounter(void)
 {
-  int res = m_errorCounter;
+  int16_t res = m_errorCounter;
   m_errorCounter = 0;
   return res;
 }

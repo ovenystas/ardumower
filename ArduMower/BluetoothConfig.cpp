@@ -45,11 +45,10 @@ void BluetoothConfig::readBT()
     {
       char btData = static_cast<char>(Bluetooth.read());
       m_btResult += btData;
-      Console.print(btData);
     } while (Bluetooth.available());
+
+    Console.println(m_btResult);
   }
-  //Console.print("btResult=");
-  //Console.println(btResult);
 }
 
 void BluetoothConfig::writeReadBT(String s)

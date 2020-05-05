@@ -37,6 +37,7 @@ SRC_FILES = \
 	../ArduMower/Encoder.cpp \
 	../ArduMower/Filter.cpp \
 	../ArduMower/Gps.cpp \
+	../ArduMower/Imu.cpp \
 	../ArduMower/LawnSensor.cpp \
 	../ArduMower/Pid.cpp \
 	../ArduMower/RainSensor.cpp \
