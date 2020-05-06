@@ -154,8 +154,8 @@ public:
   bool calibrateAccelerometerNextAxis();
 
   // --------- accelerometer/magnetometer state -------
-  Vector<float> m_acc { 0.0, 0.0, 0.0 };
-  Vector<float> m_mag { 0.0, 0.0, 0.0 };
+  Vector<float> m_acc {};
+  Vector<float> m_mag {};
   bool getUseAccelCalibration(void) const
   {
     return m_useAccelCalibration;
@@ -227,12 +227,12 @@ private:
   uint16_t m_timeBetweenRuns { 200 }; // 5 Hz
   uint16_t m_timeBetweenControl { 100 }; // 10 Hz
 
-  bool m_foundNewMinMax { false };
+  bool m_foundNewMinMax {};
   Buzzer* m_buzzer_p;
   int16_t m_callCounter {};
   int16_t m_errorCounter {};
-  bool m_hardwareInitialized { false };
-  bool m_calibrationAvailable { false };
+  bool m_hardwareInitialized {};
+  bool m_calibrationAvailable {};
   uint8_t m_state { IMU_RUN };
   uint32_t m_lastAHRSTime {};
   calibrationData_t m_calibrationData
@@ -245,21 +245,21 @@ private:
 
   // --------- acceleration state ---------------------
   LSM303 m_accMag;
-  Vector<float> m_accMin { 0.0, 0.0, 0.0 };
-  Vector<float> m_accMax { 0.0, 0.0, 0.0 };
+  Vector<float> m_accMin {};
+  Vector<float> m_accMax {};
   int16_t m_calibAccelAxisCounter {};
   bool m_useAccelCalibration { true };
 
   // --------- gyro state -----------------------------
-  Vector<int16_t> m_gyroOffset { 0, 0, 0 }; // gyro calibration data
+  Vector<int16_t> m_gyroOffset {}; // gyro calibration data
   int16_t m_gyroNoise {};          // gyro noise
   bool m_useGyroCalibration { true }; // gyro calibration flag
   YawPitchRoll_t m_ypr { 0.0, 0.0, 0.0 };  // gyro yaw,pitch,roll
 
   // --------- magnetometer state --------------------------
-  Vector<int16_t> m_magLast { 0, 0, 0 };
-  Vector<int16_t> m_magMin { 0, 0, 0 }; // magnetometer sensor data (raw)
-  Vector<int16_t> m_magMax { 0, 0, 0 }; // magnetometer sensor data (raw)
+  Vector<int16_t> m_magLast {};
+  Vector<int16_t> m_magMin {}; // magnetometer sensor data (raw)
+  Vector<int16_t> m_magMax {}; // magnetometer sensor data (raw)
   bool m_useMagnetometerCalibration { true };
 
   float m_accPitch {};
@@ -272,7 +272,7 @@ private:
   float m_scaledYaw {};
   float m_scaled2Yaw {};
   float m_filtYaw {};
-  Vector<float> m_magTilt { 0.0, 0.0, 0.0 };
+  Vector<float> m_magTilt {};
 
   ImuSettings m_settings
   {

@@ -161,10 +161,10 @@ void Imu::saveCalibrationData(void)
 void Imu::deleteCalibrationData(void)
 {
   EEPROM.write(ADDR, 0); // clear magic
-  m_calibrationData.accelOffset = {0.0, 0.0, 0.0};
-  m_calibrationData.accelScale = {1.0, 1.0, 1.0};
-  m_calibrationData.magnetometerOffset = {0, 0, 0};
-  m_calibrationData.magnetometerScale = {1, 1, 1};
+  m_calibrationData.accelOffset = Vector<float>();
+  m_calibrationData.accelScale = Vector<float>(1.0f);
+  m_calibrationData.magnetometerOffset = Vector<int16_t>();
+  m_calibrationData.magnetometerScale = Vector<int16_t>(1);
   m_calibrationAvailable = false;
   Console.println(F("IMU calibration deleted"));
 }
@@ -224,7 +224,6 @@ void Imu::calibrateGyro(void)
     int16_t zmin = INT16_MAX;
     int16_t zmax = INT16_MIN;
     int16_t noise = 0;
-    offset = { 0, 0, 0 };
 
     for (uint8_t i = 0; i < numberOfSamples; i++)
     {
@@ -576,7 +575,7 @@ bool Imu::calibrateAccelerometerNextAxis(void)
   }
 
   // Get sample values from accelerometer
-  Vector<int16_t> acc = { 0, 0, 0 };
+  Vector<int16_t> acc;
   for (uint8_t i = 0; i < numberOfSamples; i++)
   {
     readAccelerometer();
