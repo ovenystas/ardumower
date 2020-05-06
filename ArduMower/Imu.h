@@ -37,33 +37,13 @@
 #include "LSM303.h"
 #include "Buzzer.h"
 #include "Setting.h"
+#include "Vector.h"
 
 // IMU state
 enum
 {
   IMU_RUN,
   IMU_CAL_COM
-};
-
-struct XyzInt16_t
-{
-  int16_t x;
-  int16_t y;
-  int16_t z;
-};
-
-struct XyzInt32_t
-{
-  int32_t x;
-  int32_t y;
-  int32_t z;
-};
-
-struct XyzFloat_t
-{
-  float x;
-  float y;
-  float z;
 };
 
 struct YawPitchRoll_t
@@ -75,10 +55,10 @@ struct YawPitchRoll_t
 
 typedef struct calibrationData_t
 {
-  XyzFloat_t accelOffset;
-  XyzFloat_t accelScale;
-  XyzInt16_t magnetometerOffset;
-  XyzInt16_t magnetometerScale;
+  Vector<float> accelOffset;
+  Vector<float> accelScale;
+  Vector<int16_t> magnetometerOffset;
+  Vector<int16_t> magnetometerScale;
 } calibrationData_t;
 
 struct ImuSettings
@@ -174,8 +154,8 @@ public:
   bool calibrateAccelerometerNextAxis();
 
   // --------- accelerometer/magnetometer state -------
-  XyzFloat_t m_acc { 0.0, 0.0, 0.0 };
-  XyzFloat_t m_mag { 0.0, 0.0, 0.0 };
+  Vector<float> m_acc { 0.0, 0.0, 0.0 };
+  Vector<float> m_mag { 0.0, 0.0, 0.0 };
   bool getUseAccelCalibration(void) const
   {
     return m_useAccelCalibration;
@@ -207,10 +187,10 @@ private:
   void loadCalibrationData(void);
 
   // print IMU values
-  void printPoint(const XyzInt16_t point);
-  void printPointln(const XyzInt16_t point);
-  void printPoint(const XyzFloat_t point);
-  void printPointln(const XyzFloat_t point);
+  void printPoint(const Vector<int16_t> point);
+  void printPointln(const Vector<int16_t> point);
+  void printPoint(const Vector<float> point);
+  void printPointln(const Vector<float> point);
   void printCalibrationData(void);
   void saveCalibrationData(void);
 
@@ -265,21 +245,21 @@ private:
 
   // --------- acceleration state ---------------------
   LSM303 m_accMag;
-  XyzFloat_t m_accMin { 0.0, 0.0, 0.0 };
-  XyzFloat_t m_accMax { 0.0, 0.0, 0.0 };
+  Vector<float> m_accMin { 0.0, 0.0, 0.0 };
+  Vector<float> m_accMax { 0.0, 0.0, 0.0 };
   int16_t m_calibAccelAxisCounter {};
   bool m_useAccelCalibration { true };
 
   // --------- gyro state -----------------------------
-  XyzInt16_t m_gyroOffset { 0, 0, 0 }; // gyro calibration data
+  Vector<int16_t> m_gyroOffset { 0, 0, 0 }; // gyro calibration data
   int16_t m_gyroNoise {};          // gyro noise
   bool m_useGyroCalibration { true }; // gyro calibration flag
   YawPitchRoll_t m_ypr { 0.0, 0.0, 0.0 };  // gyro yaw,pitch,roll
 
   // --------- magnetometer state --------------------------
-  XyzInt16_t m_magLast { 0, 0, 0 };
-  XyzInt16_t m_magMin { 0, 0, 0 }; // magnetometer sensor data (raw)
-  XyzInt16_t m_magMax { 0, 0, 0 }; // magnetometer sensor data (raw)
+  Vector<int16_t> m_magLast { 0, 0, 0 };
+  Vector<int16_t> m_magMin { 0, 0, 0 }; // magnetometer sensor data (raw)
+  Vector<int16_t> m_magMax { 0, 0, 0 }; // magnetometer sensor data (raw)
   bool m_useMagnetometerCalibration { true };
 
   float m_accPitch {};
@@ -292,7 +272,7 @@ private:
   float m_scaledYaw {};
   float m_scaled2Yaw {};
   float m_filtYaw {};
-  XyzFloat_t m_magTilt { 0.0, 0.0, 0.0 };
+  Vector<float> m_magTilt { 0.0, 0.0, 0.0 };
 
   ImuSettings m_settings
   {

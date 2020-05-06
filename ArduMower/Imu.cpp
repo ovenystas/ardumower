@@ -169,7 +169,7 @@ void Imu::deleteCalibrationData(void)
   Console.println(F("IMU calibration deleted"));
 }
 
-void Imu::printPoint(const XyzFloat_t point)
+void Imu::printPoint(const Vector<float> point)
 {
   Console.print(point.x);
   Console.print(",");
@@ -177,13 +177,13 @@ void Imu::printPoint(const XyzFloat_t point)
   Console.print(",");
   Console.print(point.z);
 }
-void Imu::printPointln(const XyzFloat_t point)
+void Imu::printPointln(const Vector<float> point)
 {
   printPoint(point);
   Console.println();
 }
 
-void Imu::printPoint(const XyzInt16_t point)
+void Imu::printPoint(const Vector<int16_t> point)
 {
   Console.print(point.x);
   Console.print(",");
@@ -191,7 +191,7 @@ void Imu::printPoint(const XyzInt16_t point)
   Console.print(",");
   Console.print(point.z);
 }
-void Imu::printPointln(const XyzInt16_t point)
+void Imu::printPointln(const Vector<int16_t> point)
 {
   printPoint(point);
   Console.println();
@@ -218,7 +218,7 @@ void Imu::calibrateGyro(void)
   Console.println(F("---calibGyro---"));
   m_useGyroCalibration = false;
   m_gyroOffset = { 0, 0, 0 };
-  XyzInt16_t offset;
+  Vector<int16_t> offset;
   for (;;)
   {
     int16_t zmin = INT16_MAX;
@@ -446,7 +446,7 @@ void Imu::calibrateMagnetometerStartStop(void)
     Console.println(F("Magnetometer calibration completed"));
     m_calibrationAvailable = true;
 
-    XyzInt16_t range;
+    Vector<int16_t> range;
     range.x = static_cast<int16_t>(m_magMax.x - m_magMin.x);
     range.y = static_cast<int16_t>(m_magMax.y - m_magMin.y);
     range.z = static_cast<int16_t>(m_magMax.z - m_magMin.z);
@@ -576,7 +576,7 @@ bool Imu::calibrateAccelerometerNextAxis(void)
   }
 
   // Get sample values from accelerometer
-  XyzInt16_t acc = { 0, 0, 0 };
+  Vector<int16_t> acc = { 0, 0, 0 };
   for (uint8_t i = 0; i < numberOfSamples; i++)
   {
     readAccelerometer();
@@ -595,7 +595,7 @@ bool Imu::calibrateAccelerometerNextAxis(void)
   }
 
   // Average values
-  XyzFloat_t average;
+  Vector<float> average;
   average.x = static_cast<float>(acc.x) / numberOfSamples;
   average.y = static_cast<float>(acc.y) / numberOfSamples;
   average.z = static_cast<float>(acc.z) / numberOfSamples;
@@ -641,7 +641,7 @@ bool Imu::calibrateAccelerometerNextAxis(void)
   if (m_calibAccelAxisCounter == 6)
   {
     // all axis complete
-    XyzFloat_t range;
+    Vector<float> range;
     range.x = m_accMax.x - m_accMin.x;
     range.y = m_accMax.y - m_accMin.y;
     range.z = m_accMax.z - m_accMin.z;
