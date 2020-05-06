@@ -169,7 +169,7 @@ void Imu::deleteCalibrationData(void)
   Console.println(F("IMU calibration deleted"));
 }
 
-void Imu::printPoint(const Vector<float> point)
+void Imu::printPoint(const Vector<float>& point)
 {
   Console.print(point.x);
   Console.print(",");
@@ -177,13 +177,13 @@ void Imu::printPoint(const Vector<float> point)
   Console.print(",");
   Console.print(point.z);
 }
-void Imu::printPointln(const Vector<float> point)
+void Imu::printPointln(const Vector<float>& point)
 {
   printPoint(point);
   Console.println();
 }
 
-void Imu::printPoint(const Vector<int16_t> point)
+void Imu::printPoint(const Vector<int16_t>& point)
 {
   Console.print(point.x);
   Console.print(",");
@@ -191,7 +191,7 @@ void Imu::printPoint(const Vector<int16_t> point)
   Console.print(",");
   Console.print(point.z);
 }
-void Imu::printPointln(const Vector<int16_t> point)
+void Imu::printPointln(const Vector<int16_t>& point)
 {
   printPoint(point);
   Console.println();
@@ -215,10 +215,12 @@ void Imu::printCalibrationData(void)
 void Imu::calibrateGyro(void)
 {
   const uint8_t numberOfSamples = 32;
-  Console.println(F("---calibGyro---"));
   m_useGyroCalibration = false;
-  m_gyroOffset = { 0, 0, 0 };
+  m_gyroOffset = Vector<int16_t>();
   Vector<int16_t> offset;
+
+  Console.println(F("---calibGyro---"));
+
   for (;;)
   {
     int16_t zmin = INT16_MAX;
@@ -232,9 +234,7 @@ void Imu::calibrateGyro(void)
       zmin = min(zmin, m_gyro.m_g.z);
       zmax = max(zmax, m_gyro.m_g.z);
 
-      offset.x = static_cast<int16_t>(offset.x + m_gyro.m_g.x);
-      offset.y = static_cast<int16_t>(offset.y + m_gyro.m_g.y);
-      offset.z = static_cast<int16_t>(offset.z + m_gyro.m_g.z);
+      offset += m_gyro.m_g;
       noise = static_cast<int16_t>(noise + sq(m_gyro.m_g.z - m_gyroOffset.z)); // noise is computed with last offset calculation
 
       delay(10);
@@ -384,9 +384,7 @@ void Imu::readGyroscope(void)
   if (m_useGyroCalibration)
   {
     // Compensate for offset
-    m_gyro.m_g.x = static_cast<int16_t>(m_gyro.m_g.x - m_gyroOffset.x);
-    m_gyro.m_g.y = static_cast<int16_t>(m_gyro.m_g.y - m_gyroOffset.y);
-    m_gyro.m_g.z = static_cast<int16_t>(m_gyro.m_g.z - m_gyroOffset.z);
+    m_gyro.m_g -= m_gyroOffset;
   }
 }
 
@@ -406,11 +404,14 @@ void Imu::readMagnetometer()
 
   if (m_useMagnetometerCalibration)
   {
-    m_mag.x = static_cast<float>(m_accMag.m_acc.x - m_calibrationData.magnetometerOffset.x) /
+    Vector<int16_t> numerator =
+        m_accMag.m_acc - m_calibrationData.magnetometerOffset;
+
+    m_mag.x = static_cast<float>(numerator.x) /
             static_cast<float>(m_calibrationData.magnetometerScale.x);
-    m_mag.y = static_cast<float>(m_accMag.m_acc.y - m_calibrationData.magnetometerOffset.y) /
+    m_mag.y = static_cast<float>(numerator.y) /
             static_cast<float>(m_calibrationData.magnetometerScale.y);
-    m_mag.z = static_cast<float>(m_accMag.m_acc.z - m_calibrationData.magnetometerOffset.z) /
+    m_mag.z = static_cast<float>(numerator.z) /
             static_cast<float>(m_calibrationData.magnetometerScale.z);
   }
   else
@@ -436,8 +437,8 @@ void Imu::calibrateMagnetometerStartStop(void)
     m_foundNewMinMax = false;
     m_useMagnetometerCalibration = false;
     m_state = IMU_CAL_COM;
-    m_magMin = { INT16_MAX, INT16_MAX, INT16_MAX };
-    m_magMax = { INT16_MIN, INT16_MIN, INT16_MIN };
+    m_magMin = Vector<int16_t>(INT16_MAX);
+    m_magMax = Vector<int16_t>(INT16_MIN);
   }
   else
   {
@@ -445,10 +446,7 @@ void Imu::calibrateMagnetometerStartStop(void)
     Console.println(F("Magnetometer calibration completed"));
     m_calibrationAvailable = true;
 
-    Vector<int16_t> range;
-    range.x = static_cast<int16_t>(m_magMax.x - m_magMin.x);
-    range.y = static_cast<int16_t>(m_magMax.y - m_magMin.y);
-    range.z = static_cast<int16_t>(m_magMax.z - m_magMin.z);
+    Vector<int16_t> range = m_magMax - m_magMin;
 
     m_calibrationData.magnetometerScale.x =
         static_cast<int16_t>(roundDivision(range.x, 2));
@@ -457,12 +455,8 @@ void Imu::calibrateMagnetometerStartStop(void)
     m_calibrationData.magnetometerScale.z =
         static_cast<int16_t>(roundDivision(range.z, 2));
 
-    m_calibrationData.magnetometerOffset.x =
-        static_cast<int16_t>(m_calibrationData.magnetometerScale.x + m_magMin.x);
-    m_calibrationData.magnetometerOffset.y =
-        static_cast<int16_t>(m_calibrationData.magnetometerScale.y + m_magMin.y);
-    m_calibrationData.magnetometerOffset.z =
-        static_cast<int16_t>(m_calibrationData.magnetometerScale.z + m_magMin.z);
+    m_calibrationData.magnetometerOffset =
+        m_calibrationData.magnetometerScale + m_magMin;
 
     saveCalibrationData();
     printCalibrationData();
@@ -476,9 +470,7 @@ void Imu::calibrateMagnetometerStartStop(void)
 
 void Imu::calibrateMagnetometerUpdate(void)
 {
-  m_magLast.x = m_accMag.m_mag.x;
-  m_magLast.y = m_accMag.m_mag.y;
-  m_magLast.z = m_accMag.m_mag.z;
+  m_magLast = m_accMag.m_mag;
 
   delay(20);
 
@@ -570,8 +562,8 @@ bool Imu::calibrateAccelerometerNextAxis(void)
   {
     // restart
     Console.println(F("Accelerometer calibration start..."));
-    m_accMin = { 9999, 9999, 9999 };
-    m_accMax = { -9999, -9999, -9999 };
+    m_accMin = Vector<float>(9999);
+    m_accMax = Vector<float>(-9999);
   }
 
   // Get sample values from accelerometer
@@ -580,9 +572,7 @@ bool Imu::calibrateAccelerometerNextAxis(void)
   {
     readAccelerometer();
 
-    acc.x = static_cast<int16_t>(acc.x + m_accMag.m_acc.x);
-    acc.y = static_cast<int16_t>(acc.y + m_accMag.m_acc.y);
-    acc.z = static_cast<int16_t>(acc.z + m_accMag.m_acc.z);
+    acc += m_accMag.m_acc;
 
     Console.print(m_accMag.m_acc.x);
     Console.print(",");
@@ -595,9 +585,10 @@ bool Imu::calibrateAccelerometerNextAxis(void)
 
   // Average values
   Vector<float> average;
-  average.x = static_cast<float>(acc.x) / numberOfSamples;
-  average.y = static_cast<float>(acc.y) / numberOfSamples;
-  average.z = static_cast<float>(acc.z) / numberOfSamples;
+  average.x = static_cast<float>(acc.x);
+  average.y = static_cast<float>(acc.y);
+  average.z = static_cast<float>(acc.z);
+  average /= numberOfSamples;
 
   // Update min & max values
   m_accMin.x = min(m_accMin.x, average.x);
@@ -640,18 +631,11 @@ bool Imu::calibrateAccelerometerNextAxis(void)
   if (m_calibAccelAxisCounter == 6)
   {
     // all axis complete
-    Vector<float> range;
-    range.x = m_accMax.x - m_accMin.x;
-    range.y = m_accMax.y - m_accMin.y;
-    range.z = m_accMax.z - m_accMin.z;
+    Vector<float> range = m_accMax - m_accMin;
 
-    m_calibrationData.accelScale.x = range.x / 2;
-    m_calibrationData.accelScale.y = range.y / 2;
-    m_calibrationData.accelScale.z = range.z / 2;
+    m_calibrationData.accelScale = range / 2;
 
-    m_calibrationData.accelOffset.x = m_calibrationData.accelScale.x + m_accMin.x;
-    m_calibrationData.accelOffset.y = m_calibrationData.accelScale.y + m_accMin.y;
-    m_calibrationData.accelOffset.z = m_calibrationData.accelScale.z + m_accMin.z;
+    m_calibrationData.accelOffset = m_calibrationData.accelScale + m_accMin;
 
     printCalibrationData();
     saveCalibrationData();

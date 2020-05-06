@@ -19,69 +19,97 @@ struct Vector
   Vector() = default;
   Vector(T t) : x(t), y(t), z(t) {};
   Vector(T x_, T y_, T z_) : x(x_), y(y_), z(z_) {};
-  Vector(const Vector<T>& v) : x(v.x), y(v.y), z(v.z) {};
-
-  static void cross(const Vector<T>& lhs, const Vector<T>& rhs, Vector<T>& out);
-
-  static T dot(const Vector<T>& lhs, const Vector<T>& rhs);
-
-  static void normalize(Vector<float>& lhs);
+  Vector(const Vector<int32_t>& v) :
+    x(static_cast<T>(v.x)),
+    y(static_cast<T>(v.y)),
+    z(static_cast<T>(v.z)) {};
+  Vector(const Vector<int16_t>& v) :
+    x(static_cast<T>(v.x)),
+    y(static_cast<T>(v.y)),
+    z(static_cast<T>(v.z)) {};
+  Vector(const Vector<float>& v) :
+    x(static_cast<T>(v.x)),
+    y(static_cast<T>(v.y)),
+    z(static_cast<T>(v.z)) {};
 
   bool isZero()
   {
     return x == 0 && y == 0 && z == 0;
   }
 
-  Vector<T>& operator= (const Vector<T>& v)
+  static Vector<T> cross(Vector<T> lhs, const Vector<T>& rhs)
   {
-    if (this != &v)
+    Vector<T> tmp;
+    tmp.x = (lhs.y * rhs.z) - (lhs.z * rhs.y);
+    tmp.y = (lhs.z * rhs.x) - (lhs.x * rhs.z);
+    tmp.z = (lhs.x * rhs.y) - (lhs.y * rhs.x);
+    lhs = tmp;
+    return lhs;
+  }
+
+  static T dot(const Vector<T>& v1, const Vector<T>& v2)
+  {
+    return (v1.x * v2.x) + (v1.y * v2.y) + (v1.z * v2.z);
+  }
+
+  static void normalize(Vector<T>& v)
+  {
+    float mag = sqrt(dot(v, v));
+    v.x /= mag;
+    v.y /= mag;
+    v.z /= mag;
+  }
+
+  Vector<T>& operator= (const Vector<T>& rhs)
+  {
+    if (this != &rhs)
     {
-      x = v.x;
-      y = v.y;
-      z = v.z;
+      x = rhs.x;
+      y = rhs.y;
+      z = rhs.z;
     }
     return *this;
   }
 
-  bool operator== (const Vector<T>& v)
+  bool operator== (const Vector<T>& rhs)
   {
-    return x == v.x && y == v.y && z == v.z;
+    return x == rhs.x && y == rhs.y && z == rhs.z;
   }
 
-  bool operator!= (const Vector<T>& v)
+  bool operator!= (const Vector<T>& rhs)
   {
-    return !(*this == v);
+    return !(*this == rhs);
   }
 
   Vector<T>& operator+= (const Vector<T>& rhs)
   {
-    x += rhs.x;
-    y += rhs.y;
-    z += rhs.z;
+    x = static_cast<T>(x + rhs.x);
+    y = static_cast<T>(y + rhs.y);
+    z = static_cast<T>(z + rhs.z);
     return *this;
   }
 
   Vector<T>& operator-= (const Vector<T>& rhs)
   {
-    x -= rhs.x;
-    y -= rhs.y;
-    z -= rhs.z;
+    x = static_cast<T>(x - rhs.x);
+    y = static_cast<T>(y - rhs.y);
+    z = static_cast<T>(z - rhs.z);
     return *this;
   }
 
   Vector<T>& operator*= (const T rhs)
   {
-    x *= rhs;
-    y *= rhs;
-    z *= rhs;
+    x = static_cast<T>(x * rhs);
+    y = static_cast<T>(y * rhs);
+    z = static_cast<T>(z * rhs);
     return *this;
   }
 
   Vector<T>& operator/= (const T rhs)
   {
-    x /= rhs;
-    y /= rhs;
-    z /= rhs;
+    x = static_cast<T>(x / rhs);
+    y = static_cast<T>(y / rhs);
+    z = static_cast<T>(z / rhs);
     return *this;
   }
 
@@ -116,28 +144,4 @@ struct Vector
     lhs.z = -lhs.z;
     return lhs;
   }
-
 };
-
-template <typename T>
-void cross(const Vector<T>& lhs, const Vector<T>& rhs, Vector<T>& out)
-{
-  out.x = (lhs.y * rhs.z) - (lhs.z * rhs.y);
-  out.y = (lhs.z * rhs.x) - (lhs.x * rhs.z);
-  out.z = (lhs.x * rhs.y) - (lhs.y * rhs.x);
-}
-
-template <typename T>
-T dot(const Vector<T>& lhs, const Vector<T>& rhs)
-{
-  return (lhs.x * rhs.x) + (lhs.y * rhs.y) + (lhs.z * rhs.z);
-}
-
-template <typename T>
-void normalize(Vector<T>& lhs)
-{
-  float mag = sqrt(dot(lhs, lhs));
-  lhs.x /= mag;
-  lhs.y /= mag;
-  lhs.z /= mag;
-}

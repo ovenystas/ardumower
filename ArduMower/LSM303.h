@@ -1,15 +1,11 @@
 #pragma once
 
 #include <Arduino.h> // for byte data type
+#include "Vector.h"
 
 class LSM303
 {
   public:
-    template <typename T> struct vector
-    {
-      T x, y, z;
-    };
-
     enum deviceTypeE
     {
       DEVICE_DLH,
@@ -177,10 +173,10 @@ class LSM303
       D_OUT_Z_H_M       = 0x0D
     };
 
-    vector<int16_t> m_acc {}; // accelerometer readings
-    vector<int16_t> m_mag {}; // magnetometer readings
-    vector<int16_t> m_mag_max { INT16_MAX, INT16_MAX, INT16_MAX }; // maximum magnetometer values, used for calibration
-    vector<int16_t> m_mag_min { INT16_MIN, INT16_MIN, INT16_MIN }; // minimum magnetometer values, used for calibration
+    Vector<int16_t> m_acc {}; // accelerometer readings
+    Vector<int16_t> m_mag {}; // magnetometer readings
+    Vector<int16_t> m_mag_max { INT16_MAX }; // maximum magnetometer values, used for calibration
+    Vector<int16_t> m_mag_min { INT16_MIN }; // minimum magnetometer values, used for calibration
 
     byte m_last_status {}; // status of last I2C transmission
 
@@ -215,12 +211,9 @@ class LSM303
     bool timeoutOccurred(void);
 
     float heading(void);
-    template <typename T> float heading(vector<T> from);
 
-    // vector functions
-    template <typename Ta, typename Tb, typename To> static void vector_cross(const vector<Ta> *a, const vector<Tb> *b, vector<To> *out);
-    template <typename Ta, typename Tb> static float vector_dot(const vector<Ta> *a, const vector<Tb> *b);
-    static void vector_normalize(vector<float> *a);
+    template <typename T>
+    float heading(Vector<T> from);
 
   private:
     deviceTypeE m_deviceType { DEVICE_AUTO }; // chip type (D, DLHC, DLM, or DLH)
@@ -249,9 +242,10 @@ form a basis for the horizontal plane. The From vector is projected
 into the horizontal plane and the angle between the projected vector
 and horizontal north is returned.
 */
-template <typename T> float LSM303::heading(vector<T> from)
+template <typename T>
+float LSM303::heading(Vector<T> from)
 {
-    vector<int32_t> temp_m = {m_mag.x, m_mag.y, m_mag.z};
+    Vector<int32_t> temp_m = { m_mag.x, m_mag.y, m_mag.z };
 
     // subtract offset (average of min and max) from magnetometer readings
     temp_m.x -= ((int32_t)m_mag_min.x + m_mag_max.x) / 2;
@@ -259,27 +253,17 @@ template <typename T> float LSM303::heading(vector<T> from)
     temp_m.z -= ((int32_t)m_mag_min.z + m_mag_max.z) / 2;
 
     // compute E and N
-    vector<float> E;
-    vector<float> N;
-    vector_cross(&temp_m, &m_acc, &E);
-    vector_normalize(&E);
-    vector_cross(&m_acc, &E, &N);
-    vector_normalize(&N);
+    Vector<float> E = Vector<float>::cross(temp_m, m_acc);
+    Vector<float>::normalize(E);
+    Vector<float> N = Vector<float>::cross(m_acc, E);
+    Vector<float>::normalize(N);
 
     // compute heading
-    float heading = atan2(vector_dot(&E, &from), vector_dot(&N, &from)) * 180 / M_PI;
-    if (heading < 0) heading += 360;
+    float heading =
+        atan2(Vector<float>::dot(E, from), Vector<float>::dot(N, from)) * 180 / M_PI;
+    if (heading < 0)
+    {
+      heading += 360;
+    }
     return heading;
-}
-
-template <typename Ta, typename Tb, typename To> void LSM303::vector_cross(const vector<Ta> *a, const vector<Tb> *b, vector<To> *out)
-{
-  out->x = (a->y * b->z) - (a->z * b->y);
-  out->y = (a->z * b->x) - (a->x * b->z);
-  out->z = (a->x * b->y) - (a->y * b->x);
-}
-
-template <typename Ta, typename Tb> float LSM303::vector_dot(const vector<Ta> *a, const vector<Tb> *b)
-{
-  return (a->x * b->x) + (a->y * b->y) + (a->z * b->z);
 }

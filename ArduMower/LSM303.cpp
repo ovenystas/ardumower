@@ -344,9 +344,10 @@ void LSM303::readAcc(void)
   m_last_status = Wire.endTransmission();
   Wire.requestFrom(m_acc_address, (byte)6);
 
-  unsigned int millis_start = millis();
-  while (Wire.available() < 6) {
-    if (m_io_timeout > 0 && ((unsigned int)millis() - millis_start) > m_io_timeout)
+  unsigned long millis_start = millis();
+  while (Wire.available() < 6)
+  {
+    if (m_io_timeout > 0 && (unsigned int)(millis() - millis_start) > m_io_timeout)
     {
       m_did_timeout = true;
       return;
@@ -379,9 +380,10 @@ void LSM303::readMag(void)
   m_last_status = Wire.endTransmission();
   Wire.requestFrom(m_mag_address, (byte)6);
 
-  unsigned int millis_start = millis();
-  while (Wire.available() < 6) {
-    if (m_io_timeout > 0 && ((unsigned int)millis() - millis_start) > m_io_timeout)
+  unsigned long millis_start = millis();
+  while (Wire.available() < 6)
+  {
+    if (m_io_timeout > 0 && (unsigned int)(millis() - millis_start) > m_io_timeout)
     {
       m_did_timeout = true;
       return;
@@ -450,20 +452,12 @@ float LSM303::heading(void)
 {
   if (m_deviceType == DEVICE_D)
   {
-    return heading(vector<int>{1, 0, 0});
+    return heading(Vector<int16_t>(1, 0, 0));
   }
   else
   {
-    return heading(vector<int>{0, -1, 0});
+    return heading(Vector<int16_t>(0, -1, 0));
   }
-}
-
-void LSM303::vector_normalize(vector<float> *a)
-{
-  float mag = sqrt(vector_dot(a, a));
-  a->x /= mag;
-  a->y /= mag;
-  a->z /= mag;
 }
 
 // Private Methods //////////////////////////////////////////////////////////////

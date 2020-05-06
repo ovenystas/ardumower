@@ -242,25 +242,67 @@ TEST(Vector, int_divisionByValue)
   CHECK_TRUE(v1 / 2 == expected);
 }
 
-TEST(Vector, int_cross)
+TEST(Vector, int_castToFloat)
 {
-  const Vector<int> v1(1, 2, 3);
-  const Vector<int> v2(4, 5, 6);
-  const Vector<int> expected(-3, 6, -3);
+  const Vector<int> v(1, 2, 3);
+  const Vector<float> expected(1, 2, 3);
 
-  Vector<int> res;
-  cross(v1, v2, res);
+  Vector<float> res = static_cast<Vector<float>>(v);
 
   CHECK_TRUE(res == expected);
 }
 
-TEST(Vector, int_dot)
+TEST(Vector, int_cross)
+{
+  Vector<int> v1(1, 2, 3);
+  const Vector<int> v2(4, 5, 6);
+  const Vector<int> expected(-3, 6, -3);
+
+  Vector<int> res = Vector<int>::cross(v1, v2);
+
+  CHECK_TRUE(res == expected);
+}
+
+TEST(Vector, dot_int_int)
 {
   const Vector<int> v1(1, 2, 3);
   const Vector<int> v2(4, 5, 6);
   const int expected = 32;
 
-  int res = dot(v1, v2);
+  int res = Vector<int>::dot(v1, v2);
+
+  CHECK_TRUE(res == expected);
+}
+
+TEST(Vector, dot_int_float)
+{
+  const Vector<int> v1(1, 2, 3);
+  const Vector<float> v2(0.4f, 0.5f, 0.6f);
+  const float expected = 3.2f;
+
+  float res = Vector<float>::dot(v1, v2);
+
+  CHECK_TRUE(res == expected);
+}
+
+TEST(Vector, dot_float_int)
+{
+  const Vector<float> v1(0.1f, 0.2f, 0.3f);
+  const Vector<int> v2(4, 5, 6);
+  const float expected = 3.2f;
+
+  float res = Vector<float>::dot(v1, v2);
+
+  CHECK_TRUE(res == expected);
+}
+
+TEST(Vector, dot_float_float)
+{
+  const Vector<float> v1(0.1f, 0.2f, 0.3f);
+  const Vector<float> v2(0.4f, 0.5f, 0.6f);
+  const float expected = 0.32f;
+
+  float res = Vector<float>::dot(v1, v2);
 
   CHECK_TRUE(res == expected);
 }
@@ -270,7 +312,7 @@ TEST(Vector, int_normalize)
   Vector<float> v(4.0f, 5.0f, 6.0f);
   const Vector<float> expected(0.455842316f, 0.56980288f, 0.683763444f);
 
-  normalize(v);
+  Vector<float>::normalize(v);
 
   CHECK_TRUE(v == expected);
 }

@@ -187,10 +187,10 @@ private:
   void loadCalibrationData(void);
 
   // print IMU values
-  void printPoint(const Vector<int16_t> point);
-  void printPointln(const Vector<int16_t> point);
-  void printPoint(const Vector<float> point);
-  void printPointln(const Vector<float> point);
+  void printPoint(const Vector<int16_t>& point);
+  void printPointln(const Vector<int16_t>& point);
+  void printPoint(const Vector<float>& point);
+  void printPointln(const Vector<float>& point);
   void printCalibrationData(void);
   void saveCalibrationData(void);
 
