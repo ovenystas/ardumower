@@ -511,14 +511,14 @@ void Imu::calibrateMagnetometerStartStop(void)
     Console.read();
   }
 
-  if (m_state == IMU_RUN)
+  if (m_state == ImuStateE::RUN)
   {
     // start
     Console.println(F("Magnetometer calibration..."));
     Console.println(F("Rotate sensor 360 degree around all three axis"));
     m_foundNewMinMax = false;
     m_useMagnetometerCalibration = false;
-    m_state = IMU_CAL_COM;
+    m_state = ImuStateE::CAL_COM;
     m_magMin = Vector<int16_t>(INT16_MAX);
     m_magMax = Vector<int16_t>(INT16_MIN);
   }
@@ -543,7 +543,7 @@ void Imu::calibrateMagnetometerStartStop(void)
     saveCalibrationData();
     printCalibrationData();
     m_useMagnetometerCalibration = true;
-    m_state = IMU_RUN;
+    m_state = ImuStateE::RUN;
 
     playCompletedSound();
     delay(500);
@@ -792,7 +792,7 @@ void Imu::update(void)
   int16_t looptime = static_cast<int16_t>(curMillis - m_lastAHRSTime);
   m_lastAHRSTime = curMillis;
 
-  if (m_state == IMU_RUN)
+  if (m_state == ImuStateE::RUN)
   {
     // ------ roll, pitch --------------
     m_accPitch = atan2(m_acc.x, sqrt(sq(m_acc.y) + sq(m_acc.z)));
@@ -828,7 +828,7 @@ void Imu::update(void)
         looptime, m_ypr.yaw);
     m_ypr.yaw = scalePI(m_filtYaw);
   }
-  else if (m_state == IMU_CAL_COM)
+  else if (m_state == ImuStateE::CAL_COM)
   {
     calibrateMagnetometerUpdate();
   }
@@ -836,35 +836,26 @@ void Imu::update(void)
 
 void Imu::printInfo(Stream &s)
 {
-  Streamprint(s, "imu a=%s%2d.%02d %s%2d.%02d %s%2d.%02d",
-              m_acc.x >= 0.0 ? "+" : "-", abs((int16_t)m_acc.x), abs((int16_t)(m_acc.x * 100) - ((int16_t)m_acc.x * 100)),
-              m_acc.y >= 0.0 ? "+" : "-", abs((int16_t)m_acc.y), abs((int16_t)(m_acc.y * 100) - ((int16_t)m_acc.y * 100)),
-              m_acc.z >= 0.0 ? "+" : "-", abs((int16_t)m_acc.z), abs((int16_t)(m_acc.z * 100) - ((int16_t)m_acc.z * 100)));
-  Streamprint(s, " m=%s%2d.%02d %s%2d.%02d %s%2d.%02d",
-              m_mag.x >= 0.0 ? "+" : "-", abs((int16_t)m_mag.x), abs((int16_t)(m_mag.x * 100) - ((int16_t)m_mag.x * 100)),
-              m_mag.y >= 0.0 ? "+" : "-", abs((int16_t)m_mag.y), abs((int16_t)(m_mag.y * 100) - ((int16_t)m_mag.y * 100)),
-              m_mag.z >= 0.0 ? "+" : "-", abs((int16_t)m_mag.z), abs((int16_t)(m_mag.z * 100) - ((int16_t)m_mag.z * 100)));
-  Streamprint(s, " g=%4d %4d %4d", m_gyro.m_g.x, m_gyro.m_g.y, m_gyro.m_g.z);
-  Streamprint(s, " P=%s%2d.%02d %s%2d.%02d %s%2d.%02d %s%2d.%02d",
-              m_accPitch >= 0.0 ? "+" : "-", abs((int16_t)m_accPitch), abs((int16_t)(m_accPitch * 100) - ((int16_t)m_accPitch * 100)),
-              m_scaledPitch >= 0.0 ? "+" : "-", abs((int16_t)m_scaledPitch), abs((int16_t)(m_scaledPitch * 100) - ((int16_t)m_scaledPitch * 100)),
-              m_filtPitch >= 0.0 ? "+" : "-", abs((int16_t)m_filtPitch), abs((int16_t)(m_filtPitch * 100) - ((int16_t)m_filtPitch * 100)),
-              m_ypr.pitch >= 0.0 ? "+" : "-", abs((int16_t)m_ypr.pitch), abs((int16_t)(m_ypr.pitch * 100) - ((int16_t)m_ypr.pitch * 100)));
-  Streamprint(s, " R=%s%2d.%02d %s%2d.%02d %s%2d.%02d %s%2d.%02d",
-              m_accRoll >= 0.0 ? "+" : "-", abs((int16_t)m_accRoll), abs((int16_t)(m_accRoll * 100) - ((int16_t)m_accRoll * 100)),
-              m_scaledRoll >= 0.0 ? "+" : "-", abs((int16_t)m_scaledRoll), abs((int16_t)(m_scaledRoll * 100) - ((int16_t)m_scaledRoll * 100)),
-              m_filtRoll >= 0.0 ? "+" : "-", abs((int16_t)m_filtRoll), abs((int16_t)(m_filtRoll * 100) - ((int16_t)m_filtRoll * 100)),
-              m_ypr.roll >= 0.0 ? "+" : "-", abs((int16_t)m_ypr.roll), abs((int16_t)(m_ypr.roll * 100) - ((int16_t)m_ypr.roll * 100)));
-  Streamprint(s, " T=%s%2d.%02d %s%2d.%02d %s%2d.%02d",
-              m_magTilt.x >= 0.0 ? "+" : "-", abs((int16_t)m_magTilt.x), abs((int16_t)(m_magTilt.x * 100) - ((int16_t)m_magTilt.x * 100)),
-              m_magTilt.y >= 0.0 ? "+" : "-", abs((int16_t)m_magTilt.y), abs((int16_t)(m_magTilt.y * 100) - ((int16_t)m_magTilt.y * 100)),
-              m_magTilt.z >= 0.0 ? "+" : "-", abs((int16_t)m_magTilt.z), abs((int16_t)(m_magTilt.z * 100) - ((int16_t)m_magTilt.z * 100)));
-  Streamprint(s, " Y=%s%2d.%02d %s%2d.%02d %s%2d.%02d\r\n",
-              m_yaw >= 0.0 ? "+" : "-", abs((int16_t)m_yaw), abs((int16_t)(m_yaw * 100) - ((int16_t)m_yaw * 100)),
-              m_scaledYaw >= 0.0 ? "+" : "-", abs((int16_t)m_scaledYaw), abs((int16_t)(m_scaledYaw * 100) - ((int16_t)m_scaledYaw * 100)),
-              m_scaled2Yaw >= 0.0 ? "+" : "-", abs((int16_t)m_scaled2Yaw), abs((int16_t)(m_scaled2Yaw * 100) - ((int16_t)m_scaled2Yaw * 100)),
-              m_filtYaw >= 0.0 ? "+" : "-", abs((int16_t)m_filtYaw), abs((int16_t)(m_filtYaw * 100) - ((int16_t)m_filtYaw * 100)),
-              m_ypr.yaw >= 0.0 ? "+" : "-", abs((int16_t)m_ypr.yaw), abs((int16_t)(m_ypr.yaw * 100) - ((int16_t)m_ypr.yaw * 100)));
+  Streamprint(s, "imu a=+%2.2f +%2.2f +%2.2f",
+      m_acc.x, m_acc.y, m_acc.z);
+
+  Streamprint(s, " m=+%2.2f +%2.2f +%2.2f",
+      m_mag.x, m_mag.y, m_mag.z);
+
+  Streamprint(s, " g=%4d %4d %4d",
+      m_gyro.m_g.x, m_gyro.m_g.y, m_gyro.m_g.z);
+
+  Streamprint(s, " P=+%2.2f +%2.2f +%2.2f +%2.2f",
+      m_accPitch, m_scaledPitch, m_filtPitch, m_ypr.pitch);
+
+  Streamprint(s, " R=+%2.2f +%2.2f +%2.2f +%2.2f",
+      m_accRoll, m_scaledRoll, m_filtRoll, m_ypr.roll);
+
+  Streamprint(s, " T=+%2.2f +%2.2f +%2.2f",
+      m_magTilt.x, m_magTilt.y, m_magTilt.z);
+
+  Streamprint(s, " Y=+%2.2f +%2.2f +%2.2f +%2.2f +%2.2f\n",
+      m_yaw, m_scaledYaw, m_scaled2Yaw, m_filtYaw, m_ypr.yaw);
 }
 
 bool Imu::init(Buzzer* buzzer_p)

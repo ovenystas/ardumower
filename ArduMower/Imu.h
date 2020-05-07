@@ -39,13 +39,6 @@
 #include "Setting.h"
 #include "Vector.h"
 
-// IMU state
-enum
-{
-  IMU_RUN,
-  IMU_CAL_COM
-};
-
 struct YawPitchRoll_t
 {
   float yaw;
@@ -98,6 +91,7 @@ public:
   {
     return m_calibrationAvailable;
   }
+
   void printInfo(Stream& s);
 
   Pid m_pid[END];             // direction and roll PID controllers
@@ -182,6 +176,12 @@ public:
   }
 
 private:
+  enum ImuStateE
+  {
+    RUN,
+    CAL_COM
+  };
+
   void read();
   void calibrateGyro(void);
   void loadCalibrationData(void);
@@ -234,7 +234,7 @@ private:
   int16_t m_errorCounter {};
   bool m_hardwareInitialized {};
   bool m_calibrationAvailable {};
-  uint8_t m_state { IMU_RUN };
+  ImuStateE m_state { ImuStateE::RUN };
   uint32_t m_lastAHRSTime {};
   calibrationData_t m_calibrationData
   {
