@@ -1775,15 +1775,6 @@ void RemoteControl::sendInfoMenu(bool update)
   Bluetooth.print(F("|v08~Battery recharged capacity average (mAh)"));
   Bluetooth.print(m_robot_p->m_stats.batteryChargingCapacityAverage_mAh);
 
-  //Bluetooth.print("|d01~Perimeter v");
-  //Bluetooth.print(verToString(readPerimeterVer()));
-
-  //Bluetooth.print("|d02~IMU v");
-  //Bluetooth.print(verToString(readIMUver()));
-
-  //Bluetooth.print("|d02~Stepper v");
-  //Bluetooth.print(verToString(readStepperVer()));
-
   Bluetooth.println("}");
 }
 

@@ -55,21 +55,6 @@ void StreamPrint_progmem(Print &out, PGM_P format, ...)
 }
 
 
-String verToString(int v)
-{
-  char buf[20] = { 0 };
-
-  sprintf(buf,
-          "%d.%d.%d.%d",
-          (v >> 12),
-          (v >> 8) & 0xF,
-          (v >> 4) & 0xF,
-          (v & 0xF));
-
-  return String(buf);
-}
-
-
 int freeRam(void)
 {
   extern int __heap_start, *__brkval;
