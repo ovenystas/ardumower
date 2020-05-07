@@ -259,11 +259,11 @@ float LSM303::heading(Vector<T> from)
     Vector<float>::normalize(N);
 
     // compute heading
-    float heading =
+    float headingValue =
         atan2(Vector<float>::dot(E, from), Vector<float>::dot(N, from)) * 180 / M_PI;
-    if (heading < 0)
+    if (headingValue < 0)
     {
-      heading += 360;
+      headingValue += 360;
     }
-    return heading;
+    return headingValue;
 }
