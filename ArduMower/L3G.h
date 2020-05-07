@@ -9,7 +9,7 @@
 class L3G
 {
   public:
-    enum deviceTypeE
+    enum DeviceTypeE
     {
       DEVICE_4200D,
       DEVICE_D20,
@@ -17,20 +17,20 @@ class L3G
       DEVICE_AUTO
     };
 
-    enum sa0StateE
+    enum Sa0StateE
     {
       SA0_LOW,
       SA0_HIGH,
       SA0_AUTO
     };
 
-    enum deviceIdE
+    enum DeviceIdE
     {
       DEV_ID_4200D = 0xD3
     };
 
     // register addresses
-    enum regAddrE
+    enum RegAddrE
     {
        WHO_AM_I       = 0x0F,
 
@@ -85,41 +85,41 @@ class L3G
 
     Vector<int16_t> m_g {}; // gyro angular velocity readings
 
-    byte m_last_status {}; // status of last I2C transmission
+    uint8_t m_last_status {}; // status of last I2C transmission
 
     L3G() {};
 
-    bool init(deviceTypeE device = DEVICE_AUTO, sa0StateE sa0 = SA0_AUTO);
-    deviceTypeE getDeviceType(void) const
+    bool init(DeviceTypeE device = DEVICE_AUTO, Sa0StateE sa0 = SA0_AUTO);
+    DeviceTypeE getDeviceType() const
     {
       return m_deviceType;
     }
 
-    void enableDefault(void);
+    void enableDefault();
 
-    void writeReg(const byte reg, const byte value);
-    byte readReg(const byte reg);
+    void writeReg(const uint8_t reg, const uint8_t value);
+    uint8_t readReg(const uint8_t reg);
 
-    void read(void);
+    void read();
 
-    unsigned int getTimeout(void) const
+    uint16_t getTimeout() const
     {
       return m_io_timeout;
     }
 
-    void setTimeout(const unsigned int timeout)
+    void setTimeout(const uint16_t timeout)
     {
       m_io_timeout = timeout;
     }
 
-    bool timeoutOccurred(void);
+    bool timeoutOccurred();
 
   private:
-      deviceTypeE m_deviceType { DEVICE_AUTO }; // chip type (D20H, D20, or 4200D)
-      byte m_address {};
+      DeviceTypeE m_deviceType { DEVICE_AUTO }; // chip type (D20H, D20, or 4200D)
+      uint8_t m_address {};
 
-      unsigned int m_io_timeout {};
-      bool m_did_timeout { false };
+      uint16_t m_io_timeout {};
+      bool m_did_timeout {};
 
-      int testReg(const byte address, const regAddrE reg);
+      int16_t testReg(const uint8_t address, const RegAddrE reg);
 };

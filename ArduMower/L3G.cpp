@@ -2,7 +2,7 @@
 #include <Wire.h>
 #include <math.h>
 
-// Defines ////////////////////////////////////////////////////////////////
+// Defines /////////////////////////////////////////////////////////////////////
 
 // The Arduino two-wire interface uses a 7-bit number for the address,
 // and sets the last bit correctly based on reads and writes
@@ -30,18 +30,22 @@ bool L3G::timeoutOccurred()
   return tmp;
 }
 
-bool L3G::init(deviceTypeE device, sa0StateE sa0)
+bool L3G::init(DeviceTypeE device, Sa0StateE sa0)
 {
   // perform auto-detection unless device type and SA0 state were both specified
   if (device == DEVICE_AUTO || sa0 == SA0_AUTO)
   {
-    // check for L3GD20H, D20 if device is unidentified or was specified to be one of these types
-    if (device == DEVICE_AUTO || device == DEVICE_D20H || device == DEVICE_D20)
+    // check for L3GD20H, D20 if device is unidentified or was specified to be
+    // one of these types
+    if (device == DEVICE_AUTO ||
+        device == DEVICE_D20H ||
+        device == DEVICE_D20)
     {
       int id;
 
       // check SA0 high address unless SA0 was specified to be low
-      if (sa0 != SA0_LOW && (id = testReg(D20_SA0_HIGH_ADDRESS, WHO_AM_I)) != TEST_REG_ERROR)
+      if (sa0 != SA0_LOW &&
+          (id = testReg(D20_SA0_HIGH_ADDRESS, WHO_AM_I)) != TEST_REG_ERROR)
       {
         // device responds to address 1101011; it's a D20H or D20 with SA0 high
         sa0 = SA0_HIGH;
@@ -52,7 +56,8 @@ bool L3G::init(deviceTypeE device, sa0StateE sa0)
         }
       }
       // check SA0 low address unless SA0 was specified to be high
-      else if (sa0 != SA0_HIGH && (id = testReg(D20_SA0_LOW_ADDRESS, WHO_AM_I)) != TEST_REG_ERROR)
+      else if (sa0 != SA0_HIGH &&
+          (id = testReg(D20_SA0_LOW_ADDRESS, WHO_AM_I)) != TEST_REG_ERROR)
       {
         // device responds to address 1101010; it's a D20H or D20 with SA0 low
         sa0 = SA0_LOW;
@@ -64,16 +69,20 @@ bool L3G::init(deviceTypeE device, sa0StateE sa0)
       }
     }
 
-    // check for L3G4200D if device is still unidentified or was specified to be this type
-    if (device == DEVICE_AUTO || device == DEVICE_4200D)
+    // check for L3G4200D if device is still unidentified or was specified to be
+    // this type
+    if (device == DEVICE_AUTO ||
+        device == DEVICE_4200D)
     {
-      if (sa0 != SA0_LOW && testReg(L3G4200D_SA0_HIGH_ADDRESS, WHO_AM_I) == L3G4200D_WHO_ID)
+      if (sa0 != SA0_LOW &&
+          testReg(L3G4200D_SA0_HIGH_ADDRESS, WHO_AM_I) == L3G4200D_WHO_ID)
       {
         // device responds to address 1101001; it's a 4200D with SA0 high
         device = DEVICE_4200D;
         sa0 = SA0_HIGH;
       }
-      else if (sa0 != SA0_HIGH && testReg(L3G4200D_SA0_LOW_ADDRESS, WHO_AM_I) == L3G4200D_WHO_ID)
+      else if (sa0 != SA0_HIGH &&
+          testReg(L3G4200D_SA0_LOW_ADDRESS, WHO_AM_I) == L3G4200D_WHO_ID)
       {
         // device responds to address 1101000; it's a 4200D with SA0 low
         device = DEVICE_4200D;
@@ -81,7 +90,8 @@ bool L3G::init(deviceTypeE device, sa0StateE sa0)
       }
     }
 
-    // make sure device and SA0 were successfully detected; otherwise, indicate failure
+    // make sure device and SA0 were successfully detected; otherwise,
+    // indicate failure
     if (device == DEVICE_AUTO || sa0 == SA0_AUTO)
     {
       return false;
@@ -95,11 +105,13 @@ bool L3G::init(deviceTypeE device, sa0StateE sa0)
   {
     case DEVICE_D20H:
     case DEVICE_D20:
-      m_address = (sa0 == SA0_HIGH) ? D20_SA0_HIGH_ADDRESS : D20_SA0_LOW_ADDRESS;
+      m_address = (sa0 == SA0_HIGH) ?
+          D20_SA0_HIGH_ADDRESS : D20_SA0_LOW_ADDRESS;
       break;
 
     case DEVICE_4200D:
-      m_address = (sa0 == SA0_HIGH) ? L3G4200D_SA0_HIGH_ADDRESS : L3G4200D_SA0_LOW_ADDRESS;
+      m_address = (sa0 == SA0_HIGH) ?
+          L3G4200D_SA0_HIGH_ADDRESS : L3G4200D_SA0_LOW_ADDRESS;
       break;
 
     case DEVICE_AUTO:
@@ -156,66 +168,55 @@ byte L3G::readReg(const byte reg)
   Wire.beginTransmission(m_address);
   Wire.write(reg);
   m_last_status = Wire.endTransmission(false);
-  Wire.requestFrom(m_address, (byte)1);
+  Wire.requestFrom(m_address, static_cast<uint8_t>(1));
   value = Wire.read();
   Wire.endTransmission();
 
   return value;
 }
 
-// Reads the 3 gyro channels and stores them in vector g
+// Reads the 3 gyro channels and stores them in vector m_g
 void L3G::read()
 {
   Wire.beginTransmission(m_address);
   // assert the MSB of the address to get the gyro
-  // to do slave-transmit subaddress updating.
-  Wire.write(OUT_X_L | (1 << 7));
+  // to do slave-transmit sub address updating.
+  Wire.write(OUT_X_L | B10000000);
   Wire.endTransmission();
-  Wire.requestFrom(m_address, (byte)6);
+  Wire.requestFrom(m_address, static_cast<uint8_t>(6));
 
-  unsigned int millis_start = millis();
+  uint32_t millis_start = millis();
   while (Wire.available() < 6)
   {
-    if (m_io_timeout > 0 && ((unsigned int)millis() - millis_start) > m_io_timeout)
+    if (m_io_timeout > 0 &&
+        static_cast<uint32_t>(millis() - millis_start) > m_io_timeout)
     {
       m_did_timeout = true;
       return;
     }
   }
 
-  uint8_t xlg = Wire.read();
-  uint8_t xhg = Wire.read();
-  uint8_t ylg = Wire.read();
-  uint8_t yhg = Wire.read();
-  uint8_t zlg = Wire.read();
-  uint8_t zhg = Wire.read();
+  // Read from device, combine high and low bytes
+  Vector<int16_t> g;
+  g.x = Wire.read() | (Wire.read() << 8);
+  g.y = Wire.read() | (Wire.read() << 8);
+  g.z = Wire.read() | (Wire.read() << 8);
 
-  // combine high and low bytes
-  m_g.x = static_cast<int16_t>(xhg << 8 | xlg);
-  m_g.y = static_cast<int16_t>(yhg << 8 | ylg);
-  m_g.z = static_cast<int16_t>(zhg << 8 | zlg);
+  m_g = g;
 }
 
-//void L3G::vectorNormalize(vector<float> *a)
-//{
-//  float mag = sqrt(vectorDot(a, a));
-//  a->x /= mag;
-//  a->y /= mag;
-//  a->z /= mag;
-//}
+// Private Methods /////////////////////////////////////////////////////////////
 
-// Private Methods //////////////////////////////////////////////////////////////
-
-int L3G::testReg(const byte address, const regAddrE reg)
+int16_t L3G::testReg(const uint8_t address, const RegAddrE reg)
 {
   Wire.beginTransmission(address);
-  Wire.write((byte)reg);
+  Wire.write(static_cast<uint8_t>(reg));
   if (Wire.endTransmission() != 0)
   {
     return TEST_REG_ERROR;
   }
 
-  Wire.requestFrom(address, (byte)1);
+  Wire.requestFrom(address, static_cast<uint8_t>(1));
   if (Wire.available())
   {
     return Wire.read();

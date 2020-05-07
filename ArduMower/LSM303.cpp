@@ -110,7 +110,8 @@ bool LSM303::init(DeviceTypeE device, Sa0StateE sa0)
       else if (sa0 != SA0_HIGH &&
           testReg(DLM_DLH_ACC_SA0_LOW_ADDRESS, CTRL_REG1_A) != TEST_REG_ERROR)
       {
-        // device responds to address 0011000; it's a DLM with SA0 low or DLH with SA0 low
+        // device responds to address 0011000; it's a DLM with SA0 low or
+        // DLH with SA0 low
         sa0 = SA0_LOW;
         if (device == DEVICE_AUTO)
         {
@@ -366,7 +367,7 @@ void LSM303::readAcc(void)
   Wire.beginTransmission(m_acc_address);
   // assert the MSB of the address to get the accelerometer
   // to do slave-transmit sub address updating.
-  Wire.write(OUT_X_L_A | (1 << 7));
+  Wire.write(OUT_X_L_A | B10000000);
   m_last_status = Wire.endTransmission();
   Wire.requestFrom(m_acc_address, static_cast<uint8_t>(6));
 
@@ -387,12 +388,9 @@ void LSM303::readAcc(void)
   // (12-bit resolution, left-aligned). The D has 16-bit resolution.
   // Ove: Changed to drop lowest 4 bits again
   Vector<int16_t> acc;
-  acc.x = Wire.read() >> 4;
-  acc.x |= Wire.read() << 4;
-  acc.y = Wire.read() >> 4;
-  acc.y |= Wire.read() << 4;
-  acc.z = Wire.read() >> 4;
-  acc.z |= Wire.read() << 4;
+  acc.x = (Wire.read() >> 4) | (Wire.read() << 4);
+  acc.y = (Wire.read() >> 4) | (Wire.read() << 4);
+  acc.z = (Wire.read() >> 4) | (Wire.read() << 4);
 
   m_acc = acc;
 }
@@ -404,7 +402,7 @@ void LSM303::readMag(void)
   // If LSM303D, assert MSB to enable sub address updating
   // OUT_X_L_M comes first on D, OUT_X_H_M on others
   Wire.write(m_deviceType == DEVICE_D ?
-      m_translated_regs[-OUT_X_L_M] | (1 << 7) :
+      m_translated_regs[-OUT_X_L_M] | B10000000 :
       m_translated_regs[-OUT_X_H_M]);
 
   m_last_status = Wire.endTransmission();
@@ -426,34 +424,26 @@ void LSM303::readMag(void)
   if (m_deviceType == DEVICE_D)
   {
     // D: X_L, X_H, Y_L, Y_H, Z_L, Z_H
-    mag.x = Wire.read();
-    mag.x |= Wire.read() << 8;
-    mag.y = Wire.read();
-    mag.y |= Wire.read() << 8;
-    mag.z = Wire.read();
-    mag.z |= Wire.read() << 8;
+    mag.x = Wire.read() | (Wire.read() << 8);
+    mag.y = Wire.read() | (Wire.read() << 8);
+    mag.z = Wire.read() | (Wire.read() << 8);
   }
   else
   {
     // DLHC, DLM, DLH: X_H, X_L...
-    mag.x = Wire.read() << 8;
-    mag.x |= Wire.read();
+    mag.x = (Wire.read() << 8) | Wire.read();
 
     if (m_deviceType == DEVICE_DLH)
     {
       // DLH: ...Y_H, Y_L, Z_H, Z_L
-      mag.y = Wire.read() << 8;
-      mag.y |= Wire.read();
-      mag.z = Wire.read() << 8;
-      mag.z |= Wire.read();
+      mag.y = (Wire.read() << 8) | Wire.read();
+      mag.z = (Wire.read() << 8) | Wire.read();
     }
     else
     {
       // DLM, DLHC: ...Z_H, Z_L, Y_H, Y_L
-      mag.z = Wire.read() << 8;
-      mag.z |= Wire.read();
-      mag.y = Wire.read() << 8;
-      mag.y |= Wire.read();
+      mag.z = (Wire.read() << 8) | Wire.read();
+      mag.y = (Wire.read() << 8) | Wire.read();
     }
   }
 

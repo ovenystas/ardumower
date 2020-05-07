@@ -8,7 +8,7 @@
 #include "CppUTestExt/MockSupport.h"
 #include "L3G.h"
 
-bool L3G::init(deviceTypeE device, sa0StateE sa0)
+bool L3G::init(DeviceTypeE device, Sa0StateE sa0)
 {
   mock().actualCall("L3G::init")
       .withParameter("device", device)
