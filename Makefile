@@ -20,6 +20,9 @@ test:
 gcov:
 	$(SILENCE)make -j -C ArduMower_Test gcov
 
+gcovr:
+	$(SILENCE)make -j -C ArduMower_Test gcovr
+
 clean:
 	$(SILENCE)rm -rf ArduMower/build
 	$(SILENCE)rm -f ArduMower/ArduMower.*.hex
