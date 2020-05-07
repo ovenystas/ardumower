@@ -57,11 +57,11 @@ TEST_GROUP(Imu)
   }
 };
 
-TEST(Imu, getCallCounter)
+TEST(Imu, getAndClearCallCounter)
 {
   imu_p->m_callCounter = 12345;
 
-  UNSIGNED_LONGS_EQUAL(12345, imu_p->getCallCounter());
+  UNSIGNED_LONGS_EQUAL(12345, imu_p->getAndClearCallCounter());
   UNSIGNED_LONGS_EQUAL(0, imu_p->m_callCounter);
 
   mock().checkExpectations();

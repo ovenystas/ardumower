@@ -480,7 +480,7 @@ float LSM303::heading(void)
 
 // Private Methods /////////////////////////////////////////////////////////////
 
-int LSM303::testReg(byte address, RegAddrE reg)
+int16_t LSM303::testReg(byte address, RegAddrE reg)
 {
   Wire.beginTransmission(address);
   Wire.write(static_cast<uint8_t>(reg));

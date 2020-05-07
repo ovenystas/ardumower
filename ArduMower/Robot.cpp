@@ -1425,7 +1425,7 @@ void Robot::printInfo(Stream &s)
     Streamprint(s, "chg %2d.%01d V @ %4d mA",
         chgVolt_mV / 1000, (chgVolt_mV % 1000) / 100, chgCurr_mA);
 
-    Streamprint(s, "imu %3d ", m_imu.getCallCounter());
+    Streamprint(s, "imu %3d ", m_imu.getAndClearCallCounter());
 
     Streamprint(s, "adc %3d\r\n", ADCMan.getCapturedChannels());
 
@@ -1956,7 +1956,7 @@ void Robot::readPerimeters()
 
 void Robot::readImu()
 {
-  if (m_imu.getErrorCounter() > 0)
+  if (m_imu.getAndClearErrorCounter() > 0)
   {
     incErrorCounter(ERR_IMU_COMM);
     Console.println(F("IMU comm error"));

@@ -329,3 +329,27 @@ TEST(Vector, castBeforeAddition)
   LONGS_EQUAL(-64000, res.y);
   LONGS_EQUAL(0, res.z);
 }
+
+TEST(Vector, elementWiseMultiplication)
+{
+  const Vector<int> v1(1, 2, 3);
+  const Vector<int> v2(4, 5, 6);
+
+  Vector<int> res = v1 * v2;
+
+  LONGS_EQUAL(4, res.x);
+  LONGS_EQUAL(10, res.y);
+  LONGS_EQUAL(18, res.z);
+}
+
+TEST(Vector, elementWiseDivision)
+{
+  const Vector<int> v1(12, 10, 24);
+  const Vector<int> v2(4, 5, 6);
+
+  Vector<int> res = v1 / v2;
+
+  LONGS_EQUAL(3, res.x);
+  LONGS_EQUAL(2, res.y);
+  LONGS_EQUAL(4, res.z);
+}

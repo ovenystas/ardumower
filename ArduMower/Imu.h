@@ -72,7 +72,7 @@ class Imu
 public:
   Imu() {};
 
-  enum imuPidE
+  enum ImuPidE
   {
     DIR,
     ROLL,
@@ -91,8 +91,8 @@ public:
   }
 
   void update(void);
-  int16_t getCallCounter(void);
-  int16_t getErrorCounter(void);
+  int16_t getAndClearCallCounter(void);
+  int16_t getAndClearErrorCounter(void);
   void deleteCalibrationData(void);
   bool isCalibrationAvailable(void) const
   {
@@ -187,10 +187,11 @@ private:
   void loadCalibrationData(void);
 
   // print IMU values
-  void printPoint(const Vector<int16_t>& point);
-  void printPointln(const Vector<int16_t>& point);
-  void printPoint(const Vector<float>& point);
-  void printPointln(const Vector<float>& point);
+  template <class T> void printPoint(const Vector<T>& point);
+  template <class T> void printPointln(const Vector<T>& point);
+  template <class T> void printPointMinAvgMax(
+      Vector<T>& v_min, Vector<T>& v_avg, Vector<T>& v_max);
+  template <class T> void printPointMinMax(Vector<T>& v_min, Vector<T>& v_max);
   void printCalibrationData(void);
   void saveCalibrationData(void);
 
@@ -215,11 +216,11 @@ private:
   float fusionPI(const float w, const float a, const float b);
 
   // Filter
-  float Complementary(const float newAngle, const float newRate,
+  float complementary(const float newAngle, const float newRate,
       const int16_t looptime, float angle);
-  float Complementary2(const float newAngle, const float newRate,
+  float complementary2(const float newAngle, const float newRate,
       const int16_t looptime, float angle);
-  float Kalman(const float newAngle, const float newRate, const int16_t looptime,
+  float kalman(const float newAngle, const float newRate, const int16_t looptime,
       float x_angle);
 
   uint32_t m_nextTime {};

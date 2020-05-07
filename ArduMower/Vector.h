@@ -105,11 +105,27 @@ struct Vector
     return *this;
   }
 
+  Vector<T>& operator*= (const Vector<T> rhs)
+  {
+    x = static_cast<T>(x * rhs.x);
+    y = static_cast<T>(y * rhs.y);
+    z = static_cast<T>(z * rhs.z);
+    return *this;
+  }
+
   Vector<T>& operator/= (const T rhs)
   {
     x = static_cast<T>(x / rhs);
     y = static_cast<T>(y / rhs);
     z = static_cast<T>(z / rhs);
+    return *this;
+  }
+
+  Vector<T>& operator/= (const Vector<T> rhs)
+  {
+    x = static_cast<T>(x / rhs.x);
+    y = static_cast<T>(y / rhs.y);
+    z = static_cast<T>(z / rhs.z);
     return *this;
   }
 
@@ -131,7 +147,19 @@ struct Vector
     return lhs;
   }
 
+  friend Vector<T> operator* (Vector<T> lhs, const Vector<T> rhs)
+  {
+    lhs *= rhs;
+    return lhs;
+  }
+
   friend Vector<T> operator/ (Vector<T> lhs, const T rhs)
+  {
+    lhs /= rhs;
+    return lhs;
+  }
+
+  friend Vector<T> operator/ (Vector<T> lhs, const Vector<T> rhs)
   {
     lhs /= rhs;
     return lhs;
