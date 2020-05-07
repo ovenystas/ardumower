@@ -316,3 +316,16 @@ TEST(Vector, int_normalize)
 
   CHECK_TRUE(v == expected);
 }
+
+TEST(Vector, castBeforeAddition)
+{
+  const Vector<int16_t> v1(32000, -32000, 0);
+  const Vector<int16_t> v2(32000, -32000, 0);
+
+  Vector<int32_t> res =
+      static_cast<Vector<int32_t>>(v1) + static_cast<Vector<int32_t>>(v2);
+
+  LONGS_EQUAL(64000, res.x);
+  LONGS_EQUAL(-64000, res.y);
+  LONGS_EQUAL(0, res.z);
+}

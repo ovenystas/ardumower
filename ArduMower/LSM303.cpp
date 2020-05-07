@@ -31,7 +31,8 @@ LSM303::LSM303(void)
 
 // Public Methods //////////////////////////////////////////////////////////////
 
-// Did a timeout occur in readAcc(), readMag(), or read() since the last call to timeoutOccurred()?
+// Did a timeout occur in readAcc(), readMag(), or read() since the last call
+// to timeoutOccurred()?
 bool LSM303::timeoutOccurred()
 {
   bool tmp = m_did_timeout;
@@ -39,17 +40,17 @@ bool LSM303::timeoutOccurred()
   return tmp;
 }
 
-void LSM303::setTimeout(unsigned int timeout)
+void LSM303::setTimeout(uint16_t timeout)
 {
   m_io_timeout = timeout;
 }
 
-unsigned int LSM303::getTimeout()
+uint16_t LSM303::getTimeout()
 {
   return m_io_timeout;
 }
 
-bool LSM303::init(deviceTypeE device, sa0StateE sa0)
+bool LSM303::init(DeviceTypeE device, Sa0StateE sa0)
 {
   // perform auto-detection unless device type and SA0 state were both specified
   if (device == DEVICE_AUTO || sa0 == SA0_AUTO)
@@ -58,14 +59,16 @@ bool LSM303::init(deviceTypeE device, sa0StateE sa0)
     if (device == DEVICE_AUTO || device == DEVICE_D)
     {
       // check SA0 high address unless SA0 was specified to be low
-      if (sa0 != SA0_LOW && testReg(D_SA0_HIGH_ADDRESS, WHO_AM_I) == D_WHO_ID)
+      if (sa0 != SA0_LOW &&
+          testReg(D_SA0_HIGH_ADDRESS, WHO_AM_I) == D_WHO_ID)
       {
         // device responds to address 0011101 with D ID; it's a D with SA0 high
         device = DEVICE_D;
         sa0 = SA0_HIGH;
       }
       // check SA0 low address unless SA0 was specified to be high
-      else if (sa0 != SA0_HIGH && testReg(D_SA0_LOW_ADDRESS, WHO_AM_I) == D_WHO_ID)
+      else if (sa0 != SA0_HIGH &&
+          testReg(D_SA0_LOW_ADDRESS, WHO_AM_I) == D_WHO_ID)
       {
         // device responds to address 0011110 with D ID; it's a D with SA0 low
         device = DEVICE_D;
@@ -73,40 +76,54 @@ bool LSM303::init(deviceTypeE device, sa0StateE sa0)
       }
     }
 
-    // check for LSM303DLHC, DLM, DLH if device is still unidentified or was specified to be one of these types
-    if (device == DEVICE_AUTO || device == DEVICE_DLHC || device == DEVICE_DLM || device == DEVICE_DLH)
+    // check for LSM303DLHC, DLM, DLH if device is still unidentified or was
+    // specified to be one of these types
+    if (device == DEVICE_AUTO ||
+        device == DEVICE_DLHC ||
+        device == DEVICE_DLM ||
+        device == DEVICE_DLH)
     {
       // check SA0 high address unless SA0 was specified to be low
-      if (sa0 != SA0_LOW && testReg(DLHC_DLM_DLH_ACC_SA0_HIGH_ADDRESS, CTRL_REG1_A) != TEST_REG_ERROR)
+      if (sa0 != SA0_LOW &&
+          testReg(DLHC_DLM_DLH_ACC_SA0_HIGH_ADDRESS, CTRL_REG1_A) !=
+              TEST_REG_ERROR)
       {
-        // device responds to address 0011001; it's a DLHC, DLM with SA0 high, or DLH with SA0 high
+        // device responds to address 0011001; it's a DLHC, DLM with SA0 high,
+        // or DLH with SA0 high
         sa0 = SA0_HIGH;
         if (device == DEVICE_AUTO)
         {
           // use magnetometer WHO_AM_I register to determine device type
           //
-          // DLHC seems to respond to WHO_AM_I request the same way as DLM, even though this
-          // register isn't documented in its datasheet. Since the DLHC accelerometer address is the
-          // same as the DLM with SA0 high, but Pololu DLM boards pull SA0 low by default, we'll
-          // guess that a device whose accelerometer responds to the SA0 high address and whose
-          // magnetometer gives the DLM ID is actually a DLHC.
-          device = (testReg(DLHC_DLM_DLH_MAG_ADDRESS, WHO_AM_I_M) == DLM_WHO_ID) ? DEVICE_DLHC : DEVICE_DLH;
+          // DLHC seems to respond to WHO_AM_I request the same way as DLM, even
+          // though this register isn't documented in its data sheet.
+          // Since the DLHC accelerometer address is the same as the DLM with
+          // SA0 high, but Pololu DLM boards pull SA0 low by default, we'll
+          // guess that a device whose accelerometer responds to the SA0 high
+          // address and whose magnetometer gives the DLM ID is actually a DLHC.
+          device =
+              testReg(DLHC_DLM_DLH_MAG_ADDRESS, WHO_AM_I_M) == DLM_WHO_ID ?
+              DEVICE_DLHC : DEVICE_DLH;
         }
       }
       // check SA0 low address unless SA0 was specified to be high
-      else if (sa0 != SA0_HIGH && testReg(DLM_DLH_ACC_SA0_LOW_ADDRESS, CTRL_REG1_A) != TEST_REG_ERROR)
+      else if (sa0 != SA0_HIGH &&
+          testReg(DLM_DLH_ACC_SA0_LOW_ADDRESS, CTRL_REG1_A) != TEST_REG_ERROR)
       {
         // device responds to address 0011000; it's a DLM with SA0 low or DLH with SA0 low
         sa0 = SA0_LOW;
         if (device == DEVICE_AUTO)
         {
           // use magnetometer WHO_AM_I register to determine device type
-          device = (testReg(DLHC_DLM_DLH_MAG_ADDRESS, WHO_AM_I_M) == DLM_WHO_ID) ? DEVICE_DLM : DEVICE_DLH;
+          device =
+              testReg(DLHC_DLM_DLH_MAG_ADDRESS, WHO_AM_I_M) == DLM_WHO_ID ?
+                  DEVICE_DLM : DEVICE_DLH;
         }
       }
     }
 
-    // make sure device and SA0 were successfully detected; otherwise, indicate failure
+    // make sure device and SA0 were successfully detected; otherwise,
+    // indicate failure
     if (device == DEVICE_AUTO || sa0 == SA0_AUTO)
     {
       return false;
@@ -119,7 +136,8 @@ bool LSM303::init(deviceTypeE device, sa0StateE sa0)
   switch (device)
   {
     case DEVICE_D:
-      m_acc_address = m_mag_address = (sa0 == SA0_HIGH) ? D_SA0_HIGH_ADDRESS : D_SA0_LOW_ADDRESS;
+      m_acc_address = m_mag_address = (sa0 == SA0_HIGH) ?
+          D_SA0_HIGH_ADDRESS : D_SA0_LOW_ADDRESS;
       m_translated_regs[-OUT_X_L_M] = D_OUT_X_L_M;
       m_translated_regs[-OUT_X_H_M] = D_OUT_X_H_M;
       m_translated_regs[-OUT_Y_L_M] = D_OUT_Y_L_M;
@@ -129,7 +147,9 @@ bool LSM303::init(deviceTypeE device, sa0StateE sa0)
       break;
 
     case DEVICE_DLHC:
-      m_acc_address = DLHC_DLM_DLH_ACC_SA0_HIGH_ADDRESS; // DLHC doesn't have configurable SA0 but uses same acc address as DLM/DLH with SA0 high
+      // DLHC doesn't have configurable SA0 but uses same acc address as
+      // DLM/DLH with SA0 high
+      m_acc_address = DLHC_DLM_DLH_ACC_SA0_HIGH_ADDRESS;
       m_mag_address = DLHC_DLM_DLH_MAG_ADDRESS;
       m_translated_regs[-OUT_X_H_M] = DLHC_OUT_X_H_M;
       m_translated_regs[-OUT_X_L_M] = DLHC_OUT_X_L_M;
@@ -140,7 +160,8 @@ bool LSM303::init(deviceTypeE device, sa0StateE sa0)
       break;
 
     case DEVICE_DLM:
-      m_acc_address = (sa0 == SA0_HIGH) ? DLHC_DLM_DLH_ACC_SA0_HIGH_ADDRESS : DLM_DLH_ACC_SA0_LOW_ADDRESS;
+      m_acc_address = (sa0 == SA0_HIGH) ?
+          DLHC_DLM_DLH_ACC_SA0_HIGH_ADDRESS : DLM_DLH_ACC_SA0_LOW_ADDRESS;
       m_mag_address = DLHC_DLM_DLH_MAG_ADDRESS;
       m_translated_regs[-OUT_X_H_M] = DLM_OUT_X_H_M;
       m_translated_regs[-OUT_X_L_M] = DLM_OUT_X_L_M;
@@ -151,7 +172,8 @@ bool LSM303::init(deviceTypeE device, sa0StateE sa0)
       break;
 
     case DEVICE_DLH:
-      m_acc_address = (sa0 == SA0_HIGH) ? DLHC_DLM_DLH_ACC_SA0_HIGH_ADDRESS : DLM_DLH_ACC_SA0_LOW_ADDRESS;
+      m_acc_address = (sa0 == SA0_HIGH) ?
+          DLHC_DLM_DLH_ACC_SA0_HIGH_ADDRESS : DLM_DLH_ACC_SA0_LOW_ADDRESS;
       m_mag_address = DLHC_DLM_DLH_MAG_ADDRESS;
       m_translated_regs[-OUT_X_H_M] = DLH_OUT_X_H_M;
       m_translated_regs[-OUT_X_L_M] = DLH_OUT_X_L_M;
@@ -268,7 +290,7 @@ byte LSM303::readAccReg(byte reg)
   Wire.beginTransmission(m_acc_address);
   Wire.write(reg);
   m_last_status = Wire.endTransmission();
-  Wire.requestFrom(m_acc_address, (byte)1);
+  Wire.requestFrom(m_acc_address, static_cast<uint8_t>(1));
   value = Wire.read();
   Wire.endTransmission();
 
@@ -285,11 +307,12 @@ void LSM303::writeMagReg(byte reg, byte value)
 }
 
 // Reads a magnetometer register
-byte LSM303::readMagReg(int reg)
+byte LSM303::readMagReg(int16_t reg)
 {
   byte value;
 
-  // if dummy register address (magnetometer Y/Z), look up actual translated address (based on device type)
+  // If dummy register address (magnetometer Y/Z),
+  // look up actual translated address (based on device type).
   if (reg < 0)
   {
     reg = m_translated_regs[-reg];
@@ -298,7 +321,7 @@ byte LSM303::readMagReg(int reg)
   Wire.beginTransmission(m_mag_address);
   Wire.write(reg);
   m_last_status = Wire.endTransmission();
-  Wire.requestFrom(m_mag_address, (byte)1);
+  Wire.requestFrom(m_mag_address, static_cast<uint8_t>(1));
   value = Wire.read();
   Wire.endTransmission();
 
@@ -307,7 +330,8 @@ byte LSM303::readMagReg(int reg)
 
 void LSM303::writeReg(byte reg, byte value)
 {
-  // mag address == acc_address for LSM303D, so it doesn't really matter which one we use.
+  // mag address == acc_address for LSM303D,
+  // so it doesn't really matter which one we use.
   if (m_deviceType == DEVICE_D || reg < CTRL_REG1_A)
   {
     writeMagReg(reg, value);
@@ -318,11 +342,13 @@ void LSM303::writeReg(byte reg, byte value)
   }
 }
 
-// Note that this function will not work for reading TEMP_OUT_H_M and TEMP_OUT_L_M on the DLHC.
+// Note that this function will not work for reading TEMP_OUT_H_M and
+// TEMP_OUT_L_M on the DLHC.
 // To read those two registers, use readMagReg() instead.
-byte LSM303::readReg(int reg)
+byte LSM303::readReg(int16_t reg)
 {
-  // mag address == acc_address for LSM303D, so it doesn't really matter which one we use.
+  // mag address == acc_address for LSM303D, so it doesn't really matter which
+  // one we use.
   // Use readMagReg so it can translate OUT_[XYZ]_[HL]_M
   if (m_deviceType == DEVICE_D || reg < CTRL_REG1_A)
   {
@@ -334,102 +360,104 @@ byte LSM303::readReg(int reg)
   }
 }
 
-// Reads the 3 accelerometer channels and stores them in vector a
+// Reads the 3 accelerometer channels and stores them in vector m_acc.
 void LSM303::readAcc(void)
 {
   Wire.beginTransmission(m_acc_address);
   // assert the MSB of the address to get the accelerometer
-  // to do slave-transmit subaddress updating.
+  // to do slave-transmit sub address updating.
   Wire.write(OUT_X_L_A | (1 << 7));
   m_last_status = Wire.endTransmission();
-  Wire.requestFrom(m_acc_address, (byte)6);
+  Wire.requestFrom(m_acc_address, static_cast<uint8_t>(6));
 
-  unsigned long millis_start = millis();
+  uint32_t millis_start = millis();
   while (Wire.available() < 6)
   {
-    if (m_io_timeout > 0 && (unsigned int)(millis() - millis_start) > m_io_timeout)
+    if (m_io_timeout > 0 &&
+        static_cast<uint32_t>(millis() - millis_start) > m_io_timeout)
     {
       m_did_timeout = true;
       return;
     }
   }
 
-  byte xla = Wire.read();
-  byte xha = Wire.read();
-  byte yla = Wire.read();
-  byte yha = Wire.read();
-  byte zla = Wire.read();
-  byte zha = Wire.read();
-
-  // combine high and low bytes
-  // This no longer drops the lowest 4 bits of the readings from the DLH/DLM/DLHC, which are always 0
-  // (12-bit resolution, left-aligned). The D has 16-bit resolution
+  // Read from device, combine high and low bytes.
+  // This no longer drops the lowest 4 bits of the readings from the
+  // DLH/DLM/DLHC, which are always 0.
+  // (12-bit resolution, left-aligned). The D has 16-bit resolution.
   // Ove: Changed to drop lowest 4 bits again
-  m_acc.x = (int16_t)(xha << 8 | xla) >> 4;
-  m_acc.y = (int16_t)(yha << 8 | yla) >> 4;
-  m_acc.z = (int16_t)(zha << 8 | zla) >> 4;
+  Vector<int16_t> acc;
+  acc.x = Wire.read() >> 4;
+  acc.x |= Wire.read() << 4;
+  acc.y = Wire.read() >> 4;
+  acc.y |= Wire.read() << 4;
+  acc.z = Wire.read() >> 4;
+  acc.z |= Wire.read() << 4;
+
+  m_acc = acc;
 }
 
-// Reads the 3 magnetometer channels and stores them in vector m
+// Reads the 3 magnetometer channels and stores them in vector m_mag.
 void LSM303::readMag(void)
 {
   Wire.beginTransmission(m_mag_address);
-  // If LSM303D, assert MSB to enable subaddress updating
+  // If LSM303D, assert MSB to enable sub address updating
   // OUT_X_L_M comes first on D, OUT_X_H_M on others
-  Wire.write((m_deviceType == DEVICE_D) ? m_translated_regs[-OUT_X_L_M] | (1 << 7) : m_translated_regs[-OUT_X_H_M]);
+  Wire.write(m_deviceType == DEVICE_D ?
+      m_translated_regs[-OUT_X_L_M] | (1 << 7) :
+      m_translated_regs[-OUT_X_H_M]);
+
   m_last_status = Wire.endTransmission();
-  Wire.requestFrom(m_mag_address, (byte)6);
+  Wire.requestFrom(m_mag_address, static_cast<uint8_t>(6));
 
   unsigned long millis_start = millis();
   while (Wire.available() < 6)
   {
-    if (m_io_timeout > 0 && (unsigned int)(millis() - millis_start) > m_io_timeout)
+    if (m_io_timeout > 0 &&
+        static_cast<uint32_t>(millis() - millis_start) > m_io_timeout)
     {
       m_did_timeout = true;
       return;
     }
   }
 
-  byte xlm, xhm, ylm, yhm, zlm, zhm;
+  Vector<int16_t> mag;
 
   if (m_deviceType == DEVICE_D)
   {
     // D: X_L, X_H, Y_L, Y_H, Z_L, Z_H
-    xlm = Wire.read();
-    xhm = Wire.read();
-    ylm = Wire.read();
-    yhm = Wire.read();
-    zlm = Wire.read();
-    zhm = Wire.read();
+    mag.x = Wire.read();
+    mag.x |= Wire.read() << 8;
+    mag.y = Wire.read();
+    mag.y |= Wire.read() << 8;
+    mag.z = Wire.read();
+    mag.z |= Wire.read() << 8;
   }
   else
   {
     // DLHC, DLM, DLH: X_H, X_L...
-    xhm = Wire.read();
-    xlm = Wire.read();
+    mag.x = Wire.read() << 8;
+    mag.x |= Wire.read();
 
     if (m_deviceType == DEVICE_DLH)
     {
       // DLH: ...Y_H, Y_L, Z_H, Z_L
-      yhm = Wire.read();
-      ylm = Wire.read();
-      zhm = Wire.read();
-      zlm = Wire.read();
+      mag.y = Wire.read() << 8;
+      mag.y |= Wire.read();
+      mag.z = Wire.read() << 8;
+      mag.z |= Wire.read();
     }
     else
     {
       // DLM, DLHC: ...Z_H, Z_L, Y_H, Y_L
-      zhm = Wire.read();
-      zlm = Wire.read();
-      yhm = Wire.read();
-      ylm = Wire.read();
+      mag.z = Wire.read() << 8;
+      mag.z |= Wire.read();
+      mag.y = Wire.read() << 8;
+      mag.y |= Wire.read();
     }
   }
 
-  // combine high and low bytes
-  m_mag.x = (int16_t)(xhm << 8 | xlm);
-  m_mag.y = (int16_t)(yhm << 8 | ylm);
-  m_mag.z = (int16_t)(zhm << 8 | zlm);
+  m_mag = mag;
 }
 
 // Reads all 6 channels of the LSM303 and stores them in the object variables
@@ -444,7 +472,7 @@ Returns the angular difference in the horizontal plane between a
 default vector and north, in degrees.
 
 The default vector here is chosen to point along the surface of the
-PCB, in the direction of the top of the text on the silkscreen.
+PCB, in the direction of the top of the text on the silk screen.
 This is the +X axis on the Pololu LSM303D carrier and the -Y axis on
 the Pololu LSM303DLHC, LSM303DLM, and LSM303DLH carriers.
 */
@@ -460,18 +488,18 @@ float LSM303::heading(void)
   }
 }
 
-// Private Methods //////////////////////////////////////////////////////////////
+// Private Methods /////////////////////////////////////////////////////////////
 
-int LSM303::testReg(byte address, regAddrE reg)
+int LSM303::testReg(byte address, RegAddrE reg)
 {
   Wire.beginTransmission(address);
-  Wire.write((byte)reg);
+  Wire.write(static_cast<uint8_t>(reg));
   if (Wire.endTransmission() != 0)
   {
     return TEST_REG_ERROR;
   }
 
-  Wire.requestFrom(address, (byte)1);
+  Wire.requestFrom(address, static_cast<uint8_t>(1));
   if (Wire.available())
   {
     return Wire.read();

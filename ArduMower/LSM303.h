@@ -6,7 +6,7 @@
 class LSM303
 {
   public:
-    enum deviceTypeE
+    enum DeviceTypeE
     {
       DEVICE_DLH,
       DEVICE_DLM,
@@ -15,20 +15,20 @@ class LSM303
       DEVICE_AUTO
     };
 
-    enum sa0StateE
+    enum Sa0StateE
     {
       SA0_LOW,
       SA0_HIGH,
       SA0_AUTO
     };
 
-    enum deviceIdE
+    enum DeviceIdE
     {
       DEV_ID_LSM303DLM = 60
     };
 
     // register addresses
-    enum regAddrE
+    enum RegAddrE
     {
       TEMP_OUT_L        = 0x05, // D
       TEMP_OUT_H        = 0x06, // D
@@ -175,39 +175,41 @@ class LSM303
 
     Vector<int16_t> m_acc {}; // accelerometer readings
     Vector<int16_t> m_mag {}; // magnetometer readings
+
+    // FIXME: These values are never modified!
     Vector<int16_t> m_mag_max { INT16_MAX }; // maximum magnetometer values, used for calibration
     Vector<int16_t> m_mag_min { INT16_MIN }; // minimum magnetometer values, used for calibration
 
-    byte m_last_status {}; // status of last I2C transmission
+    uint8_t m_last_status {}; // status of last I2C transmission
 
     LSM303(void);
 
-    bool init(deviceTypeE device = DEVICE_AUTO, sa0StateE sa0 = SA0_AUTO);
-    deviceTypeE getDeviceType(void) const
+    bool init(DeviceTypeE device = DEVICE_AUTO, Sa0StateE sa0 = SA0_AUTO);
+    DeviceTypeE getDeviceType(void) const
     {
       return m_deviceType;
     }
     bool isInitialized(void)
     {
-      return (m_deviceType != DEVICE_AUTO);
+      return m_deviceType != DEVICE_AUTO;
     }
 
     void enableDefault(void);
 
-    void writeAccReg(byte reg, byte value);
-    byte readAccReg(byte reg);
-    void writeMagReg(byte reg, byte value);
-    byte readMagReg(int reg);
+    void writeAccReg(uint8_t reg, uint8_t value);
+    byte readAccReg(uint8_t reg);
+    void writeMagReg(uint8_t reg, uint8_t value);
+    byte readMagReg(int16_t reg);
 
-    void writeReg(byte reg, byte value);
-    byte readReg(int reg);
+    void writeReg(uint8_t reg, uint8_t value);
+    byte readReg(int16_t reg);
 
     void readAcc(void);
     void readMag(void);
     void read(void);
 
-    void setTimeout(unsigned int timeout);
-    unsigned int getTimeout(void);
+    void setTimeout(uint16_t timeout);
+    uint16_t getTimeout(void);
     bool timeoutOccurred(void);
 
     float heading(void);
@@ -216,17 +218,17 @@ class LSM303
     float heading(Vector<T> from);
 
   private:
-    deviceTypeE m_deviceType { DEVICE_AUTO }; // chip type (D, DLHC, DLM, or DLH)
-    byte m_acc_address {};
-    byte m_mag_address {};
+    DeviceTypeE m_deviceType { DEVICE_AUTO }; // chip type (D, DLHC, DLM, or DLH)
+    uint8_t m_acc_address {};
+    uint8_t m_mag_address {};
 
-    static const int m_dummy_reg_count = 6;
-    regAddrE m_translated_regs[m_dummy_reg_count + 1] {}; // index 0 not used
+    static const int16_t m_dummy_reg_count = 6;
+    RegAddrE m_translated_regs[m_dummy_reg_count + 1] {}; // index 0 not used
 
-    unsigned int m_io_timeout {};
+    uint16_t m_io_timeout {};
     bool m_did_timeout { false };
 
-    int testReg(byte address, regAddrE reg);
+    int16_t testReg(byte address, RegAddrE reg);
 };
 
 /*
@@ -245,25 +247,25 @@ and horizontal north is returned.
 template <typename T>
 float LSM303::heading(Vector<T> from)
 {
-    Vector<int32_t> temp_m = { m_mag.x, m_mag.y, m_mag.z };
+  // Subtract offset (average of min and max) from magnetometer readings
+  Vector<int32_t> temp_m = static_cast<Vector<int32_t>>(m_mag) -
+      (static_cast<Vector<int32_t>>(m_mag_min) +
+       static_cast<Vector<int32_t>>(m_mag_max)) / 2;
 
-    // subtract offset (average of min and max) from magnetometer readings
-    temp_m.x -= ((int32_t)m_mag_min.x + m_mag_max.x) / 2;
-    temp_m.y -= ((int32_t)m_mag_min.y + m_mag_max.y) / 2;
-    temp_m.z -= ((int32_t)m_mag_min.z + m_mag_max.z) / 2;
+  // Compute E and N
+  Vector<float> E = Vector<float>::cross(temp_m, m_acc);
+  Vector<float>::normalize(E);
+  Vector<float> N = Vector<float>::cross(m_acc, E);
+  Vector<float>::normalize(N);
 
-    // compute E and N
-    Vector<float> E = Vector<float>::cross(temp_m, m_acc);
-    Vector<float>::normalize(E);
-    Vector<float> N = Vector<float>::cross(m_acc, E);
-    Vector<float>::normalize(N);
+  // Compute heading
+  float headingValue =
+      atan2(Vector<float>::dot(E, from), Vector<float>::dot(N, from))
+      * 180 / M_PI;
+  if (headingValue < 0)
+  {
+    headingValue += 360;
+  }
 
-    // compute heading
-    float headingValue =
-        atan2(Vector<float>::dot(E, from), Vector<float>::dot(N, from)) * 180 / M_PI;
-    if (headingValue < 0)
-    {
-      headingValue += 360;
-    }
-    return headingValue;
+  return headingValue;
 }
