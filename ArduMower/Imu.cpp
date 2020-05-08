@@ -30,124 +30,8 @@
 #define ADDR 600
 #define MAGIC 6
 
-#define roundDivision(a, b) ((a) >= 0 ? ((a)+(b)/2) / (b):((a)-(b)/2) / (b))
-
-// rescale to -PI..+PI
-float Imu::scalePI(const float v)
-{
-  float d = v;
-
-  while (d < 0)
-  {
-    d += 2 * PI;
-  }
-
-  while (d >= 2 * PI)
-  {
-    d -= 2 * PI;
-  }
-
-  if (d >= PI)
-  {
-    return (-2 * PI + d);
-  }
-  else if (d < -PI)
-  {
-    return (2 * PI + d);
-  }
-  else
-  {
-    return d;
-  }
-}
-
-// rescale to -180..+180
-float Imu::scale180(const float v)
-{
-  float d = v;
-
-  while (d < 0)
-  {
-    d += 2 * 180;
-  }
-
-  while (d >= 2 * 180)
-  {
-    d -= 2 * 180;
-  }
-
-  if (d >= 180)
-  {
-    return (-2 * 180 + d);
-  }
-  else if (d < -180)
-  {
-    return (2 * 180 + d);
-  }
-  else
-  {
-    return d;
-  }
-}
-
-// Computes minimum distance between x radiant (current-value) and w radiant (set-value)
-// cases:
-// w=330 degree, x=350 degree => -20 degree
-// w=350 degree, x=10  degree => -20 degree
-// w=10  degree, x=350 degree =>  20 degree
-// w=0   degree, x=190 degree => 170 degree
-// w=190 degree, x=0   degree => -170 degree
-float Imu::distance180(const float x, const float w)
-{
-  float d = scale180(w - x);
-
-  if (d < -180)
-  {
-    d = d + 2 * 180;
-  }
-  else if (d > 180)
-  {
-    d = d - 2 * 180;
-  }
-  return d;
-}
-
-// Computes minimum distance between x radiant (current-value) and w radiant (set-value)
-float Imu::distancePI(const float x, const float w)
-{
-  float d = scalePI(w - x);
-
-  if (d < -PI)
-  {
-    d = d + 2 * PI;
-  }
-  else if (d > PI)
-  {
-    d = d - 2 * PI;
-  }
-  return d;
-}
-
-// weight fusion (w=0..1) of two radiant values (a, b)
-float Imu::fusionPI(const float w, const float a, const float b)
-{
-  float c;
-
-  if ((b >= PI / 2) && (a <= -PI / 2))
-  {
-    c = w * a + (1.0f - w) * (b - 2 * PI);
-  }
-  else if ((b <= -PI / 2) && (a >= PI / 2))
-  {
-    c = w * (a - 2 * PI) + (1.0f - w) * b;
-  }
-  else
-  {
-    c = w * a + (1.0f - w) * b;
-  }
-
-  return scalePI(c);
-}
+#define roundDivision(a, b) \
+  ((a) >= 0 ? ((a) + (b) / 2) / (b) : ((a) - (b) / 2) / (b))
 
 void Imu::loadCalibrationData(void)
 {
@@ -179,20 +63,13 @@ void Imu::deleteCalibrationData(void)
 }
 
 template <class T>
-void Imu::printPoint(const Vector<T>& point)
+void Imu::printPointln(const Vector<T>& point)
 {
   Console.print(point.x);
   Console.print(',');
   Console.print(point.y);
   Console.print(',');
-  Console.print(point.z);
-}
-
-template <class T>
-void Imu::printPointln(const Vector<T>& point)
-{
-  printPoint(point);
-  Console.println();
+  Console.println(point.z);
 }
 
 template <class T>
@@ -200,45 +77,19 @@ void Imu::printPointMinAvgMax(
     Vector<T>& v_min, Vector<T>& v_avg, Vector<T>& v_max)
 {
   const char axisChars[] = { 'x', 'y', 'z' };
-  T min;
-  T avg;
-  T max;
 
+  uint8_t i = 0;
   for (const char axis : axisChars)
   {
-    switch (axis)
-    {
-      case 'x':
-        min = v_min.x;
-        avg = v_avg.x;
-        max = v_max.x;
-        break;
-
-      case 'y':
-        min = v_min.y;
-        avg = v_avg.y;
-        max = v_max.y;
-        break;
-
-      case 'z':
-        min = v_min.z;
-        avg = v_avg.z;
-        max = v_max.z;
-        break;
-
-      default:
-        min = avg = max = 0;
-        break;
-    }
-
     Console.print(' ');
     Console.print(axis);
     Console.print(F(": min="));
-    Console.print(min);
+    Console.print(v_min.data[i]);
     Console.print(F(" avg="));
-    Console.print(avg);
+    Console.print(v_avg.data[i]);
     Console.print(F(" max="));
-    Console.println(max);
+    Console.println(v_max.data[i]);
+    ++i;
   }
 }
 
@@ -246,40 +97,20 @@ template <class T>
 void Imu::printPointMinMax(Vector<T>& v_min, Vector<T>& v_max)
 {
   const char axisChars[] = { 'x', 'y', 'z' };
-  T min;
-  T max;
 
+  uint8_t i = 0;
   for (const char axis : axisChars)
   {
-    switch (axis)
+    if (i > 0)
     {
-      case 'x':
-        min = v_min.x;
-        max = v_max.x;
-        break;
-
-      case 'y':
-        min = v_min.y;
-        max = v_max.y;
-        Console.print(' ');
-        break;
-
-      case 'z':
-        min = v_min.z;
-        max = v_max.z;
-        Console.print(' ');
-        break;
-
-      default:
-        min = max = 0;
-        break;
+      Console.print(' ');
     }
-
     Console.print(axis);
     Console.print(':');
-    Console.print(min);
+    Console.print(v_min.data[i]);
     Console.print(',');
-    Console.print(max);
+    Console.print(v_max.data[i]);
+    ++i;
   }
   Console.println();
 }
@@ -308,7 +139,8 @@ void Imu::calibrateGyro(void)
 
   Console.println(F("---CalibGyro---"));
 
-  for (;;)
+  bool calibrationDone = false;
+  while (!calibrationDone)
   {
     int16_t zmin = INT16_MAX;
     int16_t zmax = INT16_MIN;
@@ -346,10 +178,10 @@ void Imu::calibrateGyro(void)
 
     if (noise < 20)
     {
-      // optimum found
+      // Optimum found
       m_gyroOffset = offset;
       m_gyroNoise = noise;
-      break;
+      calibrationDone = true;
     }
   }
   m_useGyroCalibration = true;
@@ -418,7 +250,7 @@ void Imu::readAccelerometer()
 {
   m_accMag.readAcc();
 
-  if (m_useAccelCalibration)
+  if (m_useAccCalibration)
   {
     m_acc = (static_cast<Vector<float>>(m_accMag.m_acc) -
         m_calibrationData.accelOffset) / m_calibrationData.accelScale;
@@ -437,7 +269,7 @@ bool Imu::initGyroscope()
   Console.print(F("deviceType="));
   Console.print(m_gyro.getDeviceType());
 
-  int16_t retry = 0;
+  uint8_t retry = 0;
   for (;;)
   {
     uint8_t devId = m_gyro.readReg(L3G::WHO_AM_I);
@@ -463,7 +295,7 @@ bool Imu::initGyroscope()
   m_gyro.enableDefault();
 
   delay(250);
-  //calibGyro();
+  //calibrateGyro(); // TODO: Shall calibration not be used?
   return true;
 }
 
@@ -481,7 +313,8 @@ void Imu::readGyroscope(void)
 // LSM303 magnetometer sensor driver
 void Imu::initMagnetometer()
 {
-  // Init is handled by initAccelerometer since it is the same device
+  // Init of magnetometer is handled by initAccelerometer since it is the same
+  // device.
   if (!m_accMag.isInitialized())
   {
     initAccelerometer();
@@ -492,15 +325,15 @@ void Imu::readMagnetometer()
 {
   m_accMag.readMag();
 
-  if (m_useMagnetometerCalibration)
+  if (m_useMagCalibration)
   {
     m_mag = static_cast<Vector<float>>(
-        m_accMag.m_acc - m_calibrationData.magnetometerOffset) /
+        m_accMag.m_mag - m_calibrationData.magnetometerOffset) /
             static_cast<Vector<float>>(m_calibrationData.magnetometerScale);
   }
   else
   {
-    m_mag = m_accMag.m_acc;
+    m_mag = m_accMag.m_mag;
   }
 }
 
@@ -517,8 +350,8 @@ void Imu::calibrateMagnetometerStartStop(void)
     Console.println(F("Magnetometer calibration..."));
     Console.println(F("Rotate sensor 360 degree around all three axis"));
     m_foundNewMinMax = false;
-    m_useMagnetometerCalibration = false;
-    m_state = ImuStateE::CAL_COM;
+    m_useMagCalibration = false;
+    m_state = ImuStateE::CALIBRATE_MAG;
     m_magMin = Vector<int16_t>(INT16_MAX);
     m_magMax = Vector<int16_t>(INT16_MIN);
   }
@@ -542,7 +375,7 @@ void Imu::calibrateMagnetometerStartStop(void)
 
     saveCalibrationData();
     printCalibrationData();
-    m_useMagnetometerCalibration = true;
+    m_useMagCalibration = true;
     m_state = ImuStateE::RUN;
 
     playCompletedSound();
@@ -564,36 +397,19 @@ void Imu::calibrateMagnetometerUpdate(void)
   {
     bool newfound = false;
 
-    if (m_accMag.m_mag.x < m_magMin.x)
+    for (uint8_t axis = 0; axis < 3; axis++)
     {
-      m_magMin.x = m_accMag.m_mag.x;
-      newfound = true;
-    }
-    if (m_accMag.m_mag.y < m_magMin.y)
-    {
-      m_magMin.y = m_accMag.m_mag.y;
-      newfound = true;
-    }
-    if (m_accMag.m_mag.z < m_magMin.z)
-    {
-      m_magMin.z = m_accMag.m_mag.z;
-      newfound = true;
-    }
+      if (m_accMag.m_mag.data[axis] < m_magMin.data[axis])
+      {
+        m_magMin.data[axis] = m_accMag.m_mag.data[axis];
+        newfound = true;
+      }
 
-    if (m_accMag.m_mag.x > m_magMax.x)
-    {
-      m_magMax.x = m_accMag.m_mag.x;
-      newfound = true;
-    }
-    if (m_accMag.m_mag.y > m_magMax.y)
-    {
-      m_magMax.y = m_accMag.m_mag.y;
-      newfound = true;
-    }
-    if (m_accMag.m_mag.z > m_magMax.z)
-    {
-      m_magMax.z = m_accMag.m_mag.z;
-      newfound = true;
+      if (m_accMag.m_mag.data[axis] > m_magMax.data[axis])
+      {
+        m_magMax.data[axis] = m_accMag.m_mag.data[axis];
+        newfound = true;
+      }
     }
 
     if (newfound)
@@ -622,14 +438,14 @@ bool Imu::calibrateAccelerometerNextAxis(void)
     Console.read();
   }
 
-  m_useAccelCalibration = false;
+  m_useAccCalibration = false;
 
-  if (m_calibAccelAxisCounter >= 6)
+  if (m_calibAccAxisCounter >= 6)
   {
-    m_calibAccelAxisCounter = 0;
+    m_calibAccAxisCounter = 0;
   }
 
-  if (m_calibAccelAxisCounter == 0)
+  if (m_calibAccAxisCounter == 0)
   {
     // restart
     Console.println(F("Accelerometer calibration start..."));
@@ -663,14 +479,14 @@ bool Imu::calibrateAccelerometerNextAxis(void)
 
   printPointMinAvgMax(m_accMin, average, m_accMax);
 
-  m_calibAccelAxisCounter++;
-  m_useAccelCalibration = true;
+  m_calibAccAxisCounter++;
+  m_useAccCalibration = true;
 
   Console.print(F("side "));
-  Console.print(m_calibAccelAxisCounter);
+  Console.print(m_calibAccAxisCounter);
   Console.println(F(" of 6 completed"));
 
-  if (m_calibAccelAxisCounter == 6)
+  if (m_calibAccAxisCounter == 6)
   {
     // all axis complete
     m_calibrationData.accelScale = (m_accMax - m_accMin) / 2;
@@ -688,24 +504,6 @@ bool Imu::calibrateAccelerometerNextAxis(void)
   delay(500);
 
   return complete;
-}
-
-// First-order complementary filter
-// a=tau / (tau + loop time)
-// newAngle = angle measured with atan2 using the accelerometer
-// newRate = angle measured using the gyro
-// looptime = loop time in millis()
-float Imu::complementary(const float newAngle, const float newRate,
-    const int16_t looptime, float angle)
-{
-  const float tau = 0.075f;
-
-  float dt = static_cast<float>(looptime) / 1000.0f;
-  float a = tau / (tau + dt);
-
-  angle = a * (angle + newRate * dt) + (1 - a) * newAngle;
-
-  return angle;
 }
 
 // Second-order complementary filter
@@ -789,8 +587,8 @@ void Imu::update(void)
 {
   read();
   uint32_t curMillis = millis();
-  int16_t looptime = static_cast<int16_t>(curMillis - m_lastAHRSTime);
-  m_lastAHRSTime = curMillis;
+  int16_t looptime = static_cast<int16_t>(curMillis - m_lastAhrsTime);
+  m_lastAhrsTime = curMillis;
 
   if (m_state == ImuStateE::RUN)
   {
@@ -828,7 +626,7 @@ void Imu::update(void)
         looptime, m_ypr.yaw);
     m_ypr.yaw = scalePI(m_filtYaw);
   }
-  else if (m_state == ImuStateE::CAL_COM)
+  else if (m_state == ImuStateE::CALIBRATE_MAG)
   {
     calibrateMagnetometerUpdate();
   }
@@ -873,16 +671,16 @@ bool Imu::init(Buzzer* buzzer_p)
   return true;
 }
 
-int16_t Imu::getAndClearCallCounter(void)
+uint16_t Imu::getAndClearCallCounter(void)
 {
-  int16_t res = m_callCounter;
+  uint16_t res = m_callCounter;
   m_callCounter = 0;
   return res;
 }
 
-int16_t Imu::getAndClearErrorCounter(void)
+uint16_t Imu::getAndClearErrorCounter(void)
 {
-  int16_t res = m_errorCounter;
+  uint16_t res = m_errorCounter;
   m_errorCounter = 0;
   return res;
 }

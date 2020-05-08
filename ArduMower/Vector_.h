@@ -12,16 +12,14 @@
 template <typename T>
 struct Vector
 {
-  union {
-    struct {
+  union
+  {
+    T data[3];
+    struct
+    {
       T x;
       T y;
       T z;
-    };
-    struct {
-      T yaw;
-      T pitch;
-      T roll;
     };
   };
 

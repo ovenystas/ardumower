@@ -31,3 +31,29 @@ void StreamPrint_progmem(Print &out, PGM_P format, ...)
       .withParameterOfType("printComparator", "out", &out)
       .withParameter("format", format);
 }
+
+float scalePI(float v)
+{
+  float d = v;
+  while (d < 0)
+  {
+    d += 2 * PI;
+  }
+  while (d >= 2 * PI)
+  {
+    d -= 2 * PI;
+  }
+
+  if (d >= PI)
+  {
+    return (-2 * PI + d);
+  }
+  else if (d < -PI)
+  {
+    return (2 * PI + d);
+  }
+  else
+  {
+    return d;
+  }
+}

@@ -41,18 +41,18 @@
 
 struct YawPitchRoll_t
 {
-  float yaw;
-  float pitch;
-  float roll;
+  float yaw {};
+  float pitch {};
+  float roll {};
 };
 
-typedef struct calibrationData_t
+struct CalibrationData_t
 {
   Vector<float> accelOffset;
   Vector<float> accelScale;
   Vector<int16_t> magnetometerOffset;
   Vector<int16_t> magnetometerScale;
-} calibrationData_t;
+};
 
 struct ImuSettings
 {
@@ -78,23 +78,25 @@ public:
   {
     return m_use;
   }
+
   bool isCorrectDir()
   {
     return m_correctDir;
   }
 
   void update(void);
-  int16_t getAndClearCallCounter(void);
-  int16_t getAndClearErrorCounter(void);
+
+  uint16_t getAndClearCallCounter(void);
+  uint16_t getAndClearErrorCounter(void);
+
   void deleteCalibrationData(void);
+
   bool isCalibrationAvailable(void) const
   {
     return m_calibrationAvailable;
   }
 
   void printInfo(Stream& s);
-
-  Pid m_pid[END];             // direction and roll PID controllers
 
   float getYaw() const
   {
@@ -141,28 +143,19 @@ public:
     return static_cast<int16_t>(round(degrees(m_ypr.roll)));
   }
 
-  // --------- gyro state -----------------------------
-  L3G m_gyro;
-
-  // calibrate acceleration sensor
   bool calibrateAccelerometerNextAxis();
 
-  // --------- accelerometer/magnetometer state -------
-  Vector<float> m_acc {};
-  Vector<float> m_mag {};
   bool getUseAccelCalibration(void) const
   {
-    return m_useAccelCalibration;
+    return m_useAccCalibration;
   }
+
   void toggleUseAccelCalibration(void)
   {
-    m_useAccelCalibration = !m_useAccelCalibration;
+    m_useAccCalibration = !m_useAccCalibration;
   }
 
-  // calibrate magnetometer sensor
   void calibrateMagnetometerStartStop(void);
-
-  // --------------------------------------------------
 
   ImuSettings* getSettings()
   {
@@ -175,68 +168,60 @@ public:
     m_settings.correctDir.value = settings_p->correctDir.value;
   }
 
+public:
+  Pid m_pid[END];
+
+  L3G m_gyro;
+
+  Vector<float> m_acc {};
+  Vector<float> m_mag {};
+
 private:
   enum ImuStateE
   {
     RUN,
-    CAL_COM
+    CALIBRATE_MAG
   };
 
-  void read();
-  void calibrateGyro(void);
-  void loadCalibrationData(void);
-
-  // print IMU values
-  template <class T> void printPoint(const Vector<T>& point);
-  template <class T> void printPointln(const Vector<T>& point);
-  template <class T> void printPointMinAvgMax(
-      Vector<T>& v_min, Vector<T>& v_avg, Vector<T>& v_max);
-  template <class T> void printPointMinMax(Vector<T>& v_min, Vector<T>& v_max);
-  void printCalibrationData(void);
-  void saveCalibrationData(void);
-
-  // hardware
   void initAccelerometer(void);
   bool initGyroscope(void);
   void initMagnetometer(void);
 
+  void read();
   void readGyroscope(void);
   void readAccelerometer(void);
   void readMagnetometer(void);
 
+  void loadCalibrationData(void);
+  void saveCalibrationData(void);
+  void printCalibrationData(void);
+  void calibrateGyro(void);
   void calibrateMagnetometerUpdate(void);
   void playCompletedSound();
 
-  // helpers
-  float scalePI(const float v);
-  float scale180(const float v);
-  float scalePIangles(const float setAngle, const float currAngle);
-  float distancePI(const float x, const float w);
-  float distance180(const float x, const float w);
-  float fusionPI(const float w, const float a, const float b);
+  template <class T> void printPointln(const Vector<T>& point);
+  template <class T> void printPointMinAvgMax(
+      Vector<T>& v_min, Vector<T>& v_avg, Vector<T>& v_max);
+  template <class T> void printPointMinMax(Vector<T>& v_min, Vector<T>& v_max);
 
-  // Filter
-  float complementary(const float newAngle, const float newRate,
-      const int16_t looptime, float angle);
+  float scalePIangles(const float setAngle, const float currAngle);
+
   float complementary2(const float newAngle, const float newRate,
       const int16_t looptime, float angle);
-  float kalman(const float newAngle, const float newRate, const int16_t looptime,
-      float x_angle);
+  float kalman(const float newAngle, const float newRate,
+      const int16_t looptime, float x_angle);
 
-  uint32_t m_nextTime {};
-  uint32_t m_nextTimeControl {};
-  uint16_t m_timeBetweenRuns { 200 }; // 5 Hz
-  uint16_t m_timeBetweenControl { 100 }; // 10 Hz
-
+private:
   bool m_foundNewMinMax {};
-  Buzzer* m_buzzer_p;
-  int16_t m_callCounter {};
-  int16_t m_errorCounter {};
+  Buzzer* m_buzzer_p {};
+  uint16_t m_callCounter {};
+  uint16_t m_errorCounter {};
   bool m_hardwareInitialized {};
   bool m_calibrationAvailable {};
   ImuStateE m_state { ImuStateE::RUN };
-  uint32_t m_lastAHRSTime {};
-  calibrationData_t m_calibrationData
+  uint32_t m_lastAhrsTime {};
+
+  CalibrationData_t m_calibrationData
   {
     { 0, 0, 0 },
     { 1, 1, 1 },
@@ -244,37 +229,41 @@ private:
     { 1, 1, 1 }
   };
 
-  // --------- acceleration state ---------------------
+  // --------- Accelerometer state ---------------------------------------------
   LSM303 m_accMag;
   Vector<float> m_accMin {};
   Vector<float> m_accMax {};
-  int16_t m_calibAccelAxisCounter {};
-  bool m_useAccelCalibration { true };
+  uint8_t m_calibAccAxisCounter {};
+  bool m_useAccCalibration { true };
 
-  // --------- gyro state -----------------------------
+  // --------- Gyroscope state -------------------------------------------------
   Vector<int16_t> m_gyroOffset {}; // gyro calibration data
   int16_t m_gyroNoise {};          // gyro noise
   bool m_useGyroCalibration { true }; // gyro calibration flag
-  YawPitchRoll_t m_ypr { 0.0, 0.0, 0.0 };  // gyro yaw,pitch,roll
+  YawPitchRoll_t m_ypr {};  // gyro yaw, pitch, roll
 
-  // --------- magnetometer state --------------------------
+  // --------- Magnetometer state ----------------------------------------------
   Vector<int16_t> m_magLast {};
   Vector<int16_t> m_magMin {}; // magnetometer sensor data (raw)
   Vector<int16_t> m_magMax {}; // magnetometer sensor data (raw)
-  bool m_useMagnetometerCalibration { true };
+  bool m_useMagCalibration { true };
 
-  float m_accPitch {};
-  float m_accRoll {};
-  float m_scaledPitch {};
-  float m_scaledRoll {};
-  float m_filtPitch {};
-  float m_filtRoll {};
   float m_yaw {};
   float m_scaledYaw {};
   float m_scaled2Yaw {};
   float m_filtYaw {};
+
+  float m_accPitch {};
+  float m_scaledPitch {};
+  float m_filtPitch {};
+
+  float m_accRoll {};
+  float m_scaledRoll {};
+  float m_filtRoll {};
+
   Vector<float> m_magTilt {};
 
+  // --------- Settings --------------------------------------------------------
   ImuSettings m_settings
   {
     { "Use", false },

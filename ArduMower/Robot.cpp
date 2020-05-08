@@ -1425,7 +1425,7 @@ void Robot::printInfo(Stream &s)
     Streamprint(s, "chg %2d.%01d V @ %4d mA",
         chgVolt_mV / 1000, (chgVolt_mV % 1000) / 100, chgCurr_mA);
 
-    Streamprint(s, "imu %3d ", m_imu.getAndClearCallCounter());
+    Streamprint(s, "imu %3u ", m_imu.getAndClearCallCounter());
 
     Streamprint(s, "adc %3d\r\n", ADCMan.getCapturedChannels());
 
