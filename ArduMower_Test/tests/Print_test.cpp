@@ -10,15 +10,27 @@ TEST_GROUP(Print)
   void setup()
   {
     Serial.setMockPrintFunctions(false);
+    Serial.startCapture();
   }
 
   void teardown()
   {
-    Serial.setMockPrintFunctions();
+    Serial.stopCapture();
+    Serial.setMockPrintFunctions(true);
   }
 };
 
 TEST(Print, printStr)
 {
-  Serial.print("\nHello world!\n");
+  Serial.print("Hello");
+  Serial.println(" world!");
+
+  STRCMP_CONTAINS("Hello world!\r\n", Serial.getMockOutString());
+}
+
+TEST(Print, printStr2)
+{
+  Serial.print("Hello Ove!");
+
+  STRCMP_CONTAINS("Hello Ove!", Serial.getMockOutString());
 }

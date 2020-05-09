@@ -2,6 +2,7 @@
 
 #include <inttypes.h>
 #include <Stream.h>
+#include <string>
 
 // Define config for Serial.begin(baud, config);
 #define SERIAL_5N1 0x00
@@ -89,9 +90,49 @@ public:
     return m_config;
   }
 
-  private:
+  const char* getMockOutString()
+  {
+    if (m_mockOutString_p)
+    {
+      return m_mockOutString_p->c_str();
+    }
+    else
+    {
+      return "";
+    }
+  }
+
+  void clearMockOutString()
+  {
+    if (m_mockOutString_p)
+    {
+      m_mockOutString_p->clear();
+    }
+  }
+
+  void startCapture()
+  {
+    m_mockOutString_p = new std::string();
+  }
+
+  void stopCapture()
+  {
+    if (m_mockPrintToStdout)
+    {
+      flush();
+    }
+
+    if (m_mockOutString_p)
+    {
+      delete m_mockOutString_p;
+    }
+    m_mockOutString_p = nullptr;
+  }
+
+private:
     uint32_t m_baud;
     uint8_t m_config;
+    std::string* m_mockOutString_p;
 };
 
 extern HardwareSerial Serial;

@@ -652,7 +652,7 @@ void Imu::printInfo(Stream &s)
   Streamprint(s, " T=+%2.2f +%2.2f +%2.2f",
       m_magTilt.x, m_magTilt.y, m_magTilt.z);
 
-  Streamprint(s, " Y=+%2.2f +%2.2f +%2.2f +%2.2f +%2.2f\n",
+  Streamprint(s, " Y=+%2.2f +%2.2f +%2.2f +%2.2f +%2.2f\r\n",
       m_yaw, m_scaledYaw, m_scaled2Yaw, m_filtYaw, m_ypr.yaw);
 }
 

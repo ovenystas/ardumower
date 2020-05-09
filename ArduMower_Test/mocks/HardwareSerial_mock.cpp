@@ -62,9 +62,9 @@ size_t HardwareSerial::write(uint8_t c)
 //      .withParameter("c", c);
 //  return static_cast<size_t>(mock().unsignedLongIntReturnValue());
 
-  if (m_mockPrintToStdout)
+  if (m_mockOutString_p)
   {
-    std::cout << c;
+    m_mockOutString_p->push_back(static_cast<char>(c));
   }
 
   return 1;
@@ -72,6 +72,17 @@ size_t HardwareSerial::write(uint8_t c)
 
 void HardwareSerial::flush()
 {
-  mock().actualCall("HardwareSerial::flush")
-      .onObject(this);
+//  mock().actualCall("HardwareSerial::flush")
+//      .onObject(this);
+
+  if (m_mockPrintToStdout)
+  {
+    if (m_mockOutString_p)
+    {
+      if (!m_mockOutString_p->empty())
+      {
+        std::cout << '\n' << *m_mockOutString_p << '\n';
+      }
+    }
+  }
 }
