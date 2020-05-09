@@ -60,42 +60,42 @@ TEST_GROUP(BluetoothConfig)
 
   void mockSetup_writeBT(const String s)
   {
-    mock().expectOneCall("print")
+    mock().expectOneCall("Print::print")
         .onObject(&Console)
-        .withParameter("val", "Send: ");
-    mock().expectOneCall("print")
+        .withParameter("str", "Send: ");
+    mock().expectOneCall("Print::print")
         .onObject(&Console)
-        .withParameter("val", s);
-    mock().expectOneCall("print")
+        .withParameter("s", s);
+    mock().expectOneCall("Print::print")
         .onObject(&Bluetooth)
-        .withParameter("val", s);
+        .withParameter("s", s);
   }
 
   void mockSetup_readBT(const String s)
   {
-    mock().expectOneCall("available")
+    mock().expectOneCall("HardwareSerial::available")
         .onObject(&Bluetooth)
         .andReturnValue(static_cast<int>(s.length()));
 
     if (s.length() > 0)
     {
-      mock().expectOneCall("print")
+      mock().expectOneCall("Print::print")
           .onObject(&Console)
-          .withParameter("val", ", received: ");
+          .withParameter("str", ", received: ");
 
       for (unsigned int i = 0; i < s.length(); ++i)
       {
-        mock().expectOneCall("read")
+        mock().expectOneCall("HardwareSerial::read")
             .onObject(&Bluetooth)
             .andReturnValue(s[i]);
-        mock().expectOneCall("available")
+        mock().expectOneCall("HardwareSerial::available")
             .onObject(&Bluetooth)
             .andReturnValue(static_cast<int>(s.length() - i - 1));
       }
 
-      mock().expectOneCall("println")
+      mock().expectOneCall("Print::println")
           .onObject(&Console)
-          .withParameter("val", s);
+          .withParameter("s", s);
     }
   }
 
@@ -105,16 +105,16 @@ TEST_GROUP(BluetoothConfig)
     mock().expectOneCall("delay")
         .withParameter("ms", 2000);
     mockSetup_readBT(r);
-    mock().expectOneCall("println")
+    mock().expectOneCall("Print::println")
         .onObject(&Console);
   }
 };
 
 TEST(BluetoothConfig, printSuccess)
 {
-  mock().expectOneCall("println")
+  mock().expectOneCall("Print::println")
       .onObject(&Console)
-      .withParameter("val", "=>success");
+      .withParameter("c", "=>success");
 
   bt_p->printSuccess();
 
@@ -138,12 +138,13 @@ TEST(BluetoothConfig, baudrateToN_valid)
 
 TEST(BluetoothConfig, baudrateToN_invalid)
 {
-  mock().expectOneCall("print")
+  mock().expectOneCall("Print::print")
       .onObject(&Console)
-      .withParameter("val", "Invalid baudrate: ");
-  mock().expectOneCall("println")
+      .withParameter("str", "Invalid baudrate: ");
+  mock().expectOneCall("Print::println")
       .onObject(&Console)
-      .withParameter("val", 0);
+      .withParameter("num", 0)
+      .withParameter("base", 10);
 
   UNSIGNED_LONGS_EQUAL(4, bt_p->baudrateToN(0));
 
@@ -213,7 +214,7 @@ TEST(BluetoothConfig, writeReadBT_retryOnError)
         .withParameter("ms", 2000);
     mockSetup_readBT(receiveStr);
   }
-  mock().expectOneCall("println")
+  mock().expectOneCall("Print::println")
       .onObject(&Console);
 
   bt_p->writeReadBT(sendStr);
@@ -225,29 +226,31 @@ TEST(BluetoothConfig, writeReadBT_retryOnError)
 
 TEST(BluetoothConfig, detectBaudrate_quick_9600_8N1_HC05)
 {
-  mock().expectOneCall("println")
+  mock().expectOneCall("Print::println")
       .onObject(&Console);
-  mock().expectOneCall("println")
+  mock().expectOneCall("Print::println")
       .onObject(&Console)
-      .withParameter("val", "Detecting baudrate...");
+      .withParameter("c", "Detecting baudrate...");
 
-  mock().expectOneCall("print")
+  mock().expectOneCall("Print::print")
       .onObject(&Console)
-      .withParameter("val", "Trying baudrate ");
-  mock().expectOneCall("print")
+      .withParameter("str", "Trying baudrate ");
+  mock().expectOneCall("Print::print")
       .onObject(&Console)
-      .withParameter("val", 9600);
-  mock().expectOneCall("print")
+      .withParameter("n", 9600)
+      .withParameter("base", 10);
+  mock().expectOneCall("Print::print")
       .onObject(&Console)
-      .withParameter("val", " config ");
-  mock().expectOneCall("print")
+      .withParameter("str", " config ");
+  mock().expectOneCall("Print::print")
       .onObject(&Console)
-      .withParameter("val", 0);
-  mock().expectOneCall("println")
+      .withParameter("b", 0)
+      .withParameter("base", 10);
+  mock().expectOneCall("Print::println")
       .onObject(&Console)
-      .withParameter("val", "...");
+      .withParameter("c", "...");
 
-  mock().expectOneCall("begin")
+  mock().expectOneCall("HardwareSerial::begin")
       .onObject(&Bluetooth)
       .withParameter("baud", 9600)
       .withParameter("config", SERIAL_8N1);
@@ -255,9 +258,9 @@ TEST(BluetoothConfig, detectBaudrate_quick_9600_8N1_HC05)
   mockSetup_writeReadBT("AT", "");
   mockSetup_writeReadBT("AT\r\n", "OK");
 
-  mock().expectOneCall("println")
+  mock().expectOneCall("Print::println")
       .onObject(&Console)
-      .withParameter("val", "=>success");
+      .withParameter("c", "=>success");
 
   CHECK_TRUE(bt_p->detectBaudrate(true));
 
@@ -266,17 +269,17 @@ TEST(BluetoothConfig, detectBaudrate_quick_9600_8N1_HC05)
 
 TEST(BluetoothConfig, detectModuleType_LINVOR_HC06)
 {
-  mock().expectOneCall("println")
+  mock().expectOneCall("Print::println")
       .onObject(&Console);
-  mock().expectOneCall("println")
+  mock().expectOneCall("Print::println")
       .onObject(&Console)
-      .withParameter("val", "Detecting BT type...");
+      .withParameter("c", "Detecting BT type...");
 
   mockSetup_writeReadBT("AT+VERSION", "OKlinvor");
 
-  mock().expectOneCall("println")
+  mock().expectOneCall("Print::println")
       .onObject(&Console)
-      .withParameter("val", "=>it's a linvor/HC06");
+      .withParameter("c", "=>it's a linvor/HC06");
 
   ENUMS_EQUAL_INT(BluetoothType::LINVOR_HC06, bt_p->detectModuleType());
 
@@ -285,18 +288,18 @@ TEST(BluetoothConfig, detectModuleType_LINVOR_HC06)
 
 TEST(BluetoothConfig, detectModuleType_HC05)
 {
-  mock().expectOneCall("println")
+  mock().expectOneCall("Print::println")
       .onObject(&Console);
-  mock().expectOneCall("println")
+  mock().expectOneCall("Print::println")
       .onObject(&Console)
-      .withParameter("val", "Detecting BT type...");
+      .withParameter("c", "Detecting BT type...");
 
   mockSetup_writeReadBT("AT+VERSION", "");
   mockSetup_writeReadBT("AT+VERSION?\r\n", "OK");
 
-  mock().expectOneCall("println")
+  mock().expectOneCall("Print::println")
       .onObject(&Console)
-      .withParameter("val", "=>must be a HC03/04/05 ?");
+      .withParameter("c", "=>must be a HC03/04/05 ?");
 
   ENUMS_EQUAL_INT(BluetoothType::HC05, bt_p->detectModuleType());
 
@@ -305,19 +308,19 @@ TEST(BluetoothConfig, detectModuleType_HC05)
 
 TEST(BluetoothConfig, detectModuleType_FBT06_MBTV4)
 {
-  mock().expectOneCall("println")
+  mock().expectOneCall("Print::println")
       .onObject(&Console);
-  mock().expectOneCall("println")
+  mock().expectOneCall("Print::println")
       .onObject(&Console)
-      .withParameter("val", "Detecting BT type...");
+      .withParameter("c", "Detecting BT type...");
 
   mockSetup_writeReadBT("AT+VERSION", "");
   mockSetup_writeReadBT("AT+VERSION?\r\n", "");
   mockSetup_writeReadBT("AT+VERSION\r\n", "ModiaTek");
 
-  mock().expectOneCall("println")
+  mock().expectOneCall("Print::println")
       .onObject(&Console)
-      .withParameter("val", "=>it's a FBT06/MBTV4");
+      .withParameter("c", "=>it's a FBT06/MBTV4");
 
   ENUMS_EQUAL_INT(BluetoothType::FBT06_MBTV4, bt_p->detectModuleType());
 
@@ -326,19 +329,19 @@ TEST(BluetoothConfig, detectModuleType_FBT06_MBTV4)
 
 TEST(BluetoothConfig, detectModuleType_UNKNOWN)
 {
-  mock().expectOneCall("println")
+  mock().expectOneCall("Print::println")
       .onObject(&Console);
-  mock().expectOneCall("println")
+  mock().expectOneCall("Print::println")
       .onObject(&Console)
-      .withParameter("val", "Detecting BT type...");
+      .withParameter("c", "Detecting BT type...");
 
   mockSetup_writeReadBT("AT+VERSION", "");
   mockSetup_writeReadBT("AT+VERSION?\r\n", "");
   mockSetup_writeReadBT("AT+VERSION\r\n", "");
 
-  mock().expectOneCall("println")
+  mock().expectOneCall("Print::println")
       .onObject(&Console)
-      .withParameter("val", "=>unknown");
+      .withParameter("c", "=>unknown");
 
   ENUMS_EQUAL_INT(BluetoothType::UNKNOWN, bt_p->detectModuleType());
 
@@ -349,23 +352,23 @@ TEST(BluetoothConfig, setName_HC05)
 {
   const String name = "AwesomeBT";
 
-  mock().expectOneCall("println")
+  mock().expectOneCall("Print::println")
       .onObject(&Console);
-  mock().expectOneCall("print")
+  mock().expectOneCall("Print::print")
       .onObject(&Console)
-      .withParameter("val", "Setting name ");
-  mock().expectOneCall("print")
+      .withParameter("str", "Setting name ");
+  mock().expectOneCall("Print::print")
       .onObject(&Console)
-      .withParameter("val", name);
-  mock().expectOneCall("println")
+      .withParameter("s", name);
+  mock().expectOneCall("Print::println")
       .onObject(&Console)
-      .withParameter("val", "...");
+      .withParameter("c", "...");
 
   mockSetup_writeReadBT("AT+NAME=" + name + "\r\n", "OK");
 
-  mock().expectOneCall("println")
+  mock().expectOneCall("Print::println")
       .onObject(&Console)
-      .withParameter("val", "=>success");
+      .withParameter("c", "=>success");
 
   bt_p->setName(name, BluetoothType::HC05);
 
@@ -376,23 +379,24 @@ TEST(BluetoothConfig, setPinCode_HC05)
 {
   const uint32_t pinCode = 1234;
 
-  mock().expectOneCall("println")
+  mock().expectOneCall("Print::println")
       .onObject(&Console);
-  mock().expectOneCall("print")
+  mock().expectOneCall("Print::print")
       .onObject(&Console)
-      .withParameter("val", "Setting pin code ");
-  mock().expectOneCall("print")
+      .withParameter("str", "Setting pin code ");
+  mock().expectOneCall("Print::print")
       .onObject(&Console)
-      .withParameter("val", pinCode);
-  mock().expectOneCall("println")
+      .withParameter("n", pinCode)
+      .withParameter("base", 10);
+  mock().expectOneCall("Print::println")
       .onObject(&Console)
-      .withParameter("val", "...");
+      .withParameter("c", "...");
 
   mockSetup_writeReadBT("AT+PSWD=1234\r\n", "OK");
 
-  mock().expectOneCall("println")
+  mock().expectOneCall("Print::println")
       .onObject(&Console)
-      .withParameter("val", "=>success");
+      .withParameter("c", "=>success");
 
   bt_p->setPinCode(pinCode, BluetoothType::HC05);
 
@@ -403,23 +407,24 @@ TEST(BluetoothConfig, setBaudrate_HC05)
 {
   const uint32_t baudrate = 9600;
 
-  mock().expectOneCall("println")
+  mock().expectOneCall("Print::println")
       .onObject(&Console);
-  mock().expectOneCall("print")
+  mock().expectOneCall("Print::print")
       .onObject(&Console)
-      .withParameter("val", "Setting baudrate ");
-  mock().expectOneCall("print")
+      .withParameter("str", "Setting baudrate ");
+  mock().expectOneCall("Print::print")
       .onObject(&Console)
-      .withParameter("val", baudrate);
-  mock().expectOneCall("println")
+      .withParameter("n", baudrate)
+      .withParameter("base", 10);
+  mock().expectOneCall("Print::println")
       .onObject(&Console)
-      .withParameter("val", "...");
+      .withParameter("c", "...");
 
   mockSetup_writeReadBT("AT+UART=9600,0,0\r\n", "OK");
 
-  mock().expectOneCall("println")
+  mock().expectOneCall("Print::println")
       .onObject(&Console)
-      .withParameter("val", "=>success");
+      .withParameter("c", "=>success");
 
   bt_p->setBaudrate(baudrate, BluetoothType::HC05);
 

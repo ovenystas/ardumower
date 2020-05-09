@@ -1,7 +1,7 @@
 #pragma once
 
 #include <inttypes.h>
-#include "Stream.h"
+#include <Stream.h>
 
 // Define config for Serial.begin(baud, config);
 #define SERIAL_5N1 0x00
@@ -31,32 +31,67 @@
 
 class HardwareSerial : public Stream
 {
-  public:
-    void begin(uint32_t baud, uint8_t config);
+public:
+  void begin(uint32_t baud)
+  {
+    m_baud = baud;
+  }
 
-    void begin(uint32_t baud)
-    {
-      mBaud = baud;
-    }
+  void begin(uint32_t baud, uint8_t config);
 
-    int16_t available(void);
+  void end();
 
-    int16_t read(void);
+  int16_t available(void) override;
+  int16_t peek(void) override;
+  int16_t read(void) override;
 
-    // Extra helper functions.
-    uint32_t getBaud()
-    {
-      return mBaud;
-    }
+  int16_t availableForWrite(void);
+  void flush(void);
 
-    uint8_t getConfig()
-    {
-      return mConfig;
-    }
+  size_t write(uint8_t) override;
+
+  size_t write(uint32_t n) override
+  {
+    return write(static_cast<uint8_t>(n));
+  }
+
+  size_t write(int32_t n) override
+  {
+    return write(static_cast<uint8_t>(n));
+  }
+
+  size_t write(uint16_t n) override
+  {
+    return write(static_cast<uint8_t>(n));
+  }
+
+  size_t write(int16_t n) override
+  {
+    return write(static_cast<uint8_t>(n));
+  }
+
+  using Print::write; // pull in write(str) and write(buf, size) from Print
+
+  operator bool()
+  {
+    return true;
+  }
+
+public:
+  // Extra helper functions.
+  uint32_t getBaud()
+  {
+    return m_baud;
+  }
+
+  uint8_t getConfig()
+  {
+    return m_config;
+  }
 
   private:
-    uint32_t mBaud;
-    uint8_t mConfig;
+    uint32_t m_baud;
+    uint8_t m_config;
 };
 
 extern HardwareSerial Serial;
