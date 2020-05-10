@@ -38,6 +38,8 @@
 #include "Buzzer.h"
 #include "Setting.h"
 #include "Vector.h"
+#include "Complementary2.h"
+#include "Kalman.h"
 
 struct YawPitchRoll_t
 {
@@ -206,11 +208,6 @@ private:
 
   float scalePIangles(const float setAngle, const float currAngle);
 
-  float complementary2(const float newAngle, const float newRate,
-      const int16_t looptime, float angle);
-  float kalman(const float newAngle, const float newRate,
-      const int16_t looptime, float x_angle);
-
 private:
   const BeepData m_completedSound[3] =
   {
@@ -219,6 +216,9 @@ private:
       { 1320, 200 },
   };
 
+  Complementary2 comp2Filter;
+  Kalman kalmanPitch;
+  Kalman kalmanRoll;
   bool m_foundNewMinMax {};
   Buzzer* m_buzzer_p {};
   uint16_t m_callCounter {};

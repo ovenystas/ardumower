@@ -277,20 +277,6 @@ TEST(Imu, scalePIangles)
   mock().checkExpectations();
 }
 
-TEST(Imu, complementary2)
-{
-  DOUBLES_EQUAL(1.806415776f, imu_p->complementary2(PI/4, PI/8, 100, PI/16), 0.00001);
-
-  mock().checkExpectations();
-}
-
-TEST(Imu, kalman)
-{
-  DOUBLES_EQUAL(0.2855994f, imu_p->kalman(PI/4, PI/8, 100, PI/16), 0.00001);
-
-  mock().checkExpectations();
-}
-
 TEST(Imu, printPointln_int16_t)
 {
   Vector<int16_t> v(123, -456, -32000);
@@ -979,7 +965,7 @@ TEST(Imu, init)
   mock().checkExpectations();
 }
 
-IGNORE_TEST(Imu, update)
+TEST(Imu, update)
 {
   // millis
   mock().expectOneCall("millis")

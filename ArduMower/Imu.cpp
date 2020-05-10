@@ -509,66 +509,6 @@ bool Imu::calibrateAccelerometerNextAxis(void)
   return complete;
 }
 
-// Second-order complementary filter
-// newAngle = angle measured with atan2 using the accelerometer
-// newRate = angle measured using the gyro
-// looptime = loop time in millis()
-float Imu::complementary2(const float newAngle, const float newRate,
-    const int16_t looptime, float angle)
-{
-  const float k = 10;
-
-  float dt = static_cast<float>(looptime) / 1000.0f;
-
-  float dAngle = newAngle - angle;
-  float x1 = dAngle * 2 * k;
-  float x2 = dAngle * k * k * dt;
-  float y1 = newRate + x1 + x2;
-
-  angle = dt * y1;
-
-  return angle;
-}
-
-// Kalman filter
-// newAngle = angle measured with atan2 using the accelerometer
-// newRate = angle measured using the gyro
-// looptime = loop time in millis()
-float Imu::kalman(const float newAngle, const float newRate,
-                  const int16_t looptime, float x_angle)
-{
-  const float Q_angle = 0.01f; //0.001
-  const float Q_gyro = 0.0003f;  //0.003
-  const float R_angle = 0.01f;  //0.03
-
-  static float x_bias = 0;
-  static float P_00 = 0;
-  static float P_01 = 0;
-  static float P_10 = 0;
-  static float P_11 = 0;
-
-  float dt = static_cast<float>(looptime) / 1000;
-  x_angle += dt * (newRate - x_bias);
-  P_00 += -dt * (P_10 + P_01) + Q_angle * dt;
-  P_01 += -dt * P_11;
-  P_10 += -dt * P_11;
-  P_11 += Q_gyro * dt;
-
-  float y = newAngle - x_angle;
-  float S = P_00 + R_angle;
-  float K_0 = P_00 / S;
-  float K_1 = P_10 / S;
-
-  x_angle += K_0 * y;
-  x_bias += K_1 * y;
-  P_00 -= K_0 * P_00;
-  P_01 -= K_0 * P_01;
-  P_10 -= K_1 * P_00;
-  P_11 -= K_1 * P_01;
-
-  return x_angle;
-}
-
 // scale setangle, so that both PI angles have the same sign
 float Imu::scalePIangles(const float setAngle, const float currAngle)
 {
@@ -602,8 +542,10 @@ void Imu::update(void)
     m_scaledRoll = scalePIangles(m_accRoll, m_ypr.roll);
 
     // complementary filter
-    m_filtPitch = kalman(m_scaledPitch, m_gyro.m_g.x, looptime, m_ypr.pitch);
-    m_filtRoll = kalman(m_scaledRoll, m_gyro.m_g.y, looptime, m_ypr.roll);
+    m_filtPitch =
+        kalmanPitch.update(m_scaledPitch, m_gyro.m_g.x, looptime, m_ypr.pitch);
+    m_filtRoll =
+        kalmanRoll.update(m_scaledRoll, m_gyro.m_g.y, looptime, m_ypr.roll);
 
     m_ypr.pitch = scalePI(m_filtPitch);
     m_ypr.roll = scalePI(m_filtRoll);
@@ -625,8 +567,8 @@ void Imu::update(void)
     m_scaled2Yaw = scalePIangles(m_scaledYaw, m_ypr.yaw);
 
     // Complementary filter
-    m_filtYaw = complementary2(m_scaled2Yaw, static_cast<float>(-m_gyro.m_g.z),
-        looptime, m_ypr.yaw);
+    m_filtYaw = comp2Filter.update(
+        m_scaled2Yaw, static_cast<float>(-m_gyro.m_g.z), looptime, m_ypr.yaw);
     m_ypr.yaw = scalePI(m_filtYaw);
   }
   else if (m_state == ImuStateE::CALIBRATE_MAG)

@@ -33,11 +33,13 @@ SRC_FILES = \
 	../ArduMower/Bumper.cpp \
 	../ArduMower/Button.cpp \
 	../ArduMower/Buzzer.cpp \
+	../ArduMower/Complementary2.cpp \
 	../ArduMower/DropSensor.cpp \
 	../ArduMower/Encoder.cpp \
 	../ArduMower/Filter.cpp \
 	../ArduMower/Gps.cpp \
 	../ArduMower/Imu.cpp \
+	../ArduMower/Kalman.cpp \
 	../ArduMower/LawnSensor.cpp \
 	../ArduMower/Pid.cpp \
 	../ArduMower/RainSensor.cpp \
