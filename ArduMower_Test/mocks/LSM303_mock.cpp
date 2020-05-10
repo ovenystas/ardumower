@@ -30,7 +30,7 @@ uint8_t LSM303::readReg(int16_t reg)
 
 void LSM303::writeReg(uint8_t reg, uint8_t value)
 {
-  mock().actualCall("LSM303::readReg")
+  mock().actualCall("LSM303::writeReg")
       .withParameter("reg", reg)
       .withParameter("value", value);
 }

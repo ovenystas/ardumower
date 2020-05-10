@@ -9,21 +9,6 @@
 #include "Drivers.h"
 #include "pgmspace.h"
 
-class PrintComparator : public MockNamedValueComparator
-{
-public:
-    virtual bool isEqual(const void* object1, const void* object2)
-    {
-        return object1 == object2;
-    }
-    virtual SimpleString valueToString(const void* object)
-    {
-        return StringFrom(object);
-    }
-};
-
-PrintComparator printComparator;
-
 void StreamPrint_progmem(Print &out, PGM_P format, ...)
 {
 //  mock().installComparator("printComparator", printComparator);

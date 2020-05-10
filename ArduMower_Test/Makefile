@@ -53,7 +53,10 @@ INCLUDE_DIRS = \
  	../ArduMower \
  	$(CPPUTEST_HOME)/include \
 
-CPPUTEST_CPPFLAGS += -std=gnu++11	# This is what Arduino 1.8.12 is using
+# -std=gnu++11 is what Arduino 1.8.12 is using
+CPPUTEST_CPPFLAGS += \
+	-std=gnu++11 \
+	-DTEST_VIRTUAL=virtual \
 
 gcovr: gcov
 	$(SILENCE)mkdir -p gcov/report

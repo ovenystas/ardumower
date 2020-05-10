@@ -6,6 +6,7 @@
 #include "Imu.h"
 #include "HardwareSerial.h"
 #include "Drivers.h"
+#include "BuzzerMock.h"
 
 // ImuInit ------------------------------------------------------------
 
@@ -378,9 +379,9 @@ TEST(Imu, printCalibrationData)
       Console.getMockOutString());
 }
 
-IGNORE_TEST(Imu, printInfo)
+TEST(Imu, printInfo)
 {
-  imu_p->m_acc = Vector<float>(-23.23f, -456.456f, -32000.319f);
+  imu_p->m_acc = Vector<float>(-23.23f, -45.456f, -32.319f);
   imu_p->m_mag = Vector<float>(0.1f, 1.0f, 0.5f);
   imu_p->m_gyro.m_g = Vector<int16_t>(20, 30, 40);
   imu_p->m_accPitch = 1.23f;
@@ -402,12 +403,589 @@ IGNORE_TEST(Imu, printInfo)
   imu_p->printInfo(Console);
 
   STRCMP_EQUAL("imu"
-      " a=-23.23 -456.46 -32000.32"
-      " m=+0.10 +1.00 +0.50"
+      " a=-23.23 -45.46 -32.32"
+      " m= +0.10  +1.00  +0.50"
       " g=  20   30   40"
-      " P=+1.23 +2.34 +3.45 +4.56"
-      " R=+5.67 +6.78 +7.89 +8.90"
-      " T=+1.99 -2.30 +0.60"
-      " Y=-0.12 -1.23 -2.34 -3.45 -4.56\r\n",
+      " P= +1.23  +2.34  +3.45  +4.56"
+      " R= +5.67  +6.78  +7.89  +8.90"
+      " T= +1.99  -2.30  +0.60"
+      " Y= -0.12  -1.23  -2.34  -3.45  -4.56\r\n",
       Console.getMockOutString());
+}
+
+TEST(Imu, playCompletedSound)
+{
+  mock().disable();
+  BuzzerMock* buzzerMock_p = new BuzzerMock();
+  mock().enable();
+
+  imu_p->m_buzzer_p = buzzerMock_p;
+
+  mock().expectOneCall("Buzzer::beep")
+      .onObject(buzzerMock_p)
+      .withParameter("data_p", imu_p->m_completedSound)
+      .withParameter("len", 3);
+
+  imu_p->playCompletedSound();
+
+  delete buzzerMock_p;
+
+  mock().checkExpectations();
+}
+
+TEST(Imu, saveCalibrationData)
+{
+  const int16_t ADDR = 600;
+  const uint8_t MAGIC = 6;
+
+  mock().expectOneCall("EEPROM::put")
+      .withParameter("idx", ADDR + 1);
+  mock().expectOneCall("EEPROM::write")
+      .withParameter("idx", ADDR)
+      .withParameter("val", MAGIC);
+
+  imu_p->saveCalibrationData();
+
+  mock().checkExpectations();
+}
+
+TEST(Imu, deleteCalibrationData)
+{
+  const int16_t ADDR = 600;
+
+  imu_p->m_calibrationData.accelOffset = Vector<float>(123.456f);
+  imu_p->m_calibrationData.accelScale = Vector<float>(123.456f);
+  imu_p->m_calibrationData.magnetometerOffset = Vector<int16_t>(INT16_MAX);
+  imu_p->m_calibrationData.magnetometerScale = Vector<int16_t>(INT16_MAX);
+  imu_p->m_calibrationAvailable = true;
+
+  mock().expectOneCall("EEPROM::write")
+      .withParameter("idx", ADDR)
+      .withParameter("val", 0);
+
+  imu_p->deleteCalibrationData();
+
+  CHECK(Vector<float>() == imu_p->m_calibrationData.accelOffset);
+  CHECK(Vector<float>(1.0f) == imu_p->m_calibrationData.accelScale);
+  CHECK(Vector<int16_t>() == imu_p->m_calibrationData.magnetometerOffset);
+  CHECK(Vector<int16_t>(1) == imu_p->m_calibrationData.magnetometerScale);
+  CHECK_FALSE(imu_p->m_calibrationAvailable);
+  STRCMP_EQUAL("IMU calibration deleted\r\n", Console.getMockOutString());
+
+  mock().checkExpectations();
+}
+
+TEST(Imu, loadCalibrationData_invalidMagic)
+{
+  const int16_t ADDR = 600;
+
+  mock().expectOneCall("EEPROM::read")
+      .withParameter("idx", ADDR)
+      .andReturnValue(0);
+
+  imu_p->loadCalibrationData();
+
+  STRCMP_EQUAL("IMU error: No calibration data\r\n", Console.getMockOutString());
+
+  mock().checkExpectations();
+}
+
+TEST(Imu, loadCalibrationData_validMagic)
+{
+  const int16_t ADDR = 600;
+  const uint8_t MAGIC = 6;
+
+  imu_p->m_calibrationAvailable = false;
+
+  mock().expectOneCall("EEPROM::read")
+      .withParameter("idx", ADDR)
+      .andReturnValue(MAGIC);
+  mock().expectOneCall("EEPROM::get")
+      .withParameter("idx", ADDR + 1);
+
+  imu_p->loadCalibrationData();
+
+  CHECK_TRUE(imu_p->m_calibrationAvailable);
+  STRCMP_EQUAL("IMU: Found calibration data\r\n", Console.getMockOutString());
+
+  mock().checkExpectations();
+}
+
+TEST(Imu, initAccelerometer_DEVICE_D_OK)
+{
+  imu_p->m_accMag.m_deviceType = LSM303::DEVICE_D;
+
+  mock().expectOneCall("LSM303::init")
+      .withParameter("device", LSM303::DEVICE_AUTO)
+      .withParameter("sa0", LSM303::SA0_AUTO)
+      .andReturnValue(true);
+  mock().expectOneCall("LSM303::readReg")
+      .withParameter("reg", LSM303::WHO_AM_I_M)
+      .andReturnValue(LSM303::DEV_ID_LSM303DLM);
+  mock().expectOneCall("LSM303::enableDefault");
+  mock().expectOneCall("LSM303::writeReg")
+      .withParameter("reg", LSM303::CTRL2)
+      .withParameter("value", 0x18);
+
+  imu_p->initAccelerometer();
+
+  UNSIGNED_LONGS_EQUAL(0, imu_p->m_errorCounter);
+  STRCMP_EQUAL(
+      "Init Accelerometer/Magnetometer\r\n"
+      "deviceType=3 devId=60\r\n",
+      Console.getMockOutString());
+
+  mock().checkExpectations();
+}
+
+TEST(Imu, initMagnetometer_alreadyInitialized)
+{
+  imu_p->m_accMag.m_deviceType = LSM303::DEVICE_D;
+
+  mock().expectNoCall("LSM303::init");
+
+  imu_p->initMagnetometer();
+
+  mock().checkExpectations();
+}
+
+TEST(Imu, initMagnetometer_notInitialized)
+{
+  imu_p->m_accMag.m_deviceType = LSM303::DEVICE_AUTO;
+
+  mock().expectOneCall("LSM303::init")
+      .withParameter("device", LSM303::DEVICE_AUTO)
+      .withParameter("sa0", LSM303::SA0_AUTO)
+      .andReturnValue(true);
+  mock().ignoreOtherCalls();
+
+  imu_p->initMagnetometer();
+
+  mock().checkExpectations();
+}
+
+TEST(Imu, initGyroscope)
+{
+  mock().expectOneCall("L3G::init")
+      .withParameter("device", L3G::DEVICE_AUTO)
+      .withParameter("sa0", L3G::SA0_AUTO)
+      .andReturnValue(true);
+  mock().expectOneCall("L3G::readReg")
+      .withParameter("reg", L3G::WHO_AM_I)
+      .andReturnValue(L3G::DEV_ID_4200D);
+  mock().expectOneCall("L3G::enableDefault");
+  mock().expectOneCall("delay")
+      .withParameter("ms", 250);
+
+  CHECK_TRUE(imu_p->initGyroscope());
+
+  STRCMP_EQUAL(
+      "Init Gyroscope\r\n"
+      "deviceType=3 devId=211\r\n",
+      Console.getMockOutString());
+
+  mock().checkExpectations();
+}
+
+TEST(Imu, calibrateGyro_zeroInput)
+{
+  const uint8_t numberOfSamples = 32;
+
+  mock().expectNCalls(numberOfSamples, "L3G::read");
+  mock().expectNCalls(numberOfSamples, "delay")
+      .withParameter("ms", 10);
+
+
+  imu_p->calibrateGyro();
+
+  CHECK(Vector<int16_t>() == imu_p->m_gyroOffset);
+  CHECK(Vector<int16_t>() == imu_p->m_gyroNoise);
+  CHECK_TRUE(imu_p->m_useGyroCalibration);
+  STRCMP_EQUAL(
+      "---CalibGyro---\r\n"
+      "gyro calib min=0 max=0 Offset=0 noise=0\r\n"
+      "Offset=0,0,0\r\n"
+      "------------\r\n",
+      Console.getMockOutString());
+
+  mock().checkExpectations();
+}
+
+TEST(Imu, calibrateMagnetometerStartStop_start)
+{
+  imu_p->m_state = Imu::RUN;
+
+  mock().expectOneCall("HardwareSerial::available")
+      .onObject(&Console)
+      .andReturnValue(1);
+  mock().expectOneCall("HardwareSerial::read")
+      .onObject(&Console)
+      .andReturnValue('x');
+  mock().expectOneCall("HardwareSerial::available")
+      .onObject(&Console)
+      .andReturnValue(0);
+
+  imu_p->calibrateMagnetometerStartStop();
+
+  CHECK_FALSE(imu_p->m_foundNewMinMax);
+  CHECK_FALSE(imu_p->m_useMagCalibration);
+  ENUMS_EQUAL_INT(Imu::CALIBRATE_MAG, imu_p->m_state);
+  CHECK(Vector<int16_t>(INT16_MAX) == imu_p->m_magMin);
+  CHECK(Vector<int16_t>(INT16_MIN) == imu_p->m_magMax);
+  STRCMP_EQUAL(
+      "Magnetometer calibration...\r\n"
+      "Rotate sensor 360 degree around all three axis\r\n",
+      Console.getMockOutString());
+
+  mock().checkExpectations();
+}
+
+TEST(Imu, calibrateMagnetometerStartStop_stop)
+{
+  const int16_t ADDR = 600;
+  const uint8_t MAGIC = 6;
+
+  mock().disable();
+  BuzzerMock* buzzerMock_p = new BuzzerMock();
+  mock().enable();
+
+  imu_p->m_buzzer_p = buzzerMock_p;
+  imu_p->m_state = Imu::CALIBRATE_MAG;
+
+  // calibrateMagnetometerStartStop
+  mock().expectOneCall("HardwareSerial::available")
+      .onObject(&Console)
+      .andReturnValue(1);
+  mock().expectOneCall("HardwareSerial::read")
+      .onObject(&Console)
+      .andReturnValue('x');
+  mock().expectOneCall("HardwareSerial::available")
+      .onObject(&Console)
+      .andReturnValue(0);
+
+  // saveCalibrationData
+  mock().expectOneCall("EEPROM::put")
+      .withParameter("idx", ADDR + 1);
+  mock().expectOneCall("EEPROM::write")
+      .withParameter("idx", ADDR)
+      .withParameter("val", MAGIC);
+
+  // playCompletedSound
+  mock().expectOneCall("Buzzer::beep")
+      .onObject(buzzerMock_p)
+      .withParameter("data_p", imu_p->m_completedSound)
+      .withParameter("len", 3);
+
+  // delay
+  mock().expectOneCall("delay")
+      .withParameter("ms", 500);
+
+  imu_p->calibrateMagnetometerStartStop();
+
+  CHECK_TRUE(imu_p->m_calibrationAvailable);
+  CHECK_TRUE(imu_p->m_useMagCalibration);
+  ENUMS_EQUAL_INT(Imu::RUN, imu_p->m_state);
+  CHECK(Vector<int16_t>() == imu_p->m_calibrationData.magnetometerScale);
+  CHECK(Vector<int16_t>() == imu_p->m_calibrationData.magnetometerOffset);
+  STRCMP_EQUAL(
+      "Magnetometer calibration completed\r\n"
+      "--------\r\n"
+      "accOffset=0.00,0.00,0.00\r\n"
+      "accScale=1.00,1.00,1.00\r\n"
+      "magOffset=0,0,0\r\n"
+      "magScale=0,0,0\r\n"
+      "--------\r\n",
+      Console.getMockOutString());
+
+  delete buzzerMock_p;
+
+  mock().checkExpectations();
+}
+
+TEST(Imu, calibrateMagnetometerUpdate)
+{
+  mock().disable();
+  BuzzerMock* buzzerMock_p = new BuzzerMock();
+  mock().enable();
+
+  imu_p->m_buzzer_p = buzzerMock_p;
+
+  // delay
+  mock().expectOneCall("delay")
+      .withParameter("ms", 20);
+
+  // readMagnetometer
+  mock().expectOneCall("LSM303::readMag");
+
+  // buzzer
+  mock().expectOneCall("Buzzer::beepStop")
+      .onObject(buzzerMock_p);
+
+  imu_p->calibrateMagnetometerUpdate();
+
+  delete buzzerMock_p;
+
+  mock().checkExpectations();
+}
+
+TEST(Imu, calibrateAccelerometerNextAxis)
+{
+  const uint8_t numberOfSamples = 32;
+
+  mock().disable();
+  BuzzerMock* buzzerMock_p = new BuzzerMock();
+  mock().enable();
+
+  imu_p->m_buzzer_p = buzzerMock_p;
+  imu_p->m_calibAccAxisCounter = 6;
+
+  // buzzer
+  mock().expectOneCall("Buzzer::beep")
+      .onObject(buzzerMock_p)
+      .withParameter("frequency", 440)
+      .withParameter("duration_ms", 0);
+
+  // calibrateAccelerometerNextAxis
+  mock().expectOneCall("HardwareSerial::available")
+      .onObject(&Console)
+      .andReturnValue(1);
+  mock().expectOneCall("HardwareSerial::read")
+      .onObject(&Console)
+      .andReturnValue('x');
+  mock().expectOneCall("HardwareSerial::available")
+      .onObject(&Console)
+      .andReturnValue(0);
+
+  // readAccelerometer
+  mock().expectNCalls(numberOfSamples, "LSM303::readAcc");
+
+  // delay
+  mock().expectNCalls(numberOfSamples, "delay")
+      .withParameter("ms", 10);
+  mock().expectOneCall("delay")
+      .withParameter("ms", 500);
+
+  CHECK_FALSE(imu_p->calibrateAccelerometerNextAxis());
+
+  STRCMP_EQUAL(
+      "Accelerometer calibration start...\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      " x: min=0.00 avg=0.00 max=0.00\r\n"
+      " y: min=0.00 avg=0.00 max=0.00\r\n"
+      " z: min=0.00 avg=0.00 max=0.00\r\n"
+      "side 1 of 6 completed\r\n",
+      Console.getMockOutString());
+
+  delete buzzerMock_p;
+
+  mock().checkExpectations();
+}
+
+TEST(Imu, calibrateAccelerometerNextAxis_lastAxis)
+{
+  const uint8_t numberOfSamples = 32;
+  const int16_t ADDR = 600;
+  const uint8_t MAGIC = 6;
+
+  mock().disable();
+  BuzzerMock* buzzerMock_p = new BuzzerMock();
+  mock().enable();
+
+  imu_p->m_buzzer_p = buzzerMock_p;
+  imu_p->m_calibAccAxisCounter = 5;
+
+  // buzzer
+  mock().expectOneCall("Buzzer::beep")
+      .onObject(buzzerMock_p)
+      .withParameter("frequency", 440)
+      .withParameter("duration_ms", 0);
+
+  // calibrateAccelerometerNextAxis
+  mock().expectOneCall("HardwareSerial::available")
+      .onObject(&Console)
+      .andReturnValue(0);
+
+  // readAccelerometer
+  mock().expectNCalls(numberOfSamples, "LSM303::readAcc");
+
+  // delay
+  mock().expectNCalls(numberOfSamples, "delay")
+      .withParameter("ms", 10);
+
+  // saveCalibrationData
+  mock().expectOneCall("EEPROM::put")
+      .withParameter("idx", ADDR + 1);
+  mock().expectOneCall("EEPROM::write")
+      .withParameter("idx", ADDR)
+      .withParameter("val", MAGIC);
+
+  // playCompletedSound
+  mock().expectOneCall("Buzzer::beep")
+      .onObject(buzzerMock_p)
+      .withParameter("data_p", imu_p->m_completedSound)
+      .withParameter("len", 3);
+
+  // delay
+  mock().expectOneCall("delay")
+      .withParameter("ms", 500);
+
+  CHECK_TRUE(imu_p->calibrateAccelerometerNextAxis());
+
+  STRCMP_EQUAL(
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      "0,0,0\r\n"
+      " x: min=0.00 avg=0.00 max=0.00\r\n"
+      " y: min=0.00 avg=0.00 max=0.00\r\n"
+      " z: min=0.00 avg=0.00 max=0.00\r\n"
+      "side 6 of 6 completed\r\n"
+      "--------\r\n"
+      "accOffset=0.00,0.00,0.00\r\n"
+      "accScale=0.00,0.00,0.00\r\n"
+      "magOffset=0,0,0\r\n"
+      "magScale=1,1,1\r\n"
+      "--------\r\n"
+      "Accelerometer calibration completed\r\n",
+      Console.getMockOutString());
+
+  delete buzzerMock_p;
+
+  mock().checkExpectations();
+}
+
+TEST(Imu, init)
+{
+  const int16_t ADDR = 600;
+  const uint8_t MAGIC = 6;
+
+  mock().disable();
+  BuzzerMock* buzzerMock_p = new BuzzerMock();
+  mock().enable();
+
+  imu_p->m_accMag.m_deviceType = LSM303::DEVICE_D;
+
+  // loadCalibrationData
+  mock().expectOneCall("EEPROM::read")
+      .withParameter("idx", ADDR)
+      .andReturnValue(MAGIC);
+  mock().expectOneCall("EEPROM::get")
+      .withParameter("idx", ADDR + 1);
+
+  // initGyroscope
+  mock().expectOneCall("L3G::init")
+      .withParameter("device", L3G::DEVICE_AUTO)
+      .withParameter("sa0", L3G::SA0_AUTO)
+      .andReturnValue(true);
+  mock().expectOneCall("L3G::readReg")
+      .withParameter("reg", L3G::WHO_AM_I)
+      .andReturnValue(L3G::DEV_ID_4200D);
+  mock().expectOneCall("L3G::enableDefault");
+  mock().expectOneCall("delay")
+      .withParameter("ms", 250);
+
+  // initAccelerometer
+  mock().expectOneCall("LSM303::init")
+      .withParameter("device", LSM303::DEVICE_AUTO)
+      .withParameter("sa0", LSM303::SA0_AUTO)
+      .andReturnValue(true);
+  mock().expectOneCall("LSM303::readReg")
+      .withParameter("reg", LSM303::WHO_AM_I_M)
+      .andReturnValue(LSM303::DEV_ID_LSM303DLM);
+  mock().expectOneCall("LSM303::enableDefault");
+  mock().expectOneCall("LSM303::writeReg")
+      .withParameter("reg", LSM303::CTRL2)
+      .withParameter("value", 0x18);
+
+  CHECK_TRUE(imu_p->init(buzzerMock_p));
+
+  POINTERS_EQUAL(buzzerMock_p, imu_p->m_buzzer_p);
+  CHECK_TRUE(imu_p->m_hardwareInitialized);
+  STRCMP_EQUAL(
+      "IMU: Found calibration data\r\n"
+      "--------\r\n"
+      "accOffset=0.00,0.00,0.00\r\n"
+      "accScale=1.00,1.00,1.00\r\n"
+      "magOffset=0,0,0\r\n"
+      "magScale=1,1,1\r\n"
+      "--------\r\n"
+      "Init Gyroscope\r\n"
+      "deviceType=3 devId=211\r\n"
+      "Init Accelerometer/Magnetometer\r\n"
+      "deviceType=3 devId=60\r\n"
+      , Console.getMockOutString());
+
+  delete buzzerMock_p;
+
+  mock().checkExpectations();
+}
+
+IGNORE_TEST(Imu, update)
+{
+  // millis
+  mock().expectOneCall("millis")
+      .andReturnValue(100);
+
+  imu_p->update();
+
+  mock().checkExpectations();
 }

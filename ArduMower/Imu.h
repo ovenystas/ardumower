@@ -212,6 +212,13 @@ private:
       const int16_t looptime, float x_angle);
 
 private:
+  const BeepData m_completedSound[3] =
+  {
+      { 600, 200 },
+      { 880, 200 },
+      { 1320, 200 },
+  };
+
   bool m_foundNewMinMax {};
   Buzzer* m_buzzer_p {};
   uint16_t m_callCounter {};

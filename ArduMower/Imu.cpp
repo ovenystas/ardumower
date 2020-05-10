@@ -36,19 +36,22 @@
 void Imu::loadCalibrationData(void)
 {
   uint8_t magic = EEPROM.read(ADDR);
+
   if (magic != MAGIC)
   {
-    Console.println(F("IMU error: no calib data"));
+    Console.println(F("IMU error: No calibration data"));
     return;
   }
+
+  EEPROM.get(ADDR + 1, m_calibrationData);
   m_calibrationAvailable = true;
   Console.println(F("IMU: Found calibration data"));
-  EEPROM.get(ADDR + 1, m_calibrationData);
 }
 
 void Imu::saveCalibrationData(void)
 {
   EEPROM.put(ADDR + 1, m_calibrationData);
+  EEPROM.write(ADDR, MAGIC); // set magic
 }
 
 void Imu::deleteCalibrationData(void)
@@ -155,7 +158,7 @@ void Imu::calibrateGyro(void)
 
       offset += m_gyro.m_g;
 
-      // noise is computed with last offset calculation
+      // Noise is computed with last offset calculation
       noise = static_cast<int16_t>(noise + sq(m_gyro.m_g.z - m_gyroOffset.z));
 
       delay(10);
@@ -264,7 +267,7 @@ void Imu::readAccelerometer()
 // L3G4200D gyro sensor driver
 bool Imu::initGyroscope()
 {
-  Console.println(F("initL3G4200D"));
+  Console.println(F("Init Gyroscope"));
   m_gyro.init(L3G::DEVICE_AUTO, L3G::SA0_AUTO);
   Console.print(F("deviceType="));
   Console.print(m_gyro.getDeviceType());
@@ -634,25 +637,25 @@ void Imu::update(void)
 
 void Imu::printInfo(Stream &s)
 {
-  Streamprint(s, "imu a=+%2.2f +%2.2f +%2.2f",
+  Streamprint(s, "imu a=%+6.2f %+6.2f %+6.2f",
       m_acc.x, m_acc.y, m_acc.z);
 
-  Streamprint(s, " m=+%2.2f +%2.2f +%2.2f",
+  Streamprint(s, " m=%+6.2f %+6.2f %+6.2f",
       m_mag.x, m_mag.y, m_mag.z);
 
   Streamprint(s, " g=%4d %4d %4d",
       m_gyro.m_g.x, m_gyro.m_g.y, m_gyro.m_g.z);
 
-  Streamprint(s, " P=+%2.2f +%2.2f +%2.2f +%2.2f",
+  Streamprint(s, " P=%+6.2f %+6.2f %+6.2f %+6.2f",
       m_accPitch, m_scaledPitch, m_filtPitch, m_ypr.pitch);
 
-  Streamprint(s, " R=+%2.2f +%2.2f +%2.2f +%2.2f",
+  Streamprint(s, " R=%+6.2f %+6.2f %+6.2f %+6.2f",
       m_accRoll, m_scaledRoll, m_filtRoll, m_ypr.roll);
 
-  Streamprint(s, " T=+%2.2f +%2.2f +%2.2f",
+  Streamprint(s, " T=%+6.2f %+6.2f %+6.2f",
       m_magTilt.x, m_magTilt.y, m_magTilt.z);
 
-  Streamprint(s, " Y=+%2.2f +%2.2f +%2.2f +%2.2f +%2.2f\r\n",
+  Streamprint(s, " Y=%+6.2f %+6.2f %+6.2f %+6.2f %+6.2f\r\n",
       m_yaw, m_scaledYaw, m_scaled2Yaw, m_filtYaw, m_ypr.yaw);
 }
 
@@ -700,12 +703,6 @@ void Imu::read(void)
 
 void Imu::playCompletedSound(void)
 {
-  BeepData data[] =
-  {
-      { 600, 200 },
-      { 880, 200 },
-      { 1320, 200 },
-  };
-
-  m_buzzer_p->beep(data, sizeof(data) / sizeof(data[0]));
+  m_buzzer_p->beep(m_completedSound,
+      sizeof(m_completedSound) / sizeof(m_completedSound[0]));
 }

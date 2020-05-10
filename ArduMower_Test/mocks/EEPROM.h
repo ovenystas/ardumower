@@ -18,14 +18,14 @@ struct EEPROMClass
 {
   uint8_t read(int idx)
   {
-    mock().actualCall("EEPROM_read")
+    mock().actualCall("EEPROM::read")
         .withParameter("idx", idx);
     return static_cast<uint8_t>(mock().unsignedIntReturnValue());
   }
 
   void write(int idx, uint8_t val)
   {
-    mock().actualCall("EEPROM_write")
+    mock().actualCall("EEPROM::write")
         .withParameter("idx", idx)
         .withParameter("val", val);
   }
@@ -33,22 +33,20 @@ struct EEPROMClass
   template <typename T>
   T &get(int idx, T &t)
   {
-    (void)idx;
     (void)t;
-//    mock().actualCall("EEPROM_get")
-//        .withParameter("idx", idx)
-//        .withParameter("t", t);
+
+    mock().actualCall("EEPROM::get")
+        .withParameter("idx", idx);
     return t;
   }
 
   template <typename T>
   const T &put(int idx, const T &t)
   {
-    (void)idx;
     (void)t;
-//    mock().actualCall("EEPROM_put")
-//        .withParameter("idx", idx)
-//        .withParameter("t", t);
+
+    mock().actualCall("EEPROM::put")
+          .withParameter("idx", idx);
     return t;
   }
 };

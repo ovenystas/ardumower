@@ -39,7 +39,12 @@ void Buzzer::beepLong(uint8_t numberOfBeeps)
   }
 }
 
-void Buzzer::beep(BeepData* data_p, uint8_t len)
+void Buzzer::beep(uint16_t frequency, uint32_t duration_ms)
+{
+  tone(m_pin, frequency, duration_ms);
+}
+
+void Buzzer::beep(const BeepData* data_p, uint8_t len)
 {
   if (!isEnabled()) return;
 
@@ -47,4 +52,9 @@ void Buzzer::beep(BeepData* data_p, uint8_t len)
   {
     tone(m_pin, data_p[i].frequency, data_p[i].duration_ms);
   }
+}
+
+void Buzzer::beepStop()
+{
+  noTone(m_pin);
 }

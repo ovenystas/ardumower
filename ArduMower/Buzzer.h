@@ -10,6 +10,10 @@
 #include <Arduino.h>
 #include <stdint.h>
 
+#ifndef TEST_VIRTUAL
+#define TEST_VIRTUAL
+#endif
+
 enum class BeepType { LONG, SHORT };
 
 struct BeepData
@@ -26,6 +30,7 @@ public:
     pinMode(m_pin, OUTPUT);
     digitalWrite(m_pin, LOW);
   }
+  virtual ~Buzzer() {};
 
   bool isEnabled()
   {
@@ -40,17 +45,10 @@ public:
   void beepShort(uint8_t numberOfBeeps = 1);
   void beepLong(uint8_t numberOfBeeps = 1);
 
-  void beep(uint16_t frequency, uint32_t duration_ms = 0)
-  {
-    tone(m_pin, frequency, duration_ms);
-  }
+  TEST_VIRTUAL void beep(uint16_t frequency, uint32_t duration_ms = 0);
+  TEST_VIRTUAL void beep(const BeepData* data_p, uint8_t len = 1);
 
-  void beep(BeepData* data_p, uint8_t len = 1);
-
-  void beepStop()
-  {
-    noTone(m_pin);
-  }
+  TEST_VIRTUAL void beepStop();
 
 private:
   uint8_t m_pin { };
