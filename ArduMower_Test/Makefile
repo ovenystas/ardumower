@@ -62,7 +62,7 @@ CPPUTEST_CPPFLAGS += \
 
 gcovr: gcov
 	$(SILENCE)mkdir -p gcov/report
-	$(SILENCE)gcovr --html-detail -o gcov/report/gcov_report.html
+	$(SILENCE)gcovr --html-detail --output gcov/report/coverage.html --html-title ArduMower -j 4 --exclude ../../cpputest --exclude mocks --exclude tests
 	@echo "See gcov/report/gcov_report.html for details"
 
 include $(CPPUTEST_HOME)/build/MakefileWorker.mk
