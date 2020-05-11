@@ -27,7 +27,7 @@
 
 void BluetoothConfig::writeBT(String s)
 {
-  Console.print(F("Send: "));
+  Console.print(F("  Send: "));
   Console.print(s);
 
   Bluetooth.print(s);
@@ -39,7 +39,7 @@ void BluetoothConfig::readBT()
 
   if (Bluetooth.available())
   {
-    Console.print(F(", received: "));
+    Console.print(F("  Received: "));
 
     do
     {
@@ -60,13 +60,10 @@ void BluetoothConfig::writeReadBT(String s)
     delay(2000);
     readBT();
   } while (m_btResult.startsWith("ERROR") && ++counter < 4);
-
-  Console.println();
 }
 
 void BluetoothConfig::setName(String name, BluetoothType btType)
 {
-  Console.println();
   Console.print(F("Setting name "));
   Console.print(name);
   Console.println("...");
@@ -103,13 +100,12 @@ void BluetoothConfig::setName(String name, BluetoothType btType)
   }
   else
   {
-    Console.println(F("=>error setting name"));
+    Console.println(F("  =>error setting name"));
   }
 }
 
 void BluetoothConfig::setPinCode(uint32_t pinCode, BluetoothType btType)
 {
-  Console.println();
   Console.print(F("Setting pin code "));
   Console.print(pinCode);
   Console.println(F("..."));
@@ -146,7 +142,7 @@ void BluetoothConfig::setPinCode(uint32_t pinCode, BluetoothType btType)
   }
   else
   {
-    Console.println(F("=>error setting pin"));
+    Console.println(F("  =>error setting pin"));
   }
 }
 
@@ -171,12 +167,11 @@ uint8_t BluetoothConfig::baudrateToN(uint32_t baudrate)
 
 void BluetoothConfig::printSuccess()
 {
-  Console.println(F("=>success"));
+  Console.println(F("  =>success"));
 }
 
 void BluetoothConfig::setBaudrate(uint32_t baudrate, BluetoothType btType)
 {
-  Console.println();
   Console.print(F("Setting baudrate "));
   Console.print(baudrate);
   Console.println(F("..."));
@@ -224,7 +219,7 @@ void BluetoothConfig::setBaudrate(uint32_t baudrate, BluetoothType btType)
   }
   else
   {
-    Console.println(F("=>error setting baudrate"));
+    Console.println(F("  =>error setting baudrate"));
   }
 }
 
@@ -243,7 +238,6 @@ bool BluetoothConfig::detectBaudrate(bool quickBaudScan)
       SERIAL_5O2, SERIAL_6O2, SERIAL_7O2, SERIAL_8O2
   };
 
-  Console.println();
   Console.println(F("Detecting baudrate..."));
 
   for (uint32_t testBaudrate : testBaudrates)
@@ -251,7 +245,7 @@ bool BluetoothConfig::detectBaudrate(bool quickBaudScan)
     uint8_t j = 0;
     for (uint8_t testConfig : testConfigs)
     {
-      Console.print(F("Trying baudrate "));
+      Console.print(F("  Trying baudrate "));
       Console.print(testBaudrate);
       Console.print(F(" config "));
       Console.print(j++);
@@ -282,37 +276,36 @@ bool BluetoothConfig::detectBaudrate(bool quickBaudScan)
     //writeReadBT("ATZ0\n"); // BTM factory
     //writeReadBT("ATC0\r\nATQ1\r\nATI1\r\n"); // BTM
   }
-  Console.println(F("=>error detecting baudrate"));
+  Console.println(F("  =>error detecting baudrate"));
   return false;
 }
 
 BluetoothType BluetoothConfig::detectModuleType()
 {
-  Console.println();
   Console.println(F("Detecting BT type..."));
 
   writeReadBT(F("AT+VERSION"));
   if (m_btResult.startsWith("OKlinvor"))
   {
-    Console.println(F("=>it's a linvor/HC06"));
+    Console.println(F("  =>it's a linvor/HC06"));
     return BluetoothType::LINVOR_HC06;
   }
 
   writeReadBT(F("AT+VERSION?\r\n"));
   if (m_btResult.indexOf("OK") != -1)
   {
-    Console.println(F("=>must be a HC03/04/05 ?"));
+    Console.println(F("  =>must be a HC03/04/05 ?"));
     return BluetoothType::HC05;
   }
 
   writeReadBT(F("AT+VERSION\r\n"));
   if (m_btResult.indexOf("ModiaTek") != -1)
   {
-    Console.println(F("=>it's a FBT06/MBTV4"));
+    Console.println(F("  =>it's a FBT06/MBTV4"));
     return BluetoothType::FBT06_MBTV4;
   }
 
-  Console.println(F("=>unknown"));
+  Console.println(F("  =>unknown"));
   return BluetoothType::UNKNOWN;
 }
 
