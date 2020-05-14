@@ -21,15 +21,15 @@ void Odometer::calc(void)
   int16_t odoLeft = m_encoder.left.getCounter();
   int16_t odoRight = m_encoder.right.getCounter();
 
-  int16_t ticksLeft = odoLeft - m_lastOdoLeft;
-  int16_t ticksRight = odoRight - m_lastOdoRight;
+  int16_t ticksLeft = static_cast<int16_t>(odoLeft - m_lastOdoLeft);
+  int16_t ticksRight = static_cast<int16_t>(odoRight - m_lastOdoRight);
 
   m_lastOdoLeft = odoLeft;
   m_lastOdoRight = odoRight;
 
   float left_cm = static_cast<float>(ticksLeft) / m_ticksPerCm;
   float right_cm = static_cast<float>(ticksRight) / m_ticksPerCm;
-  float avg_cm = (left_cm + right_cm) / 2.0;
+  float avg_cm = (left_cm + right_cm) / 2.0f;
 
   float wheelTheta = (left_cm - right_cm) / m_wheelBaseCm;
   float thetaOld = m_theta;
@@ -40,13 +40,14 @@ void Odometer::calc(void)
   float revolutionRight =
       static_cast<float>(ticksRight) / static_cast<float>(m_ticksPerRevolution);
 
-  float deltaTime = static_cast<float>(curMillis - m_lastWheelRpmTime) / 60000.0;
+  float deltaTime =
+      static_cast<float>(curMillis - m_lastWheelRpmTime) / 60000.0f;
 
   float rpmLeft = revolutionLeft / deltaTime;
   float rpmRight = revolutionRight / deltaTime;
 
-  m_encoder.left.setWheelRpmCurr(round(rpmLeft));
-  m_encoder.right.setWheelRpmCurr(round(rpmRight));
+  m_encoder.left.setWheelRpmCurr(static_cast<int16_t>(round(rpmLeft)));
+  m_encoder.right.setWheelRpmCurr(static_cast<int16_t>(round(rpmRight)));
 
   m_lastWheelRpmTime = curMillis;
 

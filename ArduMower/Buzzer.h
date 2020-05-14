@@ -30,7 +30,7 @@ public:
     pinMode(m_pin, OUTPUT);
     digitalWrite(m_pin, LOW);
   }
-  virtual ~Buzzer() {};
+  TEST_VIRTUAL ~Buzzer() {};
 
   bool isEnabled() const
   {

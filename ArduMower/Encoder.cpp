@@ -14,10 +14,6 @@
 
 void Encoder::setup(uint8_t pin, bool swapDir)
 {
-  m_curState = LOW;
-  m_lastState = LOW;
-  m_counter = 0;
-  m_wheelRpmCurr = 0;
   m_pin = pin;
   m_swapDir = swapDir;
 

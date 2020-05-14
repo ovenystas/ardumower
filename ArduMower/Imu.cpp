@@ -601,6 +601,11 @@ void Imu::printInfo(Stream &s)
       m_yaw, m_scaledYaw, m_scaled2Yaw, m_filtYaw, m_ypr.yaw);
 }
 
+float Imu::getYaw() const
+{
+  return m_ypr.yaw;
+}
+
 bool Imu::init(Buzzer* buzzer_p)
 {
   m_buzzer_p = buzzer_p;
@@ -614,6 +619,11 @@ bool Imu::init(Buzzer* buzzer_p)
   initMagnetometer();
   m_hardwareInitialized = true;
   return true;
+}
+
+bool Imu::isUsed()
+{
+  return m_use;
 }
 
 uint16_t Imu::getAndClearCallCounter(void)

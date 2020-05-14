@@ -41,6 +41,10 @@
 #include "Complementary2.h"
 #include "Kalman.h"
 
+#ifndef TEST_VIRTUAL
+#define TEST_VIRTUAL
+#endif
+
 struct YawPitchRoll_t
 {
   float yaw {};
@@ -66,6 +70,7 @@ class Imu
 {
 public:
   Imu() {};
+  TEST_VIRTUAL ~Imu() {};
 
   enum ImuPidE
   {
@@ -76,10 +81,7 @@ public:
 
   bool init(Buzzer* buzzer_p);
 
-  bool isUsed()
-  {
-    return m_use;
-  }
+  TEST_VIRTUAL bool isUsed();
 
   bool isCorrectDir()
   {
@@ -100,10 +102,7 @@ public:
 
   void printInfo(Stream& s);
 
-  float getYaw() const
-  {
-    return m_ypr.yaw;
-  }
+  TEST_VIRTUAL float getYaw() const;
 
   float getYawDeg()
   {
