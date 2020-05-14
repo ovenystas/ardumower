@@ -16,7 +16,7 @@ void Odometer::read(void)
 // calculate map position by odometer sensors
 void Odometer::calc(void)
 {
-  unsigned long curMillis = millis();
+  uint32_t curMillis = millis();
 
   int16_t odoLeft = m_encoder.left.getCounter();
   int16_t odoRight = m_encoder.right.getCounter();
@@ -27,18 +27,20 @@ void Odometer::calc(void)
   m_lastOdoLeft = odoLeft;
   m_lastOdoRight = odoRight;
 
-  float left_cm = (float)ticksLeft / m_ticksPerCm;
-  float right_cm = (float)ticksRight / m_ticksPerCm;
+  float left_cm = static_cast<float>(ticksLeft) / m_ticksPerCm;
+  float right_cm = static_cast<float>(ticksRight) / m_ticksPerCm;
   float avg_cm = (left_cm + right_cm) / 2.0;
 
   float wheelTheta = (left_cm - right_cm) / m_wheelBaseCm;
   float thetaOld = m_theta;
   m_theta += wheelTheta;
 
-  float revolutionLeft = (float)ticksLeft / (float)m_ticksPerRevolution;
-  float revolutionRight = (float)ticksRight / (float)m_ticksPerRevolution;
+  float revolutionLeft =
+      static_cast<float>(ticksLeft) / static_cast<float>(m_ticksPerRevolution);
+  float revolutionRight =
+      static_cast<float>(ticksRight) / static_cast<float>(m_ticksPerRevolution);
 
-  float deltaTime = (float)(curMillis - m_lastWheelRpmTime) / 60000.0;
+  float deltaTime = static_cast<float>(curMillis - m_lastWheelRpmTime) / 60000.0;
 
   float rpmLeft = revolutionLeft / deltaTime;
   float rpmRight = revolutionRight / deltaTime;
