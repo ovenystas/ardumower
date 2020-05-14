@@ -7,21 +7,6 @@
 
 #include "Odometer.h"
 
-void Odometer::setup(const int ticksPerRevolution,
-                     const float ticksPerCm,
-                     const float wheelBaseCm,
-                     Encoder* encoderLeft_p,
-                     Encoder* encoderRight_p,
-                     Imu* imu_p)
-{
-  m_ticksPerRevolution = ticksPerRevolution;
-  m_ticksPerCm = ticksPerCm;
-  m_wheelBaseCm = wheelBaseCm;
-  m_encoder.left_p = encoderLeft_p;
-  m_encoder.right_p = encoderRight_p;
-  m_imu_p = imu_p;
-}
-
 void Odometer::read(void)
 {
   m_encoder.left_p->read();

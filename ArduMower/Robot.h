@@ -430,7 +430,12 @@ public:
   Gps m_gps;
 
   // -------- odometer state --------------------------
-  Odometer m_odometer;
+  Odometer m_odometer
+  {
+    &m_wheels.m_wheel[Wheel::LEFT].m_encoder,
+    &m_wheels.m_wheel[Wheel::RIGHT].m_encoder,
+    &m_imu
+  };
 
   // --------- wheel motor state ----------------------------
   // wheel motor speed ( <0 backward, >0 forward); range -motorSpeedMaxRpm..motorSpeedMaxRpm

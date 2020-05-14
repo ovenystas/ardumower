@@ -1216,14 +1216,6 @@ void Robot::setup()
   pinMode(PIN_REMOTE_SPEED, INPUT);
   pinMode(PIN_REMOTE_SWITCH, INPUT);
 
-  // odometer
-  m_odometer.setup(ODOMETER_TICKS_PER_REVOLUTION,
-                 ODOMETER_TICKS_PER_CM,
-                 ODOMETER_WHEELBASE_CM,
-                 &m_wheels.m_wheel[Wheel::LEFT].m_encoder,
-                 &m_wheels.m_wheel[Wheel::RIGHT].m_encoder,
-                 &m_imu);
-
   // user switches
   pinMode(PIN_USER_SWITCH_1, OUTPUT);
   pinMode(PIN_USER_SWITCH_2, OUTPUT);
