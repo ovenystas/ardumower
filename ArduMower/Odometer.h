@@ -14,8 +14,11 @@
 
 struct EncoderS
 {
-  Encoder* left_p { nullptr };
-  Encoder* right_p { nullptr };
+  Encoder& left;
+  Encoder& right;
+
+  EncoderS(Encoder& left_, Encoder& right_) :
+    left(left_), right(right_) {};
 };
 
 struct OdometerSettings
@@ -36,12 +39,8 @@ public:
     END
   };
 
-  Odometer(Encoder* encoderLeft_p, Encoder* encoderRight_p, Imu* imu_p) :
-    m_imu_p(imu_p)
-  {
-    m_encoder.left_p = encoderLeft_p;
-    m_encoder.right_p = encoderRight_p;
-  };
+  Odometer(Encoder& encoderLeft, Encoder& encoderRight, Imu& imu) :
+    m_encoder(encoderLeft, encoderRight), m_imu(imu) {};
 
   bool isUsed()
   {
@@ -75,7 +74,7 @@ public:
   }
 
   EncoderS m_encoder;
-  Imu* m_imu_p;
+  Imu& m_imu;
 
 private:
   unsigned long m_lastWheelRpmTime {};  // last time it was updated

@@ -171,8 +171,8 @@ void Robot::loadSaveUserSettingsOdometer(bool readflag, uint16_t& addr,
   eereadwrite(readflag, addr, settings_p->ticksPerCm.value);
   eereadwrite(readflag, addr, settings_p->wheelBaseCm.value);
 
-  eereadwrite(readflag, addr, odometer.m_encoder.left_p->m_swapDir);
-  eereadwrite(readflag, addr, odometer.m_encoder.right_p->m_swapDir);
+  eereadwrite(readflag, addr, odometer.m_encoder.left.m_swapDir);
+  eereadwrite(readflag, addr, odometer.m_encoder.right.m_swapDir);
 }
 
 void Robot::loadSaveUserSettingsLawnSensors(bool readflag, uint16_t& addr,
@@ -649,10 +649,10 @@ void Robot::printSettingSerialOdometer()
   printSettingNameColonValue(settings_p->wheelBaseCm);
 
   Console.print(F("LEFT.swapDir : "));
-  Console.println(m_odometer.m_encoder.left_p->m_swapDir);
+  Console.println(m_odometer.m_encoder.left.m_swapDir);
 
   Console.print(F("RIGHT.swapDir : "));
-  Console.println(m_odometer.m_encoder.right_p->m_swapDir);
+  Console.println(m_odometer.m_encoder.right.m_swapDir);
 }
 
 void Robot::printSettingSerialGps()
@@ -1282,8 +1282,8 @@ void Robot::printInfo_perimeter(Stream &s)
 void Robot::printInfo_odometer(Stream &s)
 {
   Streamprint(s, "odo %4d %4d ",
-      m_odometer.m_encoder.left_p->getCounter(),
-      m_odometer.m_encoder.right_p->getCounter());
+      m_odometer.m_encoder.left.getCounter(),
+      m_odometer.m_encoder.right.getCounter());
 }
 
 void Robot::printInfo_sensorValues(Stream &s)
@@ -1475,8 +1475,8 @@ void Robot::testOdometer()
   {
     resetIdleTime();
 
-    int odoCountLeft = m_odometer.m_encoder.left_p->getCounter();
-    int odoCountRight = m_odometer.m_encoder.right_p->getCounter();
+    int odoCountLeft = m_odometer.m_encoder.left.getCounter();
+    int odoCountRight = m_odometer.m_encoder.right.getCounter();
 
     if (odoCountLeft != lastLeft || odoCountRight != lastRight)
     {
@@ -1517,8 +1517,8 @@ void Robot::testOdometer()
 
       if (ch == 'z')
       {
-        m_odometer.m_encoder.left_p->clearCounter();
-        m_odometer.m_encoder.right_p->clearCounter();
+        m_odometer.m_encoder.left.clearCounter();
+        m_odometer.m_encoder.right.clearCounter();
       }
     }
   }
@@ -2797,8 +2797,8 @@ void Robot::checkIfStuck()
     // Console.println(errorCounter[ERR_STUCK]);
     if (m_stateMachine.isCurrentState(StateMachine::STATE_MANUAL) &&
         gpsSpeed < m_stuckIfGpsSpeedBelow &&
-        m_odometer.m_encoder.left_p->getWheelRpmCurr() != 0 &&
-        m_odometer.m_encoder.right_p->getWheelRpmCurr() != 0 &&
+        m_odometer.m_encoder.left.getWheelRpmCurr() != 0 &&
+        m_odometer.m_encoder.right.getWheelRpmCurr() != 0 &&
         millis() > (m_stateMachine.getStateStartTime() + m_gpsSpeedIgnoreTime))
     {
       m_robotIsStuckCounter++;

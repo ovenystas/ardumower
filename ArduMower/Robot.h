@@ -432,9 +432,9 @@ public:
   // -------- odometer state --------------------------
   Odometer m_odometer
   {
-    &m_wheels.m_wheel[Wheel::LEFT].m_encoder,
-    &m_wheels.m_wheel[Wheel::RIGHT].m_encoder,
-    &m_imu
+    m_wheels.m_wheel[Wheel::LEFT].m_encoder,
+    m_wheels.m_wheel[Wheel::RIGHT].m_encoder,
+    m_imu
   };
 
   // --------- wheel motor state ----------------------------

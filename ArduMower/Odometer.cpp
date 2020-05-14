@@ -9,8 +9,8 @@
 
 void Odometer::read(void)
 {
-  m_encoder.left_p->read();
-  m_encoder.right_p->read();
+  m_encoder.left.read();
+  m_encoder.right.read();
 }
 
 // calculate map position by odometer sensors
@@ -18,8 +18,8 @@ void Odometer::calc(void)
 {
   unsigned long curMillis = millis();
 
-  int16_t odoLeft = m_encoder.left_p->getCounter();
-  int16_t odoRight = m_encoder.right_p->getCounter();
+  int16_t odoLeft = m_encoder.left.getCounter();
+  int16_t odoRight = m_encoder.right.getCounter();
 
   int16_t ticksLeft = odoLeft - m_lastOdoLeft;
   int16_t ticksRight = odoRight - m_lastOdoRight;
@@ -43,14 +43,14 @@ void Odometer::calc(void)
   float rpmLeft = revolutionLeft / deltaTime;
   float rpmRight = revolutionRight / deltaTime;
 
-  m_encoder.left_p->setWheelRpmCurr(round(rpmLeft));
-  m_encoder.right_p->setWheelRpmCurr(round(rpmRight));
+  m_encoder.left.setWheelRpmCurr(round(rpmLeft));
+  m_encoder.right.setWheelRpmCurr(round(rpmRight));
 
   m_lastWheelRpmTime = curMillis;
 
-  if (m_imu_p->isUsed())
+  if (m_imu.isUsed())
   {
-    float yaw = m_imu_p->getYaw();
+    float yaw = m_imu.getYaw();
     m_x += avg_cm * sin(yaw);
     m_y += avg_cm * cos(yaw);
   }
