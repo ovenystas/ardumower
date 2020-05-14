@@ -157,18 +157,18 @@ TEST(Buzzer, beepShort_1Beep)
   mock().checkExpectations();
 }
 
-TEST(Buzzer, beepShort_255Beeps)
+TEST(Buzzer, beepShort_2Beeps)
 {
   buzzer_p->setEnabled(true);
 
-  mock().expectNCalls(255, "tone")
+  mock().expectNCalls(2, "tone")
       .withParameter("_pin", 1)
       .withParameter("frequency", frequency_hz)
       .withParameter("duration", durationShort_ms);
-  mock().expectNCalls(255, "delay")
+  mock().expectNCalls(2, "delay")
       .withParameter("ms", delayShort_ms);
 
-  buzzer_p->beepShort(255);
+  buzzer_p->beepShort(2);
 
   mock().checkExpectations();
 }
@@ -230,18 +230,27 @@ TEST(Buzzer, beepLong_1Beep)
   mock().checkExpectations();
 }
 
-TEST(Buzzer, beepLong_255Beeps)
+TEST(Buzzer, beepLong_2Beeps)
 {
   buzzer_p->setEnabled(true);
 
-  mock().expectNCalls(255, "tone")
+  mock().expectNCalls(2, "tone")
       .withParameter("_pin", 1)
       .withParameter("frequency", frequency_hz)
       .withParameter("duration", durationLong_ms);
-  mock().expectNCalls(255, "delay")
+  mock().expectNCalls(2, "delay")
       .withParameter("ms", delayLong_ms);
 
-  buzzer_p->beepLong(255);
+  buzzer_p->beepLong(2);
+
+  mock().checkExpectations();
+}
+
+TEST(Buzzer, beep_disabled)
+{
+  mock().expectNoCall("tone");
+
+  buzzer_p->beep(440);
 
   mock().checkExpectations();
 }
@@ -270,6 +279,16 @@ TEST(Buzzer, beep_440Hz200ms)
       .withParameter("duration", 200);
 
   buzzer_p->beep(440, 200);
+
+  mock().checkExpectations();
+}
+
+TEST(Buzzer, beep_BeepData_disabled)
+{
+  mock().expectNoCall("tone");
+
+  BeepData data = { 880, 400 };
+  buzzer_p->beep(&data);
 
   mock().checkExpectations();
 }
@@ -308,6 +327,27 @@ TEST(Buzzer, beep_BeepData_880Hz400ms_1720Hz1000ms)
       { 1720, 1000 }
   };
   buzzer_p->beep(data, sizeof(data) / sizeof(data[0]));
+
+  mock().checkExpectations();
+}
+
+TEST(Buzzer, beepStop_disabled)
+{
+  mock().expectNoCall("noTone");
+
+  buzzer_p->beepStop();
+
+  mock().checkExpectations();
+}
+
+TEST(Buzzer, beepStop_enabled)
+{
+  buzzer_p->setEnabled(true);
+
+  mock().expectOneCall("noTone")
+      .withParameter("_pin", 1);
+
+  buzzer_p->beepStop();
 
   mock().checkExpectations();
 }

@@ -49,6 +49,38 @@ TEST(PidPInit, defaultInit_setup)
   mock().checkExpectations();
 }
 
+TEST(PidPInit, defaultInit_setup_withRegConstX)
+{
+  mock().expectOneCall("micros")
+      .andReturnValue(0u);
+
+  pid_p = new Pid();
+  pid_p->setup(1.0, 0.0, 0.0, -1.0, 1.0, 1.0, 10.0, 2.0);
+
+  PidSettings* pidSettings_p = pid_p->getSettings();
+
+  DOUBLES_EQUAL(10.0, pidSettings_p->Kp.scale, 0.01);
+  DOUBLES_EQUAL(10.0, pidSettings_p->Ki.scale, 0.01);
+  DOUBLES_EQUAL(10.0, pidSettings_p->Kd.scale, 0.01);
+
+  DOUBLES_EQUAL(2.0, pidSettings_p->Kp.maxValue, 0.01);
+  DOUBLES_EQUAL(2.0, pidSettings_p->Ki.maxValue, 0.01);
+  DOUBLES_EQUAL(2.0, pidSettings_p->Kd.maxValue, 0.01);
+
+  DOUBLES_EQUAL(1.0, pidSettings_p->Kp.value, 0.01);
+  DOUBLES_EQUAL(0.0, pidSettings_p->Ki.value, 0.01);
+  DOUBLES_EQUAL(0.0, pidSettings_p->Kd.value, 0.01);
+
+  DOUBLES_EQUAL(-1.0, pid_p->m_yMin, 0.01);
+  DOUBLES_EQUAL(1.0, pid_p->m_yMax, 0.01);
+  DOUBLES_EQUAL(1.0, pid_p->m_maxOutput, 0.01);
+  DOUBLES_EQUAL(0.0, pid_p->m_errorOld, 0.01);
+  DOUBLES_EQUAL(0.0, pid_p->m_errorSum, 0.01);
+  DOUBLES_EQUAL(0.0, pid_p->m_setPoint, 0.01);
+
+  mock().checkExpectations();
+}
+
 TEST(PidPInit, parameterizedInit)
 {
   mock().expectOneCall("micros")

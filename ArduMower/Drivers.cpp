@@ -26,7 +26,7 @@
 
 #include <Wire.h>
 
-const char* dayOfWeek[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+const char* dayOfWeek[] = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
 
 // ---- print helpers ----------------------------------------------------------
 
@@ -55,6 +55,7 @@ void StreamPrint_progmem(Print &out, PGM_P format, ...)
 }
 
 
+#if 0
 int freeRam(void)
 {
   extern int __heap_start, *__brkval;
@@ -62,16 +63,18 @@ int freeRam(void)
 
   return (int)&v - (__brkval == 0 ? (int)&__heap_start : (int)__brkval);
 }
-
+#endif
 
 // rescale to -PI..+PI
 float scalePI(float v)
 {
   float d = v;
+
   while (d < 0)
   {
     d += 2 * PI;
   }
+
   while (d >= 2 * PI)
   {
     d -= 2 * PI;
@@ -116,20 +119,39 @@ float distancePI(float x, float w)
   return d;
 }
 
-
+/*
+ * Convert timehm_t format to minutes.
+ *
+ * Valid range of time.hour is 0 to 23.
+ * Valid range of time.minute is 0 to 59.
+ * 23 hours and 59 minutes equals 1439 minutes.
+ * There are no checks of valid values.
+ */
 int time2minutes(const timehm_t& time)
 {
   return (time.hour * 60 + time.minute);
 }
 
-
+/*
+ * Convert minutes to timehm_t format.
+ *
+ * Valid range of minutes is 0 to 1439.
+ * 1439 minutes equals 23 hours and 59 minutes.
+ * There are no checks of valid values.
+ */
 void minutes2time(int minutes, timehm_t& time)
 {
-  time.hour = minutes / 60;
-  time.minute = minutes % 60;
+  time.hour = static_cast<uint8_t>(minutes / 60);
+  time.minute = static_cast<uint8_t>(minutes % 60);
 }
 
-
+/*
+ * Create a time string in 24h format "HH:MM" from a time in timehm_t format.
+ *
+ * Valid range of time.hour is 0 to 23.
+ * Valid range of time.minute is 0 to 59.
+ * There are no checks of valid values.
+ */
 String time2str(const timehm_t& time)
 {
   String s = String(time.hour / 10);
@@ -142,6 +164,15 @@ String time2str(const timehm_t& time)
 }
 
 
+/*
+ * Create a date string in format "ddd yyyy-mm-dd" from a date in date_t format.
+ *
+ * Valid range of date.year is 1000 to 9999.
+ * Valid range of date.month is 1 to 12.
+ * Valid range of date.day is 1 to 31.
+ * Valid range of date.dayOfWeek is 0 to 6 (Mon to Sun).
+ * There are no checks of valid values.
+ */
 String date2str(const date_t& date)
 {
   String s = dayOfWeek[date.dayOfWeek];
@@ -156,6 +187,24 @@ String date2str(const date_t& date)
   return s;
 }
 
+/*
+ *  Returns the day of week (0=Monday, 6=Sunday) for a given date
+ */
+uint8_t getDayOfWeek(uint16_t year, uint8_t month, uint8_t day,
+    CalendarSystem calendarSystem)
+{
+  // CalendarSystem = 0 for Gregorian Calendar, -1 for Julian Calendar
+  if (month < 3)
+  {
+    month = static_cast<uint8_t>(month + 12);
+    year--;
+  }
+
+  return static_cast<uint8_t>(
+      (static_cast<uint16_t>(day + (2 * month) + 6 * (month + 1) / 10) +
+          year + year / 4 - year / 100 + year / 400 +
+          static_cast<uint16_t>(calendarSystem)) % 7);
+}
 
 // ---- I2C helpers --------------------------------------------------------------
 void I2CwriteTo(uint8_t device, uint8_t address, uint8_t val)
@@ -184,7 +233,7 @@ void I2CwriteTo(uint8_t device, uint8_t address, int num, const uint8_t* buf_p)
 int I2CreadFrom(uint8_t device, uint8_t address,
                 uint8_t num, uint8_t* buf_p, int retryCount)
 {
-  int i;;
+  int i = 0;
 
   for (int j = 0; j < retryCount + 1; j++)
   {
@@ -194,11 +243,14 @@ int I2CreadFrom(uint8_t device, uint8_t address,
     Wire.write(address);
     Wire.endTransmission();
 
-    Wire.requestFrom(device, num); // request 6 bytes from device
+    // Request num bytes from device
+    Wire.requestFrom(device, num);
 
-    while (Wire.available())       // device may send less than requested (abnormal)
+    // Device may send less than requested (abnormal)
+    while (Wire.available())
     {
-      buf_p[i] = Wire.read();       // receive a byte
+      // Receive one byte
+      buf_p[i] = static_cast<uint8_t>(Wire.read());
       i++;
     }
 
@@ -245,12 +297,17 @@ bool readDS1307(datetime_t& dt)
   }
 
   datetime_t r;
-  r.time.minute = 10 * ((buf[1] >> 4) & B00000111) + (buf[1] & B00001111);
-  r.time.hour =   10 * ((buf[2] >> 4) & B00000111) + (buf[2] & B00001111);
+  r.time.minute = static_cast<uint8_t>(
+      10 * ((buf[1] >> 4) & B00000111) + (buf[1] & B00001111));
+  r.time.hour = static_cast<uint8_t>(
+      10 * ((buf[2] >> 4) & B00000111) + (buf[2] & B00001111));
   r.date.dayOfWeek = (buf[3] & B00000111);
-  r.date.day =   10 * ((buf[4] >> 4) & B00000011) + (buf[4] & B00001111);
-  r.date.month = 10 * ((buf[5] >> 4) & B00000001) + (buf[5] & B00001111);
-  r.date.year =  10 * ((buf[6] >> 4) & B00001111) + (buf[6] & B00001111);
+  r.date.day = static_cast<uint8_t>(
+      10 * ((buf[4] >> 4) & B00000011) + (buf[4] & B00001111));
+  r.date.month = static_cast<uint8_t>(
+      10 * ((buf[5] >> 4) & B00000001) + (buf[5] & B00001111));
+  r.date.year = static_cast<uint16_t>(
+      10 * ((buf[6] >> 4) & B00001111) + (buf[6] & B00001111));
 
   if ((r.time.minute > 59) ||
       (r.time.hour > 23) ||
@@ -266,7 +323,7 @@ bool readDS1307(datetime_t& dt)
     return false;
   }
 
-  r.date.year += 2000;
+  r.date.year = static_cast<uint16_t>(r.date.year + 2000u);
   dt = r;
 
   return true;
@@ -285,31 +342,19 @@ bool setDS1307(const datetime_t& dt)
   }
 
   buf[0] = buf[0] & B01111111; // enable clock
-  buf[1] = ((dt.time.minute / 10) << 4) | (dt.time.minute % 10);
-  buf[2] = ((dt.time.hour / 10) << 4) | (dt.time.hour % 10);
+  buf[1] = static_cast<uint8_t>(
+      ((dt.time.minute / 10) << 4) | (dt.time.minute % 10));
+  buf[2] = static_cast<uint8_t>(
+      ((dt.time.hour / 10) << 4) | (dt.time.hour % 10));
   buf[3] = dt.date.dayOfWeek;
-  buf[4] = ((dt.date.day / 10) << 4) | (dt.date.day % 10);
-  buf[5] = ((dt.date.month / 10) << 4) | (dt.date.month % 10);
-  buf[6] = ((dt.date.year % 100 / 10) << 4) | (dt.date.year % 10);
+  buf[4] = static_cast<uint8_t>(
+      ((dt.date.day / 10) << 4) | (dt.date.day % 10));
+  buf[5] = static_cast<uint8_t>(
+      ((dt.date.month / 10) << 4) | (dt.date.month % 10));
+  buf[6] = static_cast<uint8_t>(
+      ((dt.date.year % 100 / 10) << 4) | (dt.date.year % 10));
 
   I2CwriteTo(DS1307_ADDRESS, 0x00, 7, buf);
 
   return true;
-}
-
-
-// Returns the day of week (0=Sunday, 6=Saturday) for a given date
-uint8_t getDayOfWeek(uint8_t month, uint8_t day, uint16_t year,
-    CalendarSystem calendarSystem)
-{
-  // CalendarSystem = 1 for Gregorian Calendar, 0 for Julian Calendar
-  if (month < 3)
-  {
-    month += 12;
-    year--;
-  }
-
-  return (uint8_t)(((uint16_t)(day + (2 * month) + 6 * (month + 1) / 10) +
-           year + year / 4 - year / 100 + year / 400 +
-           (uint16_t)calendarSystem) % 7);
 }

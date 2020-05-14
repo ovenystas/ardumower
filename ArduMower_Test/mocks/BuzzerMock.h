@@ -15,7 +15,7 @@ class BuzzerMock : public Buzzer
 public:
   BuzzerMock() : Buzzer(1, true) {};
 
-  virtual void beep(uint16_t frequency, uint32_t duration_ms = 0) override
+  virtual void beep(uint16_t frequency, uint32_t duration_ms = 0) const override
   {
     mock().actualCall("Buzzer::beep")
         .onObject(this)
@@ -23,7 +23,7 @@ public:
         .withParameter("duration_ms", duration_ms);
   }
 
-  virtual void beep(const BeepData* data_p, uint8_t len = 1) override
+  virtual void beep(const BeepData* data_p, uint8_t len = 1) const override
   {
     mock().actualCall("Buzzer::beep")
         .onObject(this)
@@ -31,7 +31,7 @@ public:
         .withParameter("len", len);
   }
 
-  virtual void beepStop() override
+  virtual void beepStop() const override
   {
     mock().actualCall("Buzzer::beepStop")
         .onObject(this);

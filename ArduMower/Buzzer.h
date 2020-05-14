@@ -32,7 +32,7 @@ public:
   }
   virtual ~Buzzer() {};
 
-  bool isEnabled()
+  bool isEnabled() const
   {
     return m_enabled;
   }
@@ -42,13 +42,13 @@ public:
     m_enabled = enabled;
   }
 
-  void beepShort(uint8_t numberOfBeeps = 1);
-  void beepLong(uint8_t numberOfBeeps = 1);
+  void beepShort(uint8_t numberOfBeeps = 1) const;
+  void beepLong(uint8_t numberOfBeeps = 1) const;
 
-  TEST_VIRTUAL void beep(uint16_t frequency, uint32_t duration_ms = 0);
-  TEST_VIRTUAL void beep(const BeepData* data_p, uint8_t len = 1);
+  TEST_VIRTUAL void beep(uint16_t frequency, uint32_t duration_ms = 0) const;
+  TEST_VIRTUAL void beep(const BeepData* data_p, uint8_t len = 1) const;
 
-  TEST_VIRTUAL void beepStop();
+  TEST_VIRTUAL void beepStop() const;
 
 private:
   uint8_t m_pin { };

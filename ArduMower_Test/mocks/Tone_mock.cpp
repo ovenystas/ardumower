@@ -22,6 +22,6 @@ void tone(uint8_t _pin, uint16_t frequency, uint32_t duration)
 
 void noTone(uint8_t _pin)
 {
-  mock().actualCall("tone")
+  mock().actualCall("noTone")
       .withParameter("_pin", _pin);
 }

@@ -34,6 +34,7 @@ SRC_FILES = \
 	../ArduMower/Button.cpp \
 	../ArduMower/Buzzer.cpp \
 	../ArduMower/Complementary2.cpp \
+	../ArduMower/Drivers.cpp \
 	../ArduMower/DropSensor.cpp \
 	../ArduMower/Encoder.cpp \
 	../ArduMower/Filter.cpp \

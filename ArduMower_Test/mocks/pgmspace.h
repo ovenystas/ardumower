@@ -9,3 +9,4 @@
 
 #define PGM_P const char *
 #define PSTR(s) (s)
+#define strncpy_P strncpy

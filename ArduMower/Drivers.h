@@ -41,8 +41,19 @@ extern const char *dayOfWeek[];
 
 enum class CalendarSystem
 {
-  Julian = 0,
-  Gregorian = 1
+  Julian = -1,
+  Gregorian = 0
+};
+
+enum class Weekdays
+{
+  Monday = 0,
+  Tuesday,
+  Wednesday,
+  Thursday,
+  Friday,
+  Saturday,
+  Sunday
 };
 
 struct timehm_t
@@ -83,7 +94,7 @@ struct ttimer_t
 template <typename T>
 int8_t sign(T val)
 {
-  return (T(0) < val) - (val < T(0));
+  return static_cast<int8_t>((T(0) < val) - (val < T(0)));
 }
 
 
@@ -112,7 +123,14 @@ void eeread(uint16_t &eeIdx, T& value)
 template <class T>
 void eereadwrite(const bool readflag, uint16_t& eeIdx, T& value)
 {
-  readflag ? eeread(eeIdx, value) : eewrite(eeIdx, value);
+  if (readflag)
+  {
+    eeread(eeIdx, value);
+  }
+  else
+  {
+    eewrite(eeIdx, value);
+  }
 }
 
 
@@ -128,8 +146,8 @@ void StreamPrint_progmem(Print &out, PGM_P format, ...);
 // time helpers
 void minutes2time(int minutes, timehm_t& time);
 int time2minutes(const timehm_t& time);
-String time2str(const timehm_t& time_p);
-String date2str(const date_t& date_p);
+String time2str(const timehm_t& time);
+String date2str(const date_t& date);
 
 // I2C helpers
 void I2CwriteTo(uint8_t device, uint8_t address, uint8_t val);
@@ -147,5 +165,6 @@ float distancePI(float x, float w);
 bool readDS1307(datetime_t& dt);
 bool setDS1307(const datetime_t& dt);
 
-// Returns the day of week (0=Sunday, 6=Saturday) for a given date
-uint8_t getDayOfWeek(uint8_t month, uint8_t day, uint16_t year, CalendarSystem calendarSystem);
+// Returns the day of week (0=Monday, 6=Sunday) for a given date
+uint8_t getDayOfWeek(uint16_t year, uint8_t month, uint8_t day,
+    CalendarSystem calendarSystem = CalendarSystem::Gregorian);

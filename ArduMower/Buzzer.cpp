@@ -5,6 +5,8 @@
  *      Author: ove
  */
 
+// TODO: Make this work without using delay()
+
 #include "Buzzer.h"
 
 class BuzzerConst
@@ -17,44 +19,53 @@ public:
   static const uint16_t delayLong_ms = 500;
 };
 
-void Buzzer::beepShort(uint8_t numberOfBeeps)
+void Buzzer::beepShort(uint8_t numberOfBeeps) const
 {
-  if (!isEnabled()) return;
-
-  for (uint8_t i = 0; i < numberOfBeeps; i++)
+  if (isEnabled())
   {
-    tone(m_pin, BuzzerConst::frequency_hz, BuzzerConst::durationShort_ms);
-    delay(BuzzerConst::delayShort_ms);
+    for (uint8_t i = 0; i < numberOfBeeps; i++)
+    {
+      tone(m_pin, BuzzerConst::frequency_hz, BuzzerConst::durationShort_ms);
+      delay(BuzzerConst::delayShort_ms);
+    }
   }
 }
 
-void Buzzer::beepLong(uint8_t numberOfBeeps)
+void Buzzer::beepLong(uint8_t numberOfBeeps) const
 {
-  if (!isEnabled()) return;
-
-  for (uint8_t i = 0; i < numberOfBeeps; i++)
+  if (isEnabled())
   {
-    tone(m_pin, BuzzerConst::frequency_hz, BuzzerConst::durationLong_ms);
-    delay(BuzzerConst::delayLong_ms);
+    for (uint8_t i = 0; i < numberOfBeeps; i++)
+    {
+      tone(m_pin, BuzzerConst::frequency_hz, BuzzerConst::durationLong_ms);
+      delay(BuzzerConst::delayLong_ms);
+    }
   }
 }
 
-void Buzzer::beep(uint16_t frequency, uint32_t duration_ms)
+void Buzzer::beep(uint16_t frequency, uint32_t duration_ms) const
 {
-  tone(m_pin, frequency, duration_ms);
-}
-
-void Buzzer::beep(const BeepData* data_p, uint8_t len)
-{
-  if (!isEnabled()) return;
-
-  for (uint8_t i = 0; i < len; i++)
+  if (isEnabled())
   {
-    tone(m_pin, data_p[i].frequency, data_p[i].duration_ms);
+    tone(m_pin, frequency, duration_ms);
   }
 }
 
-void Buzzer::beepStop()
+void Buzzer::beep(const BeepData* data_p, uint8_t len) const
 {
-  noTone(m_pin);
+  if (isEnabled())
+  {
+    for (uint8_t i = 0; i < len; i++)
+    {
+      tone(m_pin, data_p[i].frequency, data_p[i].duration_ms);
+    }
+  }
+}
+
+void Buzzer::beepStop() const
+{
+  if (isEnabled())
+  {
+    noTone(m_pin);
+  }
 }
