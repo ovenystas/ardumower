@@ -43,6 +43,7 @@ SRC_FILES = \
 	../ArduMower/Kalman.cpp \
 	../ArduMower/LawnSensor.cpp \
 	../ArduMower/Odometer.cpp \
+	../ArduMower/Perimeter.cpp \
 	../ArduMower/Pid.cpp \
 	../ArduMower/RainSensor.cpp \
 	../ArduMower/Sonar.cpp \

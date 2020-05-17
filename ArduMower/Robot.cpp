@@ -226,17 +226,6 @@ void Robot::loadSaveUserSettingsPerimeter(bool readflag, uint16_t& addr,
   loadSaveUserSettingsPid(readflag, addr, perimeter.m_pid);
 }
 
-void Robot::loadSaveUserSettingsPerimeters(bool readflag, uint16_t& addr,
-    Perimeters& perimeters)
-{
-  auto settings_p = perimeters.getSettings();
-
-  eereadwrite(readflag, addr, settings_p->use.value);
-
-  loadSaveUserSettingsPerimeter(readflag, addr,
-      perimeters.m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)]);
-}
-
 void Robot::loadSaveUserSettingsBattery(bool readflag, uint16_t& addr,
     Battery& battery)
 {
@@ -355,7 +344,7 @@ void Robot::loadSaveUserSettings(bool readflag)
   loadSaveUserSettingsCutter(readflag, addr, m_cutter);
   loadSaveUserSettingsBumpers(readflag, addr, m_bumpers);
   loadSaveUserSettingsSonars(readflag, addr, m_sonars);
-  loadSaveUserSettingsPerimeters(readflag, addr, m_perimeters);
+  loadSaveUserSettingsPerimeter(readflag, addr, m_perimeter);
   loadSaveUserSettingsLawnSensors(readflag, addr, m_lawnSensors);
   loadSaveUserSettingsImu(readflag, addr, m_imu);
   loadSaveUserSettingsBattery(readflag, addr, m_battery);
@@ -556,7 +545,7 @@ void Robot::printSettingSerialPerimeters()
 {
   Console.println(F("== Perimeter =="));
 
-  printSettingNameColonValue(m_perimeters.getSettings()->use);
+  printSettingNameColonValue(m_perimeter.getSettings()->use);
 
   printSettingNameColonValue(m_settings.perimeterTriggerTimeout);
   printSettingNameColonValue(m_settings.perimeterOutRollTimeMax);
@@ -567,8 +556,7 @@ void Robot::printSettingSerialPerimeters()
   Console.print(F("trackRevTime : "));
   Console.println(m_perimeterTrackRevTime);
 
-  printSettingSerialPid(F("pid."),
-      m_perimeters.m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)].m_pid.getSettings());
+  printSettingSerialPid(F("pid."), m_perimeter.m_pid.getSettings());
 
   Console.print(F("trackingPerimeterTransitionTimeOut : "));
   Console.println(m_trackingPerimeterTransitionTimeOut);
@@ -909,7 +897,7 @@ void Robot::wheelControl_perimeter()
   {
     // Normal perimeter tracking
 
-    Pid* pid_p = &m_perimeters.m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)].m_pid;
+    Pid* pid_p = &m_perimeter.m_pid;
     float y = pid_p->compute(sign(m_perimeterMag));
 
     m_wheels.setSpeed(m_speed);
@@ -1107,15 +1095,11 @@ void Robot::setup()
   m_rc.initSerial(PFOD_BAUDRATE);
 
   // ------ perimeter ---------------------------------
-  m_perimeters.m_perimeterArray_p[LEFT].setup(PIN_PERIMETER_LEFT);
-  m_perimeters.m_perimeterArray_p[RIGHT].setup(PIN_PERIMETER_RIGHT);
+  m_perimeter.setup(PIN_PERIMETER_LEFT);
+  m_perimeter.setup(PIN_PERIMETER_RIGHT);
 
-  m_perimeters.m_perimeterArray_p[LEFT].m_pid.setup(
-      51.0, 12.5, 0.8, -100.0, 100.0, 100.0, 0.1, 100);
-  m_perimeters.m_perimeterArray_p[LEFT].m_pid.setSetPoint(0);
-  //m_perimeters.m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::RIGHT)].m_pid.setup(
-  //    51.0, 12.5, 0.8, -100.0, 100.0, 100.0, 0.1, 100);
-
+  m_perimeter.m_pid.setup(51.0, 12.5, 0.8, -100.0, 100.0, 100.0, 0.1, 100);
+  m_perimeter.m_pid.setSetPoint(0);
 
   // ------  IMU (compass/accel/gyro) ----------------------
   m_imu.m_pid[Imu::DIR].setup(5.0, 1.0, 1.0, -100.0, 100.0, 100.0, 0.1, 20);
@@ -1273,10 +1257,10 @@ void Robot::printOdometer()
 
 void Robot::printInfo_perimeter(Stream &s)
 {
-  m_perimeters.printInfo(s);
+  m_perimeter.printInfo(s);
   Streamprint(s, "  in %-2d  cnt %-4d  on %-1d\r\n", m_perimeterInside,
               m_perimeterCounter,
-              !m_perimeters.m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)].signalTimedOut());
+              !m_perimeter.signalTimedOut());
 }
 
 void Robot::printInfo_odometer(Stream &s)
@@ -1310,7 +1294,7 @@ void Robot::printInfo_sensorValues(Stream &s)
   Streamprint(s, "pit %3d ", m_imu.getPitchDegInt());
   Streamprint(s, "rol %3d ", m_imu.getRollDeg());
 
-  if (m_perimeters.isUsed())
+  if (m_perimeter.isUsed())
   {
     Streamprint(s, "per %3d ", m_perimeterInside);
   }
@@ -1346,7 +1330,7 @@ void Robot::printInfo_sensorCounters(Stream &s)
 
   //Streamprint(s, "per %3d ", perimeterLeft);
 
-  if (m_perimeters.isUsed())
+  if (m_perimeter.isUsed())
   {
     Streamprint(s, "per %3d ", m_perimeterCounter);
   }
@@ -1816,7 +1800,7 @@ void Robot::checkButton()
 
           case 4:
             // start normal without perimeter
-            m_perimeters.getSettings()->use.value = false;
+            m_perimeter.getSettings()->use.value = false;
             setNextState(StateMachine::STATE_FORWARD);
             break;
 
@@ -1894,13 +1878,10 @@ void Robot::measureCutterMotorRpm()
 
 void Robot::readPerimeters()
 {
-  unsigned long curMillis = millis();
+  uint32_t curMillis = millis();
 
-  auto perimeterLeft_p = &m_perimeters.m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)];
-  //auto perimeterRight_p = &m_perimeters.m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::RIGHT)];
-
-  m_perimeterMag = perimeterLeft_p->calcMagnitude();
-  bool inside = perimeterLeft_p->isInside();
+  m_perimeterMag = m_perimeter.calcMagnitude();
+  bool inside = m_perimeter.isInside();
 
   if (inside != m_perimeterInside)
   {
@@ -1925,7 +1906,7 @@ void Robot::readPerimeters()
     }
   }
 
-  if (perimeterLeft_p->signalTimedOut())
+  if (m_perimeter.signalTimedOut())
   {
     if (!m_stateMachine.isCurrentState(StateMachine::STATE_OFF) &&
         !m_stateMachine.isCurrentState(StateMachine::STATE_MANUAL) &&
@@ -2174,7 +2155,7 @@ void Robot::checkBattery()
       setNextState(StateMachine::STATE_OFF);
     }
     else if (m_battery.isVoltageBelowGoHomeLimit() &&
-             m_perimeters.isUsed() &&
+             m_perimeter.isUsed() &&
              !m_stateMachine.isCurrentState(StateMachine::STATE_OFF) &&
              !m_stateMachine.isCurrentState(StateMachine::STATE_MANUAL) &&
              !m_stateMachine.isCurrentState(StateMachine::STATE_STATION) &&
@@ -2418,7 +2399,7 @@ void Robot::checkTimer()
     if (stopTimerTriggered && m_stateMachine.isCurrentState(StateMachine::STATE_FORWARD))
     {
       Console.println(F("Timer stop triggered"));
-      if (m_perimeters.isUsed())
+      if (m_perimeter.isUsed())
       {
         setNextState(StateMachine::STATE_PERI_FIND);
       }
@@ -2628,7 +2609,7 @@ void Robot::checkPerimeterFind()
 {
   if (m_stateMachine.isCurrentState(StateMachine::STATE_PERI_FIND))
   {
-    if (m_perimeters.m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)].isInside())
+    if (m_perimeter.isInside())
     {
       if (m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet !=
           m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmSet)
@@ -2669,7 +2650,7 @@ void Robot::checkRain()
   {
     Console.println(F("RAIN"));
 
-    if (m_perimeters.isUsed())
+    if (m_perimeter.isUsed())
     {
       setNextState(StateMachine::STATE_PERI_FIND);
     }
@@ -3237,7 +3218,7 @@ void Robot::tasks_50ms()
   checkButton();
   readMotorCurrents();
 
-  if (m_perimeters.isUsed())
+  if (m_perimeter.isUsed())
   {
     readPerimeters();
   }
@@ -3268,7 +3249,7 @@ void Robot::tasks_100ms()
   {
     wheelControl_imuRoll();
   }
-  else if (m_perimeters.isUsed() &&
+  else if (m_perimeter.isUsed() &&
            m_stateMachine.isCurrentState(StateMachine::STATE_PERI_TRACK))
   {
     wheelControl_perimeter();

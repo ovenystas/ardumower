@@ -392,6 +392,11 @@ void AdcManager::restart(const uint8_t pin)
   captureComplete[pin - A0] = false;
 }
 
+bool AdcManager::isCaptureComplete(const uint8_t pin)
+{
+  return captureComplete[pin - A0];
+}
+
 bool AdcManager::isCaptureCompleteCh(const uint8_t ch)
 {
   return captureComplete[ch];

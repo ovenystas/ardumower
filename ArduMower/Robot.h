@@ -68,6 +68,7 @@ extern Robot robot;
 #define DROPSENSORS_NUM 2
 #define LAWNSENSORS_NUM 2
 #define SONARS_NUM 3
+#define PERIMETERSENSORS_NUM 2
 
 // error types
 enum ErrorE
@@ -292,8 +293,6 @@ private:
       Sonars& sonars);
   void loadSaveUserSettingsPerimeter(bool readflag, uint16_t& addr,
       Perimeter& perimeter);
-  void loadSaveUserSettingsPerimeters(bool readflag, uint16_t& addr,
-      Perimeters& perimeters);
   void loadSaveUserSettingsBattery(bool readflag, uint16_t& addr,
       Battery& battery);
   void loadSaveUserSettingsDropSensors(bool readflag, uint16_t& addr,
@@ -470,7 +469,7 @@ public:
   float m_imuRollHeading {};      // roll heading  (IMU)
 
   // ------- perimeter state --------------------------
-  Perimeters m_perimeters;
+  Perimeter m_perimeter {};
   bool m_perimeterUse { false }; // use perimeter?
   int m_trackingErrorTimeOut { 10000 };
   int m_trackingPerimeterTransitionTimeOut { 2000 };

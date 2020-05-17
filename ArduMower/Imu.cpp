@@ -30,9 +30,6 @@
 #define ADDR 600
 #define MAGIC 6
 
-#define roundDivision(a, b) \
-  ((a) >= 0 ? ((a) + (b) / 2) / (b) : ((a) - (b) / 2) / (b))
-
 void Imu::loadCalibrationData(void)
 {
   uint8_t magic = EEPROM.read(ADDR);

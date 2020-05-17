@@ -1,12 +1,13 @@
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
 
-// Get access to private class members in SUT
-#define private public
-#include "Imu.h"
 #include "HardwareSerial.h"
 #include "Drivers.h"
 #include "BuzzerMock.h"
+
+// Get access to private class members in SUT
+#define private public
+#include "Imu.h"
 
 // ImuInit ------------------------------------------------------------
 

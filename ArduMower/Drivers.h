@@ -35,6 +35,10 @@
 #define STEPPER_ADDRESS 0xBB
 #define DS1307_ADDRESS B1101000
 
+// Utils
+#define roundDivision(a, b) \
+  ((a) >= 0 ? ((a) + (b) / 2) / (b) : ((a) - (b) / 2) / (b))
+
 // ---------- date time --------------------------------------
 
 extern const char *dayOfWeek[];

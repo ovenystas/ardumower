@@ -84,10 +84,7 @@ class AdcManager
 
     // read the median value of samples
     int16_t readMedian(const uint8_t pin);
-    bool isCaptureComplete(const uint8_t pin)
-    {
-      return isCaptureCompleteCh(static_cast<uint8_t>(pin - A0));
-    }
+    bool isCaptureComplete(const uint8_t pin);
 
     // statistics only
     uint8_t getCapturedChannels();

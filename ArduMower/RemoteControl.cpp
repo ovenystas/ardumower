@@ -923,7 +923,7 @@ void RemoteControl::sendPerimeterMenu(bool update)
   }
 
   Bluetooth.print(F("|e00~Use "));
-  sendYesNo(m_robot_p->m_perimeters.isUsed());
+  sendYesNo(m_robot_p->m_perimeter.isUsed());
 
   Bluetooth.println(F("|e02~Value"));
   Bluetooth.print(m_robot_p->getPerimeterMag());
@@ -937,8 +937,7 @@ void RemoteControl::sendPerimeterMenu(bool update)
     Bluetooth.print(" (outside)");
   }
 
-  auto perimeterSettings_p = m_robot_p->m_perimeters.
-      m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)].getSettings();
+  auto perimeterSettings_p = m_robot_p->m_perimeter.getSettings();
   auto robotSettings_p = m_robot_p->getSettings();
 
   sendSettingSlider("e08", perimeterSettings_p->timedOutIfBelowSmag);
@@ -963,8 +962,7 @@ void RemoteControl::sendPerimeterMenu(bool update)
   sendSlider("e12", F("Track error timeout"),
              m_robot_p->m_trackingErrorTimeOut, "", 1, 10000);
 
-  sendPIDSlider("e07", F("Track"), m_robot_p->m_perimeters.
-      m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)].m_pid);
+  sendPIDSlider("e07", F("Track"), m_robot_p->m_perimeter.m_pid);
 
   sendSettingYesNo("e09", perimeterSettings_p->useDifferentialPerimeterSignal);
 
@@ -978,13 +976,12 @@ void RemoteControl::sendPerimeterMenu(bool update)
 
 void RemoteControl::processPerimeterMenu(String pfodCmd)
 {
-  auto perimeterSettings_p = m_robot_p->m_perimeters.
-      m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)].getSettings();
+  auto perimeterSettings_p = m_robot_p->m_perimeter.getSettings();
   auto robotSettings_p = m_robot_p->getSettings();
 
   if (pfodCmd == "e00")
   {
-    TOGGLE(m_robot_p->m_perimeters.getSettings()->use.value);
+    TOGGLE(m_robot_p->m_perimeter.getSettings()->use.value);
   }
   else if (pfodCmd.startsWith("e04"))
   {
@@ -1012,8 +1009,7 @@ void RemoteControl::processPerimeterMenu(String pfodCmd)
   }
   else if (pfodCmd.startsWith("e07"))
   {
-    processPIDSlider(pfodCmd, "e07", m_robot_p->m_perimeters.
-        m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)].m_pid);
+    processPIDSlider(pfodCmd, "e07", m_robot_p->m_perimeter.m_pid);
   }
   else if (pfodCmd.startsWith("e08"))
   {
@@ -2161,7 +2157,7 @@ void RemoteControl::run()
       Bluetooth.print(",");
     }
 
-    Bluetooth.print(m_robot_p->m_perimeters.m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)].isInside());
+    Bluetooth.print(m_robot_p->m_perimeter.isInside());
     Bluetooth.print(",");
     Bluetooth.print(m_robot_p->getPerimeterMag());
     Bluetooth.print(",");
@@ -2324,7 +2320,7 @@ void RemoteControl::run()
         Bluetooth.print(m_robot_p->m_sonars.m_sonarArray_p[i].getDistance_cm());
         Bluetooth.print(",");
       }
-      Bluetooth.print(m_robot_p->m_perimeters.m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)].isInside());
+      Bluetooth.print(m_robot_p->m_perimeter.isInside());
       Bluetooth.print(",");
       Bluetooth.print(m_robot_p->m_lawnSensors.isDetected());
       Bluetooth.print(",");
@@ -2355,15 +2351,15 @@ void RemoteControl::run()
         Bluetooth.print(",");
         Bluetooth.print(m_robot_p->getPerimeterMag());
         Bluetooth.print(",");
-        Bluetooth.print(m_robot_p->m_perimeters.m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)].getSmoothMagnitude());
+        Bluetooth.print(m_robot_p->m_perimeter.getSmoothMagnitude());
         Bluetooth.print(",");
-        Bluetooth.print(m_robot_p->m_perimeters.m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)].isInside());
+        Bluetooth.print(m_robot_p->m_perimeter.isInside());
         Bluetooth.print(",");
         Bluetooth.print(m_robot_p->getPerimeterCounter());
         Bluetooth.print(",");
-        Bluetooth.print(!m_robot_p->m_perimeters.m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)].signalTimedOut());
+        Bluetooth.print(!m_robot_p->m_perimeter.signalTimedOut());
         Bluetooth.print(",");
-        Bluetooth.println(m_robot_p->m_perimeters.m_perimeterArray_p[static_cast<uint8_t>(PerimeterE::LEFT)].getFilterQuality());
+        Bluetooth.println(m_robot_p->m_perimeter.getFilterQuality());
         m_perimeterCaptureIdx++;
       }
     }

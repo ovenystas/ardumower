@@ -37,22 +37,17 @@
 #include <Arduino.h>
 #include "Pid.h"
 #include "Setting.h"
-
-enum class PerimeterE
-{
-  LEFT,
-  RIGHT,
-  END
-};
+#include "CrossCorrelationFilter.h"
+#include "Drivers.h"
 
 struct PerimeterSettings
 {
-  Setting<unsigned int> timedOutIfBelowSmag;
+  Setting<bool> use;                // Use the perimeter sensors or not
+  Setting<uint16_t> timedOutIfBelowSmag;
   Setting<bool> useDifferentialPerimeterSignal;
   Setting<bool> swapCoilPolarity;
-  Setting<unsigned int> timeOutSecIfNotInside;
+  Setting<uint16_t> timeOutSecIfNotInside;
 };
-
 
 class Perimeter
 {
@@ -63,10 +58,13 @@ public:
     setup(idxPin);
   }
 
-  // set ADC pins
   void setup(const uint8_t idxPin);
 
-  // get perimeter magnitude
+  bool isUsed()
+  {
+    return m_use;
+  }
+
   int16_t calcMagnitude();
 
   int16_t getMagnitude()
@@ -76,11 +74,9 @@ public:
 
   int16_t getSmoothMagnitude()
   {
-    return (int16_t)m_smoothMag;
+    return static_cast<int16_t>(round(m_smoothMag));
   }
 
-  // inside perimeter (true) or outside (false)?
-  // perimeter signal timed out? (e.g. due to broken wire)
   bool signalTimedOut();
 
   float getFilterQuality()
@@ -99,16 +95,6 @@ public:
 
   void matchedFilter();
 
-  int16_t corrFilter(
-      const int8_t* H_p,
-      const uint8_t subsample,
-      const uint8_t M,
-      const uint8_t Hsum,
-      const int8_t* ip_p,
-      const uint8_t nPts,
-      float &quality,
-      bool print);
-
   PerimeterSettings* getSettings()
   {
     return &m_settings;
@@ -116,6 +102,7 @@ public:
 
   void setSettings(PerimeterSettings* settings_p)
   {
+    m_settings.use.value = settings_p->use.value;
     m_settings.timedOutIfBelowSmag.value = settings_p->timedOutIfBelowSmag.value;
     m_settings.useDifferentialPerimeterSignal.value = settings_p->useDifferentialPerimeterSignal.value;
     m_settings.swapCoilPolarity.value = settings_p->swapCoilPolarity.value;
@@ -141,8 +128,14 @@ private:
   int16_t m_sumMaxTmp {};
   int16_t m_sumMinTmp {};
 
+  uint8_t m_callCounter = 0;
+  uint32_t m_callCounter2 = 0;
+
+  CrossCorrelationFilter m_corrFilter { Console };
+
   PerimeterSettings m_settings
   {
+    { "Use", false },
     { "Timeout if below smag", "", 300, 0, 2000 },
     { "Use differential signal", true },
     { "Swap coil polarity", false },
@@ -150,46 +143,9 @@ private:
   };
 
   // Shorter convenient variables for settings variables
-  unsigned int& m_timedOutIfBelowSmag = m_settings.timedOutIfBelowSmag.value;
+  bool& m_use = m_settings.use.value;
+  uint16_t& m_timedOutIfBelowSmag = m_settings.timedOutIfBelowSmag.value;
   bool& m_useDifferentialPerimeterSignal = m_settings.useDifferentialPerimeterSignal.value;
   bool& m_swapCoilPolarity = m_settings.swapCoilPolarity.value;
-  unsigned int& m_timeOutSecIfNotInside = m_settings.timeOutSecIfNotInside.value;
-};
-
-struct PerimetersSettings
-{
-  Setting<bool> use;                // Use the perimeter sensors or not
-};
-
-class Perimeters
-{
-public:
-  bool isUsed()
-  {
-    return m_use;
-  }
-
-  void printInfo(Stream &s);
-
-  PerimetersSettings* getSettings()
-  {
-    return &m_settings;
-  }
-
-  void setSettings(PerimetersSettings* settings_p)
-  {
-    m_settings.use.value = settings_p->use.value;
- }
-
-public:
-  Perimeter* m_perimeterArray_p;
-
-private:
-  PerimetersSettings m_settings
-  {
-    { "Use", false }
-  };
-
-  // Shorter convenient variables for settings variables
-  bool& m_use = m_settings.use.value;
+  uint16_t& m_timeOutSecIfNotInside = m_settings.timeOutSecIfNotInside.value;
 };
