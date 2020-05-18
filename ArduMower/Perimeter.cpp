@@ -162,7 +162,7 @@ void Perimeter::matchedFilter()
   if (m_callCounter2 >= 200UL)
   {
     m_callCounter2 = 0;
-    //print = true;
+    print = true;
   }
 
   m_mag = m_corrFilter.update(

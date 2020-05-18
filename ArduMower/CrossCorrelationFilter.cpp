@@ -68,35 +68,26 @@ int16_t CrossCorrelationFilter::update(
   for (uint8_t j = 0; j < nPts; j++)
   {
     int16_t sum = 0;
-    int8_t* Hi_p = (int8_t*)H_p;
     uint8_t ss = 0;
-    int8_t* ipi_p = (int8_t*)ip_p;
 
     // for each filter coeffs
     for (uint8_t i = 0; i < Ms; i++)
     {
       sum = static_cast<int16_t>(sum +
-          static_cast<int16_t>(*Hi_p) *
-          static_cast<int16_t>(*ipi_p));
+          static_cast<int16_t>(*H_p) *
+          static_cast<int16_t>(*ip_p));
 
       ss++;
       if (ss == subsample)
       {
         ss = 0;
-        Hi_p++; // next filter coeffs
+        H_p++; // next filter coeffs
       }
-      ipi_p++;
+      ip_p++;
     }
 
-    if (sum > sumMax)
-    {
-      sumMax = sum;
-    }
-
-    if (sum < sumMin)
-    {
-      sumMin = sum;
-    }
+    sumMax = max(sumMax, sum);
+    sumMin = min(sumMin, sum);
 
     ip_p++;
   }
@@ -128,12 +119,12 @@ int16_t CrossCorrelationFilter::update(
   // compute ratio min/max
   if (sumMax > -sumMin)
   {
-    quality = (float)sumMax / (float)-sumMin;
+    quality = static_cast<float>(sumMax) / static_cast<float>(-sumMin);
 
     if (print)
     {
       m_outStream.print(F(" quality="));
-      m_outStream.print((int16_t)(quality * 100));
+      m_outStream.print(static_cast<int16_t>(quality * 100));
       m_outStream.print(F(" mag="));
       m_outStream.println(sumMax);
     }
