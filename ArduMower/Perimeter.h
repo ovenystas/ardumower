@@ -46,7 +46,7 @@ struct PerimeterSettings
   Setting<uint16_t> timedOutIfBelowSmag;
   Setting<bool> useDifferentialPerimeterSignal;
   Setting<bool> swapCoilPolarity;
-  Setting<uint16_t> timeOutSecIfNotInside;
+  Setting<uint8_t> timeOutSecIfNotInside;
 };
 
 class Perimeter
@@ -147,5 +147,5 @@ private:
   uint16_t& m_timedOutIfBelowSmag = m_settings.timedOutIfBelowSmag.value;
   bool& m_useDifferentialPerimeterSignal = m_settings.useDifferentialPerimeterSignal.value;
   bool& m_swapCoilPolarity = m_settings.swapCoilPolarity.value;
-  uint16_t& m_timeOutSecIfNotInside = m_settings.timeOutSecIfNotInside.value;
+  uint8_t& m_timeOutSecIfNotInside = m_settings.timeOutSecIfNotInside.value;
 };

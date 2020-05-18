@@ -34,33 +34,33 @@
 // more motor driver friendly signal (receiver)
 const int8_t sigcode_norm[] =
 {
-  1, -1, 0, 0, 0, 1, -1, 0, 0, 0,
-  -1, 1, 0, 0, 0, 1, -1, 0, 0, 0
+  1, -1, 0, 0, 0, 1, -1, 0, 0, 0, -1, 1, 0, 0, 0, 1, -1, 0, 0, 0
 };
 #else
-#if !PERIMETER_USE_BARKER_CODE
+# if PERIMETER_USE_BARKER_CODE
+const int8_t sigcode_norm[]  = { 1,  1,  1, -1, -1, -1,  1, -1, -1,  1, -1 };
+const uint8_t hSum_norm = 44;
+//const int8_t sigcode_diff[]  = { 1,  0,  0, -1,  0,  0,  1, -1,  0,  1, -1 };
+const int8_t sigcode_diff[] =
+{
+    1,  0,  0,  0,  0,  0, -1,  0,  0,  0,  0,  0,  1,  0, -1,  0,  0,  0,  1,  0, -1,  0
+};
+const uint8_t hSum_diff = 12;
+# else
 // http://grauonline.de/alexwww/ardumower/filter/filter.html
 // "pseudonoise4_pw" signal
 // if using reconstructed sender signal, use this
 const int8_t sigcode_norm[] =
 {
-  1, 1, -1, -1, 1, -1, 1, -1, -1, 1, -1, 1,
-  1, -1, -1, 1, -1, -1, 1, -1, -1, 1, 1, -1
+  1, 1, -1, -1, 1, -1, 1, -1, -1, 1, -1, 1, 1, -1, -1, 1, -1, -1, 1, -1, -1, 1, 1, -1
 };
 // "pseudonoise4_pw" signal (differential)
 // if using the coil differential signal, use this
 const int8_t sigcode_diff[] =
 {
-  1, 0, -1, 0, 1, -1, 1, -1, 0, 1, -1, 1,
-  0, -1, 0, 1, -1, 0, 1, -1, 0, 1, 0, -1
+  1, 0, -1, 0, 1, -1, 1, -1, 0, 1, -1, 1, 0, -1, 0, 1, -1, 0, 1, -1, 0, 1, 0, -1
 };
-#else
-const int8_t sigcode_norm[]  = { 1,  1,  1, -1, -1, -1,  1, -1, -1,  1, -1 };
-const uint8_t hSum_norm = 44;
-//const int8_t sigcode_diff[]  = { 1,  0,  0, -1,  0,  0,  1, -1,  0,  1, -1 };
-const int8_t sigcode_diff[] = { 1,  0,  0,  0,  0,  0, -1,  0,  0,  0,  0,  0,  1,  0, -1,  0,  0,  0,  1,  0, -1,  0 };
-const uint8_t hSum_diff = 12;
-#endif
+# endif
 #endif
 
 void Perimeter::setup(const uint8_t idxPin)
@@ -71,21 +71,10 @@ void Perimeter::setup(const uint8_t idxPin)
 
   switch (ADCMan.getSampleRate())
   {
-    case SRATE_9615:
-      m_subSample = 1;
-      break;
-
-    case SRATE_19231:
-      m_subSample = 2;
-      break;
-
-    case SRATE_38462:
-      m_subSample = 4;
-      break;
-
-    default:
-      m_subSample = 0;
-      break;
+    case SRATE_9615:  m_subSample = 1; break;
+    case SRATE_19231: m_subSample = 2; break;
+    case SRATE_38462: m_subSample = 4; break;
+    default:          m_subSample = 0; break;
   }
 
   // Use max. 255 samples and multiple of signal size
@@ -226,7 +215,8 @@ bool Perimeter::signalTimedOut()
     return true;
   }
 
-  if (millis() - m_lastInsideTime >= m_timeOutSecIfNotInside * 1000)
+  if (millis() - m_lastInsideTime >=
+      static_cast<uint16_t>(m_timeOutSecIfNotInside) * 1000u)
   {
     return true;
   }
