@@ -67,49 +67,46 @@ public:
   }
 
   // lat/long in hundred thousands of a degree and age of fix in milliseconds
-  void get_position(long* latitude, long* longitude,
-      unsigned long* fix_age = 0);
+  void get_position(int32_t* latitude, int32_t* longitude,
+      uint32_t* fix_age = 0);
 
   // date as ddmmyy, time as hhmmsscc, and age in milliseconds
-  void get_datetime(unsigned long* date, unsigned long* time,
-      unsigned long* age = 0);
+  void get_datetime(uint32_t* date, uint32_t* time, uint32_t* age = 0);
 
   // signed altitude in centimeters (from GPGGA sentence)
-  long altitude() const
+  int32_t altitude() const
   {
     return m_altitude;
   }
 
   // course in last full GPRMC sentence in 100th of a degree
-  unsigned long course() const
+  uint32_t course() const
   {
     return m_course;
   }
 
   // speed in last full GPRMC sentence in 100ths of a knot
-  unsigned long speed() const
+  uint32_t speed() const
   {
     return m_speed;
   }
 
   // satellites used in last full GPGGA sentence
-  unsigned short satellites() const
+  uint16_t satellites() const
   {
     return m_numsats;
   }
 
   // horizontal dilution of precision in 100ths
-  unsigned long hdop() const
+  uint32_t hdop() const
   {
     return m_hdop;
   }
 
-  void f_get_position(float* latitude, float* longitude,
-      unsigned long* fix_age = 0);
+  void f_get_position(float* latitude, float* longitude, uint32_t* fix_age = 0);
 
-  void crack_datetime(int* year, byte* month, byte* day, byte* hour,
-      byte* minute, byte* second, byte* hundredths = 0, unsigned long* fix_age =
-          0);
+  void crack_datetime(int16_t* year, byte* month, byte* day, byte* hour,
+      byte* minute, byte* second, byte* hundredths = 0, uint32_t* fix_age = 0);
 
   float f_altitude();
   float f_course();
@@ -126,8 +123,7 @@ public:
   static const char* cardinal(float course);
 
 #ifndef _GPS_NO_STATS
-  void stats(unsigned long* chars, unsigned short* good_sentences,
-      unsigned short* failed_cs);
+  void stats(uint32_t *chars, uint16_t *sentences, uint16_t *failed_cs);
 #endif
 
 private:
@@ -139,45 +135,56 @@ private:
   };
 
   // properties
-  unsigned long m_time, m_newTime;
-  unsigned long m_date, m_newDate;
-  long m_latitude, m_newLatitude;
-  long m_longitude, m_newLongitude;
-  long m_altitude, m_newAltitude;
-  unsigned long m_speed, m_newSpeed;
-  unsigned long m_course, m_newCourse;
-  unsigned long m_hdop, m_newHdop;
-  unsigned short m_numsats, m_newNumsats;
+  uint32_t m_time;
+  uint32_t m_newTime;
+  uint32_t m_date;
+  uint32_t m_newDate;
+  int32_t m_latitude;
+  int32_t m_newLatitude;
+  int32_t m_longitude;
+  int32_t m_newLongitude;
+  int32_t m_altitude;
+  int32_t m_newAltitude;
+  uint32_t m_speed;
+  uint32_t m_newSpeed;
+  uint32_t m_course;
+  uint32_t m_newCourse;
+  uint32_t m_hdop;
+  uint32_t m_newHdop;
+  uint16_t m_numsats;
+  uint16_t m_newNumsats;
 
-  unsigned long m_lastTimeFix, m_newTimeFix;
-  unsigned long m_lastPositionFix, m_newPositionFix;
+  uint32_t m_lastTimeFix;
+  uint32_t m_newTimeFix;
+  uint32_t m_lastPositionFix;
+  uint32_t m_newPositionFix;
 
   // parsing state variables
-  byte m_parity;
+  uint8_t m_parity;
   bool m_isChecksumTerm;
   char m_term[15];
-  byte m_sentenceType;
-  byte m_termNumber;
-  byte m_termOffset;
+  uint8_t m_sentenceType;
+  uint8_t m_termNumber;
+  uint8_t m_termOffset;
   bool m_gpsDataGood;
 
 #ifndef _GPS_NO_STATS
   // statistics
-  unsigned long m_encodedCharacters;
-  unsigned short m_goodSentences;
-  unsigned short m_failedChecksum;
-  unsigned short m_passedChecksum;
+  uint32_t m_encodedCharacters;
+  uint16_t m_goodSentences;
+  uint16_t m_failedChecksum;
+  uint16_t m_passedChecksum;
 #endif
 
   // internal utilities
-  int from_hex(char a);
-  unsigned long parse_decimal();
-  unsigned long parse_degrees();
+  int16_t from_hex(char a);
+  uint32_t parse_decimal();
+  uint32_t parse_degrees();
   bool term_complete();
   bool gpsisdigit(char c)
   {
     return c >= '0' && c <= '9';
   }
-  long gpsatol(const char *str);
-  int gpsstrcmp(const char* str1, const char* str2);
+  int32_t gpsatol(const char *str);
+  int16_t gpsstrcmp(const char* str1, const char* str2);
 };

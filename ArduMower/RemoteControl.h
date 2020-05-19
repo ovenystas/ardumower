@@ -62,7 +62,7 @@ class RemoteControl
 public:
   RemoteControl(Robot* robot_p) : m_robot_p(robot_p) {}
 
-  void initSerial(int baudrate);
+  void initSerial(int16_t baudrate);
   bool readSerial();
   void run();
 
@@ -152,18 +152,18 @@ private:
   void processInfoMenu(String pfodCmd);
 
   // timer
-  void sendTimerDetailMenu(int timerIdx, bool update);
+  void sendTimerDetailMenu(int16_t timerIdx, bool update);
   void processTimerDetailMenu(String pfodCmd);
   void sendTimerMenu(bool update);
   void processTimerMenu(String pfodCmd);
 
 private:
-  Robot* m_robot_p { nullptr };
-  bool m_pfodCmdComplete { false };
+  Robot* m_robot_p {};
+  bool m_pfodCmdComplete {};
   String m_pfodCmd { "" };
   PfodState m_pfodState { PfodState::OFF };
-  int m_testmode {};
-  unsigned long m_nextPlotTime {};
+  int16_t m_testmode {};
+  uint32_t m_nextPlotTime {};
   int8_t m_perimeterCapture[32];
-  int m_perimeterCaptureIdx {};
+  int16_t m_perimeterCaptureIdx {};
 };

@@ -828,7 +828,7 @@ void Robot::setMotorPWM(int pwm,
 //   http://wiki.ardumower.de/images/a/a5/Motor_polarity_switch_protection.png
 // - optional: ensures that the motors (and gears) are not switched to 0%
 //   (or 100%) too fast (motorAccel)
-void Robot::setMotorPWMs(const int pwmLeft, int const pwmRight,
+void Robot::setMotorPWMs(const int16_t pwmLeft, int16_t const pwmRight,
     const bool useAccel)
 {
 //  Console.print("setPwm: ");
@@ -866,7 +866,7 @@ void Robot::wheelControl_imuRoll()
 // PID controller: track perimeter
 void Robot::wheelControl_perimeter()
 {
-  unsigned long curMillis = millis();
+  uint32_t curMillis = millis();
   if ((curMillis > m_stateMachine.getStateStartTime() + 5000) &&
       (curMillis > m_perimeterLastTransitionTime + m_trackingPerimeterTransitionTimeOut))
   {
@@ -996,9 +996,9 @@ void Robot::checkOdometerFaults()
 
   if (err[LEFT])
   {
-    Console.print("Left odometer error: PWM=");
+    Console.print(F("Left odometer error: PWM="));
     Console.print(m_wheels.m_wheel[Wheel::LEFT].m_motor.getPwmCur());
-    Console.print("\tRPM=");
+    Console.print(F("\tRPM="));
     Console.println(m_wheels.m_wheel[Wheel::LEFT].m_encoder.getWheelRpmCurr());
     incErrorCounter(ERR_ODOMETER_LEFT);
     setNextState(StateMachine::STATE_ERROR);
@@ -1006,9 +1006,9 @@ void Robot::checkOdometerFaults()
 
   if (err[RIGHT])
   {
-    Console.print("Right odometer error: PWM=");
+    Console.print(F("Right odometer error: PWM="));
     Console.print(m_wheels.m_wheel[Wheel::RIGHT].m_motor.getPwmCur());
-    Console.print("\tRPM=");
+    Console.print(F("\tRPM="));
     Console.println(m_wheels.m_wheel[Wheel::RIGHT].m_encoder.getWheelRpmCurr());
     incErrorCounter(ERR_ODOMETER_RIGHT);
     setNextState(StateMachine::STATE_ERROR);
@@ -1251,16 +1251,15 @@ void Robot::printOdometer()
 {
   Console.print(F("ODO,"));
   Console.print(m_odometer.getX());
-  Console.print(", ");
+  Console.print(F(", "));
   Console.println(m_odometer.getY());
 }
 
 void Robot::printInfo_perimeter(Stream &s)
 {
   m_perimeter.printInfo(s);
-  Streamprint(s, "  in %-2d  cnt %-4d  on %-1d\r\n", m_perimeterInside,
-              m_perimeterCounter,
-              !m_perimeter.signalTimedOut());
+  Streamprint(s, "  in %-2d  cnt %-4d  on %-1d\r\n",
+      m_perimeterInside, m_perimeterCounter, !m_perimeter.signalTimedOut());
 }
 
 void Robot::printInfo_odometer(Stream &s)
@@ -1273,13 +1272,13 @@ void Robot::printInfo_odometer(Stream &s)
 void Robot::printInfo_sensorValues(Stream &s)
 {
   Streamprint(s, "sen %4d %4d %4d ",
-              m_wheels.m_wheel[Wheel::LEFT].m_motor.getPowerMeas(),
-              m_wheels.m_wheel[Wheel::RIGHT].m_motor.getPowerMeas(),
-              m_cutter.m_motor.getPowerMeas());
+      m_wheels.m_wheel[Wheel::LEFT].m_motor.getPowerMeas(),
+      m_wheels.m_wheel[Wheel::RIGHT].m_motor.getPowerMeas(),
+      m_cutter.m_motor.getPowerMeas());
 
   Streamprint(s, "bum %4d %4d ",
-              m_bumperArray[LEFT].isHit(),
-              m_bumperArray[RIGHT].isHit());
+      m_bumperArray[LEFT].isHit(),
+      m_bumperArray[RIGHT].isHit());
 
   Streamprint(s, "dro %4d %4d ",
       m_dropSensorArray[LEFT].isDetected(),
@@ -1302,21 +1301,21 @@ void Robot::printInfo_sensorValues(Stream &s)
   if (m_lawnSensors.isUsed())
   {
     Streamprint(s, "lawn %3d %3d ",
-                (int)m_lawnSensorArray[FRONT].getValue(),
-                (int)m_lawnSensorArray[BACK].getValue());
+        static_cast<int16_t>(m_lawnSensorArray[FRONT].getValue()),
+        static_cast<int16_t>(m_lawnSensorArray[BACK].getValue()));
   }
 }
 
 void Robot::printInfo_sensorCounters(Stream &s)
 {
   Streamprint(s, "sen %4d %4d %4d ",
-              m_wheels.m_wheel[Wheel::LEFT].m_motor.getOverloadCounter(),
-              m_wheels.m_wheel[Wheel::RIGHT].m_motor.getOverloadCounter(),
-              m_cutter.m_motor.getOverloadCounter());
+      m_wheels.m_wheel[Wheel::LEFT].m_motor.getOverloadCounter(),
+      m_wheels.m_wheel[Wheel::RIGHT].m_motor.getOverloadCounter(),
+      m_cutter.m_motor.getOverloadCounter());
 
   Streamprint(s, "bum %4d %4d ",
-              m_bumperArray[LEFT].getCounter(),
-              m_bumperArray[RIGHT].getCounter());
+      m_bumperArray[LEFT].getCounter(),
+      m_bumperArray[RIGHT].getCounter());
 
   Streamprint(s, "dro %4d %4d ",
       m_dropSensorArray[LEFT].getCounter(),
@@ -1353,7 +1352,8 @@ void Robot::printInfo(Stream &s)
     return;
   }
 
-  Streamprint(s, "t%4u ", (millis() - m_stateMachine.getStateStartTime()) / 1000);
+  Streamprint(s, "t%4u ",
+      (millis() - m_stateMachine.getStateStartTime()) / 1000);
 
   Streamprint(s, "l%5u ", m_loopsPerSec);
 
@@ -1378,9 +1378,9 @@ void Robot::printInfo(Stream &s)
       printInfo_odometer(s);
     }
     Streamprint(s, "spd %4d %4d %4d ",
-                m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet,
-                m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmSet,
-                m_cutter.m_motor.getRpmMeas());
+        m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet,
+        m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmSet,
+        m_cutter.m_motor.getRpmMeas());
 
     if (m_consoleMode == CONSOLE_SENSOR_VALUES)
     {
@@ -1429,9 +1429,9 @@ void Robot::printMenu()
   Console.println();
 }
 
-void Robot::delayInfo(const int ms)
+void Robot::delayInfo(const int16_t ms)
 {
-  unsigned long endtime = millis() + ms;
+  uint32_t endtime = millis() + ms;
 
   while (millis() < endtime)
   {
@@ -1452,15 +1452,15 @@ void Robot::testOdometer()
   motorRight_p->setPwmCur(rightPwm);
   setMotorPWMs(motorLeft_p->m_pwmCur, motorRight_p->m_pwmCur);
 
-  int lastLeft = 0;
-  int lastRight = 0;
+  int16_t lastLeft = 0;
+  int16_t lastRight = 0;
 
   for (;;)
   {
     resetIdleTime();
 
-    int odoCountLeft = m_odometer.m_encoder.left.getCounter();
-    int odoCountRight = m_odometer.m_encoder.right.getCounter();
+    int16_t odoCountLeft = m_odometer.m_encoder.left.getCounter();
+    int16_t odoCountRight = m_odometer.m_encoder.right.getCounter();
 
     if (odoCountLeft != lastLeft || odoCountRight != lastRight)
     {
@@ -1478,8 +1478,7 @@ void Robot::testOdometer()
 
     if (Console.available() > 0)
     {
-      char ch;
-      ch = (char) Console.read();
+      char ch = static_cast<char>(Console.read());
       if (ch == '0')
       {
         break;
@@ -1589,7 +1588,7 @@ void Robot::menu()
 
     if (Console.available() > 0)
     {
-      char ch = (char)Console.read();
+      char ch = static_cast<char>(Console.read());
       switch (ch)
       {
         case '0':
@@ -1666,7 +1665,7 @@ void Robot::readSerial()
   // serial input
   if (Console.available() > 0)
   {
-    char ch = (char)Console.read();
+    char ch = static_cast<char>(Console.read());
     resetIdleTime();
     switch (ch)
     {
@@ -1754,6 +1753,9 @@ void Robot::readSerial()
         //motorMowModulate = false;
         setNextState(StateMachine::STATE_FORWARD);
         break;
+
+      default:
+        break;
     }
   }
 }
@@ -1822,7 +1824,7 @@ void Robot::checkButton()
             break;
 
           default:
-            Console.print("Unknown number of button presses, ");
+            Console.print(F("Unknown number of button presses, "));
             Console.println(m_button.getCounter());
             break;
         }
@@ -1920,7 +1922,7 @@ void Robot::readPerimeters()
         !m_stateMachine.isCurrentState(StateMachine::STATE_PERI_OUT_REV) &&
         !m_stateMachine.isCurrentState(StateMachine::STATE_PERI_OUT_ROLL))
     {
-      Console.println("Error: Perimeter too far away");
+      Console.println(F("Error: Perimeter too far away"));
       incErrorCounter(ERR_PERIMETER_TIMEOUT);
       setNextState(StateMachine::STATE_ERROR);
     }
@@ -2201,9 +2203,9 @@ void Robot::receiveGPSTime()
     return;
   }
 
-  unsigned long chars = 0;
-  unsigned short good_sentences = 0;
-  unsigned short failed_cs = 0;
+  uint32_t chars = 0;
+  uint16_t good_sentences = 0;
+  uint16_t failed_cs = 0;
   m_gps.stats(&chars, &good_sentences, &failed_cs);
 
   if (good_sentences == 0)
@@ -2253,7 +2255,7 @@ void Robot::readRtc()
 {
   if (!readDS1307(m_datetime))
   {
-    Console.println("RTC data error!");
+    Console.println(F("RTC data error!"));
     //addErrorCounter(ERR_RTC_DATA);
     //setNextState(STATE_ERROR, 0);
   }
@@ -2268,7 +2270,7 @@ void Robot::setRtc()
 {
   if (!setDS1307(m_datetime))
   {
-    Console.println("RTC comm error!");
+    Console.println(F("RTC comm error!"));
     incErrorCounter(ERR_RTC_COMM);
     setNextState(StateMachine::STATE_ERROR);
   }
@@ -2374,13 +2376,13 @@ void Robot::checkTimer()
       timehm_t time;
       time.hour = timerSettings_p->startTime.hour.value;
       time.minute = timerSettings_p->startTime.minute.value;
-      int startMinute = time2minutes(time);
+      int16_t startMinute = time2minutes(time);
 
       time.hour = timerSettings_p->stopTime.hour.value;
       time.minute = timerSettings_p->stopTime.minute.value;
-      int stopMinute = time2minutes(time);
+      int16_t stopMinute = time2minutes(time);
 
-      int currMinute = time2minutes(m_datetime.time);
+      int16_t currMinute = time2minutes(m_datetime.time);
 
       if (currMinute >= startMinute && currMinute < stopMinute)
       {
@@ -2453,7 +2455,7 @@ void Robot::checkCutterMotorPower()
   if (m_cutter.m_motor.getOverloadCounter() >= 30)
   {
     m_cutter.disable();
-    Console.println("Error: Motor cutter current");
+    Console.println(F("Error: Motor cutter current"));
     incErrorCounter(ERR_CUTTER_SENSE);
     m_cutter.m_motor.gotStuck();
   }
@@ -2503,7 +2505,8 @@ void Robot::checkMotorPower()
 // check bumpers
 void Robot::checkBumpers()
 {
-  if (m_mowPattern == MOW_BIDIR && millis() < (m_stateMachine.getStateStartTime() + 4000))
+  if (m_mowPattern == MOW_BIDIR && millis() <
+      (m_stateMachine.getStateStartTime() + 4000))
   {
     return;
   }
@@ -2522,7 +2525,8 @@ void Robot::checkBumpers()
 void Robot::checkDrop()
 {
   unsigned long curMillis = millis();
-  if (m_mowPattern == MOW_BIDIR && curMillis < (m_stateMachine.getStateStartTime() + 4000))
+  if (m_mowPattern == MOW_BIDIR && curMillis <
+      (m_stateMachine.getStateStartTime() + 4000))
   {
     return;
   }
@@ -2567,7 +2571,7 @@ void Robot::checkBumpersPerimeter()
 // Check perimeter as a boundary
 void Robot::checkPerimeterBoundary()
 {
-  unsigned long curMillis = millis();
+  uint32_t curMillis = millis();
 
   if (m_wheels.isTimeToRotationChange())
   {
@@ -2748,8 +2752,8 @@ void Robot::checkTilt()
       m_stateMachine.isCurrentState(StateMachine::STATE_ERROR) &&
       m_stateMachine.isCurrentState(StateMachine::STATE_STATION))
   {
-    int pitchAngle = (int)m_imu.getPitchDeg();
-    int rollAngle = (int)m_imu.getRollDeg();
+    int16_t pitchAngle = static_cast<int16_t>(m_imu.getPitchDeg());
+    int16_t rollAngle = static_cast<int16_t>(m_imu.getRollDeg());
     if (abs(pitchAngle) > 40 || abs(rollAngle) > 40)
     {
       Console.println(F("Error: IMU tilt"));
@@ -2841,7 +2845,7 @@ void Robot::processGPSData()
 {
   float nlat;
   float nlon;
-  unsigned long age;
+  uint32_t age;
   m_gps.f_get_position(&nlat, &nlon, &age);
 
   if (nlat == m_gps.GPS_INVALID_F_ANGLE)
@@ -2920,11 +2924,13 @@ void Robot::runStateMachine()
 
         if (m_rollDir == RIGHT)
         {
-          motorRight_p->m_rpmSet = (float)motorLeft_p->m_rpmSet * ratio;
+          motorRight_p->m_rpmSet =
+              static_cast<float>(motorLeft_p->m_rpmSet) * ratio;
         }
         else
         {
-          motorLeft_p->m_rpmSet = (float)motorRight_p->m_rpmSet * ratio;
+          motorLeft_p->m_rpmSet =
+              static_cast<float>(motorRight_p->m_rpmSet) * ratio;
         }
       }
 
@@ -3007,11 +3013,13 @@ void Robot::runStateMachine()
 
         if (m_rollDir == RIGHT)
         {
-          motorRight_p->m_rpmSet = (float)motorLeft_p->m_rpmSet * ratio;
+          motorRight_p->m_rpmSet =
+              static_cast<float>(motorLeft_p->m_rpmSet) * ratio;
         }
         else
         {
-          motorLeft_p->m_rpmSet = (float)motorRight_p->m_rpmSet * ratio;
+          motorLeft_p->m_rpmSet =
+              static_cast<float>(motorRight_p->m_rpmSet) * ratio;
         }
 
         if (m_stateMachine.getStateTime() > m_wheels.m_forwardTimeMax)
@@ -3108,7 +3116,8 @@ void Robot::runStateMachine()
         {
           setNextState(StateMachine::STATE_STATION);
         }
-        else if (curMillis - m_stateMachine.getStateStartTime() > m_battery.m_chargingTimeout_ms)
+        else if (curMillis - m_stateMachine.getStateStartTime() >
+            m_battery.m_chargingTimeout_ms)
         {
           incErrorCounter(ERR_BATTERY);
           setNextState(StateMachine::STATE_ERROR);

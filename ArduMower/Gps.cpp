@@ -79,7 +79,7 @@ bool Gps::feed()
 {
   while (Serial3.available())
   {
-    if (encode((char)Serial3.read()))
+    if (encode(static_cast<char>(Serial3.read())))
     {
       return true;
     }
@@ -129,26 +129,28 @@ bool Gps::encode(char c)
   {
     m_term[m_termOffset++] = c;
   }
+
   if (!m_isChecksumTerm)
   {
-    m_parity ^= (byte)c;
+    m_parity ^= static_cast<uint8_t>(c);
   }
 
   return valid_sentence;
 }
 
 #ifndef _GPS_NO_STATS
-void Gps::stats(unsigned long *chars, unsigned short *sentences,
-                unsigned short *failed_cs)
+void Gps::stats(uint32_t *chars, uint16_t *sentences, uint16_t *failed_cs)
 {
   if (chars)
   {
     *chars = m_encodedCharacters;
   }
+
   if (sentences)
   {
     *sentences = m_goodSentences;
   }
+
   if (failed_cs)
   {
     *failed_cs = m_failedChecksum;
@@ -159,61 +161,70 @@ void Gps::stats(unsigned long *chars, unsigned short *sentences,
 //
 // internal utilities
 //
-int Gps::from_hex(char c)
+int16_t Gps::from_hex(char c)
 {
   if (c >= 'A' && c <= 'F')
   {
-    return c - 'A' + 10;
+    return static_cast<int16_t>(c - 'A' + 10);
   }
   else if (c >= 'a' && c <= 'f')
   {
-    return c - 'a' + 10;
+    return static_cast<int16_t>(c - 'a' + 10);
   }
   else
   {
-    return c - '0';
+    return static_cast<int16_t>(c - '0');
   }
 }
 
-unsigned long Gps::parse_decimal()
+uint32_t Gps::parse_decimal()
 {
   char *p = m_term;
   bool isneg = (*p == '-');
+
   if (isneg)
   {
     ++p;  // skip heading '-'
   }
 
-  long ret = 100L * gpsatol(p); // gpsatol = generalPtrStrToLong => convert int-part to long: 90.239 => 100*90
+  int32_t ret = 100 * gpsatol(p); // gpsatol = generalPtrStrToLong => convert int-part to long: 90.239 => 100*90
   while (gpsisdigit(*p))
   {
     ++p; // skip converted digits '.'
   }
+
   if (*p == '.')
   {
     if (gpsisdigit(p[1])) // any number behind '.' ?
     {
       ret += 10 * (p[1] - '0'); // add first decimal
+
       if (gpsisdigit(p[2]))
+      {
         ret += p[2] - '0'; // add second decimal - note all meter values are converted to cm with the precision of 2 digits
+      }
     }
   }
-  return (unsigned long)(isneg ? -ret : ret); // negate result if isneg is set
+  return static_cast<uint32_t>(isneg ? -ret : ret); // negate result if isneg is set
 }
 
-unsigned long Gps::parse_degrees()  // term=5000.0095 (50° 00' 0.0095*60'')
+uint32_t Gps::parse_degrees()  // term=5000.0095 (50° 00' 0.0095*60'')
 {                                        // (D)DDMM.MMMM is the format
   char *p;
-  unsigned long left = (unsigned long)gpsatol(m_term); // get (D)DDMM in left
-  unsigned long tenk_minutes = (left % 100UL) * 10000UL; // get MM*10000
+  uint32_t left = static_cast<uint32_t>(gpsatol(m_term)); // get (D)DDMM in left
+  uint32_t tenk_minutes = (left % 100U) * 10000U; // get MM*10000
+
   for (p = m_term; gpsisdigit(*p); ++p)
+  {
     ;  // advance to '.'
+  }
+
   if (*p == '.')
   {
-    unsigned long mult = 1000;
+    uint32_t mult = 1000;
     while (gpsisdigit(*++p))
     {
-      tenk_minutes += mult * (unsigned long)(*p - '0');
+      tenk_minutes += mult * static_cast<uint32_t>(*p - '0');
       mult /= 10;
     }
   }
@@ -226,7 +237,8 @@ unsigned long Gps::parse_degrees()  // term=5000.0095 (50° 00' 0.0095*60'')
 // BBBB.BBBB 	= Breitengrad in Grad und Minuten (ddmm.mmmmmm)
 // LLLLL.LLLL 	Längengrad in Grad und Minuten (dddmm.mmmmmm)
 
-#define COMBINE(sentence_type, term_number) (((unsigned)(sentence_type) << 5) | term_number)
+#define COMBINE(sentence_type, term_number) \
+  ((static_cast<unsigned>(sentence_type) << 5) | term_number)
 
 // Processes a just-completed term
 // Returns true if new sentence has just passed checksum test and is validated
@@ -235,9 +247,10 @@ bool Gps::term_complete()
   //Console.println("compl");
   if (m_isChecksumTerm)
   {
-    byte checksum = (byte)(16 * from_hex(m_term[0]) + from_hex(m_term[1]));
+    uint8_t checksum =
+        static_cast<uint8_t>(16 * from_hex(m_term[0]) + from_hex(m_term[1]));
     //Console.print(checksum);
-    //Console.print(",");
+    //Console.print(',');
     //Console.println(_parity);
     if (checksum == m_parity)
     {
@@ -321,7 +334,7 @@ bool Gps::term_complete()
 
       case COMBINE(_GPS_SENTENCE_GPRMC, 3): // Latitude
       case COMBINE(_GPS_SENTENCE_GPGGA, 2):
-        m_newLatitude = (long)parse_degrees();
+        m_newLatitude = static_cast<int32_t>(parse_degrees());
         m_newPositionFix = millis();
         break;
 
@@ -333,7 +346,7 @@ bool Gps::term_complete()
 
       case COMBINE(_GPS_SENTENCE_GPRMC, 5): // Longitude
       case COMBINE(_GPS_SENTENCE_GPGGA, 4):
-        m_newLongitude = (long)parse_degrees();
+        m_newLongitude = static_cast<int32_t>(parse_degrees());
         break;
 
       case COMBINE(_GPS_SENTENCE_GPRMC, 6): // E/W
@@ -351,7 +364,7 @@ bool Gps::term_complete()
         break;
 
       case COMBINE(_GPS_SENTENCE_GPRMC, 9): // Date (GPRMC)
-        m_newDate = (unsigned long)gpsatol(m_term);
+        m_newDate = static_cast<uint32_t>(gpsatol(m_term));
         break;
 
       case COMBINE(_GPS_SENTENCE_GPGGA, 6): // Fix data (GPGGA) ; 0=invalid, 1=GPS fix, 2=DGPS fix, 6=estimation
@@ -359,7 +372,7 @@ bool Gps::term_complete()
         break;
 
       case COMBINE(_GPS_SENTENCE_GPGGA, 7): // NN-Satellites used (GPGGA): 00-12
-        m_newNumsats = (unsigned char)atoi(m_term);
+        m_newNumsats = static_cast<uint8_t>(atoi(m_term));
         break;
 
       case COMBINE(_GPS_SENTENCE_GPGGA, 8): // D.D - HDOP (GPGGA) - horizontal deviation
@@ -367,7 +380,7 @@ bool Gps::term_complete()
         break;
 
       case COMBINE(_GPS_SENTENCE_GPGGA, 9): // H.H - Altitude (GPGGA)
-        m_newAltitude = (long)parse_decimal();
+        m_newAltitude = static_cast<int32_t>(parse_decimal());
         break;
 
       default:
@@ -377,9 +390,9 @@ bool Gps::term_complete()
   return false;
 }
 
-long Gps::gpsatol(const char *str) // convert string to long - does only work for unsigned ints!
+int32_t Gps::gpsatol(const char *str) // convert string to long - does only work for unsigned ints!
 {
-  long ret = 0;
+  int32_t ret = 0;
   while (gpsisdigit(*str)) // process only digits
   {
     ret = 10 * ret + *str++ - '0'; // inc str after assignment
@@ -387,7 +400,7 @@ long Gps::gpsatol(const char *str) // convert string to long - does only work fo
   return ret;
 }
 
-int Gps::gpsstrcmp(const char *str1, const char *str2)
+int16_t Gps::gpsstrcmp(const char *str1, const char *str2)
 {
   while (*str1 && *str1 == *str2)
   {
@@ -455,12 +468,12 @@ const char* Gps::cardinal(float course)
       "W", "WNW", "NW", "NNW"
   };
 
-  int direction = (int)((course + 11.25f) / 22.5f);
+  int16_t direction = static_cast<int16_t>((course + 11.25f) / 22.5f);
   return directions[direction % 16];
 }
 
 // lat/long in hundred thousandths of a degree and age of fix in milliseconds
-void Gps::get_position(long* latitude, long* longitude, unsigned long* fix_age)
+void Gps::get_position(int32_t* latitude, int32_t* longitude, uint32_t* fix_age)
 {
   if (latitude)
   {
@@ -473,33 +486,33 @@ void Gps::get_position(long* latitude, long* longitude, unsigned long* fix_age)
   if (fix_age)
   {
     *fix_age = m_lastPositionFix == GPS_INVALID_FIX_TIME ?
-        (unsigned long)GPS_INVALID_AGE : millis() - m_lastPositionFix;
+        static_cast<uint32_t>(GPS_INVALID_AGE) : millis() - m_lastPositionFix;
   }
 }
 
 // date as ddmmyy, time as hhmmsscc, and age in milliseconds
-void Gps::get_datetime(unsigned long* date, unsigned long* time,
-    unsigned long* age)
+void Gps::get_datetime(uint32_t* date, uint32_t* time, uint32_t* age)
 {
   if (date)
   {
     *date = m_date;
   }
+
   if (time)
   {
     *time = m_time;
   }
+
   if (age)
   {
     *age = m_lastTimeFix == GPS_INVALID_FIX_TIME ?
-        (unsigned long)GPS_INVALID_AGE : millis() - m_lastTimeFix;
+        static_cast<uint32_t>(GPS_INVALID_AGE) : millis() - m_lastTimeFix;
   }
 }
 
-void Gps::f_get_position(float* latitude, float* longitude,
-    unsigned long* fix_age)
+void Gps::f_get_position(float* latitude, float* longitude, uint32_t* fix_age)
 {
-  long lat, lon;
+  int32_t lat, lon;
 
   get_position(&lat, &lon, fix_age);
 
@@ -510,44 +523,44 @@ void Gps::f_get_position(float* latitude, float* longitude,
   }
   else
   {
-    *latitude = (float)lat / 100000.0f;
-    *longitude = (float)lon / 100000.0f;
+    *latitude = static_cast<float>(lat) / 100000.0f;
+    *longitude = static_cast<float>(lon) / 100000.0f;
   }
 }
 
-void Gps::crack_datetime(int* year, byte* month, byte* day, byte* hour,
-    byte* minute, byte* second, byte* hundredths, unsigned long* age)
+void Gps::crack_datetime(int16_t* year, byte* month, byte* day, byte* hour,
+    byte* minute, byte* second, byte* hundredths, uint32_t* age)
 {
-  unsigned long date, time;
+  uint32_t date, time;
   get_datetime(&date, &time, age);
   if (year)
   {
-    *year = (int)(date % 100);
-    *year += *year > 80 ? 1900 : 2000;
+    *year = static_cast<int16_t>(date % 100);
+    *year = static_cast<int16_t>(*year + (*year > 80 ? 1900 : 2000));
   }
   if (month)
   {
-    *month = (byte)((date / 100) % 100);
+    *month = static_cast<uint8_t>((date / 100) % 100);
   }
   if (day)
   {
-    *day = (byte)(date / 10000);
+    *day = static_cast<uint8_t>(date / 10000);
   }
   if (hour)
   {
-    *hour = (byte)(time / 1000000);
+    *hour = static_cast<uint8_t>(time / 1000000);
   }
   if (minute)
   {
-    *minute = (byte)((time / 10000) % 100);
+    *minute = static_cast<uint8_t>((time / 10000) % 100);
   }
   if (second)
   {
-    *second = (byte)((time / 100) % 100);
+    *second = static_cast<uint8_t>((time / 100) % 100);
   }
   if (hundredths)
   {
-    *hundredths = (byte)(time % 100);
+    *hundredths = static_cast<uint8_t>(time % 100);
   }
 }
 
@@ -559,20 +572,20 @@ float Gps::f_altitude()
   }
   else
   {
-    return (float)m_altitude / 100.0f;
+    return static_cast<float>(m_altitude) / 100.0f;
   }
 }
 
 float Gps::f_course()
 {
   return m_course == GPS_INVALID_ANGLE ?
-      GPS_INVALID_F_ANGLE : (float)m_course / 100.0f;
+      GPS_INVALID_F_ANGLE : static_cast<float>(m_course) / 100.0f;
 }
 
 float Gps::f_speed_knots()
 {
   return m_speed == GPS_INVALID_SPEED ?
-      GPS_INVALID_F_SPEED : (float)m_speed / 100.0f;
+      GPS_INVALID_F_SPEED : static_cast<float>(m_speed) / 100.0f;
 }
 
 float Gps::f_speed_mph()

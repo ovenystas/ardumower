@@ -158,19 +158,19 @@ struct RobotSettings
 {
   Setting<bool> developer;              // Developer mode enables a few advanced settings
 
-  Setting<int> perimeterTriggerTimeout; // Perimeter trigger timeout when escaping from inside (ms)
-  Setting<int> perimeterOutRollTimeMax; // Roll time max after perimeter out (ms)
-  Setting<int> perimeterOutRollTimeMin; // Roll time min after perimeter out (ms)
-  Setting<int> perimeterOutRevTime;     // Reverse time after perimeter out (ms)
-  Setting<int> perimeterTrackRollTime;  // Perimeter tracking roll time (ms)
-  Setting<int> perimeterTrackRevTime;   // Perimeter tracking reverse time (ms)
+  Setting<int16_t> perimeterTriggerTimeout; // Perimeter trigger timeout when escaping from inside (ms)
+  Setting<int16_t> perimeterOutRollTimeMax; // Roll time max after perimeter out (ms)
+  Setting<int16_t> perimeterOutRollTimeMin; // Roll time min after perimeter out (ms)
+  Setting<int16_t> perimeterOutRevTime;     // Reverse time after perimeter out (ms)
+  Setting<int16_t> perimeterTrackRollTime;  // Perimeter tracking roll time (ms)
+  Setting<int16_t> perimeterTrackRevTime;   // Perimeter tracking reverse time (ms)
 
   Setting<bool> trackingBlockInnerWheelWhilePerimeterStruggling;
 
-  Setting<int> stationRevTime;          // Charge station reverse time (ms)
-  Setting<int> stationRollTime;         // Charge station roll time (ms)
-  Setting<int> stationForwTime;         // Charge station forward time (ms)
-  Setting<int> stationCheckTime;        // Charge station reverse check time (ms)
+  Setting<int16_t> stationRevTime;          // Charge station reverse time (ms)
+  Setting<int16_t> stationRollTime;         // Charge station roll time (ms)
+  Setting<int16_t> stationForwTime;         // Charge station forward time (ms)
+  Setting<int16_t> stationCheckTime;        // Charge station reverse check time (ms)
 
   Setting<bool> userSwitch1;            // User-defined switch 1 (default value)
   Setting<bool> userSwitch2;            // User-defined switch 2 (default value)
@@ -181,7 +181,7 @@ struct RobotSettings
 
   Setting<bool> gpsUse;                 // Use GPS?
   Setting<float> stuckIfGpsSpeedBelow;  // If GPS speed is below given value the mower is considered stuck
-  Setting<int> gpsSpeedIgnoreTime;      // How long gpsSpeed is ignored when robot switches into a new STATE (in ms)
+  Setting<int16_t> gpsSpeedIgnoreTime;      // How long gpsSpeed is ignored when robot switches into a new STATE (in ms)
 };
 
 class Robot
@@ -230,12 +230,12 @@ public:
     return m_gpsY;
   }
 
-  int getPerimeterCounter() const
+  int16_t getPerimeterCounter() const
   {
     return m_perimeterCounter;
   }
 
-  int getPerimeterMag() const
+  int16_t getPerimeterMag() const
   {
     return m_perimeterMag;
   }
@@ -373,9 +373,9 @@ private:
   void wheelControl_perimeter();
   void wheelControl_imuDir();
   void cutterControl();
-  void setMotorPWMs(const int pwmLeft, const int pwmRight,
+  void setMotorPWMs(const int16_t pwmLeft, const int16_t pwmRight,
       const bool useAccel = false);
-  void setMotorPWM(int pwm, const uint8_t motor, const bool useAccel);
+  void setMotorPWM(int16_t pwm, const uint8_t motor, const bool useAccel);
 
   // Date & time
   void setDefaultTime();
@@ -396,7 +396,7 @@ private:
   void printInfo_odometer(Stream& s);
   void printInfo_sensorValues(Stream& s);
   void printInfo_sensorCounters(Stream& s);
-  void delayInfo(const int ms);
+  void delayInfo(const int16_t ms);
   void testOdometer();
   void testMotors();
   void setDefaults();
@@ -471,8 +471,8 @@ public:
   // ------- perimeter state --------------------------
   Perimeter m_perimeter {};
   bool m_perimeterUse { false }; // use perimeter?
-  int m_trackingErrorTimeOut { 10000 };
-  int m_trackingPerimeterTransitionTimeOut { 2000 };
+  int16_t m_trackingErrorTimeOut { 10000 };
+  int16_t m_trackingPerimeterTransitionTimeOut { 2000 };
 
   //  --------- lawn state ----------------------------
   LawnSensor m_lawnSensorArray[LAWNSENSORS_NUM];
@@ -521,17 +521,17 @@ private:
   float m_gpsLon {};
   float m_gpsX {};   // X position (m)
   float m_gpsY {};   // Y position (m)
-  int m_robotIsStuckCounter {};
+  int16_t m_robotIsStuckCounter {};
 
   // ------- IMU state ----------------------------------
   byte m_imuRollDir { LEFT };
 
   // ------- perimeter state ----------------------------
-  int m_perimeterMag {};             // perimeter magnitude
+  int16_t m_perimeterMag {};             // perimeter magnitude
   bool m_perimeterInside { true };      // is inside perimeter?
   unsigned long m_perimeterTriggerTime {}; // time to trigger perimeter transition (timeout)
   unsigned long m_perimeterLastTransitionTime {};
-  int m_perimeterCounter {};         // counts perimeter transitions
+  int16_t m_perimeterCounter {};         // counts perimeter transitions
 
   // --------- pfodApp ----------------------------------
 
@@ -543,18 +543,18 @@ private:
   byte m_errorCounter[ERR_ENUM_COUNT] {};
 
   // --------- other ------------------------------------
-  int m_loopsPerSec {};  // main loops per second
-  int m_loopsPerSecCounter {};
+  int16_t m_loopsPerSec {};  // main loops per second
+  int16_t m_loopsPerSecCounter {};
   uint8_t m_consoleMode { CONSOLE_SENSOR_COUNTERS };
   uint8_t m_rollDir { LEFT };
-  unsigned long m_nextTimeErrorCounterReset {};
-  unsigned long m_nextTimeErrorBeep {};
+  uint32_t m_nextTimeErrorCounterReset {};
+  uint32_t m_nextTimeErrorBeep {};
 
   // ------------robot stats-----------------------------
   bool m_statsMowTimeTotalStart { false };
-  unsigned int m_statsMowTimeMinutesTripCounter {};
+  uint16_t m_statsMowTimeMinutesTripCounter {};
   float m_statsMowTimeHoursTotal {};
-  unsigned int m_statsBatteryChargingCounter {};
+  uint16_t m_statsBatteryChargingCounter {};
 
   RobotSettings m_settings
   {
@@ -650,20 +650,20 @@ private:
   // Shorter convenient variables for settings variables
   bool& m_developer = m_settings.developer.value;
 
-  int& m_perimeterTriggerTimeout = m_settings.perimeterTriggerTimeout.value;
-  int& m_perimeterOutRollTimeMax = m_settings.perimeterOutRollTimeMax.value;
-  int& m_perimeterOutRollTimeMin = m_settings.perimeterOutRollTimeMin.value;
-  int& m_perimeterOutRevTime = m_settings.perimeterOutRevTime.value;
-  int& m_perimeterTrackRollTime = m_settings.perimeterTrackRollTime.value;
-  int& m_perimeterTrackRevTime = m_settings.perimeterTrackRevTime.value;
+  int16_t& m_perimeterTriggerTimeout = m_settings.perimeterTriggerTimeout.value;
+  int16_t& m_perimeterOutRollTimeMax = m_settings.perimeterOutRollTimeMax.value;
+  int16_t& m_perimeterOutRollTimeMin = m_settings.perimeterOutRollTimeMin.value;
+  int16_t& m_perimeterOutRevTime = m_settings.perimeterOutRevTime.value;
+  int16_t& m_perimeterTrackRollTime = m_settings.perimeterTrackRollTime.value;
+  int16_t& m_perimeterTrackRevTime = m_settings.perimeterTrackRevTime.value;
 
   bool& m_trackingBlockInnerWheelWhilePerimeterStruggling =
       m_settings.trackingBlockInnerWheelWhilePerimeterStruggling.value;
 
-  int& m_stationRevTime = m_settings.stationRevTime.value;
-  int& m_stationRollTime = m_settings.stationRollTime.value;
-  int& m_stationForwTime = m_settings.stationForwTime.value;
-  int& m_stationCheckTime = m_settings.stationCheckTime.value;
+  int16_t& m_stationRevTime = m_settings.stationRevTime.value;
+  int16_t& m_stationRollTime = m_settings.stationRollTime.value;
+  int16_t& m_stationForwTime = m_settings.stationForwTime.value;
+  int16_t& m_stationCheckTime = m_settings.stationCheckTime.value;
 
   bool& m_userSwitch1 = m_settings.userSwitch1.value;
   bool& m_userSwitch2 = m_settings.userSwitch2.value;
@@ -674,5 +674,5 @@ private:
 
   bool& m_gpsUse = m_settings.gpsUse.value;
   float& m_stuckIfGpsSpeedBelow = m_settings.stuckIfGpsSpeedBelow.value;
-  int& m_gpsSpeedIgnoreTime = m_settings.gpsSpeedIgnoreTime.value;
+  int16_t& m_gpsSpeedIgnoreTime = m_settings.gpsSpeedIgnoreTime.value;
 };
