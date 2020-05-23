@@ -1015,16 +1015,6 @@ void Robot::checkOdometerFaults()
   }
 }
 
-// Cutter motor speed controller (slowly adjusts output speed to set speed)
-void Robot::cutterControl()
-{
-  if (m_cutter.isEnableOverriden())
-  {
-    m_cutter.disable();
-  }
-  m_cutter.control();
-}
-
 void Robot::resetIdleTime()
 {
   // battery switched off?
@@ -1707,16 +1697,7 @@ void Robot::readSerial()
         break;
 
       case 'm': // toggle mower motor
-        if (m_stateMachine.isCurrentState(StateMachine::STATE_OFF) ||
-            m_stateMachine.isCurrentState(StateMachine::STATE_MANUAL))
-        {
-          m_cutter.setEnableOverriden(false);
-        }
-        else
-        {
-          m_cutter.toggleEnableOverriden();
-        }
-        m_cutter.toggleEnabled();
+        m_cutter.toggleOnOff();
         break;
 
       case 'c': // simulate in station
@@ -1749,8 +1730,7 @@ void Robot::readSerial()
         break;
 
       case '1': // Automode
-        m_cutter.enable();
-        //motorMowModulate = false;
+        m_cutter.turnOn();
         setNextState(StateMachine::STATE_FORWARD);
         break;
 
@@ -1788,14 +1768,14 @@ void Robot::checkButton()
         {
           case 1:
             // start normal with random mowing
-            m_cutter.enable();
+            m_cutter.turnOn();
             m_mowPattern = MOW_RANDOM;
             setNextState(StateMachine::STATE_FORWARD);
             break;
 
           case 2:
             // start normal with bidir mowing
-            m_cutter.enable();
+            m_cutter.turnOn();
             m_mowPattern = MOW_BIDIR;
             setNextState(StateMachine::STATE_FORWARD);
             break;
@@ -1818,7 +1798,7 @@ void Robot::checkButton()
 
           case 7:
             // start normal with lanes mowing
-            m_cutter.enable();
+            m_cutter.turnOn();
             m_mowPattern = MOW_LANES;
             setNextState(StateMachine::STATE_FORWARD);
             break;
@@ -1949,7 +1929,7 @@ void Robot::setDefaults()
 {
   m_speed = 0;
   m_steer = 0;
-  m_cutter.disable();
+  m_cutter.turnOff();
 }
 
 // set state machine new state
@@ -1993,7 +1973,7 @@ void Robot::setNextState(StateMachine::StateE stateNew, uint8_t rollDir)
     {
       stateNew = StateMachine::STATE_STATION_CHECK;
       m_battery.setChargeRelay(OFF);
-      m_cutter.disable();
+      m_cutter.turnOff();
     }
   }
 
@@ -2018,7 +1998,7 @@ void Robot::setNextState(StateMachine::StateE stateNew, uint8_t rollDir)
   {
     m_speed = +100;
     m_steer = 0;
-    m_cutter.enable();
+    m_cutter.turnOn();
     m_stateMachine.setEndTime(curMillis + m_stationForwTime + zeroSettleTime);
   }
   else if (stateNew == StateMachine::STATE_STATION_CHECK)
@@ -2392,7 +2372,7 @@ void Robot::checkTimer()
             m_stateMachine.isCurrentState(StateMachine::STATE_OFF))
         {
           Console.println(F("Timer start triggered"));
-          m_cutter.enable();
+          m_cutter.turnOn();
           setNextState(StateMachine::STATE_FORWARD);
         }
       }
@@ -2447,14 +2427,14 @@ void Robot::checkCutterMotorPower()
     if (m_cutter.m_motor.isWaitAfterStuckEnd())
     {
       m_errorCounter[ERR_CUTTER_SENSE] = 0;
-      m_cutter.enable();
+      m_cutter.turnOn();
     }
   }
 
   // Ignore motor cutter power overload for 3 seconds
   if (m_cutter.m_motor.getOverloadCounter() >= 30)
   {
-    m_cutter.disable();
+    m_cutter.turnOff();
     Console.println(F("Error: Motor cutter current"));
     incErrorCounter(ERR_CUTTER_SENSE);
     m_cutter.m_motor.gotStuck();
@@ -2803,14 +2783,14 @@ void Robot::checkIfStuck()
           m_stateMachine.isCurrentState(StateMachine::STATE_STATION_ROLL) &&
           m_stateMachine.isCurrentState(StateMachine::STATE_ERROR))
       {
-        m_cutter.enable();
+        m_cutter.turnOn();
         m_errorCounterMax[ERR_STUCK] = 0;
       }
     }
 
     if (m_robotIsStuckCounter >= 5)
     {
-      m_cutter.disable();
+      m_cutter.turnOff();
       if (m_errorCounterMax[ERR_STUCK] >= 3)
       {
         // robot is definitely stuck and unable to move
@@ -2824,14 +2804,14 @@ void Robot::checkIfStuck()
         // mower tries 3 times to get unstuck
         if (m_stateMachine.isCurrentState(StateMachine::STATE_FORWARD))
         {
-          m_cutter.disable();
+          m_cutter.turnOff();
           incErrorCounter(ERR_STUCK);
           setMotorPWMs(0, 0);
           reverseOrChangeDirection(RIGHT);
         }
         else if (m_stateMachine.isCurrentState(StateMachine::STATE_ROLL))
         {
-          m_cutter.disable();
+          m_cutter.turnOff();
           incErrorCounter(ERR_STUCK);
           setMotorPWMs(0, 0);
           setNextState(StateMachine::STATE_FORWARD);
@@ -3275,8 +3255,7 @@ void Robot::tasks_100ms()
   }
 
   m_wheels.control();
-  cutterControl();
-
+  m_cutter.control();
   m_battery.read();
 }
 

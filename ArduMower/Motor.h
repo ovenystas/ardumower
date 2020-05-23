@@ -24,19 +24,23 @@ public:
   virtual void setSpeed(int16_t speed, bool brake) = 0;
   virtual void readCurrent() = 0;
 
+  // Settings
   float m_acceleration {};
   bool m_regulate { false };
   int16_t m_rpmMax {};
-  int16_t m_rpmSet {};
   int16_t m_pwmMax {};
-  int16_t m_pwmCur {};  // TODO: Move to private
   int16_t m_powerMax {};
   bool m_swapDir { false };
   int16_t m_powerIgnoreTime {};
   int16_t m_zeroSettleTime {};  // TODO: Make it configurable
 
+  int16_t m_rpmSet {};
+  int16_t m_pwmCur {};  // TODO: Move to private
+
+  // PID for speed regulation.
   Pid m_pid;
 
+  // Scaling ADC value for current measurement.
   // 5.0V Ref. Max=1023. 10 times amplification.
   // 1A measured over 0,15ohm => 1 * 0,15 * 10 = 1,5V.
   // Full-scale = 5,0 / 1,5 = 3,33A
@@ -208,7 +212,10 @@ protected:
   int16_t m_rpmMeas {};
 
   uint8_t m_channel {};
-  FilterEmaI16 m_filter { 1.0f }; // Default 1.0 is no filtering
+
+  // Filter for smoothing current measurement.
+  // Default 1.0 is no filtering.
+  FilterEmaI16 m_filter { 1.0f };
 
 private:
   static const uint16_t TIME_BETWEEN_RPM_MEAS { 500 };
@@ -221,14 +228,8 @@ private:
   static constexpr float RPM_DIVISOR_HALF { 1.5 };
   static constexpr float RPM_DIVISOR_SLOW { 2.0 };
 
-  uint8_t m_pinDir {};
-  uint8_t m_pinPwm {};
-  uint8_t m_pinSense {};
   uint8_t m_pinRpm {};
-  uint8_t m_pinBrake {};
   uint16_t m_overloadCounter {};
-  uint32_t m_lastRpmTime {};
-  uint32_t m_nextTimeRpmMeas {};
   uint32_t m_nextTimeControl {};
   uint32_t m_nextTimeCheckPower {};
   uint32_t m_nextTimeReadSensor {};

@@ -372,7 +372,6 @@ private:
   void wheelControl_imuRoll();
   void wheelControl_perimeter();
   void wheelControl_imuDir();
-  void cutterControl();
   void setMotorPWMs(const int16_t pwmLeft, const int16_t pwmRight,
       const bool useAccel = false);
   void setMotorPWM(int16_t pwm, const uint8_t motor, const bool useAccel);

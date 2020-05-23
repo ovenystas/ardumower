@@ -16,69 +16,21 @@ public:
 
   MotorMosFet m_motor;
 
-  bool isEnabled() const
+  void turnOn();
+  void turnOff();
+  void toggleOnOff();
+  bool isOn() const
   {
-    return m_enabled;
-  }
-
-  bool isDisabled() const
-  {
-    return !m_enabled;
-  }
-
-  void enable()
-  {
-    m_enabled = true;
-  }
-
-  void disable()
-  {
-    m_enabled = false;
-    m_motor.setRpmSet(0);
-    m_motor.setPwmSet(0);
-  }
-
-  void toggleEnabled()
-  {
-    if (m_enabled)
-    {
-      disable();
-    }
-    else
-    {
-      enable();
-    }
-  }
-
-  bool isEnableOverriden() const
-  {
-    return m_enableOverriden;
-  }
-
-  void setEnableOverriden(bool enableOverriden)
-  {
-    m_enableOverriden = enableOverriden;
-  }
-
-  void toggleEnableOverriden()
-  {
-    m_enableOverriden = !m_enableOverriden;
-  }
-
-  int8_t getSpeed() const
-  {
-    return m_speed;
-  }
-
-  void setSpeed(int8_t speed)
-  {
-    m_speed = speed;
+    return m_isOn;
   }
 
   void control(void);
 
 private:
-  bool m_enabled {};
-  bool m_enableOverriden {};
-  int8_t m_speed {}; // Range 0..100
+  bool m_isOn {};
+
+  // Settings
+  bool m_use { false }; // TODO: Disabled during prototyping
+  uint8_t m_idleRpm_percent { 80 }; // Motor regulates to this percentage of max rpm.
+  bool m_randomDir {}; // Motor direction is random each turn on.
 };

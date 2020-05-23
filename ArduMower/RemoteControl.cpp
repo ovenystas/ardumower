@@ -751,12 +751,12 @@ void RemoteControl::processMowMenu(String pfodCmd)
       case 0:
         m_robot_p->setNextState(StateMachine::STATE_OFF);
         m_robot_p->m_cutter.m_motor.setRpmMeas(0);
-        m_robot_p->m_cutter.disable();
+        m_robot_p->m_cutter.turnOff();
         break;
 
       case 1:
         m_robot_p->setNextState(StateMachine::STATE_MANUAL);
-        m_robot_p->m_cutter.enable();
+        m_robot_p->m_cutter.turnOn();
         break;
 
       default:
@@ -1807,7 +1807,7 @@ void RemoteControl::sendCommandMenu(bool update)
 
   Bluetooth.print(F("|ro~OFF|ra~Auto mode|"));
   Bluetooth.print(F("rm~Mowing is "));
-  sendOnOff(m_robot_p->m_cutter.isEnabled());
+  sendOnOff(m_robot_p->m_cutter.isOn());
 
   Bluetooth.print(F("|rp~Pattern is "));
   Bluetooth.print(m_robot_p->mowPatternName());
@@ -1856,23 +1856,14 @@ void RemoteControl::processCommandMenu(String pfodCmd)
   else if (pfodCmd == "ra")
   {
     // cmd: start auto mowing
-    m_robot_p->m_cutter.enable();
+    m_robot_p->m_cutter.turnOn();
     m_robot_p->setNextState(StateMachine::STATE_FORWARD);
     sendCommandMenu(true);
   }
   else if (pfodCmd == "rm")
   {
     // cmd: mower motor on/off
-    if (m_robot_p->m_stateMachine.isCurrentState(StateMachine::STATE_OFF) ||
-        m_robot_p->m_stateMachine.isCurrentState(StateMachine::STATE_MANUAL))
-    {
-      m_robot_p->m_cutter.setEnableOverriden(false);
-    }
-    else
-    {
-      m_robot_p->m_cutter.toggleEnableOverriden();
-    }
-    m_robot_p->m_cutter.toggleEnabled();
+    m_robot_p->m_cutter.toggleOnOff();
     sendCommandMenu(true);
   }
   else if (pfodCmd == "rs")
@@ -1933,7 +1924,7 @@ void RemoteControl::sendManualMenu(bool update)
   }
 
   Bluetooth.print(F("|nm~Mow is "));
-  sendOnOff(m_robot_p->m_cutter.isEnabled());
+  sendOnOff(m_robot_p->m_cutter.isOn());
 
   Bluetooth.println('}');
 }
@@ -1959,7 +1950,8 @@ void RemoteControl::processCompassMenu(String pfodCmd)
 {
   if (pfodCmd == "cm")
   {
-    m_robot_p->m_cutter.toggleEnabled();
+    // TODO: This feels dangerous. Why mow in this menu?
+    m_robot_p->m_cutter.toggleOnOff();
     sendCompassMenu(true);
   }
   else if (pfodCmd == "cn")
@@ -2054,7 +2046,7 @@ void RemoteControl::processManualMenu(String pfodCmd)
   else if (pfodCmd == "nm")
   {
     // manual: mower ON/OFF
-    m_robot_p->m_cutter.toggleEnabled();
+    m_robot_p->m_cutter.toggleOnOff();
     sendManualMenu(true);
   }
   else if (pfodCmd == "ns")
