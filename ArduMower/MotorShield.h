@@ -11,9 +11,9 @@
 #pragma once
 
 #include <Arduino.h>
-#include "MotorDrv.h"
+#include "Motor.h"
 
-class MotorShield: public MotorDrv
+class MotorShield: public Motor
 {
 public:
   void setup() override;

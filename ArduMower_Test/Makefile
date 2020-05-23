@@ -43,6 +43,7 @@ SRC_FILES = \
 	../ArduMower/Imu.cpp \
 	../ArduMower/Kalman.cpp \
 	../ArduMower/LawnSensor.cpp \
+	../ArduMower/Motor.cpp \
 	../ArduMower/Odometer.cpp \
 	../ArduMower/Perimeter.cpp \
 	../ArduMower/Pid.cpp \
@@ -63,6 +64,7 @@ INCLUDE_DIRS = \
 CPPUTEST_CPPFLAGS += \
 	-std=gnu++11 \
 	-DTEST_VIRTUAL=virtual \
+	-fshort-enums \
 
 gcovr: gcov
 	$(SILENCE)mkdir -p gcov/report
