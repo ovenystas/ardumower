@@ -11,11 +11,13 @@
 // Get access to private class members in SUT
 #define private public
 #include "RemoteControl.h"
+#include "RobotMock.h"
 
 // RemoteControlInit ------------------------------------------------------------
 
 TEST_GROUP(RemoteControlInit)
 {
+  RobotMock* robot_p;
   RemoteControl* rc_p;
 
   void setup()
@@ -34,6 +36,6 @@ TEST_GROUP(RemoteControlInit)
 
 //TEST(RemoteControlInit, init)
 //{
-//  rc_p = new RemoteControl();
-//
+//  robot_p = new RobotMock();
+//  rc_p = new RemoteControl(robot_p);
 //}
