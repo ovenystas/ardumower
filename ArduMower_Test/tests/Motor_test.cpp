@@ -90,12 +90,13 @@ TEST(Motor, set_and_get_filterAlpha)
   DOUBLES_EQUAL(0.67f, motDrv_p->getFilterAlpha(), 0.01);
 }
 
-TEST(Motor, setChannel)
-{
-  UNSIGNED_LONGS_EQUAL(0, motDrv_p->m_channel);
-  motDrv_p->setChannel(3);
-  UNSIGNED_LONGS_EQUAL(3, motDrv_p->m_channel);
-}
+// TODO: Move to MotorShield_test.cpp
+//TEST(Motor, setChannel)
+//{
+//  UNSIGNED_LONGS_EQUAL(0, motDrv_p->m_channel);
+//  motDrv_p->setChannel(3);
+//  UNSIGNED_LONGS_EQUAL(3, motDrv_p->m_channel);
+//}
 
 TEST(Motor, set_and_get_scale)
 {

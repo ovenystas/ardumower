@@ -38,6 +38,7 @@
 #include "Button.h"
 #include "Buzzer.h"
 #include "Cutter.h"
+#include "DifferentialDrive.h"
 #include "Drivers.h"
 #include "DropSensor.h"
 #include "Gps.h"
@@ -214,7 +215,7 @@ public:
 
   // other
   void setUserSwitches();
-  void resetErrorCounters();
+  void resetAllErrorCounters();
   const char* mowPatternName();
 
   // RTC
@@ -299,8 +300,8 @@ private:
       DropSensors& dropSensor);
   void loadSaveUserSettingsButton(bool readflag, uint16_t& addr,
       Button& button);
-  void loadSaveUserSettingsWheels(bool readflag, uint16_t& addr,
-      Wheels& wheels);
+  void loadSaveUserSettingsDifferentialDrive(bool readflag, uint16_t& addr,
+      DifferentialDrive& wheels);
   void loadSaveUserSettingsCutter(bool readflag, uint16_t& addr,
       Cutter& cutter);
   void loadSaveUserSettingsRobot(bool readflag, uint16_t& addr);
@@ -351,7 +352,7 @@ private:
   void checkTimer();
   void checkMotorPower();
   void checkCutterMotorPower();
-  void checkWheelMotorPower(Wheel::WheelE side);
+  void checkWheelMotorPower(DifferentialDrive::SideE side);
   void checkBumpers();
   void checkDrop();
   void checkBumpersPerimeter();
@@ -368,10 +369,10 @@ private:
   void checkRobotStats_battery();
 
   // Motor
-  void wheelControl_normal();
-  void wheelControl_imuRoll();
-  void wheelControl_perimeter();
-  void wheelControl_imuDir();
+  void diffDriveControl_normal();
+  void diffDriveControl_imuRoll();
+  void diffDriveControl_perimeter();
+  void diffDriveControl_imuDir();
   void setMotorPWMs(const int16_t pwmLeft, const int16_t pwmRight,
       const bool useAccel = false);
   void setMotorPWM(int16_t pwm, const uint8_t motor, const bool useAccel);
@@ -430,14 +431,14 @@ public:
   // -------- odometer state --------------------------
   Odometer m_odometer
   {
-    m_wheels.m_wheel[Wheel::LEFT].m_encoder,
-    m_wheels.m_wheel[Wheel::RIGHT].m_encoder,
+    m_diffDrive.m_wheelLeft.m_encoder,
+    m_diffDrive.m_wheelRight.m_encoder,
     m_imu
   };
 
   // --------- wheel motor state ----------------------------
   // wheel motor speed ( <0 backward, >0 forward); range -motorSpeedMaxRpm..motorSpeedMaxRpm
-  Wheels m_wheels;
+  DifferentialDrive m_diffDrive;
 
   // -------- mower motor state -----------------------
   Cutter m_cutter;
@@ -470,8 +471,8 @@ public:
   // ------- perimeter state --------------------------
   Perimeter m_perimeter {};
   bool m_perimeterUse { false }; // use perimeter?
-  int16_t m_trackingErrorTimeOut { 10000 };
-  int16_t m_trackingPerimeterTransitionTimeOut { 2000 };
+  uint16_t m_trackingErrorTimeOut { 10000 };
+  uint16_t m_trackingPerimeterTransitionTimeOut { 2000 };
 
   //  --------- lawn state ----------------------------
   LawnSensor m_lawnSensorArray[LAWNSENSORS_NUM];
@@ -528,8 +529,8 @@ private:
   // ------- perimeter state ----------------------------
   int16_t m_perimeterMag {};             // perimeter magnitude
   bool m_perimeterInside { true };      // is inside perimeter?
-  unsigned long m_perimeterTriggerTime {}; // time to trigger perimeter transition (timeout)
-  unsigned long m_perimeterLastTransitionTime {};
+  uint32_t m_perimeterTriggerTime {}; // time to trigger perimeter transition (timeout)
+  uint32_t m_perimeterLastTransitionTime {};
   int16_t m_perimeterCounter {};         // counts perimeter transitions
 
   // --------- pfodApp ----------------------------------
@@ -546,8 +547,9 @@ private:
   int16_t m_loopsPerSecCounter {};
   uint8_t m_consoleMode { CONSOLE_SENSOR_COUNTERS };
   uint8_t m_rollDir { LEFT };
-  uint32_t m_nextTimeErrorCounterReset {};
+  uint32_t m_lastTimeErrorCounterReset {};
   uint32_t m_nextTimeErrorBeep {};
+  uint32_t m_lastTimeMeasureCutterRpm {};
 
   // ------------robot stats-----------------------------
   bool m_statsMowTimeTotalStart { false };

@@ -9,13 +9,11 @@
 #include "AdcManager.h"
 #include "Pid.h"
 
-//#define Console Serial
-
 void MotorMosFet::setup()
 {
-  pinMode(pinPwm, OUTPUT);
-  pinMode(pinSense, INPUT);
-  ADCMan.setCapture(pinSense, 1, true);
+  pinMode(m_pinPwm, OUTPUT);
+  pinMode(m_pinSense, INPUT);
+  ADCMan.setCapture(m_pinSense, 1, true);
 }
 
 void MotorMosFet::setSpeed()
@@ -26,11 +24,7 @@ void MotorMosFet::setSpeed()
 void MotorMosFet::setSpeed(int16_t speed)
 {
   uint8_t tmpSpeed = (uint8_t)constrain(speed, 0, m_pwmMax);
-  analogWrite(pinPwm, tmpSpeed);
-//  Console.print("MotorMosFet::setSpeed pinPwm=");
-//  Console.print(pinPwm);
-//  Console.print(" speed=");
-//  Console.println(tmpSpeed);
+  analogWrite(m_pinPwm, tmpSpeed);
 }
 
 void MotorMosFet::setSpeed(int16_t speed, bool brake)
@@ -41,7 +35,7 @@ void MotorMosFet::setSpeed(int16_t speed, bool brake)
 
 void MotorMosFet::readCurrent()
 {
-  int16_t newAdcValue = ADCMan.read(pinSense);
+  int16_t newAdcValue = ADCMan.read(m_pinSense);
   m_filter.addValue(newAdcValue);
 }
 
@@ -56,12 +50,12 @@ void MotorMosFet::control()
   {
     // Use PID regulator.
     float y = m_pid.compute(m_rpmMeas);
-    pwmNew = (int)round(y);
+    pwmNew = static_cast<int>(round(y));
   }
   else
   {
     // Direct control of PWM
-    m_pwmSet = map(m_rpmSet, 0, m_rpmMax, 0, m_pwmMax);
+    m_pwmSet = static_cast<int16_t>(map(m_rpmSet, 0, m_rpmMax, 0, m_pwmMax));
     if (m_pwmSet < m_pwmCur)
     {
       // Ignore acceleration if speed is lowered (e.g. motor is shut down).
@@ -72,8 +66,9 @@ void MotorMosFet::control()
       // Use acceleration when speed is increased
       // http://phrogz.net/js/framerate-independent-low-pass-filter.html
       // smoothed += elapsedTime * ( newValue - smoothed ) / smoothing;
-      int16_t addPwm = getSamplingTime() * (float)(m_pwmSet - m_pwmCur) / m_acceleration;
-      pwmNew = m_pwmCur + addPwm;
+      pwmNew = m_pwmCur +
+          getSamplingTime() * static_cast<float>(m_pwmSet - m_pwmCur) /
+          m_acceleration;
     }
   }
 

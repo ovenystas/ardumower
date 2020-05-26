@@ -411,7 +411,7 @@ void RemoteControl::processErrorMenu(String pfodCmd)
 {
   if (pfodCmd == "z00")
   {
-    m_robot_p->resetErrorCounters();
+    m_robot_p->resetAllErrorCounters();
     m_robot_p->setNextState(StateMachine::STATE_OFF);
   }
 
@@ -429,8 +429,8 @@ void RemoteControl::sendMotorMenu(bool update)
     Bluetooth.print(F("{.Motor`1000"));
   }
 
-  auto motorLeft_p = &m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor;
-  auto motorRight_p = &m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor;
+  auto motorLeft_p = &m_robot_p->m_diffDrive.m_wheelLeft.m_motor;
+  auto motorRight_p = &m_robot_p->m_diffDrive.m_wheelRight.m_motor;
 
   Bluetooth.println(F("|a00~Overload Counter l, r "));
   Bluetooth.print(motorLeft_p->getOverloadCounter());
@@ -469,23 +469,23 @@ void RemoteControl::sendMotorMenu(bool update)
   sendSlider("a18", F("Power ignore time"), motorLeft_p->m_powerIgnoreTime,
       "", 1, 8000);
 
-  sendSlider("a07", F("Roll time max"), m_robot_p->m_wheels.m_rollTimeMax,
+  sendSlider("a07", F("Roll time max"), m_robot_p->m_diffDrive.m_rollTimeMax,
       "", 1, 8000);
 
-  sendSlider("a19", F("Roll time min"), m_robot_p->m_wheels.m_rollTimeMin,
-      "", 1, (m_robot_p->m_wheels.m_rollTimeMax - 500));
+  sendSlider("a19", F("Roll time min"), m_robot_p->m_diffDrive.m_rollTimeMin,
+      "", 1, (m_robot_p->m_diffDrive.m_rollTimeMax - 500));
 
-  sendSlider("a08", F("Reverse time"), m_robot_p->m_wheels.m_reverseTime,
+  sendSlider("a08", F("Reverse time"), m_robot_p->m_diffDrive.m_reverseTime,
       "", 1, 8000);
 
-  sendSlider("a09", F("Forw time max"), m_robot_p->m_wheels.m_forwardTimeMax,
+  sendSlider("a09", F("Forw time max"), m_robot_p->m_diffDrive.m_forwardTimeMax,
       "", 10, 80000);
 
   sendSlider("a12", F("Bidir speed ratio 1"),
-      m_robot_p->m_wheels.m_biDirSpeedRatio1, "", 0.01, 1.0);
+      m_robot_p->m_diffDrive.m_biDirSpeedRatio1, "", 0.01, 1.0);
 
   sendSlider("a13", F("Bidir speed ratio 2"),
-      m_robot_p->m_wheels.m_biDirSpeedRatio2, "", 0.01, 1.0);
+      m_robot_p->m_diffDrive.m_biDirSpeedRatio2, "", 0.01, 1.0);
 
   sendPIDSlider("a14", "RPM", motorLeft_p->m_pid);
 
@@ -525,8 +525,8 @@ void RemoteControl::sendMotorMenu(bool update)
 
 void RemoteControl::processMotorMenu(String pfodCmd)
 {
-  auto motorLeft_p = &m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor;
-  auto motorRight_p = &m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor;
+  auto motorLeft_p = &m_robot_p->m_diffDrive.m_wheelLeft.m_motor;
+  auto motorRight_p = &m_robot_p->m_diffDrive.m_wheelRight.m_motor;
 
   if (pfodCmd.startsWith("a02"))
   {
@@ -562,19 +562,19 @@ void RemoteControl::processMotorMenu(String pfodCmd)
   }
   else if (pfodCmd.startsWith("a07"))
   {
-    processSlider(pfodCmd, m_robot_p->m_wheels.m_rollTimeMax, 1.0);
+    processSlider(pfodCmd, m_robot_p->m_diffDrive.m_rollTimeMax, 1.0);
   }
   else if (pfodCmd.startsWith("a19"))
   {
-    processSlider(pfodCmd, m_robot_p->m_wheels.m_rollTimeMin, 1.0);
+    processSlider(pfodCmd, m_robot_p->m_diffDrive.m_rollTimeMin, 1.0);
   }
   else if (pfodCmd.startsWith("a08"))
   {
-    processSlider(pfodCmd, m_robot_p->m_wheels.m_reverseTime, 1.0);
+    processSlider(pfodCmd, m_robot_p->m_diffDrive.m_reverseTime, 1.0);
   }
   else if (pfodCmd.startsWith("a09"))
   {
-    processSlider(pfodCmd, m_robot_p->m_wheels.m_forwardTimeMax, 10.0);
+    processSlider(pfodCmd, m_robot_p->m_diffDrive.m_forwardTimeMax, 10.0);
   }
   else if (pfodCmd.startsWith("a11"))
   {
@@ -583,11 +583,11 @@ void RemoteControl::processMotorMenu(String pfodCmd)
   }
   else if (pfodCmd.startsWith("a12"))
   {
-    processSlider(pfodCmd, m_robot_p->m_wheels.m_biDirSpeedRatio1, 0.01);
+    processSlider(pfodCmd, m_robot_p->m_diffDrive.m_biDirSpeedRatio1, 0.01);
   }
   else if (pfodCmd.startsWith("a13"))
   {
-    processSlider(pfodCmd, m_robot_p->m_wheels.m_biDirSpeedRatio2, 0.01);
+    processSlider(pfodCmd, m_robot_p->m_diffDrive.m_biDirSpeedRatio2, 0.01);
   }
   else if (pfodCmd.startsWith("a14"))
   {
@@ -1816,7 +1816,7 @@ void RemoteControl::sendCommandMenu(bool update)
   Bluetooth.print(m_robot_p->m_stateMachine.getCurrentStateName());
 
   Bluetooth.print(F("|rr~Auto rotate is "));
-  Bluetooth.print(m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.getPwmCur());
+  Bluetooth.print(m_robot_p->m_diffDrive.m_wheelLeft.m_motor.getPwmCur());
 
   sendSettingOnOff("r1", settings_p->userSwitch1);
   sendSettingOnOff("r2", settings_p->userSwitch2);
@@ -1842,9 +1842,9 @@ void RemoteControl::processCommandMenu(String pfodCmd)
   else if (pfodCmd == "rr")
   {
     m_robot_p->setNextState(StateMachine::STATE_MANUAL);
-    m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet += 10;
-    m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_rpmSet =
-        -m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_rpmSet;
+    m_robot_p->m_diffDrive.m_wheelLeft.m_motor.m_rpmSet += 10;
+    m_robot_p->m_diffDrive.m_wheelRight.m_motor.m_rpmSet =
+        -m_robot_p->m_diffDrive.m_wheelLeft.m_motor.m_rpmSet;
     sendCommandMenu(true);
   }
   else if (pfodCmd == "rk")
@@ -1909,8 +1909,8 @@ void RemoteControl::sendManualMenu(bool update)
     Bluetooth.println(F("{^Manual navigation`1000"));
   }
 
-  auto motorLeft_p = &m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor;
-  auto motorRight_p = &m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor;
+  auto motorLeft_p = &m_robot_p->m_diffDrive.m_wheelLeft.m_motor;
+  auto motorRight_p = &m_robot_p->m_diffDrive.m_wheelRight.m_motor;
 
   Bluetooth.print(F("|nl~Left|nr~Right|nf~Forward"));
   if ((motorLeft_p->m_rpmSet < 5  && motorLeft_p->m_rpmSet > -5) &&
@@ -1982,8 +1982,8 @@ void RemoteControl::processCompassMenu(String pfodCmd)
 
 void RemoteControl::processManualMenu(String pfodCmd)
 {
-  auto motorLeft_p = &m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor;
-  auto motorRight_p = &m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor;
+  auto motorLeft_p = &m_robot_p->m_diffDrive.m_wheelLeft.m_motor;
+  auto motorRight_p = &m_robot_p->m_diffDrive.m_wheelRight.m_motor;
 
   if (pfodCmd == "nl")
   {
@@ -2143,9 +2143,9 @@ void RemoteControl::run()
     //Bluetooth.println(F("test"));
     Bluetooth.print(elapsedSeconds);
     Bluetooth.print(',');
-    Bluetooth.print(m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.getPowerMeas());
+    Bluetooth.print(m_robot_p->m_diffDrive.m_wheelLeft.m_motor.getPowerMeas());
     Bluetooth.print(',');
-    Bluetooth.print(m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor.getPowerMeas());
+    Bluetooth.print(m_robot_p->m_diffDrive.m_wheelRight.m_motor.getPowerMeas());
     Bluetooth.print(',');
     Bluetooth.print(m_robot_p->m_cutter.m_motor.getPowerMeas());
     Bluetooth.print(',');
@@ -2276,9 +2276,9 @@ void RemoteControl::run()
       Bluetooth.print(',');
       Bluetooth.print(m_robot_p->m_stateMachine.getCurrentState());
       Bluetooth.print(',');
-      Bluetooth.print(m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.getOverloadCounter());
+      Bluetooth.print(m_robot_p->m_diffDrive.m_wheelLeft.m_motor.getOverloadCounter());
       Bluetooth.print(',');
-      Bluetooth.print(m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor.getOverloadCounter());
+      Bluetooth.print(m_robot_p->m_diffDrive.m_wheelRight.m_motor.getOverloadCounter());
       Bluetooth.print(',');
       Bluetooth.print(m_robot_p->m_cutter.m_motor.getOverloadCounter());
       Bluetooth.print(',');
@@ -2308,9 +2308,9 @@ void RemoteControl::run()
       Bluetooth.print(',');
       Bluetooth.print(m_robot_p->m_stateMachine.getCurrentState());
       Bluetooth.print(',');
-      Bluetooth.print(m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.getPowerMeas());
+      Bluetooth.print(m_robot_p->m_diffDrive.m_wheelLeft.m_motor.getPowerMeas());
       Bluetooth.print(',');
-      Bluetooth.print(m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor.getPowerMeas());
+      Bluetooth.print(m_robot_p->m_diffDrive.m_wheelRight.m_motor.getPowerMeas());
       Bluetooth.print(',');
       Bluetooth.print(m_robot_p->m_cutter.m_motor.getPowerMeas());
       Bluetooth.print(',');
@@ -2410,18 +2410,18 @@ void RemoteControl::run()
       Bluetooth.print(m_robot_p->m_odometer.m_encoder.right.getWheelRpmCurr());
       Bluetooth.print(',');
       //      Bluetooth.print(robot->motorLeftSpeedRpmSet);
-      Bluetooth.print(m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pid.getSetPoint());
+      Bluetooth.print(m_robot_p->m_diffDrive.m_wheelLeft.m_motor.m_pid.getSetPoint());
       Bluetooth.print(',');
       //      Bluetooth.print(robot->motorRightSpeedRpmSet);
-      Bluetooth.print(m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pid.getSetPoint());
+      Bluetooth.print(m_robot_p->m_diffDrive.m_wheelRight.m_motor.m_pid.getSetPoint());
       Bluetooth.print(',');
-      Bluetooth.print(m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.getPwmCur());
+      Bluetooth.print(m_robot_p->m_diffDrive.m_wheelLeft.m_motor.getPwmCur());
       Bluetooth.print(',');
-      Bluetooth.print(m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor.getPwmCur());
+      Bluetooth.print(m_robot_p->m_diffDrive.m_wheelRight.m_motor.getPwmCur());
       Bluetooth.print(',');
-      Bluetooth.print(m_robot_p->m_wheels.m_wheel[Wheel::LEFT].m_motor.m_pid.getErrorOld());
+      Bluetooth.print(m_robot_p->m_diffDrive.m_wheelLeft.m_motor.m_pid.getErrorOld());
       Bluetooth.print(',');
-      Bluetooth.println(m_robot_p->m_wheels.m_wheel[Wheel::RIGHT].m_motor.m_pid.getErrorOld());
+      Bluetooth.println(m_robot_p->m_diffDrive.m_wheelRight.m_motor.m_pid.getErrorOld());
     }
   }
 }

@@ -24,9 +24,6 @@ public:
   void control();
 
 private:
-  static const uint8_t PIN_PWM { 2 };
-  static const uint8_t PIN_SENSE { A3 };
-
-  const uint8_t pinPwm { PIN_PWM };
-  const uint8_t pinSense { PIN_SENSE };
+  const uint8_t m_pinPwm { 2 };
+  const uint8_t m_pinSense { A3 };
 };

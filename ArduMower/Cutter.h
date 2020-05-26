@@ -30,7 +30,7 @@ private:
   bool m_isOn {};
 
   // Settings
-  bool m_use { false }; // TODO: Disabled during prototyping
+  bool m_use {}; // TODO: Disabled during prototyping
   uint8_t m_idleRpm_percent { 80 }; // Motor regulates to this percentage of max rpm.
   bool m_randomDir {}; // Motor direction is random each turn on.
 };

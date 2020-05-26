@@ -38,22 +38,22 @@ void Motor::setRpmState()
 uint16_t Motor::getSamplingTime()
 {
   uint32_t curMillis = millis();
-  uint32_t samplingTime = curMillis - m_lastSetSpeedTime;
-  m_lastSetSpeedTime = curMillis;
+  uint16_t samplingTime = static_cast<uint16_t>(curMillis - m_lastTimeSetSpeed);
+  m_lastTimeSetSpeed = curMillis;
 
   if (samplingTime > 1000)
   {
     samplingTime = 1;
   }
-  return static_cast<uint16_t>(samplingTime);
+  return samplingTime;
 }
 
-bool Motor::isTimeTo(uint32_t* nextTime_p, uint16_t timeBetween)
+bool Motor::isTimeTo(uint32_t& lastTime, uint16_t timeBetween)
 {
   uint32_t curMillis = millis();
-  if (curMillis >= *nextTime_p)
+  if (curMillis - lastTime >= timeBetween)
   {
-    *nextTime_p = curMillis + timeBetween;
+    lastTime = curMillis;
     return true;
   }
   return false;

@@ -26,13 +26,13 @@ public:
 
   // Settings
   float m_acceleration {};
-  bool m_regulate { false };
+  bool m_regulate {};
   int16_t m_rpmMax {};
   int16_t m_pwmMax {};
   int16_t m_powerMax {};
-  bool m_swapDir { false };
-  int16_t m_powerIgnoreTime {};
-  int16_t m_zeroSettleTime {};  // TODO: Make it configurable
+  bool m_swapDir {};
+  uint16_t m_powerIgnoreTime {};
+  uint16_t m_zeroSettleTime {};  // TODO: Make it configurable
 
   int16_t m_rpmSet {};
   int16_t m_pwmCur {};  // TODO: Move to private
@@ -56,29 +56,27 @@ public:
     return digitalRead(m_pinRpm);
   }
 
-  int16_t readSensePin(void);
-  void setRpmState(void);  // call this from hall sensor interrupt
-  uint16_t getSamplingTime(void);
-  bool isTimeForRpmMeas(unsigned long* timeSinceLast_p);
+  void setRpmState();  // call this from hall sensor interrupt
+  uint16_t getSamplingTime();
 
   bool isTimeToControl(void)
   {
-    return isTimeTo(&m_nextTimeControl, TIME_BETWEEN_CONTROL);
+    return isTimeTo(m_lastTimeControl, TIME_BETWEEN_CONTROL);
   }
 
   bool isTimeToCheckPower(void)
   {
-    return isTimeTo(&m_nextTimeCheckPower, TIME_BETWEEN_CHECK_POWER);
+    return isTimeTo(m_lastTimeCheckPower, TIME_BETWEEN_CHECK_POWER);
   }
 
   bool isTimeToReadCurrent(void)
   {
-    return isTimeTo(&m_nextTimeReadSensor, TIME_BETWEEN_READ_CURRENT);
+    return isTimeTo(m_lastTimeReadSensor, TIME_BETWEEN_READ_CURRENT);
   }
 
   bool isWaitAfterStuckEnd(void)
   {
-    return (millis() >= m_lastTimeStucked + TIME_WAIT_AFTER_STUCK);
+    return (millis() - m_lastTimeStucked >= TIME_WAIT_AFTER_STUCK);
   }
 
   void gotStuck(void)
@@ -157,6 +155,7 @@ public:
   {
     return m_rpmSet;
   }
+
   void setRpmSet(int16_t rpmSet)
   {
     m_rpmSet = rpmSet;
@@ -166,6 +165,7 @@ public:
   {
     return m_pwmCur;
   }
+
   void setPwmCur(int16_t pwmCur)
   {
     m_pwmCur = pwmCur;
@@ -191,11 +191,6 @@ public:
     return m_filter.getAlpha();
   }
 
-  void setChannel(uint8_t channel)
-  {
-    m_channel = channel;
-  }
-
   float getScale()
   {
     return m_scale;
@@ -211,8 +206,6 @@ protected:
   int16_t m_pwmSet {};
   int16_t m_rpmMeas {};
 
-  uint8_t m_channel {};
-
   // Filter for smoothing current measurement.
   // Default 1.0 is no filtering.
   FilterEmaI16 m_filter { 1.0f };
@@ -224,22 +217,20 @@ private:
   static const uint8_t TIME_BETWEEN_READ_CURRENT { 50 };
   static const uint16_t TIME_WAIT_AFTER_STUCK { 30000 };
 
-  static constexpr float RPM_DIVISOR_FAST { 1.25 };
-  static constexpr float RPM_DIVISOR_HALF { 1.5 };
-  static constexpr float RPM_DIVISOR_SLOW { 2.0 };
-
   uint8_t m_pinRpm {};
   uint16_t m_overloadCounter {};
-  uint32_t m_nextTimeControl {};
-  uint32_t m_nextTimeCheckPower {};
-  uint32_t m_nextTimeReadSensor {};
+
+  uint32_t m_lastTimeControl {};
+  uint32_t m_lastTimeCheckPower {};
+  uint32_t m_lastTimeReadSensor {};
   uint32_t m_lastTimeStucked {};
-  uint32_t m_lastSetSpeedTime {};
+  uint32_t m_lastTimeSetSpeed {};
+
   uint16_t m_rpmCounter {};
   bool m_rpmLastState { false };
   uint16_t m_zeroTimeout {};
 
-  bool isTimeTo(uint32_t* nextTime_p, const uint16_t timeBetween);
+  bool isTimeTo(uint32_t& lastTime, uint16_t timeBetween);
 
   float getAverageCurrentAsFloat() // in mA
   {

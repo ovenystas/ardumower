@@ -42,7 +42,7 @@ class StateMachine
 
     void init();
 
-    unsigned long getStateStartTime() const
+    uint32_t getStateStartTime() const
     {
       return m_stateStartTime;
     }
