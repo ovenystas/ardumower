@@ -44,18 +44,22 @@ public:
 
   Wheel* getWheel(SideE side);
 
+  SideE getRotateDir() const
+  {
+    return m_rotateDir;
+  }
+
   void toggleRotateDir();
 
 public:
   Wheel m_wheelLeft;
   Wheel m_wheelRight;
-  int16_t m_rollTimeMax {};         // max. roll time (ms)
-  int16_t m_rollTimeMin {};         // min. roll time (ms)
-  int16_t m_reverseTime {};         // max. reverse time (ms)
+  uint16_t m_rollTimeMax {};         // max. roll time (ms)
+  uint16_t m_rollTimeMin {};         // min. roll time (ms)
+  uint16_t m_reverseTime {};         // max. reverse time (ms)
   uint32_t m_forwardTimeMax {};     // max. forward time (ms) / timeout
   float m_biDirSpeedRatio1 {};      // bidir mow pattern speed ratio 1
   float m_biDirSpeedRatio2 {};      // bidir mow pattern speed ratio 2
-  SideE m_rotateDir { SideE::LEFT };
 
 private:
   const uint16_t TIME_BETWEEN_ROTATION_CHANGE_ms { 60000 };
@@ -63,4 +67,5 @@ private:
   uint32_t m_lastTimeRotationChange {};
   int8_t m_speed {}; // Range -100..+100, - = reverse, + = forward
   int8_t m_steer {}; // Range -100..+100, - = left, + = right
+  SideE m_rotateDir { SideE::LEFT };
 };

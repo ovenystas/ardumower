@@ -2577,10 +2577,11 @@ void Robot::checkPerimeterBoundary()
 
   if (m_mowPattern == MOW_BIDIR)
   {
-    if (curMillis < m_stateMachine.getStateStartTime() + 3000)
+    if (curMillis - m_stateMachine.getStateStartTime() <  3000)
     {
       return;
     }
+
     if (!m_perimeterInside)
     {
       reverseOrChangeDirection(random(2));
@@ -2593,13 +2594,15 @@ void Robot::checkPerimeterBoundary()
       m_perimeterTriggerTime = 0;
       if (m_stateMachine.isCurrentState(StateMachine::STATE_FORWARD))
       {
-        setNextState(StateMachine::STATE_PERI_OUT_REV, m_diffDrive.m_rotateDir);
+        setNextState(StateMachine::STATE_PERI_OUT_REV,
+            m_diffDrive.getRotateDir());
       }
       else if (m_stateMachine.isCurrentState(StateMachine::STATE_ROLL))
       {
         m_speed = 0;
         m_steer = 0;
-        setNextState(StateMachine::STATE_PERI_OUT_FORW, m_diffDrive.m_rotateDir);
+        setNextState(StateMachine::STATE_PERI_OUT_FORW,
+            m_diffDrive.getRotateDir());
       }
     }
   }
@@ -2665,14 +2668,14 @@ void Robot::checkRain()
 // check sonar
 void Robot::checkSonar()
 {
-  unsigned long curMillis = millis();
+  uint32_t curMillis = millis();
   if (m_mowPattern == MOW_BIDIR &&
-      curMillis < (m_stateMachine.getStateStartTime() + 4000))
+      curMillis - m_stateMachine.getStateStartTime() < 4000)
   {
     return;
   }
 
-  // slow down motor wheel speed near obstacles
+  // Slow down motor wheel speed near obstacles
   if (m_stateMachine.isCurrentState(StateMachine::STATE_FORWARD) ||
       (m_mowPattern == MOW_BIDIR &&
        m_stateMachine.isCurrentState(StateMachine::STATE_REVERSE)))
@@ -2749,9 +2752,7 @@ void Robot::checkTilt()
       m_stateMachine.isCurrentState(StateMachine::STATE_ERROR) &&
       m_stateMachine.isCurrentState(StateMachine::STATE_STATION))
   {
-    int16_t pitchAngle = static_cast<int16_t>(m_imu.getPitchDeg());
-    int16_t rollAngle = static_cast<int16_t>(m_imu.getRollDeg());
-    if (abs(pitchAngle) > 40 || abs(rollAngle) > 40)
+    if (abs(m_imu.getPitchDegInt()) > 40 || abs(m_imu.getRollDegInt()) > 40)
     {
       Console.println(F("Error: IMU tilt"));
       incErrorCounter(ERR_IMU_TILT);
@@ -2781,7 +2782,7 @@ void Robot::checkIfStuck()
         gpsSpeed < m_stuckIfGpsSpeedBelow &&
         m_odometer.m_encoder.left.getWheelRpmCurr() != 0 &&
         m_odometer.m_encoder.right.getWheelRpmCurr() != 0 &&
-        millis() > (m_stateMachine.getStateStartTime() + m_gpsSpeedIgnoreTime))
+        millis() - m_stateMachine.getStateStartTime() > m_gpsSpeedIgnoreTime)
     {
       m_robotIsStuckCounter++;
     }
@@ -2872,7 +2873,7 @@ void Robot::checkTimeout()
 
 void Robot::runStateMachine()
 {
-  unsigned long curMillis = millis();
+  uint32_t curMillis = millis();
 
   // state machine - things to do *PERMANENTLY* for current state
   // robot state machine

@@ -182,7 +182,7 @@ struct RobotSettings
 
   Setting<bool> gpsUse;                 // Use GPS?
   Setting<float> stuckIfGpsSpeedBelow;  // If GPS speed is below given value the mower is considered stuck
-  Setting<int16_t> gpsSpeedIgnoreTime;      // How long gpsSpeed is ignored when robot switches into a new STATE (in ms)
+  Setting<uint16_t> gpsSpeedIgnoreTime; // How long gpsSpeed is ignored when robot switches into a new STATE (in ms)
 };
 
 class Robot
@@ -675,5 +675,5 @@ private:
 
   bool& m_gpsUse = m_settings.gpsUse.value;
   float& m_stuckIfGpsSpeedBelow = m_settings.stuckIfGpsSpeedBelow.value;
-  int16_t& m_gpsSpeedIgnoreTime = m_settings.gpsSpeedIgnoreTime.value;
+  uint16_t& m_gpsSpeedIgnoreTime = m_settings.gpsSpeedIgnoreTime.value;
 };
