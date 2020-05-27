@@ -2191,9 +2191,10 @@ void RemoteControl::run()
     Bluetooth.print(m_robot_p->m_imu.m_mag.z);
     Bluetooth.print(',');
 
-    float lat, lon;
+    float lat;
+    float lon;
     uint32_t age;
-    m_robot_p->m_gps.f_get_position(&lat, &lon, &age);
+    m_robot_p->m_gps.f_get_position(lat, lon, age);
     Bluetooth.print(m_robot_p->m_gps.hdop());
     Bluetooth.print(',');
     Bluetooth.print(m_robot_p->m_gps.satellites());
@@ -2368,9 +2369,10 @@ void RemoteControl::run()
     if (curMillis >= m_nextPlotTime)
     {
       m_nextPlotTime = curMillis + 200;
-      float lat, lon;
+      float lat;
+      float lon;
       uint32_t age;
-      m_robot_p->m_gps.f_get_position(&lat, &lon, &age);
+      m_robot_p->m_gps.f_get_position(lat, lon, age);
       Bluetooth.print(elapsedSeconds);
       Bluetooth.print(',');
       Bluetooth.print(m_robot_p->m_gps.hdop());

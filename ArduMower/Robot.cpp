@@ -2220,23 +2220,29 @@ void Robot::receiveGPSTime()
     incErrorCounter(ERR_GPS_DATA);
   }
 
-  int16_t year;
-  byte month, day, hour, minute, second, hundredths;
+  uint16_t year;
+  uint8_t month;
+  uint8_t day;
+  uint8_t hour;
+  uint8_t minute;
+  uint8_t second;
+  uint8_t hundredths;
   uint32_t age;
-  m_gps.crack_datetime(
-      &year, &month, &day, &hour, &minute, &second, &hundredths, &age);
+  m_gps.crack_datetime(year, month, day, hour, minute, second, hundredths, age);
 
   if (age != Gps::GPS_INVALID_AGE)
   {
-    Console.print(F("GPS date received: "));
-    Console.println(date2str(m_datetime.date));
-    m_datetime.date.dayOfWeek =
-        getDayOfWeek(month, day, year, CalendarSystem::Gregorian);
-    m_datetime.date.day = day;
-    m_datetime.date.month = month;
     m_datetime.date.year = year;
+    m_datetime.date.month = month;
+    m_datetime.date.day = day;
+    m_datetime.date.dayOfWeek =
+        getDayOfWeek(year, month, day, CalendarSystem::Gregorian);
+
     m_datetime.time.hour = hour;
     m_datetime.time.minute = minute;
+
+    Console.print(F("GPS date received: "));
+    Console.println(date2str(m_datetime.date));
 
     if (m_timerUse)
     {
@@ -2844,7 +2850,7 @@ void Robot::processGPSData()
   float nlat;
   float nlon;
   uint32_t age;
-  m_gps.f_get_position(&nlat, &nlon, &age);
+  m_gps.f_get_position(nlat, nlon, age);
 
   if (nlat == m_gps.GPS_INVALID_F_ANGLE)
   {
