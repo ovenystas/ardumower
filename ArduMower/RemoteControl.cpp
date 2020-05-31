@@ -1193,9 +1193,9 @@ void RemoteControl::sendImuMenu(bool update)
   Bluetooth.print(F("|g04~Correct dir "));
   sendYesNo(m_robot_p->m_imu.isCorrectDir());
 
-  sendPIDSlider("g05", F("Dir"), m_robot_p->m_imu.m_pid[Imu::DIR]);
+  sendPIDSlider("g05", F("Dir"), m_robot_p->m_imu.m_pidDir);
 
-  sendPIDSlider("g06", F("Roll"), m_robot_p->m_imu.m_pid[Imu::ROLL]);
+  sendPIDSlider("g06", F("Roll"), m_robot_p->m_imu.m_pidRoll);
 
   Bluetooth.print(F("|g07~Acc cal next side"));
 
@@ -1220,11 +1220,11 @@ void RemoteControl::processImuMenu(String pfodCmd)
   }
   else if (pfodCmd.startsWith("g05"))
   {
-    processPIDSlider(pfodCmd, "g05", m_robot_p->m_imu.m_pid[Imu::DIR]);
+    processPIDSlider(pfodCmd, "g05", m_robot_p->m_imu.m_pidDir);
   }
   else if (pfodCmd.startsWith("g06"))
   {
-    processPIDSlider(pfodCmd, "g06", m_robot_p->m_imu.m_pid[Imu::ROLL]);
+    processPIDSlider(pfodCmd, "g06", m_robot_p->m_imu.m_pidRoll);
   }
   else if (pfodCmd == "g07")
   {

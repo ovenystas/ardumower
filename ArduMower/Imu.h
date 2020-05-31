@@ -72,13 +72,6 @@ public:
   Imu() {};
   TEST_VIRTUAL ~Imu() {};
 
-  enum ImuPidE
-  {
-    DIR,
-    ROLL,
-    END
-  };
-
   bool init(Buzzer* buzzer_p);
 
   TEST_VIRTUAL bool isUsed();
@@ -170,7 +163,8 @@ public:
   }
 
 public:
-  Pid m_pid[END];
+  Pid m_pidDir;
+  Pid m_pidRoll;
 
   L3G m_gyro;
 

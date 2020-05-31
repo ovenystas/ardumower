@@ -103,10 +103,10 @@ void Robot::setup()
   m_perimeter.m_pid.setSetPoint(0);
 
   // ------  IMU (compass/accel/gyro) ----------------------
-  m_imu.m_pid[Imu::DIR].setup(5.0, 1.0, 1.0, -100.0, 100.0, 100.0, 0.1, 20);
-  m_imu.m_pid[Imu::DIR].setSetPoint(0);
-  m_imu.m_pid[Imu::ROLL].setup(0.8, 21.0, 0.0, -80.0, 80.0, 80.0, 0.1, 30);
-  m_imu.m_pid[Imu::ROLL].setSetPoint(0);
+  m_imu.m_pidDir.setup(5.0, 1.0, 1.0, -100.0, 100.0, 100.0, 0.1, 20);
+  m_imu.m_pidDir.setSetPoint(0);
+  m_imu.m_pidRoll.setup(0.8, 21.0, 0.0, -80.0, 80.0, 80.0, 0.1, 30);
+  m_imu.m_pidRoll.setSetPoint(0);
 
   // ------- wheel motors -----------------------------
   m_diffDrive.m_rollTimeMax = 1500;      // max. roll time (ms)
@@ -348,8 +348,8 @@ void Robot::loadSaveUserSettingsImu(bool readflag, uint16_t& addr, Imu& imu)
   eereadwrite(readflag, addr, settings_p->use.value);
   eereadwrite(readflag, addr, settings_p->correctDir.value);
 
-  loadSaveUserSettingsPid(readflag, addr, imu.m_pid[Imu::DIR]);
-  loadSaveUserSettingsPid(readflag, addr, imu.m_pid[Imu::ROLL]);
+  loadSaveUserSettingsPid(readflag, addr, imu.m_pidDir);
+  loadSaveUserSettingsPid(readflag, addr, imu.m_pidRoll);
 }
 
 void Robot::loadSaveUserSettingsOdometer(bool readflag, uint16_t& addr,
@@ -775,8 +775,8 @@ void Robot::printSettingSerialImu()
   printSettingNameColonValue(settings_p->use);
   printSettingNameColonValue(settings_p->correctDir);
 
-  printSettingSerialPid(F("pid[DIR]."), m_imu.m_pid[Imu::DIR].getSettings());
-  printSettingSerialPid(F("pid[ROLL]."), m_imu.m_pid[Imu::ROLL].getSettings());
+  printSettingSerialPid(F("pid[DIR]."), m_imu.m_pidDir.getSettings());
+  printSettingSerialPid(F("pid[ROLL]."), m_imu.m_pidRoll.getSettings());
 }
 
 void Robot::printSettingSerialBattery()
@@ -1034,7 +1034,7 @@ void Robot::setMotorPWMs(const int16_t pwmLeft, int16_t const pwmRight,
 void Robot::diffDriveControl_imuRoll()
 {
   // Control range corresponds to 80 % of maximum speed on the drive wheel
-  Pid* pid_p = &m_imu.m_pid[Imu::ROLL];
+  Pid* pid_p = &m_imu.m_pidRoll;
   float processValue = -distancePI(m_imu.getYaw(), m_imuRollHeading) / PI * 180.0f;
   float y = pid_p->compute(processValue);
 
@@ -1098,7 +1098,7 @@ void Robot::diffDriveControl_imuDir()
 {
   // Control range corresponds to the steer range
   float processValue = -distancePI(m_imu.getYaw(), m_imuDriveHeading) / PI * 180.0;
-  float y = m_imu.m_pid[Imu::DIR].compute(processValue);
+  float y = m_imu.m_pidDir.compute(processValue);
 
   if ((m_stateMachine.isCurrentState(StateMachine::STATE_OFF) ||
        m_stateMachine.isCurrentState(StateMachine::STATE_STATION) ||
