@@ -2,8 +2,4 @@
 *.sublime-workspace
 *.db
 *.bak
-/build/
 *.settings/
-Release
-libraries
-core

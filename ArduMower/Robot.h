@@ -98,7 +98,7 @@ enum ErrorE
   // <---- add new error types here (NOTE: increase MAGIC to avoid corrupt EEPROM error data!)
   ERR_ENUM_COUNT,
 };
-static_assert(sizeof(ErrorE) == 1, "Enums shall be 1 byte in size");
+static_assert(sizeof(ErrorE) == 1, "Enums need to be 1 byte in size in this project. Use compiler flag -fshort-enums.");
 
 enum RollDirE
 {

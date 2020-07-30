@@ -1,5 +1,3 @@
-/build/
-/.arduinocdt/
-/*.elf
-/*.hex
-
+/Release/
+/sloeber.ino.cpp
+/spec.d
